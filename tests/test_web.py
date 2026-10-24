@@ -99,7 +99,10 @@ def test_every_route_returns_200(client: TestClient, path: str) -> None:
     assert client.get(path).status_code == 200
 
 
-@pytest.mark.parametrize("path", PAGES)
+ERROR_PAGES = ("/why/nope/X", "/what-if/rbi_hike/^NSEBANK?amount=-5")  # the 404 and the 400
+
+
+@pytest.mark.parametrize("path", [*PAGES, *ERROR_PAGES])
 def test_pages_carry_the_disclaimer_and_no_banned_words(client: TestClient, path: str) -> None:
     page = client.get(path).text
     assert DISCLAIMER in page
@@ -213,6 +216,7 @@ def test_track_record_renders_its_table(web_db, tmp_path) -> None:
     conn.close()
     words = text(client_for(copy).get("/track-record").text)
     assert "what happened" in words and "Banks 6 of 9" in words
+    assert "1 line, as recorded." in words
     assert "We start counting" not in words
 
 

@@ -9,6 +9,7 @@ friendly 404 itself.
 from __future__ import annotations
 
 import datetime as dt
+import functools
 import math
 import sqlite3
 from pathlib import Path
@@ -18,8 +19,9 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from networth.app.settings import Settings
 from networth.engine import odds as engine
-from networth.engine.model import CURRENCY, DEFAULT_DB, EventType, RatesDB
+from networth.engine.model import CURRENCY, EventType, RatesDB
 from networth.web import names, views
 from networth.web.fmt import western_grouping
 
@@ -35,8 +37,9 @@ LANDING_TYPE: Final = "rbi_hike"
 TRACK_RECORD_LIMIT: Final = 500
 
 
+@functools.cache
 def rates_db() -> Path:
-    return DEFAULT_DB
+    return Settings.from_env().rates_db
 
 
 DB = Annotated[Path, Depends(rates_db)]
@@ -157,7 +160,7 @@ def track_record(request: Request, db: DB) -> HTMLResponse:
             rows = cur.fetchall()
     finally:
         conn.close()
-    return _page(request, "track_record.html", columns=columns, rows=rows)
+    return _page(request, "track_record.html", columns=columns, rows=rows, count=len(rows))
 
 
 STATS_QUERIES: Final[tuple[tuple[str, str], ...]] = (

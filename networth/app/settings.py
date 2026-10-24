@@ -15,8 +15,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from networth.config import DATA_DIR
+
 ENV_FILE: Final = Path(__file__).resolve().parents[2] / ".env"
-DEFAULT_DATA_DIR: Final = "data"
+RATES_DB: Final = "base_rates.sqlite"
 
 
 def read_dotenv(path: Path) -> dict[str, str]:
@@ -40,6 +42,11 @@ class Settings:
     webhook_secret: str | None
     public_url: str | None
 
+    @property
+    def rates_db(self) -> Path:
+        """The engine's sqlite. In the container it lives on the /data volume, not in /app."""
+        return self.data_dir / RATES_DB
+
     def __repr__(self) -> str:
         return f"Settings(data_dir={self.data_dir!r}, public_url={self.public_url!r})"
 
@@ -48,7 +55,7 @@ class Settings:
         env = {**read_dotenv(dotenv), **environ}
         public_url = env.get("PUBLIC_URL", "").rstrip("/") or None
         return cls(
-            data_dir=Path(env.get("DATA_DIR") or DEFAULT_DATA_DIR),
+            data_dir=Path(env.get("DATA_DIR") or DATA_DIR),
             bot_token=env.get("TELEGRAM_BOT_TOKEN") or None,
             webhook_secret=env.get("TELEGRAM_WEBHOOK_SECRET") or None,
             public_url=public_url,

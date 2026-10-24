@@ -6,7 +6,7 @@
   {% if columns %}
   <p class="normal">Everything we said, next to what happened afterwards, misses included.</p>
   <table class="ledger ledger--plain">
-    <caption>{{ rows|length }} lines, as recorded.</caption>
+    <caption>{{ count }} line{{ '' if count == 1 else 's' }}, as recorded.</caption>
     <thead><tr>{% for c in columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
     <tbody>
       {% for r in rows %}<tr>{% for cell in r %}<td data-label="{{ columns[loop.index0] }}">{{ cell }}</td>{% endfor %}</tr>{% endfor %}
