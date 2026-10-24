@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import copy
 import dataclasses
-import threading
 import time
 import tomllib
 from pathlib import Path
@@ -29,8 +28,8 @@ from networth.llm import (
     validate_classification,
     validate_grouping,
 )
+from tests.watcher_fakes import FAKE_ENV, NeverConnects
 
-FAKE_ENV = {"OPENAI_API_KEY": "sk-test-not-real", "EXA_API_KEY": "exa-test-not-real"}
 DEADLINE_S = 0.5
 SLACK_S = 1.0
 
@@ -97,17 +96,6 @@ def test_no_model_id_literal_in_python_code() -> None:
 def test_price_cost_bills_cached_input_at_the_cached_rate() -> None:
     price = config.Price(2.0, 0.2, 12.0, "https://example.org")
     assert price.cost(1_000_000, 500_000, 100_000) == pytest.approx(1.0 + 0.1 + 1.2)
-
-
-class NeverConnects(httpx2.BaseTransport):
-    """A transport whose connect never completes, like an IPv6 SYN with no answer."""
-
-    def __init__(self) -> None:
-        self.release = threading.Event()
-
-    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
-        self.release.wait(60)
-        raise httpx2.ConnectError("never connected", request=request)
 
 
 def fast_deadline_config() -> config.Config:

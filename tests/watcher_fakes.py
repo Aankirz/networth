@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import threading
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+
+import httpx2
 
 from networth.config import Query
 from networth.engine.model import EventType
@@ -76,3 +79,14 @@ class FakeModels:
     def classify_story(self, story: StoryForJudge, allowed: AllowedCauses) -> Classification:
         self.classified.append(story.title)
         return self.answers.get(story.title, NotAnEvent("not a market event"))
+
+
+class NeverConnects(httpx2.BaseTransport):
+    """A transport whose connect never completes, like an IPv6 SYN with no answer."""
+
+    def __init__(self) -> None:
+        self.release = threading.Event()
+
+    def handle_request(self, request: httpx2.Request) -> httpx2.Response:
+        self.release.wait(60)
+        raise httpx2.ConnectError("never connected", request=request)

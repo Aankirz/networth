@@ -123,3 +123,6 @@
 
 ## 2026-10-25 — Watcher classification and triggers
 - Added networth/watcher/classify.py (judge model once per confirmed story, answers validated against the (type, cause) table from events.csv, a per-cycle cap) and triggers.py (news-first Insights holding the exact odds() dict per configured asset; price-first jump on excess or raw daily return beyond 2.5x the prior 60-day std, linked to a confirmed classified story or noted as unexplained), with tests that compare Insight numbers to odds() on a built db and on the real data/base_rates.sqlite. Why: Phase 2 done-when 7 and 8.
+
+## 2026-10-25 — Watcher cycle, decision log and report
+- Added networth/watcher/log.py (decision log entries and their text), run.py (python -m networth.watcher.run --once: pull, group, confirm, classify, trigger, a cycles row and a one-screen summary with counts, rejections by reason and the cycle's spend from llm_calls.jsonl; ConfigError exits 2 with the message) and report.py (confirmed stories with publishers or primary source, rejected stories with reasons, insight headline numbers, latest cycle, spend; last 48 h or --today), with tests for a repeat run leaving counts unchanged, Exa and OpenAI calls that never connect ending at the deadline and logged as failed, and the missing-key exit. Why: Phase 2 done-when 2, 5, 9 and 10.
