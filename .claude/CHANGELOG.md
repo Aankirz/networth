@@ -120,3 +120,6 @@
 
 ## 2026-10-25 — Watcher store, pull, grouping and confirmation
 - Added networth/watcher/store.py (the watcher data model and the only module that knows data/watcher.sqlite: articles, stories, decisions, insights, cycles; keyed writes), pull.py (Exa search over the IPv4 deadline client, results parsed at the boundary into Articles with publisher and wire origin) and group.py (cheap-model grouping of unassigned articles only, and the pure confirm rule: a primary domain, or 3 distinct origins inside 24 h, wire reposts counted once), with fixture articles holding a planted single-source rumour and a Reuters story reposted by 5 outlets. Why: Phase 2 done-when 6 and 10.
+
+## 2026-10-25 — Watcher classification and triggers
+- Added networth/watcher/classify.py (judge model once per confirmed story, answers validated against the (type, cause) table from events.csv, a per-cycle cap) and triggers.py (news-first Insights holding the exact odds() dict per configured asset; price-first jump on excess or raw daily return beyond 2.5x the prior 60-day std, linked to a confirmed classified story or noted as unexplained), with tests that compare Insight numbers to odds() on a built db and on the real data/base_rates.sqlite. Why: Phase 2 done-when 7 and 8.
