@@ -9,6 +9,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import httpx2
+import pandas as pd
 
 from networth.config import Query
 from networth.engine.model import EventType, Region
@@ -23,6 +24,7 @@ from networth.llm import (
     StoryBrief,
     StoryForJudge,
 )
+from networth.watcher.prices import RecentCloses
 from networth.watcher.store import normalize_url
 
 FIXTURES = Path(__file__).with_name("fixtures")
@@ -99,3 +101,15 @@ class NeverConnects(httpx2.BaseTransport):
     def handle_request(self, request: httpx2.Request) -> httpx2.Response:
         self.release.wait(60)
         raise httpx2.ConnectError("never connected", request=request)
+
+
+class FakeCloses:
+    """Fresh closes for every asset asked for: a flat line, so nothing jumps."""
+
+    def __init__(self) -> None:
+        self.asked: list[str] = []
+
+    def __call__(self, assets: Sequence[str]) -> RecentCloses:
+        self.asked += assets
+        days = pd.bdate_range(end=NOW.date(), periods=80)
+        return RecentCloses({a: pd.Series(100.0, index=days) for a in assets}, {})

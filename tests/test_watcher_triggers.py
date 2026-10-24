@@ -125,13 +125,52 @@ def closes(last_move: float, end: str = "2026-06-30") -> pd.Series:
     return pd.Series(100.0 * np.cumprod([1.0, *(1.0 + np.array(moves))]), index=days)
 
 
-def test_price_jump_fires_above_the_multiple_and_not_below() -> None:
-    sigma = pd.Series([DAILY if i % 2 else -DAILY for i in range(WINDOW)]).std()
-    above, below = 1.1 * MULTIPLE * sigma, 0.9 * MULTIPLE * sigma
-    fired = triggers.price_jump(closes(above), None, MULTIPLE, WINDOW)
-    assert fired is not None and fired.move == pytest.approx(above)
-    assert triggers.price_jump(closes(below), None, MULTIPLE, WINDOW) is None
-    assert triggers.price_jump(closes(-above), None, MULTIPLE, WINDOW) is not None
+SIGMA = pd.Series([DAILY if i % 2 else -DAILY for i in range(WINDOW)]).std()
+# The benchmark's own returns; the asset's returns are these plus the alternating excess.
+BENCH_MOVES = np.resize([0.004, -0.002, 0.003, -0.005], WINDOW + 1)
+
+
+def with_benchmark(excess_last: float, end: str = "2026-06-30") -> tuple[pd.Series, pd.Series]:
+    excess = [DAILY if i % 2 else -DAILY for i in range(WINDOW)] + [excess_last]
+    days = pd.bdate_range(end=end, periods=WINDOW + 2)
+    bench = pd.Series(100.0 * np.cumprod([1.0, *(1.0 + BENCH_MOVES)]), index=days)
+    asset_moves = BENCH_MOVES + np.array(excess)
+    return pd.Series(100.0 * np.cumprod([1.0, *(1.0 + asset_moves)]), index=days), bench
+
+
+@pytest.mark.parametrize(
+    ("k", "fires"), [(1.01, True), (0.99, False), (-1.01, True), (-0.9, False)]
+)
+def test_price_jump_fires_just_past_the_multiple(k: float, fires: bool) -> None:
+    move = k * MULTIPLE * SIGMA
+    got = triggers.price_jump(closes(move), None, MULTIPLE, WINDOW)
+    assert (got is not None) == fires
+    if fires:
+        assert got.move == pytest.approx(move)
+
+
+@pytest.mark.parametrize(
+    ("k", "fires"), [(1.01, True), (0.99, False), (-1.01, True), (-0.9, False)]
+)
+def test_price_jump_on_the_excess_fires_just_past_the_multiple(k: float, fires: bool) -> None:
+    asset, bench = with_benchmark(k * MULTIPLE * SIGMA)
+    assert (triggers.price_jump(asset, bench, MULTIPLE, WINDOW) is not None) == fires
+
+
+def test_the_shipped_config_turns_a_jump_just_past_2_5_sigma_into_an_insight(cfg, store) -> None:
+    verdicts, _ = confirmed_cycle(cfg, store, FakeModels())
+    jump, nifty = with_benchmark(1.01 * MULTIPLE * SIGMA, end="2026-10-23")
+    by_asset = {"^NSEBANK": jump, "^NSEI": nifty}
+
+    def load(asset: str) -> pd.Series:
+        return by_asset.get(asset, pd.Series(100.0, index=jump.index))
+
+    out = triggers.write_insights(
+        store, verdicts, cfg.triggers, lambda t, a: {}, load, SINCE, NOW, OLDEST
+    )
+    assert [j.asset for j in out.jumps] == ["^NSEBANK"]
+    price = [(i.asset, i.type) for i in store.insights() if i.trigger == "price"]
+    assert price == [("^NSEBANK", "rbi_hike")]
 
 
 def test_price_jump_measures_the_excess_over_the_benchmark() -> None:

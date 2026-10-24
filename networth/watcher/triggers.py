@@ -44,6 +44,7 @@ class TriggerResult:
     insights: int
     jumps: tuple[PriceJump, ...]
     notes: tuple[str, ...]
+    price_assets_checked: int  # price_watch assets whose closes were evaluated
 
 
 def price_jump(
@@ -116,7 +117,7 @@ def write_insights(
     oldest: dt.date,
 ) -> TriggerResult:
     """since bounds the price jumps, oldest the events behind any insight."""
-    jumps, notes = _jumps(cfg, load_closes, since)
+    jumps, notes, checked = _jumps(cfg, load_closes, since)
     stories = [(s, c, _assets_for(c, cfg, notes))
                for s, c in _fresh_confirmed(store, verdicts, oldest)]  # fmt: skip
     made: list[Insight | str] = [
@@ -135,23 +136,25 @@ def write_insights(
     insights = list(by_event.values())
     store.put_insights(insights, now)
     notes += [m for m in made if isinstance(m, str)]
-    return TriggerResult(len(insights), tuple(jumps), tuple(notes))
+    return TriggerResult(len(insights), tuple(jumps), tuple(notes), checked)
 
 
 def _jumps(
     cfg: TriggerConfig, load_closes: LoadCloses, since: dt.datetime
-) -> tuple[list[PriceJump], list[str]]:
+) -> tuple[list[PriceJump], list[str], int]:
     jumps: list[PriceJump] = []
     notes: list[str] = []
+    checked = 0
     for watch in cfg.price_watch:
         try:
             closes = load_closes(watch.asset)
             bench = load_closes(watch.benchmark) if watch.benchmark else None
         except (OSError, ValueError, KeyError) as exc:
-            notes.append(f"no prices for {watch.asset}: {type(exc).__name__}")
+            notes.append(f"no prices for {watch.asset}: {type(exc).__name__} {exc}")
             continue
+        checked += 1
         jump = price_jump(closes, bench, cfg.price_multiple, cfg.vol_window_days,
                           watch.asset, watch.benchmark)  # fmt: skip
         if jump is not None and jump.date >= since.date():
             jumps.append(jump)
-    return jumps, notes
+    return jumps, notes, checked

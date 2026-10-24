@@ -43,6 +43,7 @@ source_url = "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
 exa_deadline_s = 30
 openai_deadline_s = 120
 connect_timeout_s = 5
+prices_deadline_s = 60  # one yfinance download of every price_watch asset; 2 tickers took 0.5 s
 
 [confirm]
 min_publishers = 3

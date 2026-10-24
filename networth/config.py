@@ -70,6 +70,7 @@ class HttpConfig:
     exa_deadline_s: float
     openai_deadline_s: float
     connect_timeout_s: float
+    prices_deadline_s: float
 
 
 @dataclass(frozen=True)
@@ -332,7 +333,12 @@ def parse_config(raw: Mapping[str, object], secrets: Secrets) -> Config:
         http=HttpConfig(
             *(
                 _get(_table(raw, "http"), k, float, "http")
-                for k in ("exa_deadline_s", "openai_deadline_s", "connect_timeout_s")
+                for k in (
+                    "exa_deadline_s",
+                    "openai_deadline_s",
+                    "connect_timeout_s",
+                    "prices_deadline_s",
+                )
             )
         ),  # fmt: skip
         confirm=_confirm(raw),

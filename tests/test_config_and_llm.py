@@ -101,7 +101,7 @@ def test_price_cost_bills_cached_input_at_the_cached_rate() -> None:
 
 def fast_deadline_config() -> config.Config:
     cfg = config.load_config(env_path=Path("/nonexistent"), environ=FAKE_ENV)
-    http = config.HttpConfig(DEADLINE_S, DEADLINE_S, DEADLINE_S)
+    http = config.HttpConfig(DEADLINE_S, DEADLINE_S, DEADLINE_S, DEADLINE_S)
     return dataclasses.replace(cfg, http=http)
 
 

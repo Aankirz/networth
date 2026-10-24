@@ -11,19 +11,28 @@ cycle still finishes. A missing key exits 2 with a one-line message.
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import datetime as dt
 import functools
 import sys
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
 from networth import net
-from networth.config import CONFIG_TOML, DATA_DIR, ENV_FILE, Config, ConfigError, load_config
-from networth.engine import fetch, odds
+from networth.config import (
+    CONFIG_TOML,
+    DATA_DIR,
+    ENV_FILE,
+    Config,
+    ConfigError,
+    TriggerConfig,
+    load_config,
+)
+from networth.engine import odds
 from networth.llm import Models, OpenAIModels
-from networth.watcher import classify, group, log, triggers
+from networth.watcher import classify, group, log, prices, triggers
 from networth.watcher.pull import ExaSearch, NewsSearch, pull
 from networth.watcher.store import Confirmed, Cycle, Rejected, Store
 
@@ -41,10 +50,6 @@ class Paths:
         return self.data_dir / "llm_calls.jsonl"
 
     @property
-    def prices_dir(self) -> Path:
-        return self.data_dir / "prices"
-
-    @property
     def rates_db(self) -> Path:
         return self.data_dir / "base_rates.sqlite"
 
@@ -56,8 +61,31 @@ class CycleOutcome:
     notes: tuple[str, ...]
 
 
+FetchCloses = Callable[[Sequence[str]], prices.RecentCloses]  # raises PricesUnavailable
+
+
+def _price_first(
+    cfg: TriggerConfig, fetch_closes: FetchCloses
+) -> tuple[TriggerConfig, triggers.LoadCloses, list[str]]:
+    """Fresh closes for every watched asset and its benchmark. With none at all, price-first
+    is skipped and says why in one line."""
+    assets = list(dict.fromkeys(a for w in cfg.price_watch for a in (w.asset, w.benchmark) if a))
+    try:
+        recent = fetch_closes(assets)
+    except prices.PricesUnavailable as exc:
+        skipped = dataclasses.replace(cfg, price_watch=())
+        return skipped, prices.RecentCloses({}, {}).load, [f"price-first skipped: {exc}"]
+    errors = [f"no closes for {a}: {why}" for a, why in recent.failures.items()]
+    return cfg, recent.load, errors
+
+
 def run_cycle(
-    cfg: Config, paths: Paths, search: NewsSearch, models: Models, now: dt.datetime
+    cfg: Config,
+    paths: Paths,
+    search: NewsSearch,
+    models: Models,
+    now: dt.datetime,
+    fetch_closes: FetchCloses,
 ) -> CycleOutcome:
     since = now - dt.timedelta(hours=cfg.pull.lookback_hours)
     calls_before = len(net.read_records(paths.call_log))
@@ -76,14 +104,17 @@ def run_cycle(
         )
         repairs = [f"grouping repaired: {r}" for r in grouped.repairs]
         errors = [*pulled.errors, *grouped.errors, *repairs, *judged.errors]
+        checked = 0
         if paths.rates_db.exists():
+            watch, load_closes, price_errors = _price_first(cfg.triggers, fetch_closes)
+            errors += price_errors
             fired = triggers.write_insights(
-                store, verdicts, cfg.triggers,
-                functools.partial(odds.odds, db=paths.rates_db),
-                functools.partial(fetch.load_series, prices_dir=paths.prices_dir),
+                store, verdicts, watch,
+                functools.partial(odds.odds, db=paths.rates_db), load_closes,
                 since, now, triggers.oldest_event(now, cfg.event_max_age_days),
             )  # fmt: skip
             insights, jumps, notes = fired.insights, len(fired.jumps), fired.notes
+            checked = fired.price_assets_checked
         else:
             errors.append(f"{paths.rates_db} is missing; build it with the engine first")
             insights, jumps, notes = 0, 0, ()
@@ -101,6 +132,8 @@ def run_cycle(
             "classify_over_cap": judged.over_cap,
             "insights": insights,
             "price_jumps": jumps,
+            "price_assets_checked": checked,
+            "price_assets_total": len(cfg.triggers.price_watch),
         }
         spent = log.spend(net.read_records(paths.call_log)[calls_before:])
         cycle = Cycle(now, dt.datetime.now(dt.UTC), counts, spent.cost_usd, tuple(errors))
@@ -143,6 +176,7 @@ def main(argv: Sequence[str] | None = None, environ: Mapping[str, str] | None = 
         ExaSearch(cfg, paths.call_log),
         OpenAIModels(cfg, paths.call_log),
         dt.datetime.now(dt.UTC),
+        functools.partial(prices.recent_closes, deadline_s=cfg.http.prices_deadline_s),
     )
     print("\n".join(render_outcome(outcome)))
     print("\nfull decision log: uv run python -m networth.watcher.report")
