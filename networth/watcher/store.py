@@ -275,7 +275,7 @@ class Store:
         rows = self._conn.execute(
             "SELECT s.*, d.verdict, d.reason, d.publishers, d.primary_source, d.decided_at "
             "FROM decisions d JOIN stories s ON s.id = d.story_id "
-            "WHERE s.first_seen >= ? ORDER BY s.first_seen, s.id",
+            "WHERE d.decided_at >= ? ORDER BY s.first_seen, s.id",
             (_iso(since) if since else "",),
         )
         return [Decision(_story(r), _verdict(r), _time(r["decided_at"])) for r in rows]
@@ -302,7 +302,8 @@ class Store:
     def insights(self, since: dt.datetime | None = None) -> list[Insight]:
         rows = self._conn.execute(
             "SELECT i.* FROM insights i JOIN stories s ON s.id = i.story_id "
-            "WHERE s.first_seen >= ? ORDER BY s.first_seen, i.id",
+            "JOIN decisions d ON d.story_id = i.story_id "
+            "WHERE d.decided_at >= ? ORDER BY s.first_seen, i.id",
             (_iso(since) if since else "",),
         )
         return [Insight(r["story_id"], r["trigger"], r["asset"], r["type"], r["cause"],

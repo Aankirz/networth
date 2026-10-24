@@ -1,7 +1,7 @@
 """Print the decision log: confirmed stories with their publishers or primary source, rejected
 stories with their reason, the insights' headline numbers, the latest cycle and the spend.
 
-Run: uv run python -m networth.watcher.report            # stories first seen in the last 48 h
+Run: uv run python -m networth.watcher.report            # stories decided in the last 48 h
      uv run python -m networth.watcher.report --today    # since midnight, India time
 """
 
@@ -38,7 +38,7 @@ def render(paths: Paths, since: dt.datetime) -> list[str]:
         cycle = store.latest_cycle()
     finally:
         store.close()
-    lines = [f"Decision log, stories first seen since {since.astimezone(dt.UTC):%Y-%m-%d %H:%M} "
+    lines = [f"Decision log, stories decided since {since.astimezone(dt.UTC):%Y-%m-%d %H:%M} "
              f"UTC", ""]  # fmt: skip
     lines += log.render_log(entries)
     lines.append("")

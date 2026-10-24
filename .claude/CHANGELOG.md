@@ -130,3 +130,6 @@
 ## 2026-10-25 — Watcher fixes from the first live cycles
 - networth/llm.py: a rule-breaking grouping answer is repaired (unknown ids dropped, duplicates keep the first group, unknown story ids become new stories, left-out articles become their own story) instead of discarded; the judge returns event_date and code rejects an event dated before the lookback window as "old news". Why: live run 1 split 2 of 3 batches into single-article stories (84 artificial "1 publisher" rejections), and Exa dates recrawled pages, so a May 2025 airstrike and the Oct 7 RBI hike read as new events.
 - networth/config.toml: judge cap 12 -> 40 (about $0.0033 a call, measured). networth/watcher/group.py: "1 publisher" wording.
+
+## 2026-10-25 — Watcher report lists what the cycle decided
+- networth/watcher/store.py and report.py: the decision log filters stories by when they were decided, not by their first article's publish date, with a test that a stale publish date still shows. Why: the live report listed 24 confirmed while the cycle counted 30, because Exa returns date-only or recrawl dates.

@@ -95,3 +95,11 @@ def test_a_cycle_whose_calls_all_fail_still_finishes_and_records_errors(cfg, pat
     outcome = run.run_cycle(small, paths, search, FakeModels(), NOW)
     transport.release.set()
     assert len(outcome.cycle.errors) == 2 and outcome.cycle.counts["articles_new"] == 0
+
+
+def test_report_counts_match_the_cycle_even_for_stale_publish_dates(cfg, paths) -> None:
+    stale = [{**r, "publishedDate": "2026-01-24T00:00:00Z"} for r in FakeSearch().results]
+    counts = run.run_cycle(cfg, paths, FakeSearch(stale), FakeModels(), NOW).cycle.counts
+    text = "\n".join(report.render(paths, NOW - report.dt.timedelta(hours=48)))
+    assert f"CONFIRMED ({counts['confirmed']})" in text
+    assert f"REJECTED ({counts['rejected']})" in text
