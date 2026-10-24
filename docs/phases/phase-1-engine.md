@@ -6,6 +6,7 @@ You can talk with the owner, Ankit, in this window about anything technical. Kee
 
 ## Read first
 
+0. **Before any other work, invoke the `pstack:poteto-mode` skill with the Skill tool and follow it for all building.** That includes its playbook todolist, naming the data shape first, and verifying against the real artifact. The owner asked for this. Where it conflicts with this brief, this brief's scope fence, gate and branch policy win.
 1. `tech.html`, sections 03 (Data model), 04 (The engine) and 14 (Risks). `product.html`, sections 04.1 (Made for you) and 06 (Showing our work). Open them in a browser or read the HTML.
 2. `docs/research/research-tooling.md` for data sources. `docs/research/research-investor-thinking.md` for the method rules.
 3. `~/.claude/CLAUDE.md` is in force. That means conventional commits, tests alongside code, and an append to `.claude/CHANGELOG.md` after every change. Never add `Co-Authored-By` or session trailers to commits.

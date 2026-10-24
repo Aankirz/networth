@@ -67,3 +67,6 @@
 
 ## 2026-10-24 — GitHub remote, push to main
 - Repo Aankirz/networth (private) created; local git identity set to Aankirz noreply; branch renamed to main; phase 1 brief branch policy changed to push straight to main per owner.
+
+## 2026-10-24 — Builders use poteto-mode
+- Phase 1 brief: builder must invoke pstack:poteto-mode first, per owner.
