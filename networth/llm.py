@@ -23,7 +23,7 @@ from pydantic import BaseModel
 
 from networth import net
 from networth.config import Config, Role
-from networth.engine.model import EventType
+from networth.engine.model import EventType, Region
 
 SNIPPET_CHARS: Final = 300
 STORY_ARTICLES_FOR_JUDGE: Final = 8
@@ -69,20 +69,25 @@ class StoryForJudge:
     id: str
     title: str
     articles: tuple[ArticleBrief, ...]
-    window_start: dt.date  # an event dated before this is old news, not a trigger
     today: dt.date
 
 
 @dataclass(frozen=True)
 class Classified:
+    """The judge's answer, a fact about the event that never changes. Whether the event is
+    recent enough to act on is decided each cycle against the clock, not stored here."""
+
     type: EventType
     cause: str
+    event_date: dt.date
+    region: Region
     reason: str
 
 
 @dataclass(frozen=True)
 class NotAnEvent:
     reason: str
+    region: Region | None = None  # None when the model gave no usable answer
 
 
 Classification = Classified | NotAnEvent
@@ -110,6 +115,7 @@ class _WireClassification(BaseModel):
     type: str
     cause: str
     event_date: str  # YYYY-MM-DD the event itself happened, "" for none
+    region: str
     reason: str
 
 
@@ -126,8 +132,10 @@ happening (a decision announced, a war started, a tariff imposed), not commentar
 expectations or anniversaries. The cause must be one of the causes listed for that type.
 If nothing fits, answer type "none" and cause "". Give event_date, the day the event itself
 happened (YYYY-MM-DD), read from the article text, not from the published dates, which can be
-recrawl dates. Articles often mention older events; date the event, not the article. Give a
-one-sentence reason."""
+recrawl dates. Articles often mention older events; date the event, not the article. Give
+region for every answer, "none" included: "in" when the event happens in India or is about
+India's market, "us" when it happens in the US or is about the US market, "global" when it
+moves markets everywhere (a war, an OPEC decision, a pandemic). Give a one-sentence reason."""
 
 
 def fallback_grouping(articles: Sequence[ArticleBrief], reason: str) -> Grouping:
@@ -178,15 +186,18 @@ def validate_grouping(
 
 
 def validate_classification(
-    wire: _WireClassification | None, allowed: AllowedCauses, window_start: dt.date
+    wire: _WireClassification | None, allowed: AllowedCauses
 ) -> Classification:
-    """The model names the event and its date; code decides whether that date is recent
-    enough. On the first live run a May 2025 article recrawled in October 2026 read as a new
-    airstrike."""
+    """The model names the event, its date and its region. Whether that date is recent enough
+    is decided each cycle in triggers, so a verdict never depends on when it was asked."""
     if wire is None:
         return NotAnEvent(INVALID_OUTPUT)
+    try:
+        region = Region(wire.region)
+    except ValueError:
+        return NotAnEvent(f"{INVALID_OUTPUT}: region {wire.region!r}")
     if wire.type == NONE_TYPE:
-        return NotAnEvent(wire.reason)
+        return NotAnEvent(wire.reason, region)
     try:
         event_type = EventType(wire.type)
     except ValueError:
@@ -197,11 +208,7 @@ def validate_classification(
         event_date = dt.date.fromisoformat(wire.event_date)
     except ValueError:
         return NotAnEvent(f"{INVALID_OUTPUT}: no event date")
-    if event_date < window_start:
-        return NotAnEvent(
-            f"old news: {event_type.value} dated {event_date}, before {window_start}. {wire.reason}"
-        )
-    return Classified(event_type, wire.cause, wire.reason)
+    return Classified(event_type, wire.cause, event_date, region, wire.reason)
 
 
 def _group_prompt(
@@ -293,4 +300,4 @@ class OpenAIModels:
         wire = self._parse(
             Role.JUDGE, "classify_story", CLASSIFY_INSTRUCTIONS, prompt, _WireClassification
         )
-        return validate_classification(wire, allowed, story.window_start)
+        return validate_classification(wire, allowed)

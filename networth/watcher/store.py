@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal
 
-from networth.engine.model import EventType
+from networth.engine.model import EventType, Region
 from networth.llm import Classification, Classified, NotAnEvent
 
 UTM_PREFIX: Final = "utm_"
@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS articles (
   pulled_at TEXT NOT NULL, story_id TEXT);
 CREATE TABLE IF NOT EXISTS stories (
   id TEXT PRIMARY KEY, title TEXT NOT NULL, first_seen TEXT NOT NULL,
-  type TEXT, cause TEXT, classify_reason TEXT, classified_at TEXT);
+  type TEXT, cause TEXT, classify_reason TEXT, classified_at TEXT, event_date TEXT,
+  region TEXT);
 CREATE TABLE IF NOT EXISTS decisions (
   story_id TEXT PRIMARY KEY, verdict TEXT NOT NULL CHECK (verdict IN ('confirmed', 'rejected')),
   reason TEXT NOT NULL, publishers TEXT NOT NULL, primary_source TEXT, decided_at TEXT NOT NULL);
@@ -53,6 +54,18 @@ CREATE TABLE IF NOT EXISTS insights (
 CREATE TABLE IF NOT EXISTS cycles (
   id INTEGER PRIMARY KEY AUTOINCREMENT, started_at TEXT NOT NULL, finished_at TEXT NOT NULL,
   counts TEXT NOT NULL, cost_usd REAL NOT NULL, errors TEXT NOT NULL);
+"""
+
+# A file from before the judge answered with a date and a region. Its answers lack both, and
+# its "old news" verdicts were tied to the hour they were asked, so every story is judged once
+# more. Insights are rebuilt from the answers every cycle. One transaction: all or nothing.
+MIGRATE_REGION: Final = """
+BEGIN;
+ALTER TABLE stories ADD COLUMN event_date TEXT;
+ALTER TABLE stories ADD COLUMN region TEXT;
+UPDATE stories SET type = NULL, cause = NULL, classify_reason = NULL, classified_at = NULL;
+DELETE FROM insights;
+COMMIT;
 """
 
 
@@ -176,8 +189,9 @@ def _classification(r: sqlite3.Row) -> Classification | None:
     if r["classified_at"] is None:
         return None
     if r["type"] == NONE_TYPE:
-        return NotAnEvent(r["classify_reason"])
-    return Classified(EventType(r["type"]), r["cause"], r["classify_reason"])
+        return NotAnEvent(r["classify_reason"], Region(r["region"]) if r["region"] else None)
+    return Classified(EventType(r["type"]), r["cause"], dt.date.fromisoformat(r["event_date"]),
+                      Region(r["region"]), r["classify_reason"])  # fmt: skip
 
 
 def _story(r: sqlite3.Row) -> Story:
@@ -203,6 +217,9 @@ class Store:
         path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(path)
         conn.executescript(SCHEMA)
+        columns = {r[1] for r in conn.execute("PRAGMA table_info(stories)")}
+        if "region" not in columns:
+            conn.executescript(MIGRATE_REGION)
         return cls(conn)
 
     def close(self) -> None:
@@ -281,12 +298,16 @@ class Store:
         return [Decision(_story(r), _verdict(r), _time(r["decided_at"])) for r in rows]
 
     def set_classification(self, story_id: str, c: Classification, now: dt.datetime) -> None:
-        type_, cause = (c.type.value, c.cause) if isinstance(c, Classified) else (NONE_TYPE, "")
+        if isinstance(c, Classified):
+            type_, cause, event_date = c.type.value, c.cause, c.event_date.isoformat()
+        else:
+            type_, cause, event_date = NONE_TYPE, "", None
+        region = c.region.value if c.region else None
         with self._conn:
             self._conn.execute(
-                "UPDATE stories SET type = ?, cause = ?, classify_reason = ?, classified_at = ? "
-                "WHERE id = ? AND classified_at IS NULL",
-                (type_, cause, c.reason, _iso(now), story_id),
+                "UPDATE stories SET type = ?, cause = ?, classify_reason = ?, classified_at = ?, "
+                "event_date = ?, region = ? WHERE id = ? AND classified_at IS NULL",
+                (type_, cause, c.reason, _iso(now), event_date, region, story_id),
             )
 
     def put_insights(self, insights: Iterable[Insight], now: dt.datetime) -> None:

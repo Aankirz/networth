@@ -128,6 +128,7 @@ class Config:
     pull: PullConfig
     group_batch_size: int
     max_judge_calls_per_cycle: int
+    event_max_age_days: int  # an event older than this, on the cycle's own date, is old news
     triggers: TriggerConfig
     secrets: Secrets
 
@@ -324,6 +325,7 @@ def load_secrets(env_path: Path, environ: Mapping[str, str]) -> Secrets:
 def parse_config(raw: Mapping[str, object], secrets: Secrets) -> Config:
     roles = _roles(raw)
     group = _table(raw, "group")
+    classify = _table(raw, "classify")
     return Config(
         roles=roles,
         prices=_prices(raw, roles),
@@ -336,9 +338,8 @@ def parse_config(raw: Mapping[str, object], secrets: Secrets) -> Config:
         confirm=_confirm(raw),
         pull=_pull(raw),
         group_batch_size=_get(group, "batch_size", int, "group"),
-        max_judge_calls_per_cycle=_get(
-            _table(raw, "classify"), "max_judge_calls_per_cycle", int, "classify"
-        ),
+        max_judge_calls_per_cycle=_get(classify, "max_judge_calls_per_cycle", int, "classify"),
+        event_max_age_days=_get(classify, "event_max_age_days", int, "classify"),
         triggers=_triggers(raw),
         secrets=secrets,
     )

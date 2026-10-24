@@ -15,6 +15,7 @@ from pathlib import Path
 from networth import net
 from networth.llm import Classified
 from networth.watcher.store import Confirmed, Decision, Insight, Rejected, Store
+from networth.watcher.triggers import oldest_event
 
 
 @dataclass(frozen=True)
@@ -46,14 +47,27 @@ def spend_since(log_path: Path, since: dt.datetime) -> Spend:
                   if dt.datetime.fromisoformat(r.ts) >= since])  # fmt: skip
 
 
-def _classification_line(entry: LogEntry) -> str:
-    story = entry.decision.story
-    c = story.classification
+@dataclass(frozen=True)
+class Age:
+    """How the report judges old news: against its own clock, like the cycle does."""
+
+    now: dt.datetime
+    max_days: int
+
+
+def _classification_lines(entry: LogEntry, age: Age) -> list[str]:
+    c = entry.decision.story.classification
     if c is None:
-        return "classification: not yet"
-    if isinstance(c, Classified):
-        return f"classification: {c.type.value} / {c.cause} ({c.reason})"
-    return f"classification: none ({c.reason})"
+        return ["classification: not yet"]
+    if not isinstance(c, Classified):
+        region = f", region {c.region.value}" if c.region else ""
+        return [f"classification: none{region} ({c.reason})"]
+    lines = [f"classification: {c.type.value} / {c.cause}, dated {c.event_date}, "
+             f"region {c.region.value} ({c.reason})"]  # fmt: skip
+    if c.event_date < oldest_event(age.now, age.max_days):
+        lines.append(f"old news: {c.type.value} dated {c.event_date}, "
+                     f"older than {age.max_days} days")  # fmt: skip
+    return lines
 
 
 def _insight_line(i: Insight) -> str:
@@ -64,26 +78,26 @@ def _insight_line(i: Insight) -> str:
             f"{o.get('horizon_days')}d, {o.get('era')}{weak}")  # fmt: skip
 
 
-def render_entry(entry: LogEntry) -> list[str]:
+def render_entry(entry: LogEntry, age: Age) -> list[str]:
     d = entry.decision
     lines = [f"  {d.story.title}  [{d.story.first_seen:%Y-%m-%d %H:%M} UTC]"]
     publishers = ", ".join(d.verdict.publishers)
     if isinstance(d.verdict, Confirmed):
         via = (f"primary source {d.verdict.primary_source}" if d.verdict.primary_source
                else f"{len(d.verdict.publishers)} publishers")  # fmt: skip
-        lines += [f"    confirmed via {via}; publishers: {publishers}",
-                  f"    {_classification_line(entry)}"]  # fmt: skip
+        lines.append(f"    confirmed via {via}; publishers: {publishers}")
+        lines += [f"    {line}" for line in _classification_lines(entry, age)]
         lines += [f"    {_insight_line(i)}" for i in entry.insights]
     else:
         lines.append(f"    {d.verdict.reason}; publishers: {publishers}")
     return lines
 
 
-def render_log(entries: Sequence[LogEntry]) -> list[str]:
+def render_log(entries: Sequence[LogEntry], age: Age) -> list[str]:
     confirmed = [e for e in entries if isinstance(e.decision.verdict, Confirmed)]
     rejected = [e for e in entries if isinstance(e.decision.verdict, Rejected)]
     lines = [f"CONFIRMED ({len(confirmed)})"]
-    lines += [line for e in confirmed for line in render_entry(e)] or ["  none"]
+    lines += [line for e in confirmed for line in render_entry(e, age)] or ["  none"]
     lines += ["", f"REJECTED ({len(rejected)})"]
-    lines += [line for e in rejected for line in render_entry(e)] or ["  none"]
+    lines += [line for e in rejected for line in render_entry(e, age)] or ["  none"]
     return lines

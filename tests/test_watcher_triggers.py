@@ -14,13 +14,15 @@ import pytest
 
 from networth import config
 from networth.engine import backtest, odds
-from networth.engine.model import DEFAULT_DB, write_db
+from networth.engine.model import DEFAULT_DB, EventType, Region, write_db
+from networth.llm import Classified
 from networth.watcher import classify, group, triggers
 from networth.watcher.pull import pull
 from networth.watcher.store import Store
-from tests.watcher_fakes import FAKE_ENV, NOW, FakeModels, FakeSearch
+from tests.watcher_fakes import EVENT_DAY, FAKE_ENV, NOW, FakeModels, FakeSearch
 
 SINCE = NOW - dt.timedelta(hours=48)
+OLDEST = triggers.oldest_event(NOW, 7)
 WINDOW = 60
 MULTIPLE = 2.5
 DAILY = 0.01  # the alternating +-1% history has a std just above 1%
@@ -48,7 +50,6 @@ def confirmed_cycle(cfg, store, models):
         verdicts,
         classify.allowed_causes(),
         cfg.max_judge_calls_per_cycle,
-        SINCE,
         NOW,
     )
 
@@ -66,7 +67,6 @@ def test_only_confirmed_stories_are_classified_and_only_once(cfg, store) -> None
         verdicts,
         classify.allowed_causes(),
         cfg.max_judge_calls_per_cycle,
-        SINCE,
         NOW,
     )
     assert sorted(models.classified) == ["opec_cut", "rbi_hike"]
@@ -78,7 +78,7 @@ def test_stories_over_the_cap_wait_and_are_counted(cfg, store) -> None:
     group.assign_stories(store, FakeModels(), cfg.group_batch_size, SINCE)
     verdicts = group.decide(store, cfg.confirm, NOW)
     out = classify.classify_confirmed(
-        store, FakeModels(), verdicts, classify.allowed_causes(), 1, SINCE, NOW
+        store, FakeModels(), verdicts, classify.allowed_causes(), 1, NOW
     )
     assert (out.classified, out.over_cap) == (1, 1)
 
@@ -91,7 +91,7 @@ def test_allowed_causes_come_from_events_csv() -> None:
 def rbi_insights(cfg, store, rates_db: Path) -> dict[str, dict]:
     verdicts, _ = confirmed_cycle(cfg, store, FakeModels())
     odds_fn = functools.partial(odds.odds, db=rates_db)
-    triggers.write_insights(store, verdicts, cfg.triggers, odds_fn, no_prices, SINCE, NOW)
+    triggers.write_insights(store, verdicts, cfg.triggers, odds_fn, no_prices, SINCE, NOW, OLDEST)
     return {i.asset: dict(i.odds) for i in store.insights() if i.type == "rbi_hike"}
 
 
@@ -145,7 +145,7 @@ def test_price_jump_without_a_story_is_noted(cfg, store) -> None:
     jump_day = closes(0.08, end="2026-10-23")
     assert jump_day.index[-1].date() >= SINCE.date()
     out = triggers.write_insights(
-        store, {}, cfg_one, lambda t, a: {}, lambda name: jump_day, SINCE, NOW
+        store, {}, cfg_one, lambda t, a: {}, lambda name: jump_day, SINCE, NOW, OLDEST
     )
     assert out.insights == 0 and len(out.jumps) == 1
     assert any("price jump on XLK" in n and "no confirmed story" in n for n in out.notes)
@@ -157,7 +157,34 @@ def test_price_jump_with_a_confirmed_story_writes_a_price_insight(cfg, store) ->
     jump_day = closes(0.08, end="2026-10-23")
     fake_odds = {"hit_rate": 0.5}
     triggers.write_insights(
-        store, verdicts, watch, lambda t, a: fake_odds, lambda name: jump_day, SINCE, NOW
+        store, verdicts, watch, lambda t, a: fake_odds, lambda name: jump_day, SINCE, NOW, OLDEST
     )
     price = [i for i in store.insights() if i.trigger == "price"]
     assert [(i.asset, i.type, dict(i.odds)) for i in price] == [("^NSEBANK", "rbi_hike", fake_odds)]
+
+
+def news_assets(cfg, store, answer) -> set[str]:
+    verdicts, _ = confirmed_cycle(cfg, store, FakeModels({"rbi_hike": answer}))
+    triggers.write_insights(
+        store, verdicts, cfg.triggers, lambda t, a: {}, no_prices, SINCE, NOW, OLDEST
+    )
+    return {i.asset for i in store.insights() if i.trigger == "news"}
+
+
+def bank_stress(region: Region, day: dt.date = EVENT_DAY) -> Classified:
+    return Classified(EventType.BANK_STRESS, "bank_failure", day, region, "a bank failed")
+
+
+@pytest.mark.parametrize(
+    ("region", "assets"),
+    [(Region.IN, {"^NSEBANK"}), (Region.US, {"XLF"}), (Region.GLOBAL, {"XLF", "^NSEBANK"})],
+)
+def test_a_story_only_reaches_assets_in_its_region(cfg, store, region, assets) -> None:
+    assert set(cfg.triggers.assets_by_type[EventType.BANK_STRESS]) == {"XLF", "^NSEBANK"}
+    assert news_assets(cfg, store, bank_stress(region)) == assets
+
+
+@pytest.mark.parametrize(("age_days", "assets"), [(7, {"^NSEBANK"}), (8, set()), (18, set())])
+def test_an_event_older_than_the_cutoff_writes_no_insight(cfg, store, age_days, assets) -> None:
+    day = NOW.date() - dt.timedelta(days=age_days)
+    assert news_assets(cfg, store, bank_stress(Region.IN, day)) == assets

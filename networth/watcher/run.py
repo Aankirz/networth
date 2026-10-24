@@ -72,7 +72,6 @@ def run_cycle(
             verdicts,
             classify.allowed_causes(),
             cfg.max_judge_calls_per_cycle,
-            since,
             now,
         )
         repairs = [f"grouping repaired: {r}" for r in grouped.repairs]
@@ -82,7 +81,7 @@ def run_cycle(
                 store, verdicts, cfg.triggers,
                 functools.partial(odds.odds, db=paths.rates_db),
                 functools.partial(fetch.load_series, prices_dir=paths.prices_dir),
-                since, now,
+                since, now, triggers.oldest_event(now, cfg.event_max_age_days),
             )  # fmt: skip
             insights, jumps, notes = fired.insights, len(fired.jumps), fired.notes
         else:

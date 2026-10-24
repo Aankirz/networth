@@ -40,7 +40,6 @@ def classify_confirmed(
     verdicts: Mapping[str, Verdict],
     allowed: AllowedCauses,
     cap: int,
-    since: dt.datetime,
     now: dt.datetime,
 ) -> ClassifyResult:
     pending = [s for s in store.stories() if s.classified_at is None
@@ -52,7 +51,7 @@ def classify_confirmed(
         briefs = tuple(ArticleBrief(a.url, a.publisher, a.title, a.summary,
                                     a.published_at.date().isoformat())
                        for a in articles.get(story.id, []))  # fmt: skip
-        judged = StoryForJudge(story.id, story.title, briefs, since.date(), now.date())
+        judged = StoryForJudge(story.id, story.title, briefs, now.date())
         try:
             answer = models.classify_story(judged, allowed)
         except net.CallFailed as exc:

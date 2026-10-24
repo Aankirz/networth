@@ -11,7 +11,7 @@ from pathlib import Path
 import httpx2
 
 from networth.config import Query
-from networth.engine.model import EventType
+from networth.engine.model import EventType, Region
 from networth.llm import (
     AllowedCauses,
     ArticleBrief,
@@ -27,6 +27,7 @@ from networth.watcher.store import normalize_url
 
 FIXTURES = Path(__file__).with_name("fixtures")
 NOW = dt.datetime(2026, 10, 25, 12, 0, tzinfo=dt.UTC)
+EVENT_DAY = dt.date(2026, 10, 24)
 FAKE_ENV = {"OPENAI_API_KEY": "sk-test-not-real", "EXA_API_KEY": "exa-test-not-real"}
 
 
@@ -58,8 +59,12 @@ class FakeModels:
     def __init__(self, answers: Mapping[str, Classification] | None = None) -> None:
         self.labels = story_labels()
         self.answers = answers or {
-            "rbi_hike": Classified(EventType.RBI_HIKE, "inflation", "repo rate raised"),
-            "opec_cut": Classified(EventType.OIL_SUPPLY, "opec_cut", "OPEC+ cut output"),
+            "rbi_hike": Classified(
+                EventType.RBI_HIKE, "inflation", EVENT_DAY, Region.IN, "repo rate raised"
+            ),
+            "opec_cut": Classified(
+                EventType.OIL_SUPPLY, "opec_cut", EVENT_DAY, Region.GLOBAL, "OPEC+ cut output"
+            ),
         }
         self.group_calls: list[int] = []
         self.classified: list[str] = []

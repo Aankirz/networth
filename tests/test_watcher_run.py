@@ -11,12 +11,14 @@ import pytest
 
 from networth import config, net
 from networth.engine import backtest
-from networth.engine.model import write_db
-from networth.watcher import report, run
+from networth.engine.model import EventType, Region, write_db
+from networth.llm import Classified
+from networth.watcher import log, report, run
 from networth.watcher.pull import ExaSearch
 from tests.watcher_fakes import FAKE_ENV, NOW, FakeModels, FakeSearch, NeverConnects
 
 DEADLINE_S = 0.5
+AGE = log.Age(NOW, 7)
 SLACK_S = 1.0
 
 
@@ -54,7 +56,7 @@ def test_cycle_counts_rejections_by_reason(cfg, paths) -> None:
 
 def test_report_lists_confirmed_with_sources_and_rejected_with_reasons(cfg, paths) -> None:
     run.run_cycle(cfg, paths, FakeSearch(), FakeModels(), NOW)
-    text = "\n".join(report.render(paths, NOW - report.dt.timedelta(hours=48)))
+    text = "\n".join(report.render(paths, NOW - report.dt.timedelta(hours=48), AGE))
     assert "confirmed via primary source rbi.org.in" in text
     assert "rejected: 1 publisher, no primary source; publishers: viralpaisa.xyz" in text
     assert "news-first ^NSEBANK: hit rate" in text
@@ -100,6 +102,17 @@ def test_a_cycle_whose_calls_all_fail_still_finishes_and_records_errors(cfg, pat
 def test_report_counts_match_the_cycle_even_for_stale_publish_dates(cfg, paths) -> None:
     stale = [{**r, "publishedDate": "2026-01-24T00:00:00Z"} for r in FakeSearch().results]
     counts = run.run_cycle(cfg, paths, FakeSearch(stale), FakeModels(), NOW).cycle.counts
-    text = "\n".join(report.render(paths, NOW - report.dt.timedelta(hours=48)))
+    text = "\n".join(report.render(paths, NOW - report.dt.timedelta(hours=48), AGE))
     assert f"CONFIRMED ({counts['confirmed']})" in text
     assert f"REJECTED ({counts['rejected']})" in text
+
+
+def test_report_marks_an_event_older_than_the_cutoff_at_render_time(cfg, paths) -> None:
+    day = report.dt.date(2026, 10, 7)
+    answer = Classified(EventType.RBI_HIKE, "inflation", day, Region.IN, "repo rate raised")
+    run.run_cycle(cfg, paths, FakeSearch(), FakeModels({"rbi_hike": answer}), NOW)
+    since = NOW - report.dt.timedelta(hours=48)
+    text = "\n".join(report.render(paths, since, AGE))
+    assert "old news: rbi_hike dated 2026-10-07, older than 7 days" in text
+    on_the_day = log.Age(report.dt.datetime(2026, 10, 8, tzinfo=report.dt.UTC), 7)
+    assert "old news" not in "\n".join(report.render(paths, since, on_the_day))

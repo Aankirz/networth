@@ -15,7 +15,7 @@ import openai
 import pytest
 
 from networth import config, net
-from networth.engine.model import EventType
+from networth.engine.model import EventType, Region
 from networth.llm import (
     INVALID_OUTPUT,
     ArticleBrief,
@@ -173,16 +173,19 @@ def test_no_parsed_grouping_falls_back_to_one_story_per_article() -> None:
 ALLOWED = {EventType.RBI_HIKE: ("inflation",), EventType.FED_CUT: ("growth_slowdown",)}
 
 
-WINDOW_START = dt.date(2026, 10, 23)
-
-
-def judged(type_: str, cause: str, event_date: str = "2026-10-24", reason: str = "r"):
-    wire = _WireClassification(type=type_, cause=cause, event_date=event_date, reason=reason)
-    return validate_classification(wire, ALLOWED, WINDOW_START)
+def judged(
+    type_: str, cause: str, event_date: str = "2026-10-24", region: str = "in", reason: str = "r"
+):
+    wire = _WireClassification(
+        type=type_, cause=cause, event_date=event_date, region=region, reason=reason
+    )
+    return validate_classification(wire, ALLOWED)
 
 
 def test_classification_accepts_an_allowed_type_and_cause() -> None:
-    assert judged("rbi_hike", "inflation") == Classified(EventType.RBI_HIKE, "inflation", "r")
+    assert judged("rbi_hike", "inflation") == Classified(
+        EventType.RBI_HIKE, "inflation", dt.date(2026, 10, 24), Region.IN, "r"
+    )
 
 
 @pytest.mark.parametrize(
@@ -192,17 +195,23 @@ def test_classification_outside_the_table_is_none(type_: str, cause: str) -> Non
     assert judged(type_, cause) == NotAnEvent(INVALID_OUTPUT)
 
 
-def test_classification_none_keeps_the_model_reason() -> None:
-    assert judged("none", "", "", "commentary") == NotAnEvent("commentary")
+def test_classification_none_keeps_the_model_reason_and_region() -> None:
+    assert judged("none", "", "", "us", "commentary") == NotAnEvent("commentary", Region.US)
 
 
-def test_an_event_dated_before_the_window_is_old_news_not_a_trigger() -> None:
+def test_an_old_event_is_still_the_judges_answer() -> None:
     out = judged("rbi_hike", "inflation", "2025-05-07")
-    assert isinstance(out, NotAnEvent)
-    assert out.reason.startswith("old news: rbi_hike dated 2025-05-07, before 2026-10-23")
+    assert out == Classified(EventType.RBI_HIKE, "inflation", dt.date(2025, 5, 7), Region.IN, "r")
 
 
 def test_an_event_with_no_readable_date_is_none() -> None:
     assert judged("rbi_hike", "inflation", "last week") == NotAnEvent(
         f"{INVALID_OUTPUT}: no event date"
     )
+
+
+@pytest.mark.parametrize("type_", ["rbi_hike", "none"])
+def test_an_answer_with_an_unknown_region_is_invalid(type_: str) -> None:
+    out = judged(type_, "inflation" if type_ != "none" else "", region="india")
+    assert isinstance(out, NotAnEvent) and out.reason.startswith(INVALID_OUTPUT)
+    assert out.region is None
