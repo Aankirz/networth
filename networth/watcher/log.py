@@ -114,7 +114,7 @@ def render_event(event: Sequence[LogEntry], age: Age) -> list[str]:
     return lines + [f"{indent}  {line}" for line in tail]
 
 
-def india_line(entries: Sequence[LogEntry]) -> str:
+def india_line(entries: Sequence[LogEntry], age: Age) -> str:
     india = [e for e in entries if isinstance(e.decision.verdict, Confirmed)
              and e.decision.story.classification is not None
              and e.decision.story.classification.region is Region.IN]  # fmt: skip
@@ -124,14 +124,17 @@ def india_line(entries: Sequence[LogEntry]) -> str:
         india, key=lambda e: (e.decision.story.first_seen, e.decision.story.id)
     ).decision.story
     c = story.classification
-    kind = c.type.value if isinstance(c, Classified) else "none"
+    kind = "none"
+    if isinstance(c, Classified):
+        old = c.event_date < oldest_event(age.now, age.max_days)
+        kind = f"{c.type.value} dated {c.event_date}{', old news' if old else ''}"
     return f"Newest confirmed India story: {story.title} ({story.first_seen:%Y-%m-%d}), {kind}"
 
 
 def render_log(entries: Sequence[LogEntry], age: Age) -> list[str]:
     confirmed = [e for e in entries if isinstance(e.decision.verdict, Confirmed)]
     rejected = [e for e in entries if isinstance(e.decision.verdict, Rejected)]
-    lines = [india_line(entries), "", f"CONFIRMED ({len(confirmed)})"]
+    lines = [india_line(entries, age), "", f"CONFIRMED ({len(confirmed)})"]
     lines += [line for ev in _events(confirmed) for line in render_event(ev, age)] or ["  none"]
     lines += ["", f"REJECTED ({len(rejected)})"]
     lines += [f"  {line}" for e in rejected for line in _story_lines(e.decision)] or ["  none"]

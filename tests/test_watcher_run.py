@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import datetime as dt
 import time
 from pathlib import Path
 
@@ -149,7 +150,16 @@ def test_report_prints_two_stories_of_one_event_under_one_heading(cfg, paths) ->
 @pytest.mark.parametrize(
     ("answers", "line"),
     [
-        (None, "Newest confirmed India story: rbi_hike (2026-10-24), rbi_hike"),
+        (None, "Newest confirmed India story: rbi_hike (2026-10-24), rbi_hike dated 2026-10-24"),
+        (
+            {
+                "rbi_hike": Classified(
+                    EventType.RBI_HIKE, "inflation", dt.date(2025, 5, 7), Region.IN, "an old hike"
+                )
+            },
+            "Newest confirmed India story: rbi_hike (2026-10-24), rbi_hike dated 2025-05-07, "
+            "old news",
+        ),
         ({}, "Newest confirmed India story: none in window"),
     ],
 )
