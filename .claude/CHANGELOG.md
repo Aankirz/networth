@@ -87,3 +87,18 @@
 
 ## 2026-10-24 — Event library and FOMC calendar
 - Added networth/engine/events.csv (287 sourced rows: 133 us, 111 in, 43 global; every type has 11+ rows) built by three curator agents and confirmed row by row against its source by a checker agent (9 source or note fixes, 0 deletions), and networth/engine/fomc.csv (261 scheduled FOMC announcements 1994-02-04 to 2026-09-16 from the Fed's own calendar pages). Why: the backtest and the pre-FOMC outside check need dated, sourced events.
+
+## 2026-10-24 — Keiki key added
+- KEIKI_API_KEY in GrowwOS .env, verified. Keiki compatible endpoints route to Keiki agents, not raw models.
+
+## 2026-10-24 — Exa key added
+- EXA_API_KEY in GrowwOS .env, verified with one search.
+
+## 2026-10-24 — Telegram bot token added
+- TELEGRAM_BOT_TOKEN for @networth_professor_bot in GrowwOS .env, verified with getMe.
+
+## 2026-10-24 — Backtest and leak test
+- Added networth/engine/model.py (Event/Episode/Reaction/BaseRate dataclasses, the sqlite schema, atomic write_db, read-only RatesDB) and backtest.py (no-peek entry rule with KnownTime/UnknownTime, trading-day episode merging, eras as data, French 49-industry proxies, Nifty-on-Sensex benchmark splice, seeded per-row baseline, vault as an as_of cut), with tests: a leak test with six broken canaries and a poisoned real-build case, and the method-rule tests. Why: the engine computes every base rate, and the leak test must prove no return peeks.
+
+## 2026-10-24 — Phase 2 brief
+- Added docs/phases/phase-2-watcher.md: news watcher, confirmation, classification, triggers, OpenAI model layer via config.
