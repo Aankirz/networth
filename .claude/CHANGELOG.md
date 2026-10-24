@@ -108,3 +108,6 @@
 
 ## 2026-10-25 — Phase 1 hand-off report
 - Added docs/phases/phase-1-report.md: coverage table, event counts by type and region, the method as built, every done-when result with its command, five base rates with episodes and baselines, the pre-FOMC outside check (matches in the paper's sample, fades after 2011), known gaps and every deviation from the brief. Why: the coordinator reviews Phase 1 against it.
+
+## 2026-10-25 — check_events: per-host cap and 429 backoff
+- check_events.py now allows at most 2 requests per host (1 for web.archive.org), round-robins URLs across hosts, and on HTTP 429 waits for Retry-After (clamped to 5 s, 2 s if missing) before one retry inside the 20 s deadline; a persistent 429 is still a dead link. pandemic_20090611 now cites the CDC page on the WHO declaration instead of web.archive.org, with UN News in notes. Why: coordinator review round 1 saw archive.org answer 429 and check_events exit 1 twice from a clean clone.

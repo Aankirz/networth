@@ -253,3 +253,69 @@ def test_a_persistent_transport_error_still_fails(monkeypatch) -> None:
     monkeypatch.setattr(check_events, "_OPENER", _FlakyOpener(failures=5))
     result = check_events.http_status("https://example.org")
     assert isinstance(result, str) and "URLError" in result
+
+
+class _RateLimitedOpener:
+    """Answers 429 with a Retry-After header `limited` times, then 200."""
+
+    def __init__(self, limited: int, retry_after: str | None = "3") -> None:
+        self.limited = limited
+        self.retry_after = retry_after
+        self.calls = 0
+
+    def open(self, req, timeout):
+        self.calls += 1
+        if self.calls <= self.limited:
+            headers = check_events.http.client.HTTPMessage()
+            if self.retry_after is not None:
+                headers["Retry-After"] = self.retry_after
+            raise check_events.urllib.error.HTTPError(req.full_url, 429, "Too Many", headers, None)
+        return _OkResponse()
+
+
+def test_a_429_waits_for_retry_after_then_succeeds(monkeypatch) -> None:
+    waits: list[float] = []
+    monkeypatch.setattr(check_events.time, "sleep", waits.append)
+    monkeypatch.setattr(check_events, "_OPENER", _RateLimitedOpener(limited=1))
+    assert check_events.http_status("https://web.archive.org/x") == 200
+    assert waits == [3.0]
+
+
+def test_a_persistent_429_is_a_dead_link(monkeypatch) -> None:
+    monkeypatch.setattr(check_events.time, "sleep", lambda s: None)
+    monkeypatch.setattr(check_events, "_OPENER", _RateLimitedOpener(limited=5))
+    assert check_events.http_status("https://web.archive.org/x") == 429
+
+
+@pytest.mark.parametrize(
+    ("header", "wait"),
+    [(None, 2.0), ("garbage", 2.0), ("600", 5.0), ("Wed, 21 Oct 2015 07:28:00 GMT", 0.0)],
+)
+def test_retry_after_is_clamped_inside_the_deadline(header, wait) -> None:
+    assert check_events.retry_after_s(header) == wait
+
+
+def test_requests_per_host_are_capped(tmp_path) -> None:
+    hosts = ["web.archive.org"] * 4 + ["www.federalreserve.gov"] * 6
+    rows = [
+        {**row(f"e{i}", "2019-03-01", "fed_hike", "us"), "source_url": f"https://{h}/p{i}"}
+        for i, h in enumerate(hosts)
+    ]
+    events = check_events.parse_events(write_events(tmp_path / "e.csv", rows))[0]
+    lock = check_events.threading.Lock()
+    active: dict[str, int] = {}
+    peak: dict[str, int] = {}
+
+    def slow(url: str) -> int:
+        host = check_events.host_of(url)
+        with lock:
+            active[host] = active.get(host, 0) + 1
+            peak[host] = max(peak.get(host, 0), active[host])
+        time.sleep(0.05)
+        with lock:
+            active[host] -= 1
+        return 200
+
+    dead, checked = check_events.check_links(events, slow, workers=8, deadline=5)
+    assert (dead, checked) == ([], 10)
+    assert peak == {"web.archive.org": 1, "www.federalreserve.gov": 2}

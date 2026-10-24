@@ -14,12 +14,15 @@ import http.client
 import socket
 import sys
 import threading
+import time
 import urllib.error
+import urllib.parse
 import urllib.request
-from collections import Counter
+from collections import Counter, defaultdict
 from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Final
 
@@ -34,6 +37,11 @@ CONNECT_TIMEOUT_S: Final = 5.0  # per resolved address, so a dead IPv6 route fai
 URL_DEADLINE_S: Final = 20.0  # wall clock per URL, across every address and redirect
 URL_WORKERS: Final = 8
 TRANSPORT_ATTEMPTS: Final = 2
+PER_HOST_LIMIT: Final = 2
+HOST_LIMITS: Final = {"web.archive.org": 1}  # answers 429 to parallel requests from one client
+TOO_MANY_REQUESTS: Final = 429
+MAX_BACKOFF_S: Final = 5.0  # keeps one 429 retry inside URL_DEADLINE_S
+DEFAULT_BACKOFF_S: Final = 2.0
 USER_AGENT: Final = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
@@ -134,20 +142,41 @@ _OPENER: Final = urllib.request.build_opener(_HTTPHandler, _HTTPSHandler)
 def http_status(url: str, timeout: float = URL_TIMEOUT_S) -> int | str:
     """GET with a browser User-Agent, following redirects, IPv4 first. Never raises. Some
     sites refuse HEAD, so this reads the first byte of a GET instead. A transport error (DNS,
-    refused, reset) is retried once, because a single resolver blip failed a live run; an HTTP
-    status is final. The caller's deadline still bounds both attempts."""
+    refused, reset) or a 429 gets one more attempt, because a resolver blip and archive.org
+    rate limiting each failed a live run; a 429 first waits for its Retry-After. Any other
+    HTTP status is final. The caller's deadline still bounds every attempt."""
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "*/*"})
     result: int | str = "not attempted"
-    for _ in range(TRANSPORT_ATTEMPTS):
+    for attempt in range(TRANSPORT_ATTEMPTS):
         try:
             with _OPENER.open(req, timeout=timeout) as resp:
                 resp.read(1)
                 return int(resp.status)
         except urllib.error.HTTPError as exc:
-            return int(exc.code)
+            if exc.code != TOO_MANY_REQUESTS:
+                return int(exc.code)
+            result = int(exc.code)
+            if attempt + 1 < TRANSPORT_ATTEMPTS:
+                time.sleep(retry_after_s(exc.headers.get("Retry-After")))
         except Exception as exc:  # every failure is reported as a dead link, never raised
             result = f"{type(exc).__name__}: {exc}"
     return result
+
+
+def retry_after_s(header: str | None) -> float:
+    """Seconds to wait from a Retry-After header (delta-seconds or an HTTP date), clamped to
+    [0, MAX_BACKOFF_S]. A missing or unreadable header waits DEFAULT_BACKOFF_S."""
+    if not header:
+        return DEFAULT_BACKOFF_S
+    try:
+        wait = float(header)
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(header)
+        except (TypeError, ValueError):
+            return DEFAULT_BACKOFF_S
+        wait = when.timestamp() - time.time()
+    return min(max(wait, 0.0), MAX_BACKOFF_S)
 
 
 def with_deadline(url_status: UrlStatus, url: str, deadline: float) -> int | str:
@@ -190,15 +219,36 @@ def check_links(
     workers: int = URL_WORKERS,
     deadline: float = URL_DEADLINE_S,
 ) -> tuple[list[DeadLink], int]:
-    """Each distinct URL fetched once, at most `workers` at a time, each within `deadline`
-    seconds. Dead = not 2xx/3xx, an error, or past the deadline."""
-    urls = sorted({u for e in events for u in e.sources})
+    """Each distinct URL fetched once, at most `workers` at a time and at most the host's
+    limit per host, each within `deadline` seconds once it starts. Dead = not 2xx/3xx, an
+    error, or past the deadline."""
+    urls = interleave_by_host(sorted({u for e in events for u in e.sources}))
+    slots = {host: threading.BoundedSemaphore(HOST_LIMITS.get(host, PER_HOST_LIMIT))
+             for host in {host_of(u) for u in urls}}  # fmt: skip
+
+    def fetch(url: str) -> int | str:
+        with slots[host_of(url)]:
+            return with_deadline(url_status, url, deadline)
+
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        statuses = pool.map(lambda u: with_deadline(url_status, u, deadline), urls)
-        results = dict(zip(urls, statuses, strict=True))
+        results = dict(zip(urls, pool.map(fetch, urls), strict=True))
     dead = [DeadLink(e.id, u, results[u]) for e in events for u in e.sources
             if not _alive(results[u])]  # fmt: skip
     return dead, len(urls)
+
+
+def host_of(url: str) -> str:
+    return (urllib.parse.urlsplit(url).hostname or "").lower()
+
+
+def interleave_by_host(urls: Sequence[str]) -> list[str]:
+    """Round-robin across hosts, so workers waiting on one busy host's limit don't idle the
+    pool while other hosts have work."""
+    by_host: dict[str, list[str]] = defaultdict(list)
+    for url in urls:
+        by_host[host_of(url)].append(url)
+    queues = sorted(by_host.values(), key=len, reverse=True)
+    return [q[i] for i in range(len(queues[0]) if queues else 0) for q in queues if i < len(q)]
 
 
 def check(path: Path = EVENTS_CSV, *, url_status: UrlStatus | None = http_status) -> Report:
