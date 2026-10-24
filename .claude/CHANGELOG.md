@@ -64,3 +64,6 @@
 
 ## 2026-10-24 — Repo and phase 1 brief
 - git init (branch phase/p1-engine, no commits on main), .gitignore, docs/research copied from scratchpad, docs/phases/phase-1-engine.md brief for the builder session.
+
+## 2026-10-24 — GitHub remote, push to main
+- Repo Aankirz/networth (private) created; local git identity set to Aankirz noreply; branch renamed to main; phase 1 brief branch policy changed to push straight to main per owner.

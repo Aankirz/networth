@@ -80,7 +80,7 @@ Run `make check` before every commit. Don't commit red.
 
 ## Branch policy
 
-Work on branch `phase/p1-engine`. It already exists, with the specs committed by the coordinator. Commit in small conventional commits (`feat:`, `test:`, `fix:` and so on). Don't commit to `main` and don't force-push. There's no remote yet, so "push" means commit on this branch. When you're done, write `PHASE 1 READY FOR REVIEW` as the final line of your hand-off in this window.
+Hackathon mode, decided by the owner. **Commit and push straight to `main`.** No PRs and no feature branches. The remote is `origin` (github.com/Aankirz/networth, private). Repo-local git config already sets the author and the credentials, so don't change git config. Before every push, run `git pull --rebase`. Make small conventional commits (`feat:`, `test:`, `fix:`), run `make check` green before each one, and push after each one so the coordinator can review as you go. Never force-push. When you're done, write `PHASE 1 READY FOR REVIEW` as the final line of your hand-off in this window.
 
 ## OWNER NEEDED protocol
 
