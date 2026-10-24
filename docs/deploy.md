@@ -20,22 +20,22 @@ maritime login                       # or: maritime login --device --json
 maritime whoami --json               # exit 0 means logged in
 ```
 
-Email verification must be done first. Until then, `create` and `deploy` return 403 `email_not_verified`. The repo `Aankirz/networth` is private, so install the Maritime GitHub App on it when Maritime asks.
+Email verification must be done first. Until then, `create` and `deploy` return 403 `email_not_verified`. The repo `Aankirz/networth` is public, so Maritime clones it with no GitHub App. If it is ever made private, install the Maritime GitHub App (Settings → GitHub).
 
 ## Create and deploy
 
 ```bash
 maritime create networth --repo https://github.com/Aankirz/networth --public --port 8080 --json
-maritime info networth --json        # note the agent id; the URL is https://<agent-id>.mtm.sh
+maritime info networth --json        # note the agent id
 ```
 
-Set the secrets. Values come from your local `.env` and never go in the repo:
+Set the secrets. Values come from your local `.env` and never go in the repo. Use the `api.maritime.sh/a/<agent-id>` address for `PUBLIC_URL`. On 2026-10-25 the `https://<agent-id>.mtm.sh` address served a certificate that did not match its hostname, and Telegram only delivers webhooks over valid TLS:
 
 ```bash
 maritime env set networth TELEGRAM_BOT_TOKEN=... --json
 maritime env set networth TELEGRAM_WEBHOOK_SECRET=... --json
 maritime env set networth LINK_SIGNING_SECRET=... --json
-maritime env set networth PUBLIC_URL=https://<agent-id>.mtm.sh --json
+maritime env set networth PUBLIC_URL=https://api.maritime.sh/a/<agent-id> --json
 maritime env set networth DATA_DIR=/data --json
 ```
 
@@ -48,8 +48,8 @@ maritime deploy networth --source github --repo https://github.com/Aankirz/netwo
 ## Check it
 
 ```bash
-curl -s https://<agent-id>.mtm.sh/health                 # {"ok":true}
-curl -s -o /dev/null -w '%{http_code}\n' -X POST https://<agent-id>.mtm.sh/telegram/webhook   # 401
+curl -s https://api.maritime.sh/a/<agent-id>/health      # {"ok":true}
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://api.maritime.sh/a/<agent-id>/telegram/webhook   # 401
 maritime logs networth -f                                 # look for "webhook set"
 maritime exec networth ls /data --json                    # networth.sqlite appears after the first /start
 ```
