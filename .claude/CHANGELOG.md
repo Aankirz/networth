@@ -78,3 +78,12 @@
 
 ## 2026-10-24 — Phase 1 scaffold and price fetcher
 - Added uv package `networth/` (Python 3.12, pandas, yfinance; ruff and pytest dev), Makefile `make check`, and `networth/engine/fetch.py`, which caches US, India and Kenneth French 49-industry daily series in data/prices/ and prints a coverage table. Why: the Phase 1 engine needs local price history before any backtest.
+
+## 2026-10-24 — Created .env
+- Generated TELEGRAM_WEBHOOK_SECRET and LINK_SIGNING_SECRET, set AWS_REGION and AWS_PROFILE. File is gitignored, mode 600.
+
+## 2026-10-24 — Networth switches live models to OpenAI
+- Copied OPENAI_API_KEY from zoya .env into GrowwOS .env, removed AWS_PROFILE. Verified gpt-5.6 luna/terra/sol. Memory updated.
+
+## 2026-10-24 — Event library and FOMC calendar
+- Added networth/engine/events.csv (287 sourced rows: 133 us, 111 in, 43 global; every type has 11+ rows) built by three curator agents and confirmed row by row against its source by a checker agent (9 source or note fixes, 0 deletions), and networth/engine/fomc.csv (261 scheduled FOMC announcements 1994-02-04 to 2026-09-16 from the Fed's own calendar pages). Why: the backtest and the pre-FOMC outside check need dated, sourced events.
