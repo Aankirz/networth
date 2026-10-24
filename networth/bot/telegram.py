@@ -1,0 +1,141 @@
+"""The Telegram Bot API, the only module that knows its wire format.
+
+    bot = TelegramClient(token)
+    bot.send_message(chat_id, "Hi", ((Button("Yes", "ob:confirm:ok"),),))
+
+Plain text only, no parse_mode. Every call goes over IPv4 under a wall-clock deadline, because
+this network resolves IPv6 and then hangs. A 429 is retried once after its retry_after.
+The token sits in every request URL, so no error, log line or exception here ever carries
+the URL: httpx2's own request log is silenced and transport errors are re-raised by name only.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any, Final, Protocol
+
+import httpx2
+
+from networth.net import call_with_deadline, ipv4_client
+
+API_BASE: Final = "https://api.telegram.org"
+HTTP_TIMEOUT_S: Final = 10.0
+CONNECT_TIMEOUT_S: Final = 5.0
+DEADLINE_SLACK_S: Final = 5.0
+LONG_POLL_SLACK_S: Final = 10.0
+MAX_RETRY_AFTER_S: Final = 30.0
+TOO_MANY_REQUESTS: Final = 429
+ALLOWED_UPDATES: Final = ["message", "callback_query"]
+
+logging.getLogger("httpx2").setLevel(logging.WARNING)
+
+
+@dataclass(frozen=True)
+class Button:
+    label: str
+    data: str  # callback data, at most 64 bytes
+
+
+Keyboard = tuple[tuple[Button, ...], ...]
+
+
+class TelegramError(Exception):
+    """A Bot API call failed. The message names the method, never the token or URL."""
+
+    def __init__(self, method: str, description: str) -> None:
+        super().__init__(f"telegram {method}: {description}")
+        self.method = method
+        self.description = description
+
+
+class Bot(Protocol):
+    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict: ...
+
+    def answer_callback(self, callback_id: str, text: str | None = None) -> None: ...
+
+    def edit_buttons(self, chat_id: int, message_id: int, buttons: Keyboard) -> None: ...
+
+    def set_webhook(self, url: str, secret_token: str) -> None: ...
+
+    def delete_webhook(self) -> None: ...
+
+    def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]: ...
+
+
+def markup(buttons: Keyboard) -> dict:
+    return {"inline_keyboard": [[{"text": b.label, "callback_data": b.data} for b in row]
+                                for row in buttons]}  # fmt: skip
+
+
+class TelegramClient:
+    def __init__(
+        self,
+        token: str,
+        *,
+        client: httpx2.Client | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        self._token = token
+        self._client = client or ipv4_client(HTTP_TIMEOUT_S, CONNECT_TIMEOUT_S)
+        self._sleep = sleep
+
+    def __repr__(self) -> str:
+        return "TelegramClient(token=<hidden>)"
+
+    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict:
+        params: dict[str, Any] = {"chat_id": chat_id, "text": text}
+        if buttons:
+            params["reply_markup"] = markup(buttons)
+        return self._call("sendMessage", params)
+
+    def answer_callback(self, callback_id: str, text: str | None = None) -> None:
+        params: dict[str, Any] = {"callback_query_id": callback_id}
+        if text:
+            params["text"] = text
+        self._call("answerCallbackQuery", params)
+
+    def edit_buttons(self, chat_id: int, message_id: int, buttons: Keyboard) -> None:
+        params = {"chat_id": chat_id, "message_id": message_id, "reply_markup": markup(buttons)}
+        self._call("editMessageReplyMarkup", params)
+
+    def set_webhook(self, url: str, secret_token: str) -> None:
+        params = {"url": url, "secret_token": secret_token, "allowed_updates": ALLOWED_UPDATES}
+        self._call("setWebhook", params)
+
+    def delete_webhook(self) -> None:
+        self._call("deleteWebhook", {})
+
+    def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]:
+        params: dict[str, Any] = {"timeout": timeout_s, "allowed_updates": ALLOWED_UPDATES}
+        if offset is not None:
+            params["offset"] = offset
+        return self._call("getUpdates", params, read_timeout_s=timeout_s + LONG_POLL_SLACK_S)
+
+    def _call(self, method: str, params: dict, *, read_timeout_s: float = HTTP_TIMEOUT_S) -> Any:
+        body = self._post(method, params, read_timeout_s)
+        if not body.get("ok") and body.get("error_code") == TOO_MANY_REQUESTS:
+            retry_after = body.get("parameters", {}).get("retry_after", 1)
+            self._sleep(min(float(retry_after), MAX_RETRY_AFTER_S))
+            body = self._post(method, params, read_timeout_s)
+        if not body.get("ok"):
+            raise TelegramError(method, str(body.get("description", "no description")))
+        return body.get("result")
+
+    def _post(self, method: str, params: dict, read_timeout_s: float) -> dict:
+        url = f"{API_BASE}/bot{self._token}/{method}"
+        timeout = httpx2.Timeout(read_timeout_s, connect=CONNECT_TIMEOUT_S)
+
+        def post() -> dict:
+            try:
+                response = self._client.post(url, json=params, timeout=timeout)
+            except httpx2.HTTPError as exc:
+                raise TelegramError(method, type(exc).__name__) from None
+            try:
+                return response.json()
+            except ValueError:
+                raise TelegramError(method, f"HTTP {response.status_code}") from None
+
+        return call_with_deadline(post, read_timeout_s + DEADLINE_SLACK_S, f"telegram {method}")

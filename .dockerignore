@@ -1,0 +1,16 @@
+.env
+.env.*
+data/
+.venv/
+.git/
+.claude/
+.code-review-graph/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+tests/
+docs/
+assets/
+*.html
