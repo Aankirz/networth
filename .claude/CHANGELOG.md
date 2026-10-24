@@ -204,3 +204,6 @@
 
 ## 2026-10-25 — Phase 3B: rejected stories shown under the confirmed event they are about
 - One cheap-model call per cycle (llm.match_related, classify.relate_rejected) records, for each rejected story, the confirmed event (type:event_date) it is about; stories table gains related_event and related_at. The decision log prints those stories under their EVENT heading with their own rejection reason, and the newest-India line says 'not one of the event types we count' instead of ', none'. Why: the honesty log showed 'RBI holds repo rate' as an unrelated rejection next to the confirmed RBI hike.
+
+## 2026-10-25 — Phase 3B: guard.py send gate and push_rates.sh
+- networth/guard.py checks every model draft: numbers must appear in the source text after normalising (lakh, crore, k, commas, %, ordinals, Devanagari digits), no banned words in English, transliterated Hindi or Devanagari, no advice phrasing; one rewrite then the template; verdicts appended to a jsonl log. tests/test_guard.py. scripts/push_rates.sh uploads data/base_rates.sqlite to the Maritime /data volume in 80 KB gzip chunks with a sha256 check, because Maritime's upload fails above about 80 KB.
