@@ -151,3 +151,6 @@
 
 ## 2026-10-25 — FRED key added
 - FRED_API_KEY in GrowwOS .env, verified with USREC, CPIAUCSL, FEDFUNDS.
+
+## 2026-10-25 — Phase 2 hand-off report
+- Added docs/phases/phase-2-report.md: role-to-model map with OpenAI prices and source URLs, one live cycle's counts (146 articles, 71 stories, 30 confirmed, 41 rejected by reason, 10 insights), cost per cycle ($0.29 cold, $0.11 warm) and per day at 43 cycles (about $5 to $5.50, mostly Exa), every done-when result, known gaps and deviations. Corrected the judge cost comment in networth/config.toml to the measured $0.006 a call (the earlier entry's $0.0033 predates the event-date field). Why: the coordinator reviews Phase 2 against it.
