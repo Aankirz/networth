@@ -24,6 +24,7 @@
   <aside class="toc" aria-label="On this page">
     <div class="label">On this page</div>
     <a href="#overview">Overview</a>
+    <a href="#perplexity">Why not Perplexity</a>
     <a href="#problem">The problem</a>
     <a href="#principles">Principles</a>
     <a href="#people">Who it's for</a>
@@ -44,7 +45,7 @@
   <main>
     <div class="page-icon" aria-hidden="true">N</div>
     <h1>Networth</h1>
-    <p class="subtitle">Know what the news means for your money. A personal agent in your messages that watches the world, checks every event against decades of market history, and tells you only what touches what you own. Every call comes with its reasons and its odds, out in the open.</p>
+    <p class="subtitle">Know what the news means for your money. An always-on agent in WhatsApp and Telegram that reads the news every day so you don't have to, checks every story against decades of market history, and shows up on the day you invest. Every number comes with its reasons and its odds, out in the open. The goal is delight and peace of mind.</p>
     <div class="badges">
       <span class="badge green">Product spec · final</span>
       <span class="badge">Keiki × Maritime week one</span>
@@ -57,16 +58,34 @@
       <dt>Surfaces</dt><dd>Telegram and WhatsApp through one Keiki agent, plus a web view opened from a link</dd>
       <dt>Ship by</dt><dd>Mon Oct 26, 9am IST, before the likely week-one cut</dd>
       <dt>Companion</dt><dd><a href="tech.html">Tech spec</a>, how each part gets built</dd>
+      <dt>Agents read</dt><dd><code>knowledge/PRODUCT.md</code>, the same product knowledge in plain text. Every agent loads it, and if anything conflicts, that file wins.</dd>
     </dl>
 
     <section class="block" id="overview">
       <div class="sec-head"><span class="sec-num">01</span><h2>Overview</h2></div>
       <p class="lede">Networth is three things working together. Most people only ever see the first one.</p>
       <div class="grid g3">
-        <div class="card feature"><div class="k">The habit</div><h3>A morning text</h3><p>At 7am, one short message. What happened, whether it touches you, and what history says. Most days it says nothing needs your attention.</p></div>
-        <div class="card"><div class="k">The depth</div><h3>A web view</h3><p>One tap from any message. How your money is doing, how it would have done after events like today's, and the full reasoning behind every call.</p></div>
+        <div class="card feature"><div class="k">The habit</div><h3>The investing-day brief</h3><p>Once a month, on the day you invest. The month's news in one line, where history leans after months like this one, your own plan, and one clear choice. Alerts only when something big is confirmed.</p></div>
+        <div class="card"><div class="k">The proof</div><h3>Why, and the track record</h3><p>One tap shows every past episode behind a number. A public page shows everything we said and what happened next, misses included.</p></div>
         <div class="card"><div class="k">The engine</div><h3>History, counted</h3><p>A library of past events and what each sector did after them. The engine makes every number. The AI only explains.</p></div>
       </div>
+    </section>
+
+    <section class="block" id="perplexity">
+      <div class="sec-head"><span class="sec-num">01.1</span><h2>Why not Perplexity Finance</h2></div>
+      <p class="lede">Perplexity Finance is a free, excellent research terminal, and it covers NSE and BSE too. You visit it and ask it things. Networth is the opposite shape.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Perplexity Finance</th><th>Networth</th></tr></thead>
+        <tbody>
+          <tr><td>You pull. You have to know what to ask.</td><td>We push, once a month on your investing day, plus rare alerts</td></tr>
+          <tr><td>Explains why a stock moved, after the fact</td><td>Says what usually happens next, counted from history against a normal period</td></tr>
+          <tr><td>No public record of its own calls</td><td>A public track record of what we said versus what happened</td></tr>
+          <tr><td>The same summary for everyone</td><td>Shaped by your goal, horizon, monthly amount and plan</td></tr>
+          <tr><td>A web app, in English</td><td>WhatsApp and Telegram, in English, Hindi or Hinglish</td></tr>
+          <tr><td>Portfolio linking only in the US and Canada</td><td>Built for Indian beginners first</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout"><div class="ic">→</div><p><b>What we don't build:</b> dashboards, heatmaps, screeners or earnings pages. Perplexity wins there, for free. <b>The line for judges:</b> "Perplexity tells you why a stock moved yesterday. Networth tells you what usually happens next, counted from 20 years of history. It shows up on the day you invest, in WhatsApp, and keeps a public record of how often it was right."</p></div>
     </section>
 
     <section class="block" id="problem">
@@ -93,11 +112,13 @@
       <p class="lede">Every design decision below traces back to one of these. When two conflict, the earlier one wins.</p>
       <div class="steps">
         <div><p><b>Messages first.</b> The text is the product. The web view is depth for people who want it, never a place you must go.</p></div>
-        <div><p><b>We come to you.</b> Nobody pastes headlines. Networth watches the news and decides what's worth your attention.</p></div>
+        <div><p><b>One decision, one moment.</b> People decide once a month, on payday or their SIP date. We show up then, and stay quiet otherwise. No daily, weekly and monthly feeds competing for attention.</p></div>
+        <div><p><b>We come to you.</b> Nobody pastes headlines. Networth reads the news every day and decides what's worth your attention. Forwarding a tip you got is the one thing you might send us.</p></div>
         <div><p><b>Every call shows its work.</b> Each insight carries its reasons and its odds, and anyone can open the full trail. No black box.</p></div>
         <div><p><b>The engine makes every number.</b> The AI writes words. If a number in a message doesn't match the engine, the message doesn't send.</p></div>
         <div><p><b>Calm over hype.</b> "Nothing needs your attention" is a good message. We never push people to trade.</p></div>
-        <div><p><b>History, not instructions.</b> We say what happened after similar events and what that range would mean for your money. The decision stays yours.</p></div>
+        <div><p><b>History leans, you decide.</b> We say "banks beat the market in 6 of 9 similar months". We never say "put your money in banks". Your plan is your own choice.</p></div>
+        <div><p><b>Peace of mind over information.</b> Every message should leave you calmer and clearer, with less homework. If it adds anxiety, it's wrong.</p></div>
       </div>
     </section>
 
@@ -112,48 +133,48 @@
 
     <section class="block" id="personal">
       <div class="sec-head"><span class="sec-num">04.1</span><h2>Made for you, not broadcast</h2></div>
-      <p class="lede">Two users never get the same message. The same event lands differently depending on what you own, what you're saving for, how long you have, and what you've told us to ignore. We copy how a private wealth manager works for a rich client, and we leave the final decision with you.</p>
+      <p class="lede">The facts and the scoreboard are the same for everyone. What you hear, and when, is not. It depends on what you're saving for, how long you have, how much you add each month, the day you invest, and what you've told us to ignore. We copy how a private wealth manager works for a rich client, and we leave the final decision with you.</p>
       <div class="tw"><table class="t">
         <thead><tr><th>We learn</th><th>How we ask, in one text</th><th>What it changes</th></tr></thead>
         <tbody>
-          <tr><td>What you own</td><td>Screenshot or tickers</td><td>Which events reach you at all, and the dollar range on your own position</td></tr>
+          <tr><td>Investing day</td><td>"Which day do you usually invest? Payday, SIP date?"</td><td>When the main brief arrives</td></tr>
           <tr><td>Your goal</td><td>"What's this money for? House, retirement, freedom, just growing it"</td><td>Which risks we lead with. A house fund in 3 years hears about drops first.</td></tr>
           <tr><td>Your time horizon</td><td>"When might you need it?" (we ask this instead of age)</td><td>Which history we show. With 25 years left, we show how long past drops took to recover.</td></tr>
-          <tr><td>How much drop you can sit through</td><td>"If $10k became $7k for a year, would you hold, worry, or sell?"</td><td>The tone of the message and how loud the alerts are</td></tr>
+          <tr><td>How much drop you can sit through</td><td>"If ₹1 lakh became ₹70,000 for a year, would you hold, worry, or sell?"</td><td>The tone of the message and how loud the alerts are</td></tr>
           <tr><td>How much you add</td><td>"Roughly how much do you invest a month?"</td><td>Ranges shown in your own numbers. "A dip like this would equal about 2 of your monthly deposits."</td></tr>
           <tr><td>What to leave out</td><td>"Anything you don't want to hear about? Crypto, a country, a sector"</td><td>Those assets are never mentioned. Changed any time by text.</td></tr>
         </tbody>
       </table></div>
       <h3 style="margin-top:22px">One event, three people</h3>
       <div class="grid g3">
-        <div class="card"><div class="k">Maya · house in 3 years</div><p>"OPEC cut output. Your S&amp;P fund barely reacted in past cuts. Nothing to do. Your house fund's timeline matters more than this news."</p></div>
-        <div class="card"><div class="k">Dev · 25 years, holds airlines</div><p>"OPEC cut output. Airlines fell in 7 of 9 past cuts, a median of $48 on your $2,000. Every one of those drops recovered within a year."</p></div>
-        <div class="card"><div class="k">Sam · said no energy news</div><p>Nothing about it. His brief leads with the Fed meeting, which touches his bond fund.</p></div>
+        <div class="card"><div class="k">Priya · house in 3 years, ₹40k a month</div><p>"RBI raised rates. Nothing this month changes a plan. Your house fund is 3 years out, and in past hikes the Nifty's drops recovered within 14 months in 8 of 10 cases."</p></div>
+        <div class="card"><div class="k">Arjun · 25 years, ₹1 lakh a month</div><p>"RBI raised rates. Banks beat the market in 6 of 9 similar months, a weak signal. On ₹1 lakh, a typical month in banks after hikes ranged −₹4,000 to +₹6,000."</p></div>
+        <div class="card"><div class="k">Sam · US stocks only, said no India news</div><p>Nothing about the RBI. His brief leads with the Fed pause, which touches his bond fund.</p></div>
       </div>
       <p class="mock-note">Placeholder figures. Uniqueness comes from your data. We don't randomize, because varying a number just to be different is how trust gets lost.</p>
 
       <h3 style="margin-top:22px">Your plan, the wealth manager's method</h3>
-      <p>Private wealth managers start every client with a short written plan. It covers the goal, the timeline, the biggest drop the client can live with, and a split of the money into buckets. Networth helps you write yours in a two-minute chat, and then it holds you to it.</p>
+      <p>Private wealth managers start every client with a short written plan. It covers the goal, the timeline, the biggest drop the client can live with, and a split of the money into buckets. Networth shows 3 common starter mixes as education, with how each behaved through past crashes. You pick one or build your own, and the investing-day brief reminds you of it.</p>
       <div class="grid g3">
-        <div class="card"><div class="k">Safety</div><p>Money you'll need soon. Cash, T-bills, short bonds. You choose how many months it covers.</p></div>
-        <div class="card"><div class="k">Core</div><p>Broad funds you hold for years. This is where most wealth gets built.</p></div>
+        <div class="card"><div class="k">Safety</div><p>Money you'll need soon. Liquid funds, FDs, T-bills, short bonds. You choose how many months it covers.</p></div>
+        <div class="card"><div class="k">Core</div><p>Broad index funds you hold for years, like a Nifty 50 or S&amp;P 500 fund. This is where most wealth gets built.</p></div>
         <div class="card"><div class="k">Growth</div><p>The ambitious part. Single stocks, sectors, crypto if you allow it. You decide how big it is.</p></div>
       </div>
-      <p style="margin-top:12px">You set the split with sliders. Networth replays your mix through every past episode, showing the worst year, how long recovery took, and the typical yearly range. You can compare it with well-known public mixes such as 60/40 or a target-date path. When the news pushes your real holdings away from your own plan, the brief says so: "Your Growth bucket is now 41%, above the 30% you set."</p>
+      <p style="margin-top:12px">You set the split with sliders. Networth replays your mix through every past episode, showing the worst year, how long recovery took, and the typical yearly range. You can compare it with well-known public mixes such as 60/40. Your plan never changes because we said so. It changes when you change it.</p>
       <div class="callout red"><div class="ic">!</div><p><b>The line we don't cross.</b> Telling one specific person "put $1k here and $2k there" is personalized investment advice. In the US it requires registering as an investment adviser. The publisher's exclusion that covers newsletters applies only to impersonal content (Lowe v. SEC, 1985, upheld for Seeking Alpha in 2024). So <b>you choose the numbers, and we show you what history says about them</b>. Registering later is a real path, since robo-advisors are registered advisers, but it isn't for this week.</p></div>
       <div class="callout amber"><div class="ic">!</div><p><b>India has its own rule.</b> SEBI regulates research and recommendations on Indian securities through its Research Analyst rules, and it tightened the rules for financial influencers in 2024. This is cited from memory, so check it before launch. Networth stays on the safe side the same way it does in the US. It shows what history says, never says buy or sell, and labels every message as research, not advice. Get one short legal opinion before scaling in India.</p></div>
     </section>
 
     <section class="block" id="loop">
       <div class="sec-head"><span class="sec-num">05</span><h2>How it works</h2></div>
-      <p class="lede">The world produces endless news. Networth filters it down to the few things that matter to you, measured against history.</p>
+      <p class="lede">The world produces endless news. Networth reads it every day, keeps only confirmed stories, measures each against history, and saves it all for the one day you invest.</p>
       <figure class="sketch"><svg id="d-loop" viewBox="0 0 1000 330" role="img" aria-label="Flow from world news through watch, confirm, measure and rank to the user, with replies going to chat and the web view"></svg>
         <figcaption>The core loop. The user only ever sees the green box, unless they choose to go deeper.</figcaption></figure>
       <div class="grid g4">
-        <div class="card"><div class="k">Watch</div><p>News from many outlets, all day, plus prices of every asset our users hold.</p></div>
+        <div class="card"><div class="k">Watch</div><p>News from many outlets and primary sources (RBI, SEBI, the Fed, NSE filings), all day, plus index and sector prices in India and the US.</p></div>
         <div class="card"><div class="k">Confirm</div><p>A story counts only when 3 or more original publishers carry it, or a primary source like the Fed posts it.</p></div>
         <div class="card"><div class="k">Measure</div><p>Find past episodes of the same type and cause. Count what each sector did after them, compared with a normal period.</p></div>
-        <div class="card"><div class="k">Rank</div><p>Keep only what touches your holdings, ordered by how much history says it matters. Usually 0 to 3 a day.</p></div>
+        <div class="card"><div class="k">Hold</div><p>Most findings wait for your investing-day brief. Only a confirmed event with 8+ past episodes and a large effect becomes an alert, about 0 to 2 a month.</p></div>
       </div>
     </section>
 
@@ -165,14 +186,14 @@
 
       <div class="grid g2">
         <div class="card">
-          <div class="k">What your money could do</div>
-          <h3>History, sized to your position</h3>
-          <p>For each holding an event touches, we apply the range of past outcomes to your actual position. For example: "On your $2,000 in JETS, the 11 past cases ranged from a $180 loss to a $60 gain over a month. The typical case was a $48 loss." Always labelled as history, never as a forecast.</p>
+          <div class="k">What it could mean in your money</div>
+          <h3>History, sized to your monthly amount</h3>
+          <p>We apply the range of past outcomes to the amount you said you invest. For example: "On ₹1 lakh, a typical month in banks after past RBI hikes ranged from a ₹4,000 loss to a ₹6,000 gain." Always labelled as history and as an illustration, never as a forecast or an instruction.</p>
         </div>
         <div class="card">
           <div class="k">Two numbers, always</div>
           <h3>Event odds next to normal odds</h3>
-          <p>"Airlines trailed the S&amp;P in 8 of 11 past cuts" means little alone. So we always add "in a random month, they trail about half the time." The gap between those two numbers is the real signal.</p>
+          <p>"Banks beat the market in 6 of 9 past hikes" means little alone. So we always add "in a normal month, they beat it about 5 of 10 times." The gap between those two numbers is the real signal.</p>
         </div>
       </div>
 
@@ -189,68 +210,70 @@
           <tr><td>Weak signal</td><td>under 8 independent episodes, any rate</td><td>"Weak signal, only 6 past cases"</td></tr>
         </tbody>
       </table></div>
-      <div class="callout amber"><div class="ic">!</div><p><b>Where the line sits.</b> We show reasons, odds and ranges for everyone in the same way, and the user decides. We never say "buy" or "sell". This keeps Networth on the research side of US rules on personal investment advice. That's our working understanding, not legal advice, and it needs a lawyer before launch.</p></div>
+      <div class="callout amber"><div class="ic">!</div><p><b>Where the line sits.</b> We show reasons, odds and ranges for everyone in the same way, and the user decides. We never say "buy" or "sell". This keeps Networth on the research side of US rules on personal investment advice and SEBI's Research Analyst rules. That's our working understanding, not legal advice, and it needs a lawyer before launch.</p></div>
     </section>
 
     <section class="block" id="journey">
       <div class="sec-head"><span class="sec-num">07</span><h2>The journey</h2></div>
-      <p class="lede">From stranger to daily habit in about a minute. No app, no account, no password.</p>
+      <p class="lede">From stranger to monthly habit in about a minute. No app, no account, no password.</p>
       <figure class="sketch"><svg id="d-journey" viewBox="0 0 1000 270" role="img" aria-label="Seven step journey from discover to share, looping back to discover"></svg>
         <figcaption>Each step has one job. The loop back is how we grow.</figcaption></figure>
       <div class="tw"><table class="t">
         <thead><tr><th>Step</th><th>What happens</th><th>How it should feel</th></tr></thead>
         <tbody>
-          <tr><td>Discover</td><td>A friend forwards a card: "What airlines did after the last 11 OPEC cuts".</td><td>Interesting, and someone I trust sent it.</td></tr>
+          <tr><td>Discover</td><td>A friend forwards a tip check: "That WhatsApp tip wasn't confirmed. Here's what history says."</td><td>Interesting, and someone I trust sent it.</td></tr>
           <tr><td>Start</td><td>Landing page with one sentence, a real sample, and buttons for Telegram and WhatsApp.</td><td>No risk, no sign up.</td></tr>
-          <tr><td>Onboard</td><td>"What do you own?" Type tickers, plain words, or send a brokerage screenshot. Then pick a brief time.</td><td>That was easy. It read my screenshot.</td></tr>
-          <tr><td>First value</td><td>Within a minute: "This week, here's what touched your stuff."</td><td>It already knows something useful.</td></tr>
-          <tr><td>Daily</td><td>7am brief. A same-day alert only for big moves in what they hold.</td><td>On top of it without trying.</td></tr>
-          <tr><td>Weekly</td><td>Sunday report card. What we flagged, what happened, including misses.</td><td>It's honest with me.</td></tr>
-          <tr><td>Share</td><td>Every message can become a card to forward.</td><td>I look smart sending this.</td></tr>
+          <tr><td>Onboard</td><td>Five quick questions: goal, horizon, monthly amount, investing day, drop comfort. Then pick a starter plan or make your own.</td><td>That was easy. It gets what I'm saving for.</td></tr>
+          <tr><td>First value</td><td>Within a minute: "Here's what history says about this month so far." Plus the first forwarded tip it checks.</td><td>It already knows something useful.</td></tr>
+          <tr><td>Monthly</td><td>The investing-day brief, on the day they picked. Rare alerts in between. "What happened today?" any time they ask.</td><td>I'm on top of it without trying.</td></tr>
+          <tr><td>Trust</td><td>The public track record. What we said, and what happened 30 days later, misses included.</td><td>It's honest with me.</td></tr>
+          <tr><td>Share</td><td>Every tip check and brief can become a card to forward to the group chat.</td><td>I look smart sending this.</td></tr>
         </tbody>
       </table></div>
     </section>
 
     <section class="block" id="messages">
       <div class="sec-head"><span class="sec-num">08</span><h2>Messages</h2></div>
-      <p class="lede">Six message types, all with the same anatomy. Verdict for you first, then what happened, what history says, what it means for you, and two or three tap replies.</p>
+      <p class="lede">Six moments, one anatomy. The verdict first, then what happened, where history leans, what it means for your plan, and two or three tap replies.</p>
       <div class="phones">
-        <div><div class="phone"><div class="bar">Onboarding</div>
+        <div><div class="phone"><div class="bar">Onboarding · 60 seconds</div>
           <div class="bubble me">start</div>
-          <div class="bubble">Hi. I'll text you each morning with what the news means for your money. What do you own? Tickers, plain words, or a screenshot all work.</div>
-          <div class="bubble me">[brokerage screenshot]</div>
-          <div class="bubble">Got it. NVDA 20 shares, VOO 15, JETS 100, BTC 0.05. Right?</div>
-          <div class="chips"><span>Yes</span><span>Fix something</span></div>
+          <div class="bubble">Hi. I read the market news every day so you don't have to, and I'll check in on the day you invest. Five quick questions. What's this money for?</div>
+          <div class="chips"><span>A house</span><span>Retirement</span><span>Just growing it</span></div>
+          <div class="bubble me">house, in 4 years. about 1 lakh a month, on the 1st</div>
+          <div class="bubble">Got it. Pick a starting plan, or make your own. Here's how each did through every crash since 2008.</div>
+          <div class="chips"><span>Steady 40/60</span><span>Balanced 70/30</span><span>My own</span></div>
         </div></div>
-        <div><div class="phone"><div class="bar">Morning brief · 7:00</div>
-          <div class="bubble"><b>One thing matters for you today.</b> OPEC cut supply. You hold JETS.</div>
-          <div class="bubble">Airlines usually trail after surprise cuts: 8 of 11 times over a month. In a random month it's about half.</div>
-          <div class="bubble">On your $2,000 in JETS, past cases ranged from −$180 to +$60. Worth knowing, not a reason to act.</div>
-          <div class="chips"><span>Why?</span><span>See your page</span><span>What about BTC?</span></div>
+        <div><div class="phone"><div class="bar">Investing day · Nov 1</div>
+          <div class="bubble"><b>₹1,00,000 ready. Nothing this month changes a plan.</b> RBI raised rates, crude up 8%, Fed paused.</div>
+          <div class="bubble">After months like this: 🟢 banks beat the market 6 of 9 (normal 5 of 10, weak signal). ⚪ IT no pattern. 🔴 auto lagged 7 of 10. 🟦 index fund as good as the best sector, half the drops.</div>
+          <div class="bubble">Your plan: 70% index, 20% debt, 10% picks.</div>
+          <div class="chips"><span>Invest as planned</span><span>Scoreboard</span><span>Change plan</span><span>Why?</span></div>
         </div></div>
         <div><div class="phone"><div class="bar">"Why?"</div>
-          <div class="bubble me">why?</div>
-          <div class="bubble"><b>Here's the reasoning.</b> 5 outlets confirmed it. It's a supply cut, not demand. 11 past cases since 1998, 9 independent episodes. Fuel is airlines' biggest cost. It was a surprise, so it isn't fully priced in.</div>
-          <div class="bubble">What would change this view: oil falling back under last week's level.</div>
-          <div class="chips"><span>Show all 11 cases</span></div>
+          <div class="bubble me">why banks?</div>
+          <div class="bubble"><b>Here's the reasoning.</b> RBI statement plus 6 outlets confirmed the hike. 9 past hikes since 2007, 9 independent episodes. Banks earn more on loans when rates rise. Normal month: banks beat the market 5 of 10.</div>
+          <div class="bubble">What would change this: the RBI signalling cuts soon.</div>
+          <div class="chips"><span>Show all 9 cases</span></div>
         </div></div>
-        <div><div class="phone"><div class="bar">Alert · 2:14 pm</div>
-          <div class="bubble"><b>Heads up, big move in something you own.</b> BTC is down 11% today. 9 outlets tie it to an exchange collapse.</div>
-          <div class="bubble">After 7 similar events since 2014, BTC fell further the next week 5 times. Weak signal, small sample.</div>
-          <div class="chips"><span>Why?</span><span>Mute BTC alerts</span></div>
+        <div><div class="phone"><div class="bar">Forwarded tip</div>
+          <div class="bubble me">[forwarded] "XYZ Infra will double in 2 weeks, big govt order coming!!"</div>
+          <div class="bubble"><b>Not confirmed.</b> 0 major outlets and no NSE filing mention an order. Only forwards and one blog.</div>
+          <div class="bubble">History check: small-cap stocks after viral tips without filings fell in 7 of 10 cases over the next month.</div>
+          <div class="chips"><span>Why?</span><span>Share this check</span></div>
         </div></div>
-        <div><div class="phone"><div class="bar">Asking</div>
-          <div class="bubble me">should I sell NVDA?</div>
-          <div class="bubble">I can't tell you what to do. Here's what history says. After the last 14 surprise rate hikes, big tech trailed for a month 9 times, and was back level within 3 months in 11.</div>
-          <div class="chips"><span>Show the cases</span><span>What's a rate hike?</span></div>
+        <div><div class="phone"><div class="bar">Alert · rare</div>
+          <div class="bubble"><b>Big, confirmed, and history has a lot to say.</b> Union Budget raised capital gains tax. PIB plus 8 outlets.</div>
+          <div class="bubble">After 12 past budget surprises, the Nifty recovered its budget-day drop within a month 9 times.</div>
+          <div class="chips"><span>Why?</span><span>Does this change my plan?</span></div>
         </div></div>
-        <div><div class="phone"><div class="bar">Report card · Sun</div>
-          <div class="bubble"><b>Your week: 3 flags. 2 went like history, 1 didn't.</b> Airlines lagged after OPEC. Banks didn't rally after the Fed, unlike most past cases.</div>
-          <div class="bubble">Your money: +1.2% this week. S&amp;P +0.8%.</div>
-          <div class="chips"><span>See your page</span><span>Why did banks miss?</span></div>
+        <div><div class="phone"><div class="bar">Asking, in Hinglish</div>
+          <div class="bubble me">aaj market kyun gira?</div>
+          <div class="bubble">Aaj crude 4% upar gaya, isliye auto aur paint stocks gire. Nifty −0.9%. Aisa pichhle 14 baar hua, 10 baar ek mahine mein recover ho gaya.</div>
+          <div class="chips"><span>Why?</span><span>Kuch karna chahiye?</span></div>
         </div></div>
       </div>
-      <p class="mock-note">All figures are layout placeholders. Real numbers come from the engine.</p>
+      <p class="mock-note">All figures are layout placeholders. Real numbers come from the engine. No holdings are needed. The brief is shaped by the user's goal, time horizon, monthly amount and plan.</p>
 
       <h3 style="margin-top:28px">Voice</h3>
       <div class="grid g2">
@@ -259,34 +282,36 @@
           <li>Verdict in the first line, readable in 2 seconds.</li>
           <li>Under 400 characters before the first tap.</li>
           <li>Counts like "8 of 11" next to every word like "usually".</li>
-          <li>Admits misses in the report card.</li>
+          <li>Admits misses on the track record page.</li>
+              <li>Replies in English, Hindi or Hinglish, matching the user.</li>
         </ul></div>
         <div class="card"><div class="k">Never</div><ul>
           <li>"Buy", "sell", "guaranteed", "can't lose".</li>
           <li>A number the engine didn't produce.</li>
           <li>Urgency to trade, countdowns, FOMO.</li>
           <li>Jargon without a plain explanation in the same sentence.</li>
-          <li>More than one alert a day per holding.</li>
+          <li>More than about 2 alerts a month.</li>
+              <li>"Buy", "sell", "you should", "sure shot", "multibagger", "target price".</li>
         </ul></div>
       </div>
     </section>
 
     <section class="block" id="web">
       <div class="sec-head"><span class="sec-num">09</span><h2>Web view</h2></div>
-      <p class="lede">For people who want the detailed view. Opened from a private link in any message, so there's no login. Four pages for users, one for us.</p>
+      <p class="lede">For people who want the detailed view. Opened from a private link in any message, so there's no login. Three pages for users, one public, one for us.</p>
 
-      <h3>"How am I doing"</h3>
-      <figure class="sketch"><svg id="d-home" viewBox="0 0 1000 540" role="img" aria-label="Wireframe of the How am I doing page with portfolio value, chart with event markers, this week's events and holdings"></svg>
-        <figcaption>Your money against the S&amp;P, with each event pinned where it hit. Tap a pin to open its reasoning trail.</figcaption></figure>
+      <h3>The track record</h3>
+      <figure class="sketch"><svg id="d-home" viewBox="0 0 1000 540" role="img" aria-label="Wireframe of the public track record page with calibration, a list of past calls and what happened 30 days later"></svg>
+        <figcaption>Public. Every scoreboard line we sent, next to what happened 30 days later. When we said 6 of 10, it should come true about 6 times in 10.</figcaption></figure>
 
       <h3>"What if", the history lesson</h3>
-      <figure class="sketch"><svg id="d-whatif" viewBox="0 0 1000 480" role="img" aria-label="Wireframe of the What if page showing outcome range in dollars and dots for each past episode compared with random months"></svg>
-        <figcaption>Your current holdings, replayed through every past episode like today's. This is how people estimate what an event could mean for their money.</figcaption></figure>
+      <figure class="sketch"><svg id="d-whatif" viewBox="0 0 1000 480" role="img" aria-label="Wireframe of the What if page showing an outcome range in rupees and dots for each past episode compared with normal months"></svg>
+        <figcaption>Your monthly amount, replayed through every past month like this one. History, not a forecast.</figcaption></figure>
 
       <div class="grid g3" style="margin-top:14px">
         <div class="card"><div class="k">Why card</div><h3>The full reasoning trail</h3><p>All eight steps for one call, every past episode with its date and source, and the two base rates. This is also the page people share.</p></div>
-        <div class="card"><div class="k">Landing</div><h3>One sentence, one sample</h3><p>The tagline, a real morning brief, and buttons for Telegram and WhatsApp. "Free. No account. Text STOP anytime. Research, not advice."</p></div>
-        <div class="card"><div class="k">Internal</div><h3>Live stats</h3><p>Users, briefs sent, reply rate, stories confirmed and rejected. For us, and as the traction slide in the demo.</p></div>
+        <div class="card"><div class="k">Landing</div><h3>One sentence, one sample</h3><p>The tagline, a real investing-day brief, and buttons for Telegram and WhatsApp. "Free. No account. Text STOP anytime. Research, not advice."</p></div>
+        <div class="card"><div class="k">Internal</div><h3>Live stats</h3><p>Users, briefs sent, reply rate, tips checked, stories confirmed and rejected. For us, and as the traction slide in the demo.</p></div>
       </div>
     </section>
 
@@ -298,11 +323,11 @@
         <tbody>
           <tr><td>Why</td><td>"why?", "how do you know?"</td><td>Sends the reasoning trail in short form, links the Why card</td></tr>
           <tr><td>Go deeper</td><td>"show the cases", "what about airlines?"</td><td>Expands the last message, links the What if page</td></tr>
-          <tr><td>My money</td><td>"how's my BTC?", "am I ok?"</td><td>What touched that holding this week, with history and a dollar range</td></tr>
+          <tr><td>Today</td><td>"what happened today?", "aaj market kyun gira?"</td><td>One line on the day, with history if a confirmed event moved things</td></tr>
           <tr><td>Explain</td><td>"what's a rate hike?", "what does OFS mean?"</td><td>Two plain sentences with a size or an example</td></tr>
-          <tr><td>Edit holdings</td><td>"add TSLA", "sold JETS", a screenshot</td><td>Updates holdings, confirms in one line</td></tr>
-          <tr><td>Control</td><td>"pause", "fewer alerts", "8am", "stop"</td><td>Changes it right away, never argues</td></tr>
-          <tr><td>Asks for a decision</td><td>"should I sell NVDA?"</td><td>Says it can't decide for them, then shows what history says for holders in that spot</td></tr>
+          <tr><td>Check a tip</td><td>a forwarded message, "is this true?"</td><td>Says whether it's confirmed, and what history says about its claim</td></tr>
+          <tr><td>Control</td><td>"pause", "no alerts", "invest on the 5th", "stop"</td><td>Changes it right away, never argues</td></tr>
+          <tr><td>Asks for a decision</td><td>"should I put it all in banks?"</td><td>Says it can't decide for them, then shows the scoreboard and their own plan</td></tr>
         </tbody>
       </table></div>
     </section>
@@ -311,28 +336,30 @@
       <div class="sec-head"><span class="sec-num">11</span><h2>Why they come back</h2></div>
       <p class="lede">The habit loop from Nir Eyal's Hooked, aimed at understanding instead of trading.</p>
       <figure class="sketch"><svg id="d-habit" viewBox="0 0 1000 320" role="img" aria-label="Habit loop of trigger, action, reward and investment"></svg>
-        <figcaption>Each reply or holding the user adds makes tomorrow's brief more personal, which makes the next trigger stronger.</figcaption></figure>
+        <figcaption>Each reply and each tip they forward makes the next brief more useful, and the track record makes the next one more trusted.</figcaption></figure>
     </section>
 
     <section class="block" id="scope">
       <div class="sec-head"><span class="sec-num">12</span><h2>Scope</h2></div>
       <div class="grid g3">
         <div class="card feature"><div class="k">In v1</div><ul>
-          <li>India and US markets. Each user hears about the markets they hold.</li>
-          <li>Onboarding with screenshot reading (Zerodha, Groww, INDmoney, Robinhood and more)</li>
-          <li>Profile in 5 texts: goal, horizon, drop comfort, monthly amount, exclusions</li>
-          <li>Morning brief and follow-up chat</li>
+          <li>India and US markets and events</li>
+          <li>Onboarding in 6 texts: goal, horizon, monthly amount, investing day, drop comfort, exclusions</li>
+          <li>3 starter plans or your own</li>
+          <li>The investing-day brief with the scoreboard</li>
           <li>The "Why?" reasoning trail</li>
-          <li>Dollar ranges on the user's own positions</li>
-          <li>How am I doing, What if, Why card pages</li>
-          <li>Landing page, live stats</li>
+          <li>"What happened today?" on request</li>
+          <li>Forwarded-tip checking</li>
+          <li>Replies in English, Hindi or Hinglish</li>
+          <li>Why card page, landing page, live stats</li>
         </ul></div>
         <div class="card"><div class="k">Stretch</div><ul>
-          <li>Your plan: buckets, sliders, history replay, drift nudges</li>
-          <li>Your own rules: "If VOO falls 15% from its high, remind me of my plan." You write the rule, we watch for it and show history.</li>
-          <li>Same-day alerts</li>
-          <li>Sunday report card</li>
-                    <li>Fed calls split into recession and no-recession branches</li>
+          <li>Rare alerts</li>
+          <li>Public track record page</li>
+          <li>What if page in your monthly amount</li>
+          <li>Plan builder with sliders and history replay</li>
+          <li>Your own rules: "If the Nifty falls 15% from its high, remind me of my plan."</li>
+          <li>Fed calls split into recession and no-recession branches</li>
         </ul></div>
         <div class="card"><div class="k">Cut</div><ul>
           <li>Buy or sell calls</li>
@@ -370,10 +397,10 @@
       <p class="lede">About 2 minutes. Nobody pastes a headline, and nothing is faked. Every screen is the live system running on real news and real history.</p>
       <div class="steps">
         <div><p><b>0:00 · The problem.</b> "I lost money copying other people's picks. My friends earn well and have no time to follow markets."</p></div>
-        <div><p><b>0:12 · Onboarding.</b> Send a brokerage screenshot. Within a minute: "This week, here's what touched your stuff."</p></div>
-        <div><p><b>0:28 · The 7am brief arrives on its own.</b> Verdict, history, two base rates, dollar range.</p></div>
+        <div><p><b>0:12 · Onboarding.</b> Six quick answers and a starter plan, in under a minute. Then forward a viral WhatsApp tip and watch it get checked.</p></div>
+        <div><p><b>0:28 · The investing-day brief arrives on its own.</b> The month in one line, the scoreboard with both base rates, your plan, one clear choice.</p></div>
         <div><p><b>0:40 · Tap "Why?".</b> The full reasoning trail. Every past episode behind the number.</p></div>
-        <div><p><b>0:52 · Tap "See your page".</b> How am I doing, with events pinned on the chart. Then What if.</p></div>
+        <div><p><b>0:52 · Ask in Hinglish.</b> "aaj market kyun gira?" gets a one-line answer with history. Then the "Why not Perplexity" line.</p></div>
         <div><p><b>1:05 · Under the hood, the news check.</b> Today's watcher log. Stories confirmed by 3 or more publishers, and one viral story we rejected because only 1 outlet carried it.</p></div>
         <div><p><b>1:20 · Under the hood, the history check.</b> The event study behind the brief. Every past episode with its date and source, the hit rate next to the normal-period rate, and both eras.</p></div>
         <div><p><b>1:35 · Proof the engine is right.</b> It reproduces a published result, the S&amp;P drifting up before Fed meetings. It also passes the look-ahead leak test, and we show its score on years it never saw (2022 to 2026).</p></div>
@@ -404,11 +431,11 @@ sketch("d-loop", (s) => {
   s.box(225, 90, 150, 100, "Watch", "all day");
   s.box(415, 90, 150, 100, "Confirm", "3+ publishers\nor a primary source");
   s.box(605, 90, 150, 100, "Measure", "past episodes\nvs a normal period");
-  s.box(795, 90, 160, 100, "Rank", "only what\nyou own");
+  s.box(795, 90, 160, 100, "Hold", "for your\ninvesting day");
   s.arrow(187, 140, 222, 140); s.arrow(377, 140, 412, 140); s.arrow(567, 140, 602, 140); s.arrow(757, 140, 792, 140);
-  s.box(795, 235, 160, 75, "You", "7am text", { color: C.green });
+  s.box(795, 235, 160, 75, "You", "investing-day brief", { color: C.green });
   s.arrow(875, 192, 875, 232, { color: C.green });
-  s.box(500, 235, 200, 75, "Chat + web view", "why, what if, your page", { color: C.blue });
+  s.box(500, 235, 200, 75, "Chat + web view", "why, today, tip check", { color: C.blue });
   s.arrow(792, 272, 703, 272, { dash: [6, 6], label: "reply or tap", ly: -10 });
   s.text(250, 280, "most news never\ngets past here", { color: C.amber, size: 19 });
   s.arrow(330, 270, 430, 196, { bend: { x: -10, y: 30 }, color: C.amber });
@@ -426,7 +453,7 @@ sketch("d-trail", (s) => {
   const row2 = [
     ["5 · Priced in?", "a surprise, oil jumped,\nairlines only partly moved"],
     ["6 · Who wins, who loses", "energy up, airlines and\ntruckers down"],
-    ["7 · Your money", "$2,000 in JETS:\n−$180 to +$60, typical −$48"],
+    ["7 · In your money", "on ₹1 lakh:\n−₹4,000 to +₹6,000"],
     ["8 · What changes our mind", "oil back under\nlast week's level"],
   ];
   row1.forEach(([t, sub], i) => s.box(20 + i * 245, top, W, H, t, sub, { size: 19 }));
@@ -441,7 +468,7 @@ sketch("d-trail", (s) => {
 
 sketch("d-journey", (s) => {
   const { C } = s;
-  const steps = [["Discover", "a forwarded card"], ["Start", "1 tap"], ["Onboard", "under 60 s"], ["First value", "right away"], ["Daily", "7am brief"], ["Weekly", "report card"], ["Share", "forward a card"]];
+  const steps = [["Discover", "a forwarded card"], ["Start", "1 tap"], ["Onboard", "under 60 s"], ["First value", "right away"], ["Monthly", "investing-day brief"], ["Trust", "track record"], ["Share", "forward a card"]];
   const pts = steps.map((_, i) => [80 + i * 140, i % 2 ? 175 : 105]);
   steps.forEach(([t, sub], i) => {
     const [x, y] = pts[i];
@@ -456,7 +483,7 @@ sketch("d-journey", (s) => {
 
 sketch("d-habit", (s) => {
   const { C } = s;
-  const n = [[500, 58, "Trigger", "the 7am text, or\n'is my money ok?'", C.violet], [820, 160, "Action", "glance at a text", C.ink], [500, 262, "Reward", "relief, a surprise,\na card worth sharing", C.green], [180, 160, "Investment", "add a holding,\nask a question", C.amber]];
+  const n = [[500, 58, "Trigger", "the investing-day\nbrief, or a tip", C.violet], [820, 160, "Action", "glance at a text", C.ink], [500, 262, "Reward", "relief, a surprise,\na card worth sharing", C.green], [180, 160, "Investment", "add a holding,\nask a question", C.amber]];
   n.forEach(([x, y, t, sub, c]) => { s.ellipse(x, y, 220, 90, { color: c, fill: s.tint(c, .14) }); s.text(x, y - 4, t, { size: 23 }); s.text(x, y + 16, sub, { sans: true, size: 11, color: C.muted }); });
   s.arrow(612, 72, 760, 122, { bend: { x: 40, y: -20 } });
   s.arrow(780, 200, 610, 255, { bend: { x: 40, y: 20 } });
@@ -470,41 +497,34 @@ sketch("d-home", (s) => {
   s.rect(20, 18, 960, 504, { color: C.muted });
   s.line(20, 58, 980, 58, { color: C.muted });
   [44, 62, 80].forEach((x) => s.ellipse(x, 38, 10, 10, { color: C.muted }));
-  s.text(500, 43, "getnetworth.app/u/•••••• · How am I doing", { mono: true, size: 12, color: C.muted });
-  s.text(60, 108, "$24,310", { sans: true, size: 34, weight: 700, anchor: "start" });
-  s.text(60, 134, "+3.2% this month · S&P 500 +1.9%", { sans: true, size: 13, color: C.green, anchor: "start" });
-  ["1W", "1M", "1Y", "Since joined"].forEach((t, i) => { s.rect(380 + i * 68, 92, 60, 26, { color: i === 1 ? C.green : C.muted }); s.text(410 + i * 68, 110, t, { sans: true, size: 11, color: C.ink }); });
-  s.rect(50, 150, 600, 200, { color: C.muted, dash: [4, 6] });
-  const you = [[60, 300], [140, 285], [210, 292], [280, 250], [350, 262], [420, 228], [490, 240], [560, 205], [640, 190]];
-  const spx = [[60, 305], [140, 298], [210, 290], [280, 280], [350, 276], [420, 262], [490, 258], [560, 246], [640, 238]];
-  s.curve(spx, { color: C.muted, dash: [5, 6] });
-  s.curve(you, { color: C.green, sw: 2.2 });
-  [[280, 250, "Fed hike"], [490, 240, "OPEC cut"]].forEach(([x, y, l]) => { s.line(x, y, x, 170, { color: C.amber, dash: [3, 4] }); s.dot(x, y, 5, C.amber); s.text(x, 166, l, { color: C.amber, size: 17 }); });
-  s.text(600, 340, "you", { color: C.green, size: 17 }); s.text(600, 260, "S&P", { color: C.muted, size: 17 });
-  s.rect(680, 150, 270, 200, { color: C.ink });
-  s.text(700, 178, "This week", { sans: true, size: 14, weight: 600, anchor: "start" });
-  [["OPEC cut · touches JETS", C.red], ["Fed hike · touches NVDA", C.amber], ["Quiet · VOO, BTC", C.muted]].forEach(([t, c], i) => { s.dot(706, 210 + i * 42, 5, c); s.text(720, 215 + i * 42, t, { sans: true, size: 12.5, anchor: "start", color: C.ink }); s.text(930, 215 + i * 42, "Why ›", { sans: true, size: 11, anchor: "end", color: C.blue }); });
-  s.text(60, 392, "Holdings", { sans: true, size: 14, weight: 600, anchor: "start" });
-  [["NVDA", "$9,840", "+4.1%", 170, C.green], ["VOO", "$7,920", "+1.8%", 110, C.green], ["JETS", "$2,000", "−6.0%", 60, C.red], ["BTC", "$4,550", "+0.4%", 30, C.green]].forEach(([n, v, p, w, c], i) => {
-    const y = 420 + i * 24;
-    s.text(60, y, n, { mono: true, size: 12, anchor: "start" }); s.text(200, y, v, { mono: true, size: 12, anchor: "start", color: C.muted });
-    s.text(320, y, p, { mono: true, size: 12, anchor: "start", color: c }); s.line(400, y - 4, 400 + w, y - 4, { color: c, sw: 3, roughness: .6 });
-  });
-  s.text(820, 450, "tap a pin or 'Why'\nto open the trail", { color: C.amber, size: 20 });
+  s.text(500, 43, "getnetworth.app/track-record · public", { mono: true, size: 12, color: C.muted });
+  s.text(60, 104, "How often we were right", { sans: true, size: 26, weight: 700, anchor: "start" });
+  s.text(60, 130, "Every scoreboard line we sent, checked 30 days later · misses included", { sans: true, size: 13, color: C.muted, anchor: "start" });
+  s.line(80, 340, 460, 340, { color: C.muted }); s.line(80, 340, 80, 160, { color: C.muted });
+  s.line(80, 340, 460, 160, { color: C.muted, dash: [5, 6] });
+  [[140, 318], [210, 290], [280, 262], [350, 228], [420, 190]].forEach(([x, y]) => s.dot(x, y, 6, C.green));
+  s.text(270, 370, "what we said (e.g. 6 of 10)", { sans: true, size: 11, color: C.muted });
+  s.text(150, 175, "what happened", { sans: true, size: 11, color: C.muted });
+  s.text(400, 300, "on the line\n= honest odds", { color: C.amber, size: 18 });
+  s.rect(520, 150, 430, 220, { color: C.ink });
+  s.text(540, 178, "Recent calls", { sans: true, size: 14, weight: 600, anchor: "start" });
+  [["Oct · banks after RBI hike, 6 of 9", "beat ✓", C.green], ["Sep · auto after crude spike, 7 of 10", "lagged ✓", C.green], ["Sep · IT after Fed pause, no pattern", "n/a", C.muted], ["Aug · pharma after INR shock, 6 of 8", "missed ✗", C.red]].forEach(([t, r, c], i) => { s.text(540, 215 + i * 38, t, { sans: true, size: 12.5, anchor: "start", color: C.ink }); s.text(930, 215 + i * 38, r, { sans: true, size: 12, anchor: "end", color: c }); });
+  s.text(60, 430, "Placeholder rows. Real rows come from what we actually sent.", { sans: true, size: 12, color: C.muted, anchor: "start" });
+  s.text(800, 450, "tap any row\nto open its trail", { color: C.amber, size: 20 });
 });
 
 sketch("d-whatif", (s) => {
   const { C } = s;
   s.rect(20, 18, 960, 444, { color: C.muted });
   s.line(20, 58, 980, 58, { color: C.muted });
-  s.text(500, 43, "getnetworth.app/u/•••••• /what-if/opec-cut", { mono: true, size: 12, color: C.muted });
-  s.text(60, 100, "If today plays out like the last 11 OPEC cuts", { sans: true, size: 20, weight: 600, anchor: "start" });
-  s.text(60, 124, "Your portfolio as it is now · 1 month later · history, not a forecast", { sans: true, size: 12.5, color: C.muted, anchor: "start" });
+  s.text(500, 43, "getnetworth.app/u/•••••• /what-if/rbi-hike", { mono: true, size: 12, color: C.muted });
+  s.text(60, 100, "If this month plays out like the last 9 RBI hikes", { sans: true, size: 20, weight: 600, anchor: "start" });
+  s.text(60, 124, "₹1,00,000 in a bank index · 1 month later · history, not a forecast", { sans: true, size: 12.5, color: C.muted, anchor: "start" });
   s.line(120, 190, 880, 190, { color: C.muted });
   s.rect(300, 176, 380, 28, { color: C.green, fill: s.tint(C.green, .2) });
-  [[300, "−$420", "worst 10%"], [470, "−$95", "typical"], [680, "+$310", "best 10%"]].forEach(([x, v, l]) => { s.line(x, 168, x, 212, { color: C.white, sw: 2 }); s.text(x, 160, v, { mono: true, size: 13 }); s.text(x, 232, l, { sans: true, size: 11, color: C.muted }); });
+  [[300, "−₹4,000", "worst 10%"], [470, "+₹900", "typical"], [680, "+₹6,000", "best 10%"]].forEach(([x, v, l]) => { s.line(x, 168, x, 212, { color: C.white, sw: 2 }); s.text(x, 160, v, { mono: true, size: 13 }); s.text(x, 232, l, { sans: true, size: 11, color: C.muted }); });
   s.text(60, 290, "after events", { sans: true, size: 12, color: C.ink, anchor: "start" });
-  s.text(60, 345, "random months", { sans: true, size: 12, color: C.muted, anchor: "start" });
+  s.text(60, 345, "normal months", { sans: true, size: 12, color: C.muted, anchor: "start" });
   s.line(180, 316, 900, 316, { color: C.muted, dash: [3, 5] });
   [260, 330, 380, 410, 455, 470, 500, 520, 560, 610, 700].forEach((x) => s.dot(x, 286 + (x % 3) * 4, 7, C.amber));
   [220, 300, 360, 420, 480, 510, 540, 590, 640, 700, 760, 820].forEach((x) => s.dot(x, 342 + (x % 4) * 3, 5, C.muted));

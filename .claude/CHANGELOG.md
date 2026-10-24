@@ -70,3 +70,8 @@
 
 ## 2026-10-24 — Builders use poteto-mode
 - Phase 1 brief: builder must invoke pstack:poteto-mode first, per owner.
+
+## 2026-10-24 — Product knowledge file and investing-day framing
+- Added knowledge/PRODUCT.md, the product knowledge every agent loads and every builder reads.
+- Rewrote product.html around the investing-day brief, the scoreboard, rare alerts, pull-only "today", tip checks, Hindi/Hinglish, the public track record and a "Why not Perplexity" section. Removed holdings, screenshots, the 7am brief and the Sunday report card.
+- tech.html: harness loads PRODUCT.md into every agent prompt (cache-stable), Profile drops holdings and gains invest_day and lang, onboarding and brief flows and the cost table updated for one brief a month.
