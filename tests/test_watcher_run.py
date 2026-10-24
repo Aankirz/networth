@@ -15,7 +15,7 @@ from networth.engine.model import EventType, Region, write_db
 from networth.llm import Classified
 from networth.watcher import log, report, run
 from networth.watcher.pull import ExaSearch
-from tests.watcher_fakes import FAKE_ENV, NOW, FakeModels, FakeSearch, NeverConnects
+from tests.watcher_fakes import EVENT_DAY, FAKE_ENV, NOW, FakeModels, FakeSearch, NeverConnects
 
 DEADLINE_S = 0.5
 AGE = log.Age(NOW, 7)
@@ -116,3 +116,29 @@ def test_report_marks_an_event_older_than_the_cutoff_at_render_time(cfg, paths) 
     assert "old news: rbi_hike dated 2026-10-07, older than 7 days" in text
     on_the_day = log.Age(report.dt.datetime(2026, 10, 8, tzinfo=report.dt.UTC), 7)
     assert "old news" not in "\n".join(report.render(paths, since, on_the_day))
+
+
+def test_report_prints_two_stories_of_one_event_under_one_heading(cfg, paths) -> None:
+    hike = Classified(EventType.RBI_HIKE, "inflation", EVENT_DAY, Region.IN, "repo rate raised")
+    models = FakeModels({"rbi_hike": hike, "opec_cut": hike})
+    run.run_cycle(cfg, paths, FakeSearch(), models, NOW)
+    lines = report.render(paths, NOW - report.dt.timedelta(hours=48), AGE)
+    heading = lines.index("  EVENT rbi_hike on 2026-10-24")
+    assert [ln.strip().split("  [")[0] for ln in lines[heading + 1 : heading + 5 : 2]] == [
+        "rbi_hike",
+        "opec_cut",
+    ]
+    assert sum("EVENT" in ln for ln in lines) == 1
+    assert sum("news-first ^NSEBANK" in ln for ln in lines) == 1
+
+
+@pytest.mark.parametrize(
+    ("answers", "line"),
+    [
+        (None, "Newest confirmed India story: rbi_hike (2026-10-24), rbi_hike"),
+        ({}, "Newest confirmed India story: none in window"),
+    ],
+)
+def test_report_names_the_newest_confirmed_india_story(cfg, paths, answers, line) -> None:
+    run.run_cycle(cfg, paths, FakeSearch(), FakeModels(answers), NOW)
+    assert line in report.render(paths, NOW - report.dt.timedelta(hours=48), AGE)

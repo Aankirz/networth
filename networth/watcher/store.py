@@ -6,7 +6,8 @@ Tables:
     articles  (url key, normalized)        one row per article ever pulled; INSERT OR IGNORE
     stories   (id = hash of first url)     the model's grouping, plus the judge's answer once
     decisions (story_id key)               the latest verdict per story, rewritten every cycle
-    insights  (story_id + asset + trigger) engine numbers only, the exact odds() dict
+    insights  (type + event date + asset + trigger)  engine numbers only, the exact odds() dict;
+              one event reported as several stories writes one set, under the first story
     cycles                                 one row per run, for the report
 
 Every write step runs in one transaction. Every write is keyed, so a step repeated on the same
@@ -50,7 +51,8 @@ CREATE TABLE IF NOT EXISTS decisions (
 CREATE TABLE IF NOT EXISTS insights (
   id TEXT PRIMARY KEY, story_id TEXT NOT NULL,
   trigger TEXT NOT NULL CHECK (trigger IN ('news', 'price')), asset TEXT NOT NULL,
-  type TEXT NOT NULL, cause TEXT NOT NULL, odds_json TEXT NOT NULL, created_at TEXT NOT NULL);
+  type TEXT NOT NULL, cause TEXT NOT NULL, odds_json TEXT NOT NULL, created_at TEXT NOT NULL,
+  event_date TEXT);
 CREATE TABLE IF NOT EXISTS cycles (
   id INTEGER PRIMARY KEY AUTOINCREMENT, started_at TEXT NOT NULL, finished_at TEXT NOT NULL,
   counts TEXT NOT NULL, cost_usd REAL NOT NULL, errors TEXT NOT NULL);
@@ -64,6 +66,13 @@ BEGIN;
 ALTER TABLE stories ADD COLUMN event_date TEXT;
 ALTER TABLE stories ADD COLUMN region TEXT;
 UPDATE stories SET type = NULL, cause = NULL, classify_reason = NULL, classified_at = NULL;
+DELETE FROM insights;
+COMMIT;
+"""
+# Insights keyed by story, from before they were keyed by event. Rebuilt next cycle.
+MIGRATE_EVENT_INSIGHTS: Final = """
+BEGIN;
+ALTER TABLE insights ADD COLUMN event_date TEXT;
 DELETE FROM insights;
 COMMIT;
 """
@@ -143,16 +152,17 @@ Trigger = Literal["news", "price"]
 
 @dataclass(frozen=True)
 class Insight:
-    story_id: str
+    story_id: str  # the first story that reported the event
     trigger: Trigger
     asset: str
     type: str
     cause: str
+    event_date: dt.date
     odds: Mapping[str, object]  # the exact odds() dict
 
     @property
     def id(self) -> str:
-        return f"{self.story_id}:{self.asset}:{self.trigger}"
+        return f"{self.type}:{self.event_date}:{self.asset}:{self.trigger}"
 
 
 @dataclass(frozen=True)
@@ -207,6 +217,10 @@ def _verdict(r: sqlite3.Row) -> Verdict:
     return Rejected(r["reason"], publishers)
 
 
+def _columns(conn: sqlite3.Connection, table: str) -> set[str]:
+    return {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+
+
 class Store:
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
@@ -217,9 +231,10 @@ class Store:
         path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(path)
         conn.executescript(SCHEMA)
-        columns = {r[1] for r in conn.execute("PRAGMA table_info(stories)")}
-        if "region" not in columns:
+        if "region" not in _columns(conn, "stories"):
             conn.executescript(MIGRATE_REGION)
+        if "event_date" not in _columns(conn, "insights"):
+            conn.executescript(MIGRATE_EVENT_INSIGHTS)
         return cls(conn)
 
     def close(self) -> None:
@@ -248,10 +263,18 @@ class Store:
         )
         return [_article(r) for r in rows]
 
-    def stories(self, since: dt.datetime | None = None) -> list[Story]:
+    def stories(self) -> list[Story]:
+        return [
+            _story(r) for r in self._conn.execute("SELECT * FROM stories ORDER BY first_seen, id")
+        ]
+
+    def stories_pulled_since(self, since: dt.datetime) -> list[Story]:
+        """Stories with an article pulled since then. first_seen is a publish date, which
+        search reports late or stale, so it cannot say which stories are still open."""
         rows = self._conn.execute(
-            "SELECT * FROM stories WHERE first_seen >= ? ORDER BY first_seen, id",
-            (_iso(since) if since else "",),
+            "SELECT * FROM stories WHERE id IN "
+            "(SELECT story_id FROM articles WHERE pulled_at >= ?) ORDER BY first_seen, id",
+            (_iso(since),),
         )
         return [_story(r) for r in rows]
 
@@ -314,10 +337,11 @@ class Store:
         """Upsert by id. created_at stays the first time the insight was written."""
         with self._conn:
             self._conn.executemany(
-                "INSERT INTO insights VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE "
-                "SET type = excluded.type, cause = excluded.cause, odds_json = excluded.odds_json",
+                "INSERT INTO insights (id, story_id, trigger, asset, type, cause, odds_json, "
+                "created_at, event_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) "
+                "DO UPDATE SET cause = excluded.cause, odds_json = excluded.odds_json",
                 [(i.id, i.story_id, i.trigger, i.asset, i.type, i.cause, json.dumps(i.odds),
-                  _iso(now)) for i in insights],
+                  _iso(now), i.event_date.isoformat()) for i in insights],
             )  # fmt: skip
 
     def insights(self, since: dt.datetime | None = None) -> list[Insight]:
@@ -328,7 +352,8 @@ class Store:
             (_iso(since) if since else "",),
         )
         return [Insight(r["story_id"], r["trigger"], r["asset"], r["type"], r["cause"],
-                        json.loads(r["odds_json"])) for r in rows]  # fmt: skip
+                        dt.date.fromisoformat(r["event_date"]), json.loads(r["odds_json"]))
+                for r in rows]  # fmt: skip
 
     def add_cycle(self, cycle: Cycle) -> None:
         with self._conn:

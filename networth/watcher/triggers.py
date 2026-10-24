@@ -102,7 +102,7 @@ def _insight(
         odds = odds_fn(c.type.value, asset)
     except (NoBaseRate, ValueError) as exc:
         return f"no odds for {c.type.value} on {asset}: {exc}"
-    return Insight(story.id, trigger, asset, c.type.value, c.cause, odds)
+    return Insight(story.id, trigger, asset, c.type.value, c.cause, c.event_date, odds)
 
 
 def write_insights(
@@ -128,7 +128,11 @@ def write_insights(
             notes.append(f"price jump on {jump.asset} ({jump.move:+.2%} on {jump.date}, "
                          f"sigma {jump.sigma:.2%}), no confirmed story")  # fmt: skip
         made += [_insight(s, c, jump.asset, "price", odds_fn) for s, c in behind]
-    insights = [m for m in made if isinstance(m, Insight)]
+    by_event: dict[str, Insight] = {}
+    for m in made:
+        if isinstance(m, Insight):
+            by_event.setdefault(m.id, m)
+    insights = list(by_event.values())
     store.put_insights(insights, now)
     notes += [m for m in made if isinstance(m, str)]
     return TriggerResult(len(insights), tuple(jumps), tuple(notes))

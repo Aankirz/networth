@@ -12,7 +12,7 @@ from networth import config
 from networth.watcher import group
 from networth.watcher.pull import origin_of, pull
 from networth.watcher.store import Article, Confirmed, Rejected, Store, normalize_url
-from tests.watcher_fakes import FAKE_ENV, NOW, FakeModels, FakeSearch
+from tests.watcher_fakes import FAKE_ENV, NOW, FakeModels, FakeSearch, story_labels
 
 LOOKBACK = dt.timedelta(hours=48)
 
@@ -111,3 +111,11 @@ def test_a_subdomain_of_a_primary_domain_is_primary(cfg) -> None:
     art = Article("https://m.rbi.org.in/x", "rbi.org.in", "rbi.org.in", "t", "", at, "q", at)
     strict = dataclasses.replace(cfg.confirm, primary_host_prefixes=())
     assert group.confirm([art], strict) == Confirmed(("rbi.org.in",), "rbi.org.in")
+
+
+def test_a_later_batch_joins_a_story_with_a_stale_publish_date(cfg, store) -> None:
+    stale = [{**r, "publishedDate": "2026-01-24T00:00:00Z"} for r in FakeSearch().results]
+    pull(cfg, FakeSearch(stale), store, NOW)
+    out = group.assign_stories(store, FakeModels(), 1, NOW - LOOKBACK)
+    assert out.calls == store.counts()["articles_total"] > 1
+    assert out.new_stories == len(set(story_labels().values()))

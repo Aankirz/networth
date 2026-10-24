@@ -58,14 +58,18 @@ class FakeModels:
 
     def __init__(self, answers: Mapping[str, Classification] | None = None) -> None:
         self.labels = story_labels()
-        self.answers = answers or {
-            "rbi_hike": Classified(
-                EventType.RBI_HIKE, "inflation", EVENT_DAY, Region.IN, "repo rate raised"
-            ),
-            "opec_cut": Classified(
-                EventType.OIL_SUPPLY, "opec_cut", EVENT_DAY, Region.GLOBAL, "OPEC+ cut output"
-            ),
-        }
+        self.answers = (
+            answers
+            if answers is not None
+            else {
+                "rbi_hike": Classified(
+                    EventType.RBI_HIKE, "inflation", EVENT_DAY, Region.IN, "repo rate raised"
+                ),
+                "opec_cut": Classified(
+                    EventType.OIL_SUPPLY, "opec_cut", EVENT_DAY, Region.GLOBAL, "OPEC+ cut output"
+                ),
+            }
+        )
         self.group_calls: list[int] = []
         self.classified: list[str] = []
 

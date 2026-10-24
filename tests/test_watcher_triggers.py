@@ -188,3 +188,14 @@ def test_a_story_only_reaches_assets_in_its_region(cfg, store, region, assets) -
 def test_an_event_older_than_the_cutoff_writes_no_insight(cfg, store, age_days, assets) -> None:
     day = NOW.date() - dt.timedelta(days=age_days)
     assert news_assets(cfg, store, bank_stress(Region.IN, day)) == assets
+
+
+def test_two_stories_of_one_event_write_one_insight_set_under_the_first(cfg, store) -> None:
+    hike = Classified(EventType.RBI_HIKE, "inflation", EVENT_DAY, Region.IN, "repo rate raised")
+    verdicts, _ = confirmed_cycle(cfg, store, FakeModels({"rbi_hike": hike, "opec_cut": hike}))
+    triggers.write_insights(
+        store, verdicts, cfg.triggers, lambda t, a: {}, no_prices, SINCE, NOW, OLDEST
+    )
+    first = next(s.id for s in store.stories() if s.title == "rbi_hike")
+    got = sorted((i.asset, i.story_id) for i in store.insights())
+    assert got == [("^NSEBANK", first), ("^NSEI", first)]

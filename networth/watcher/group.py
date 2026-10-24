@@ -59,15 +59,16 @@ def _apply(grouping: Grouping, batch: Sequence[Article], store: Store) -> tuple[
 def assign_stories(
     store: Store, models: Models, batch_size: int, open_since: dt.datetime
 ) -> GroupResult:
-    """Group every unassigned article, batch by batch. A failed call stops grouping for this
-    cycle; its articles stay unassigned and are grouped next cycle."""
+    """Group every unassigned article, batch by batch, offering every story with an article
+    pulled since open_since, so a later batch can join a story an earlier batch made. A failed
+    call stops grouping for this cycle; its articles stay unassigned for the next cycle."""
     pending = store.unassigned_articles()
     calls = new_stories = assigned = 0
     repairs: list[str] = []
     errors: list[str] = []
     for start in range(0, len(pending), batch_size):
         batch = pending[start : start + batch_size]
-        open_stories = [StoryBrief(s.id, s.title) for s in store.stories(since=open_since)]
+        open_stories = [StoryBrief(s.id, s.title) for s in store.stories_pulled_since(open_since)]
         calls += 1
         try:
             grouping = models.group_articles([_brief(a) for a in batch], open_stories)
