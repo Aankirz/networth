@@ -216,3 +216,6 @@
 
 ## 2026-10-25 — Rare alerts and Maritime schedules
 - Added networth/bot/alerts.py (8+ episodes, 15-point gap, not weak, cap 2 a month, once per event, alerts_on only) and networth/app/schedule.py with GET /schedules (watcher every 30 min in NSE hours, brief 08:00 IST) and POST /chat for scheduled prompts in a background thread, with a 25-minute watcher gap, a single job lock and per-day brief claims. The server now passes real Services to the webhook.
+
+## 2026-10-25 — Jev intent eval
+- Added evals/intent_accuracy.py (36 labelled English, Hindi, Hinglish messages). Run 1: Jev and cheap model 34/36 each, medians 386 ms vs 1135 ms. Tightened plan_question, explain_this and tip_check criteria; run 2: 36/36 each, 422 ms vs 1082 ms. Kept use_jev_for_intent=true.

@@ -38,13 +38,17 @@ CRITERIA: Final[dict[str, str]] = {
     Intent.WHY: "asks why: the reason, source or history behind the last message or brief",
     Intent.TIP_CHECK: (
         "a tip, rumour or claim about markets, a stock, a policy or an event to verify, often "
-        "forwarded from a group chat"
+        "forwarded from a group chat; not a factual document such as an IPO page"
     ),
     Intent.EXPLAIN_THIS: (
         "wants something explained in plain words: an IPO page, a news article, a broker "
-        "alert, a link, a long pasted text, or a finance term such as DRHP, PAT or SIP"
+        "alert, a link, a long pasted text (forwarded or not), or a finance term such as "
+        "DRHP, PAT or SIP"
     ),
-    Intent.PLAN_QUESTION: "asks about their own saved plan, amount, investing day or settings",
+    Intent.PLAN_QUESTION: (
+        "asks about their own saved plan, split, amount, investing day, what they left out, "
+        "or other settings"
+    ),
     Intent.OTHER: "anything else: greetings, thanks, unrelated questions",
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"

@@ -1,0 +1,349 @@
+{
+  "summary": {
+    "jev": {
+      "correct": 36,
+      "total": 36,
+      "accuracy": 1.0,
+      "median_ms": 421.5,
+      "max_ms": 546
+    },
+    "model": {
+      "correct": 36,
+      "total": 36,
+      "accuracy": 1.0,
+      "median_ms": 1082.0,
+      "max_ms": 1749
+    },
+    "jev_confident": {
+      "floor": 0.7,
+      "n": 35,
+      "correct": 35
+    }
+  },
+  "rows": [
+    {
+      "text": "What happened in the market today?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 434,
+      "model": "what_happened_today",
+      "model_ms": 1265
+    },
+    {
+      "text": "any big news today?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 390,
+      "model": "what_happened_today",
+      "model_ms": 965
+    },
+    {
+      "text": "aaj market mein kya hua?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 394,
+      "model": "what_happened_today",
+      "model_ms": 1082
+    },
+    {
+      "text": "आज बाजार में क्या हुआ?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 421,
+      "model": "what_happened_today",
+      "model_ms": 1006
+    },
+    {
+      "text": "kal se ab tak koi badi khabar?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 534,
+      "model": "what_happened_today",
+      "model_ms": 1196
+    },
+    {
+      "text": "How did Nifty do this week?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 439,
+      "model": "what_happened_today",
+      "model_ms": 1151
+    },
+    {
+      "text": "Why did you say banks beat the Nifty?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 1.0,
+      "jev_ms": 409,
+      "model": "why",
+      "model_ms": 1033
+    },
+    {
+      "text": "why?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 1.0,
+      "jev_ms": 392,
+      "model": "why",
+      "model_ms": 1143
+    },
+    {
+      "text": "yeh 14 of 22 kahan se aaya?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 0.75,
+      "jev_ms": 546,
+      "model": "why",
+      "model_ms": 1617
+    },
+    {
+      "text": "ऐसा क्यों कहा आपने?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 1.0,
+      "jev_ms": 397,
+      "model": "why",
+      "model_ms": 1181
+    },
+    {
+      "text": "where does that history line come from?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 0.96,
+      "jev_ms": 462,
+      "model": "why",
+      "model_ms": 1225
+    },
+    {
+      "text": "Why is my brief talking about the RBI?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 1.0,
+      "jev_ms": 425,
+      "model": "why",
+      "model_ms": 1052
+    },
+    {
+      "text": "Tata Motors will double in 3 months, insider info",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 384,
+      "model": "tip_check",
+      "model_ms": 982
+    },
+    {
+      "text": "RBI ne repo rate badha diya, banks girenge",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 0.84,
+      "jev_ms": 426,
+      "model": "tip_check",
+      "model_ms": 1749
+    },
+    {
+      "text": "Breaking: SEBI bans F&O trading from Monday",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 0.96,
+      "jev_ms": 446,
+      "model": "tip_check",
+      "model_ms": 989
+    },
+    {
+      "text": "Is it true that the government is merging SBI and PNB?",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 454,
+      "model": "tip_check",
+      "model_ms": 993
+    },
+    {
+      "text": "सुना है सोना 1 लाख पार जाएगा, सच है?",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 403,
+      "model": "tip_check",
+      "model_ms": 1086
+    },
+    {
+      "text": "Bhai group mein aaya hai ki Adani ka FPO cancel ho gaya, sach hai kya?",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 410,
+      "model": "tip_check",
+      "model_ms": 1260
+    },
+    {
+      "text": "What is a DRHP?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 443,
+      "model": "explain_this",
+      "model_ms": 1075
+    },
+    {
+      "text": "PAT ka matlab kya hota hai?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 428,
+      "model": "explain_this",
+      "model_ms": 1048
+    },
+    {
+      "text": "https://www.chittorgarh.com/ipo/acme-foods-ipo/1234/",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 0.93,
+      "jev_ms": 393,
+      "model": "explain_this",
+      "model_ms": 1129
+    },
+    {
+      "text": "Acme Foods IPO. Price band ₹95 to ₹100. Lot size 150. Issue size ₹1,200 crore. Retail quota 35%. GMP ₹22. Subscription opens Oct 28.",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 0.53,
+      "jev_ms": 438,
+      "model": "explain_this",
+      "model_ms": 1115
+    },
+    {
+      "text": "SIP aur lumpsum mein kya farak hai?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 0.99,
+      "jev_ms": 461,
+      "model": "explain_this",
+      "model_ms": 1070
+    },
+    {
+      "text": "यह ग्रे मार्केट प्रीमियम क्या होता है?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 414,
+      "model": "explain_this",
+      "model_ms": 1061
+    },
+    {
+      "text": "What is my plan again?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 1.0,
+      "jev_ms": 408,
+      "model": "plan_question",
+      "model_ms": 1037
+    },
+    {
+      "text": "How much am I investing each month?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 1.0,
+      "jev_ms": 387,
+      "model": "plan_question",
+      "model_ms": 1221
+    },
+    {
+      "text": "mera investing day kab hai?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 1.0,
+      "jev_ms": 410,
+      "model": "plan_question",
+      "model_ms": 1124
+    },
+    {
+      "text": "मेरा प्लान क्या है?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 0.98,
+      "jev_ms": 411,
+      "model": "plan_question",
+      "model_ms": 1082
+    },
+    {
+      "text": "can you remind me what split I chose?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 1.0,
+      "jev_ms": 422,
+      "model": "plan_question",
+      "model_ms": 1041
+    },
+    {
+      "text": "did I leave out crypto?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 0.84,
+      "jev_ms": 440,
+      "model": "plan_question",
+      "model_ms": 1193
+    },
+    {
+      "text": "hi",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 425,
+      "model": "other",
+      "model_ms": 1039
+    },
+    {
+      "text": "thanks!",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 502,
+      "model": "other",
+      "model_ms": 1192
+    },
+    {
+      "text": "shukriya bhai",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 408,
+      "model": "other",
+      "model_ms": 1078
+    },
+    {
+      "text": "who made you?",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 0.99,
+      "jev_ms": 385,
+      "model": "other",
+      "model_ms": 974
+    },
+    {
+      "text": "Write me a poem about the monsoon",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 396,
+      "model": "other",
+      "model_ms": 921
+    },
+    {
+      "text": "नमस्ते",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 479,
+      "model": "other",
+      "model_ms": 1202
+    }
+  ]
+}
