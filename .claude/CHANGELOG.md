@@ -117,3 +117,6 @@
 
 ## 2026-10-25 — Watcher config and model layer
 - Added networth/config.toml + config.py (typed Config, roles to OpenAI models with prices and source URLs, Exa query table and budget, confirm and trigger thresholds; keys from env or .env, ConfigError names a missing key), net.py (IPv4-only httpx2 client, thread deadline, one jsonl line per paid call) and llm.py (group_articles and classify_story over the Responses API, output validated against inputs and the events.csv table), with tests. Added openai and httpx2 (openai's own HTTP library, imported directly for the IPv4 transport). Why: Phase 2 model layer.
+
+## 2026-10-25 — Watcher store, pull, grouping and confirmation
+- Added networth/watcher/store.py (the watcher data model and the only module that knows data/watcher.sqlite: articles, stories, decisions, insights, cycles; keyed writes), pull.py (Exa search over the IPv4 deadline client, results parsed at the boundary into Articles with publisher and wire origin) and group.py (cheap-model grouping of unassigned articles only, and the pure confirm rule: a primary domain, or 3 distinct origins inside 24 h, wire reposts counted once), with fixture articles holding a planted single-source rumour and a Reuters story reposted by 5 outlets. Why: Phase 2 done-when 6 and 10.
