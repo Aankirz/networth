@@ -6,7 +6,7 @@ The engine now turns 287 sourced events and 85 daily price series into `data/bas
 
 ```bash
 uv sync
-make check                                          # ruff, format, 56 tests (4 skip before a build)
+make check                                          # ruff, format, 63 tests (4 skip before a build)
 uv run python -m networth.engine.fetch              # coverage table; exits 1 if any series fails
 uv run python -m networth.engine.check_events       # rows, targets, live links; exits 1 on any failure
 uv run python -m networth.engine.backtest           # -> data/base_rates.sqlite
@@ -57,7 +57,7 @@ The Indian start dates match the risk table in `tech.html`. The French data come
 
 ## Event library
 
-`networth/engine/events.csv` has 287 rows. Three curator agents built it: US Fed, India, and global shocks. A fourth agent then opened every `source_url` and checked the event, the date and any stated time. It fixed 9 rows (8 oil rows moved off a mirror of EIA's chronology to Wikipedia, energy.gov, CNN or BBC, and one note was corrected) and deleted none. `check_events` confirms all 264 distinct URLs return 2xx or 3xx.
+`networth/engine/events.csv` has 287 rows. Three curator agents built it: US Fed, India, and global shocks. A fourth agent then opened every `source_url` and checked the event, the date and any stated time. It fixed 9 rows (8 oil rows moved off a mirror of EIA's chronology to Wikipedia, energy.gov, CNN or BBC, and one note was corrected) and deleted none. After review, `pandemic_20090611` moved from a web.archive.org copy of the WHO statement to the CDC page on the declaration, because archive.org rate-limits the checker. `check_events` confirms all 264 distinct URLs return 2xx or 3xx.
 
 | Type | global | in | us | Total | Episodes |
 |---|---|---|---|---|---|
@@ -90,9 +90,9 @@ The Indian start dates match the risk table in `tech.html`. The French data come
 
 ## Done-when results
 
-1. `make check` passes from a clean copy after `uv sync`: 52 passed and 4 skipped, because the 4 real-file tests need a built database. With the database built, 56 pass.
+1. `make check` passes from a clean clone after `uv sync`: 59 passed and 4 skipped, because the 4 real-file tests need a built database. With the database built, 63 pass.
 2. `fetch` downloaded every series. See the coverage table above.
-3. `check_events` exits 0 on 287 rows, 111 India rows and at least 11 rows per type, with 264 of 264 URLs live, in about 10 seconds.
+3. `check_events` exits 0 on 287 rows, 111 India rows and at least 11 rows per type, with 264 of 264 URLs live. Two back-to-back runs from a clean clone of `5c780de` both exited 0, in 16.1 and 16.2 seconds.
 4. `fomc.csv` covers 1994 to 2026-09-16, with sources.
 5. Both required rows exist with every field filled:
 
@@ -170,7 +170,7 @@ After March 2011 the effect fades to +12 bp, about 2 times a normal day, with t 
 - **Unknown times across markets.** An event with no time counts from the first session after its local date in every market, including markets in other time zones. This is the strict reading of "assume after the close".
 - **Episode calendar.** Gaps are counted on real trading days, so episode merging reads the price files. Episode ids come from the onset event, and they match across the full and pre-2022 builds.
 - **Vault file.** `--exclude-vault` writes `data/base_rates_pre2022.sqlite` rather than replacing `base_rates.sqlite`, so the main file is never overwritten by the smaller build.
-- **`check_events`.** Each URL has a 20-second wall-clock deadline, connects over IPv4 first with 5 seconds per address, and retries one transport error, such as a DNS failure, within the same deadline. HTTP statuses are never retried. A stuck or failed URL is reported as failed. This followed a run that hung on broken IPv6 routes and a later run that failed one URL on a resolver error that cleared within seconds. `--offline` skips links and says so.
+- **`check_events`.** Each URL has a 20-second wall-clock deadline once it starts, and connects over IPv4 first with 5 seconds per address. At most 2 requests go to one host at a time, and 1 to web.archive.org, with URLs taken round-robin across hosts. A transport error, such as a DNS failure, gets one retry. A 429 waits for its Retry-After (at most 5 seconds, 2 if the header is missing) and gets one retry. Every other HTTP status is final. A stuck, failed or still-limited URL is reported as failed. These rules came from a run that hung on broken IPv6 routes, a run that failed one URL on a resolver error, and the review's two runs where web.archive.org answered 429. `--offline` skips links and says so.
 - **`compare()`** reports each asset on shared episodes and never ranks them, because Networth does not say what to buy.
 - **Process.** The owner asked for the `pstack:poteto-mode` skill. The engine design came from two competing sketches and an independent judge. One delegate wrote the engine code, and I reviewed it and reran every check above.
 

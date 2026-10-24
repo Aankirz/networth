@@ -111,3 +111,6 @@
 
 ## 2026-10-25 — check_events: per-host cap and 429 backoff
 - check_events.py now allows at most 2 requests per host (1 for web.archive.org), round-robins URLs across hosts, and on HTTP 429 waits for Retry-After (clamped to 5 s, 2 s if missing) before one retry inside the 20 s deadline; a persistent 429 is still a dead link. pandemic_20090611 now cites the CDC page on the WHO declaration instead of web.archive.org, with UN News in notes. Why: coordinator review round 1 saw archive.org answer 429 and check_events exit 1 twice from a clean clone.
+
+## 2026-10-25 — Phase 1 report: review round 1 numbers
+- Updated docs/phases/phase-1-report.md with the per-host cap and 429 rules, the CDC source for pandemic_20090611, the new test counts (59 pass and 4 skip on a clean clone, 63 with a build), and two clean-clone check_events runs that both exited 0. Why: the report must match a fresh run.
