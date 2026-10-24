@@ -20,6 +20,7 @@ from dataclasses import dataclass, field, replace
 from typing import Final
 
 from networth import brief, chat
+from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Plan, Profile, Status, Step, Store, new_profile, now_iso, user_id_for
 from networth.bot import briefs
@@ -282,7 +283,10 @@ def cmd_plan(turn: Turn, profile: Profile) -> None:
         turn.send(profile, Reply(f"{FINISH_FIRST}\n\n{ask.text}", ask.buttons))
         return
     profile = turn.save(replace(profile, step=Step.PLAN))
-    turn.send(profile, Reply(f"Your plan: {plan_line(plan)}."))
+    page = links.page_url(turn.services.public_url, profile.link_token,
+                          turn.services.link_secret, turn.clock)  # fmt: skip
+    mine = f"\n\nYour page, with your plan and latest brief: {page}" if page else ""
+    turn.send(profile, Reply(f"Your plan: {plan_line(plan)}.{mine}"))
     turn.send(profile, ask_for(profile, plan))
 
 

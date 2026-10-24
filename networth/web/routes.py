@@ -19,7 +19,10 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
+from networth.app import links
 from networth.app.settings import Settings
+from networth.app.store import Store
+from networth.bot.onboarding import format_money, ordinal, plan_line
 from networth.engine import odds as engine
 from networth.engine.model import CURRENCY, EventType, RatesDB
 from networth.web import names, views
@@ -38,11 +41,17 @@ TRACK_RECORD_LIMIT: Final = 500
 
 
 @functools.cache
+def settings() -> Settings:
+    return Settings.from_env()
+
+
 def rates_db() -> Path:
-    return Settings.from_env().rates_db
+    return settings().rates_db
 
 
 DB = Annotated[Path, Depends(rates_db)]
+Config = Annotated[Settings, Depends(settings)]
+BAD_LINK: Final = "This link has expired or isn't right. Type /plan in the bot for a fresh one."
 
 
 def _page(request: Request, name: str, status: int = 200, **context: object) -> HTMLResponse:
@@ -189,3 +198,23 @@ def stats(request: Request, db: DB) -> HTMLResponse:
         conn.close()
     built_at = dt.datetime.fromisoformat(built[0]).strftime("%-d %B %Y") if built else None
     return _page(request, "stats.html", counts=counts, built_at=built_at)
+
+
+@router.get("/u/{token}", response_class=HTMLResponse)
+def user_page(request: Request, token: str, cfg: Config) -> HTMLResponse:
+    """One user's plan and last brief, behind a signed, expiring link. No login."""
+    now = dt.datetime.now(dt.UTC)
+    link_token = links.verify(token, cfg.link_secret, now) if cfg.link_secret else None
+    store = Store(cfg.data_dir)
+    profile = store.profile_by_token(link_token) if link_token else None
+    if profile is None:
+        return _not_found(request, BAD_LINK)
+    plan = store.get_plan(profile.user_id)
+    money = format_money(profile.monthly_amount or 0, profile.currency or "INR")
+    day = ordinal(profile.invest_day) if profile.invest_day else None
+    last = store.last_brief(profile.user_id)
+    response = _page(request, "user.html", plan=plan_line(plan) if plan else None, money=money,
+                     day=day, brief=last)  # fmt: skip
+    response.headers["X-Robots-Tag"] = "noindex"
+    response.headers["Cache-Control"] = "private, no-store"
+    return response

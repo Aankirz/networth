@@ -210,3 +210,6 @@
 
 ## 2026-10-25 — Phase 3B chat, briefs and explain-this
 - Added networth/chat (intent pick via Jev or the cheap model, what happened today, why, tip check, explain-this for text, links and screenshots, plan question), networth/brief and bot/briefs (investing-day brief, once per day), /brief and brief buttons, photo handling, same_claim model call, Services, glossary. 353 tests green.
+
+## 2026-10-25 — Per-user /u/{token} page
+- Added networth/app/links.py (HMAC-signed, 30-day links keyed by LINK_SIGNING_SECRET), the /u/{token} route and user.html (plan and last brief, noindex, no-store), a friendly 404 for bad links, and the link in /plan and on the brief. 363 tests green.

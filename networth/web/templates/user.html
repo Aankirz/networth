@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Your plan · Networth{% endblock %}
+{% block description %}Your saved plan and your latest brief. Research, not advice.{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">Your plan</h1>
+  {% if plan %}
+  <p class="normal">{{ plan }}.</p>
+  {% else %}
+  <p class="normal">You haven't picked a plan yet. Type /start in the bot to finish setting up.</p>
+  {% endif %}
+  <dl class="tally">
+    <div><dt>Each month</dt><dd class="num">{{ money }}</dd></div>
+    {% if day %}<div><dt>Investing day</dt><dd class="num">the {{ day }}</dd></div>{% endif %}
+  </dl>
+  <h2>Your latest brief</h2>
+  {% if brief %}
+  <p class="fineprint">Sent {{ brief[0] }}.</p>
+  <p class="brief">{{ brief[1] }}</p>
+  {% else %}
+  <p class="normal">No brief yet. Type /brief in the bot to get this month's.</p>
+  {% endif %}
+  <p class="fineprint">This page is private to you. Anyone with the link can see it, so don't share it.</p>
+</article>
+{% endblock %}

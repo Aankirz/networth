@@ -161,13 +161,16 @@ def compose(
     )
 
 
-def buttons(draft: Draft, public_url: str | None) -> Keyboard:
-    """Invest as planned and Change my plan call back; the scoreboard and Why? open pages."""
+def buttons(draft: Draft, public_url: str | None, page_url: str | None = None) -> Keyboard:
+    """Invest as planned and Change my plan call back; the scoreboard, Why? and the user's own
+    page open pages."""
     first = (Button("Invest as planned", f"{CALLBACK_PREFIX}:ok"),
              Button("Change my plan", f"{CALLBACK_PREFIX}:plan"))  # fmt: skip
-    if draft.lead is None or not public_url:
-        return (first,)
-    lead = draft.lead
-    pages = (Button("Show the scoreboard", "", f"{public_url}/scoreboard/{lead.type}"),
-             Button("Why?", "", f"{public_url}/why/{lead.type}/{lead.asset}"))  # fmt: skip
-    return (first, pages)
+    rows: list[tuple[Button, ...]] = [first]
+    if draft.lead is not None and public_url:
+        lead = draft.lead
+        rows.append((Button("Show the scoreboard", "", f"{public_url}/scoreboard/{lead.type}"),
+                     Button("Why?", "", f"{public_url}/why/{lead.type}/{lead.asset}")))  # fmt: skip
+    if page_url:
+        rows.append((Button("My page", "", page_url),))
+    return tuple(rows)

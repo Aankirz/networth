@@ -1,0 +1,92 @@
+"""Signed /u/{token} links: a real token opens the user's page, anything else is a friendly 404."""
+
+from __future__ import annotations
+
+import datetime as dt
+import html
+from pathlib import Path
+
+import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from networth.app import links
+from networth.app.services import Services
+from networth.app.settings import Settings
+from networth.app.store import Store
+from networth.web.routes import router, settings
+from tests.test_onboarding import USER, Chat, onboard
+
+SECRET = "test-signing-secret-not-real"
+NOW = dt.datetime(2026, 10, 25, 6, tzinfo=dt.UTC)
+
+
+def test_a_signed_token_verifies_until_it_expires() -> None:
+    token = links.sign("abc_-123", SECRET, NOW)
+    assert links.verify(token, SECRET, NOW) == "abc_-123"
+    later = NOW + dt.timedelta(days=links.LINK_DAYS, seconds=1)
+    assert links.verify(token, SECRET, later) is None
+
+
+@pytest.mark.parametrize("mangle", [
+    lambda t: t[:-1] + ("0" if t[-1] != "0" else "1"),
+    lambda t: "someone_else" + t[t.index("."):],
+    lambda t: t.replace(t.split(".")[1], str(int(t.split(".")[1]) + 86400)),
+    lambda t: t.split(".")[0],
+    lambda t: "",
+])  # fmt: skip
+def test_a_tampered_token_does_not_verify(mangle) -> None:
+    assert links.verify(mangle(links.sign("abc", SECRET, NOW)), SECRET, NOW) is None
+
+
+def test_another_secret_does_not_verify() -> None:
+    assert links.verify(links.sign("abc", SECRET, NOW), "other", NOW) is None
+
+
+@pytest.fixture
+def chat(tmp_path: Path) -> Chat:
+    services = Services(tmp_path / "data", "https://nw.example", link_secret=SECRET)
+    chat = Chat(tmp_path, services)
+    onboard(chat)
+    return chat
+
+
+@pytest.fixture
+def client(chat: Chat) -> TestClient:
+    app = FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[settings] = lambda: Settings(
+        chat.store.path.parent, None, None, "https://nw.example", SECRET
+    )
+    return TestClient(app)
+
+
+def page_path(store: Store) -> str:
+    profile = store.get_profile(USER)
+    assert profile is not None
+    return f"/u/{links.sign(profile.link_token, SECRET, dt.datetime.now(dt.UTC))}"
+
+
+def test_the_user_page_shows_the_plan_and_the_last_brief(chat: Chat, client) -> None:
+    chat.say("/brief")
+    response = client.get(page_path(chat.store))
+    assert response.status_code == 200
+    assert "Balanced. 20% safety, 70% core, 10% growth" in response.text
+    assert "Investing day," in response.text
+    assert "Research, not advice" in response.text
+    assert response.headers["x-robots-tag"] == "noindex"
+
+
+def test_a_tampered_link_gets_the_friendly_404(chat: Chat, client) -> None:
+    response = client.get(page_path(chat.store)[:-2] + "zz")
+    assert response.status_code == 404
+    assert "This link has expired or isn't right." in html.unescape(response.text)
+    assert "Research, not advice" in response.text
+
+
+def test_plan_command_hands_out_a_working_link(chat: Chat, client) -> None:
+    chat.say("/plan")
+    reply = next(t for t in reversed(chat.bot.texts) if t.startswith("Your plan:"))
+    url = reply.rsplit(" ", 1)[-1]
+    assert url.startswith("https://nw.example/u/")
+    assert client.get(url.removeprefix("https://nw.example")).status_code == 200

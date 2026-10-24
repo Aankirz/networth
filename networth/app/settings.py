@@ -41,6 +41,7 @@ class Settings:
     bot_token: str | None
     webhook_secret: str | None
     public_url: str | None
+    link_secret: str | None = None  # LINK_SIGNING_SECRET, signs /u/{token} links
 
     @property
     def rates_db(self) -> Path:
@@ -59,4 +60,5 @@ class Settings:
             bot_token=env.get("TELEGRAM_BOT_TOKEN") or None,
             webhook_secret=env.get("TELEGRAM_WEBHOOK_SECRET") or None,
             public_url=public_url,
+            link_secret=env.get("LINK_SIGNING_SECRET") or None,
         )

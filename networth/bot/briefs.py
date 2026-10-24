@@ -16,6 +16,7 @@ from typing import Final
 from zoneinfo import ZoneInfo
 
 from networth import brief, guard
+from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
 from networth.bot.onboarding import Reply
@@ -53,7 +54,9 @@ def compose_reply(profile: Profile, store: Store, services: Services, today: dt.
         task = BRIEF_TASK.format(language=language(profile))
         out = guard.guarded(lambda fb: models.write(task, template, fb), draft.source(),
                             template, services.guard_log, "brief")  # fmt: skip
-    return Reply(out.text, brief.buttons(draft, services.public_url)), out.used
+    page = links.page_url(services.public_url, profile.link_token, services.link_secret,
+                          dt.datetime.now(dt.UTC))  # fmt: skip
+    return Reply(out.text, brief.buttons(draft, services.public_url, page)), out.used
 
 
 def local_today(profile: Profile, now: dt.datetime) -> dt.date:

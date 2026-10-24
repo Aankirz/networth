@@ -36,6 +36,7 @@ class Services:
     search: NewsSearch | None = None
     cfg: Config | None = None
     env: Mapping[str, str] = field(default_factory=dict)  # read by Jev for its gateway keys
+    link_secret: str | None = None  # signs /u/{token} links
 
     @property
     def rates_db(self) -> Path:
@@ -59,7 +60,8 @@ class Services:
             cfg = load_config()
         except ConfigError as exc:
             log.warning("models off, templates only: %s", exc)
-            return cls(settings.data_dir, settings.public_url)
+            return cls(settings.data_dir, settings.public_url, link_secret=settings.link_secret)
         call_log = settings.data_dir / CALL_LOG
         return cls(settings.data_dir, settings.public_url, OpenAIModels(cfg, call_log),
-                   ExaSearch(cfg, call_log), cfg, dict(os.environ))  # fmt: skip
+                   ExaSearch(cfg, call_log), cfg, dict(os.environ),
+                   settings.link_secret)  # fmt: skip
