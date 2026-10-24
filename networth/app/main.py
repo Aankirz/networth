@@ -20,6 +20,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
 
+from networth.app import schedule
+from networth.app.services import Services
 from networth.app.settings import Settings
 from networth.app.store import Store
 from networth.bot.commands import handle_update
@@ -45,8 +47,9 @@ def mount_web(app: FastAPI) -> None:
 
 
 def create_app(
-    store: Store | None, bot: Bot | None, secret: str | None, public_url: str | None = None
-) -> FastAPI:
+    store: Store | None, bot: Bot | None, secret: str | None, public_url: str | None = None,
+    services: Services | None = None,
+) -> FastAPI:  # fmt: skip
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         if public_url and bot is not None and secret:
@@ -77,10 +80,30 @@ def create_app(
         if not isinstance(update, dict):
             return JSONResponse({"ok": False, "error": "bad update"}, status_code=400)
         try:
-            await run_in_threadpool(handle_update, update, store, bot)
+            await run_in_threadpool(handle_update, update, store, bot, None, services)
         except Exception:
             log.exception("update %s failed", update.get("update_id"))
         return JSONResponse(OK)
+
+    @app.get("/schedules")
+    def schedules() -> list[dict]:
+        return schedule.schedules()
+
+    @app.post("/chat")
+    async def chat(request: Request) -> JSONResponse:
+        """Maritime's scheduled prompts. Anything else is pointed at Telegram."""
+        try:
+            body = json.loads(await request.body())
+        except ValueError:
+            body = {}
+        body = body if isinstance(body, dict) else {}
+        prompt = next((str(body[k]) for k in ("prompt", "message", "text") if body.get(k)), "")
+        if body.get("source") != "scheduled" or store is None or bot is None:
+            return JSONResponse({"response": schedule.CHAT_REPLY})
+        if prompt.strip() not in (schedule.WATCHER_PROMPT, schedule.BRIEF_PROMPT):
+            return JSONResponse({"response": f"unknown job {prompt[:40]!r}"})
+        schedule.start_job(prompt.strip(), store, bot, services or Services(store.path.parent))
+        return JSONResponse({"response": f"started {prompt.strip()}"})
 
     mount_web(app)
     return app
@@ -92,7 +115,8 @@ def app_from_env(settings: Settings | None = None) -> FastAPI:
     if bot is None:
         log.warning("TELEGRAM_BOT_TOKEN not set; the webhook will answer 503")
     store = Store(settings.data_dir)
-    return create_app(store, bot, settings.webhook_secret, settings.public_url)
+    services = Services.from_settings(settings)
+    return create_app(store, bot, settings.webhook_secret, settings.public_url, services)
 
 
 app = app_from_env()

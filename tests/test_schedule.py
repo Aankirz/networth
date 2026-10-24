@@ -1,0 +1,94 @@
+"""Maritime-woken jobs: the schedule list, the /chat entry point, and that a repeated or forged
+wake never sends anything twice."""
+
+from __future__ import annotations
+
+import datetime as dt
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+from networth import config
+from networth.app import schedule
+from networth.app.main import create_app
+from networth.app.services import Services
+from networth.watcher.store import Cycle
+from networth.watcher.store import Store as WatcherStore
+from tests.test_alerts import insight
+from tests.test_onboarding import Chat, onboard
+from tests.watcher_fakes import FAKE_ENV
+
+NOW = dt.datetime(2026, 10, 25, 2, 30, tzinfo=dt.UTC)  # 08:00 in Kolkata
+
+
+@pytest.fixture
+def chat(tmp_path: Path) -> Chat:
+    cfg = config.load_config(env_path=Path("/nonexistent"), environ=FAKE_ENV)
+    chat = Chat(tmp_path, Services(tmp_path / "data", cfg=cfg))
+    onboard(chat)
+    chat.store.save_profile(replace(chat.profile, invest_day=25))
+    return chat
+
+
+def job(chat: Chat, prompt: str, cycle=lambda services, now: []) -> str | None:
+    return schedule.run_job(prompt, chat.store, chat.bot, chat.services, NOW, cycle)
+
+
+def test_schedules_list_the_watcher_and_the_daily_brief_in_kolkata_time() -> None:
+    client = TestClient(create_app(None, None, None))
+    entries = {e["id"]: e for e in client.get("/schedules").json()}
+    assert entries["watcher"]["cron"] == "*/30 9-15 * * 1-5"
+    assert entries["brief"]["cron"] == "0 8 * * *"
+    assert {e["tz"] for e in entries.values()} == {"Asia/Kolkata"}
+    assert all(e["enabled"] and e["prompt"] for e in entries.values())
+
+
+def test_a_non_scheduled_chat_call_runs_nothing(chat: Chat, monkeypatch) -> None:
+    started: list[str] = []
+    monkeypatch.setattr(schedule, "start_job", lambda prompt, *a: started.append(prompt))
+    client = TestClient(create_app(chat.store, chat.bot, "s", None, chat.services))
+    reply = client.post("/chat", json={"message": "RUN_BRIEF", "source": "user"}).json()
+    assert reply["response"].startswith("Networth talks on Telegram")
+    client.post("/chat", json={"message": "RUN_BRIEF", "source": "scheduled"})
+    assert started == ["RUN_BRIEF"]
+
+
+def test_the_daily_brief_never_goes_out_twice_on_the_same_day(chat: Chat) -> None:
+    before = len(chat.bot.sent)
+    assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 1 sent"
+    assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 0 sent"
+    assert len(chat.bot.sent) == before + 1
+    assert chat.bot.last.startswith("Investing day, Oct 25.")
+
+
+def test_no_brief_on_other_days(chat: Chat) -> None:
+    chat.store.save_profile(replace(chat.profile, invest_day=3))
+    assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 0 sent"
+
+
+def add_cycle(chat: Chat, finished: dt.datetime) -> None:
+    store = WatcherStore.open(chat.services.watcher_db)
+    store.add_cycle(Cycle(finished - dt.timedelta(minutes=2), finished, {}, 0.0, ()))
+    store.close()
+
+
+def test_a_watcher_wake_right_after_a_cycle_is_skipped(chat: Chat) -> None:
+    ran: list[dt.datetime] = []
+    add_cycle(chat, NOW - dt.timedelta(minutes=10))
+    outcome = job(chat, schedule.WATCHER_PROMPT, lambda s, now: ran.append(now) or [])
+    assert outcome.startswith("watcher skipped") and ran == []
+
+
+def test_a_watcher_run_sends_rare_alerts_once(chat: Chat) -> None:
+    add_cycle(chat, NOW - dt.timedelta(minutes=40))
+    rare = lambda s, now: [insight(9)]  # noqa: E731
+    assert job(chat, schedule.WATCHER_PROMPT, rare) == "watcher ran: 1 insights, 1 alerts sent"
+    assert job(chat, schedule.WATCHER_PROMPT, rare) == "watcher ran: 1 insights, 0 alerts sent"
+
+
+def test_unknown_prompts_and_overlapping_runs_do_nothing(chat: Chat) -> None:
+    assert job(chat, "DROP TABLE") is None
+    with schedule.JOB_LOCK:
+        assert job(chat, schedule.BRIEF_PROMPT) is None

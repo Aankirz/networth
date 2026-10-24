@@ -213,3 +213,6 @@
 
 ## 2026-10-25 — Per-user /u/{token} page
 - Added networth/app/links.py (HMAC-signed, 30-day links keyed by LINK_SIGNING_SECRET), the /u/{token} route and user.html (plan and last brief, noindex, no-store), a friendly 404 for bad links, and the link in /plan and on the brief. 363 tests green.
+
+## 2026-10-25 — Rare alerts and Maritime schedules
+- Added networth/bot/alerts.py (8+ episodes, 15-point gap, not weak, cap 2 a month, once per event, alerts_on only) and networth/app/schedule.py with GET /schedules (watcher every 30 min in NSE hours, brief 08:00 IST) and POST /chat for scheduled prompts in a background thread, with a 25-minute watcher gap, a single job lock and per-day brief claims. The server now passes real Services to the webhook.
