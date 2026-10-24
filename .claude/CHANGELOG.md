@@ -114,3 +114,6 @@
 
 ## 2026-10-25 — Phase 1 report: review round 1 numbers
 - Updated docs/phases/phase-1-report.md with the per-host cap and 429 rules, the CDC source for pandemic_20090611, the new test counts (59 pass and 4 skip on a clean clone, 63 with a build), and two clean-clone check_events runs that both exited 0. Why: the report must match a fresh run.
+
+## 2026-10-25 — Watcher config and model layer
+- Added networth/config.toml + config.py (typed Config, roles to OpenAI models with prices and source URLs, Exa query table and budget, confirm and trigger thresholds; keys from env or .env, ConfigError names a missing key), net.py (IPv4-only httpx2 client, thread deadline, one jsonl line per paid call) and llm.py (group_articles and classify_story over the Responses API, output validated against inputs and the events.csv table), with tests. Added openai and httpx2 (openai's own HTTP library, imported directly for the IPv4 transport). Why: Phase 2 model layer.

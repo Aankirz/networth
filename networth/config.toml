@@ -1,0 +1,290 @@
+# Networth runtime config. Parsed once by networth/config.py into a typed Config.
+# Model ids live here and nowhere else in the code.
+
+[roles.cheap]  # groups news articles into stories, every cycle
+provider = "openai"
+model = "gpt-5.6-luna"
+reasoning_effort = "low"
+max_output_tokens = 8000
+
+[roles.judge]  # classifies a confirmed story once, for all users
+provider = "openai"
+model = "gpt-5.6-sol"
+reasoning_effort = "low"
+max_output_tokens = 4000
+
+[roles.writer]  # later phases
+provider = "openai"
+model = "gpt-5.6-terra"
+reasoning_effort = "medium"
+max_output_tokens = 4000
+
+# USD per 1M tokens, from each model's page on developers.openai.com, fetched 2026-10-25.
+# Pricing overview: https://developers.openai.com/api/docs/pricing
+[prices."gpt-5.6-luna"]
+input_per_m = 0.20
+cached_per_m = 0.02
+output_per_m = 1.20
+source_url = "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+
+[prices."gpt-5.6-terra"]
+input_per_m = 2.00
+cached_per_m = 0.20
+output_per_m = 12.00
+source_url = "https://developers.openai.com/api/docs/models/gpt-5.6-terra"
+
+[prices."gpt-5.6-sol"]  # promotional price, through at least 2026-11-21
+input_per_m = 4.00
+cached_per_m = 0.40
+output_per_m = 20.00
+source_url = "https://developers.openai.com/api/docs/models/gpt-5.6-sol"
+
+[http]
+exa_deadline_s = 30
+openai_deadline_s = 120
+connect_timeout_s = 5
+
+[confirm]
+min_publishers = 3
+window_hours = 24
+# A host equal to one of these, or a subdomain of one, is a primary source.
+primary_domains = [
+  "rbi.org.in", "sebi.gov.in", "pib.gov.in", "federalreserve.gov", "sec.gov",
+  "nseindia.com", "bseindia.com", "opec.org", "finmin.nic.in", "indiabudget.gov.in",
+  "treasury.gov", "ustr.gov", "whitehouse.gov", "who.int",
+]
+# A host starting with one of these is a company investor-relations page.
+primary_host_prefixes = ["investor.", "investors.", "ir."]
+
+# An article whose title, author or first 300 characters carry one of these markers is a
+# repost of that agency's copy, so all of its reposts count as one publisher.
+[confirm.wire_agencies]
+Reuters = ["(Reuters)", "Reuters -", "By Reuters", "Reuters reported"]
+PTI = ["(PTI)", "PTI -", "PTI reported", "Press Trust of India"]
+ANI = ["(ANI)", "ANI -", "Asian News International"]
+AP = ["(AP)", "Associated Press"]
+AFP = ["(AFP)", "AFP -", "Agence France-Presse"]
+Bloomberg = ["(Bloomberg)", "Bloomberg News"]
+IANS = ["(IANS)", "IANS -"]
+
+[confirm.publisher_aliases]
+"reuters.com" = "Reuters"
+"apnews.com" = "AP"
+"bloomberg.com" = "Bloomberg"
+"ptinews.com" = "PTI"
+"aninews.in" = "ANI"
+"ianslive.in" = "IANS"
+"afp.com" = "AFP"
+
+[classify]
+max_judge_calls_per_cycle = 12
+
+[group]
+batch_size = 50  # articles per grouping call
+
+[pull]
+lookback_hours = 48
+results_per_query = 10
+max_queries_per_cycle = 20
+
+[[pull.queries]]
+types = ["rbi_hike", "rbi_cut"]
+region = "in"
+text = "Reserve Bank of India repo rate decision monetary policy committee"
+
+[[pull.queries]]
+types = ["rbi_hike", "rbi_cut", "union_budget", "bank_stress"]
+region = "in"
+text = "RBI SEBI official press release"
+include_domains = ["rbi.org.in", "sebi.gov.in", "pib.gov.in", "finmin.nic.in"]
+category = ""
+
+[[pull.queries]]
+types = ["union_budget"]
+region = "in"
+text = "Union Budget finance minister fiscal deficit announcement India"
+
+[[pull.queries]]
+types = ["inr_shock"]
+region = "in"
+text = "Indian rupee record low against dollar RBI intervention"
+
+[[pull.queries]]
+types = ["bank_stress"]
+region = "in"
+text = "Indian bank crisis deposit freeze RBI moratorium"
+
+[[pull.queries]]
+types = ["election"]
+region = "in"
+text = "India election results Lok Sabha state assembly markets"
+
+[[pull.queries]]
+types = ["military_conflict"]
+region = "in"
+text = "India Pakistan border military strike escalation"
+
+[[pull.queries]]
+types = ["fed_hike", "fed_cut"]
+region = "us"
+text = "Federal Reserve FOMC interest rate decision"
+
+[[pull.queries]]
+types = ["fed_hike", "fed_cut", "bank_stress", "tariff"]
+region = "us"
+text = "Federal Reserve SEC Treasury official statement"
+include_domains = ["federalreserve.gov", "sec.gov", "treasury.gov", "ustr.gov", "whitehouse.gov"]
+category = ""
+
+[[pull.queries]]
+types = ["tariff"]
+region = "us"
+text = "US tariffs announced trade war imports"
+
+[[pull.queries]]
+types = ["bank_stress"]
+region = "us"
+text = "US bank failure FDIC deposit run regional bank"
+
+[[pull.queries]]
+types = ["election"]
+region = "us"
+text = "US presidential election results markets"
+
+[[pull.queries]]
+types = ["military_conflict"]
+region = "us"
+text = "United States military strikes war escalation"
+
+[[pull.queries]]
+types = ["oil_supply"]
+region = "global"
+text = "OPEC output cut crude oil supply disruption"
+
+[[pull.queries]]
+types = ["oil_supply"]
+region = "global"
+text = "OPEC press release production"
+include_domains = ["opec.org"]
+category = ""
+
+[[pull.queries]]
+types = ["military_conflict", "pandemic"]
+region = "global"
+text = "war invasion outbreak pandemic declared WHO global markets"
+
+[triggers]
+price_multiple = 2.5
+vol_window_days = 60
+
+# Engine assets to look up when a confirmed story of this type arrives (news first), and the
+# types a price jump on an asset can be explained by (price first).
+[triggers.assets_by_type]
+rbi_hike = ["^NSEBANK", "^NSEI"]
+rbi_cut = ["^NSEBANK", "^NSEI"]
+union_budget = ["^NSEI", "^CNXINFRA"]
+inr_shock = ["INR=X", "^NSEI"]
+fed_hike = ["SPY", "QQQ", "TLT"]
+fed_cut = ["SPY", "QQQ", "TLT"]
+tariff = ["SPY", "XLI", "^NSEI"]
+bank_stress = ["XLF", "^NSEBANK"]
+election = ["SPY", "^NSEI"]
+military_conflict = ["SPY", "^NSEI", "GLD"]
+oil_supply = ["BZ=F", "XLE", "JETS", "^NSEI"]
+pandemic = ["SPY", "^NSEI"]
+
+# Price first. An asset with a benchmark is measured on its excess return over it; an index
+# with none is measured raw.
+[[triggers.price_watch]]
+asset = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "SPY"
+
+[[triggers.price_watch]]
+asset = "^NSEBANK"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXIT"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXAUTO"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXPHARMA"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXFMCG"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXMETAL"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXENERGY"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXREALTY"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXPSUBANK"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "^CNXINFRA"
+benchmark = "^NSEI"
+
+[[triggers.price_watch]]
+asset = "XLE"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLF"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLK"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLI"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLV"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLY"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLP"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLU"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLB"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLRE"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "XLC"
+benchmark = "SPY"
+
+[[triggers.price_watch]]
+asset = "JETS"
+benchmark = "SPY"
