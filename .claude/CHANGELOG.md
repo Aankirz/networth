@@ -102,3 +102,6 @@
 
 ## 2026-10-24 — Phase 2 brief
 - Added docs/phases/phase-2-watcher.md: news watcher, confirmation, classification, triggers, OpenAI model layer via config.
+
+## 2026-10-24 — Odds API, event checker and outside check
+- Added networth/engine/odds.py (odds, position_range, compare as TypedDict shapes over the sqlite file), check_events.py (one parser, library targets, live link check with a 20 s per-URL deadline, IPv4 first, one retry on transport errors) and outside_check.py (pre-FOMC drift on SPY and ^GSPC daily closes against Lucca and Moench 2015), with tests. Why: Phase 1 done-when items 3, 8 and 9; the retry exists because one resolver blip failed a live run.
