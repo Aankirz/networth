@@ -219,3 +219,6 @@
 
 ## 2026-10-25 — Jev intent eval
 - Added evals/intent_accuracy.py (36 labelled English, Hindi, Hinglish messages). Run 1: Jev and cheap model 34/36 each, medians 386 ms vs 1135 ms. Tightened plan_question, explain_this and tip_check criteria; run 2: 36/36 each, 422 ms vs 1082 ms. Kept use_jev_for_intent=true.
+
+## 2026-10-25 — Phase 3B docs and decision log
+- Updated docs/deploy.md (model and Jev env vars, push_rates.sh and the 80 KB upload limit, schedules, /brief). Wrote docs/phases/phase-3b-report.md (built, live samples, guard rules, cost, Jev table, OWNER NEEDED, gaps, deviations). Committed docs/phases/phase-3b-decisions.tsv (17 rows).

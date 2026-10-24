@@ -9,6 +9,8 @@ One container serves the bot webhook, `/health` and the web pages. Its state is 
 - `GET /health` returns 200 with no IO.
 - `POST /telegram/webhook` checks the `X-Telegram-Bot-Api-Secret-Token` header.
 - On boot, if `PUBLIC_URL` is set, the app calls Telegram `setWebhook` with `PUBLIC_URL/telegram/webhook` and the secret. A Telegram update to a sleeping agent wakes it in about a second.
+- `GET /schedules` publishes the scheduled jobs, and `POST /chat` runs the one Maritime delivers (see Schedules below).
+- `GET /u/{token}` is a user's own page, signed with `LINK_SIGNING_SECRET`.
 
 ## Once, by the owner
 
@@ -39,6 +41,43 @@ maritime env set networth PUBLIC_URL=https://api.maritime.sh/a/<agent-id> --json
 maritime env set networth DATA_DIR=/data --json
 ```
 
+Phase 3B adds the model, search and Jev keys. Without them the bot still answers, from code-written templates only:
+
+```bash
+maritime agents env set <agent-id> OPENAI_API_KEY=... EXA_API_KEY=... --secret
+maritime agents env set <agent-id> AI_GATEWAY_API_KEY=... AI_GATEWAY_BASE_URL=... JEV_MODEL=... --secret
+maritime agents env list <agent-id> --json   # names only; secret values are masked
+```
+
+The CLI writes one variable per request. On 2026-10-25 some writes failed with `Okibi Identity authorization: ... context deadline exceeded` while others in the same command landed, so check `env list` and re-run only the missing keys.
+
+## Engine data on /data
+
+`data/` is gitignored, so the image has no `base_rates.sqlite` and every engine page answers 500 until it is copied onto the volume. Run this once, and again after every engine rebuild:
+
+```bash
+scripts/push_rates.sh <agent-id>
+```
+
+Maritime's file upload refuses bodies above about 80 KB (`HTTP 500 Write failed`), so the script uploads the file gzipped in 80 KB chunks, joins it inside the VM and checks its sha256.
+
+## Schedules
+
+A sleeping VM's timers never fire, so Maritime is the alarm clock (https://maritime.sh/docs/triggers). The app serves `GET /schedules`:
+
+| id | cron (Asia/Kolkata) | prompt | does |
+| --- | --- | --- | --- |
+| `watcher` | `*/30 9-15 * * 1-5` | `RUN_WATCHER` | one watcher cycle, then rare alerts |
+| `brief` | `0 8 * * *` | `RUN_BRIEF` | the brief for every user whose investing day is today |
+
+Maritime polls the list while the agent is awake, registers wake triggers, and POSTs each prompt to `/chat` with `source: "scheduled"`. The job runs in a background thread so `/chat` answers at once. `/chat` is public, so a forged call costs nothing: the watcher skips a run within 25 minutes of the last cycle, one job runs at a time, briefs are claimed once per user per day, and alerts once per user per event. After a deploy, wake the agent once (`curl .../health`) and check:
+
+```bash
+maritime agents triggers list <agent-id> --json   # expect watcher and brief
+```
+
+If the list stays empty, register the same two by hand with `maritime triggers create` and the prompts above.
+
 Deploy the latest `main`. Env vars set without `--reload` apply on the next boot, and a deploy is a fresh boot:
 
 ```bash
@@ -54,7 +93,7 @@ maritime logs networth -f                                 # look for "webhook se
 maritime exec networth ls /data --json                    # networth.sqlite appears after the first /start
 ```
 
-Then send `/start` to @networth_professor_bot.
+Then send `/start` to @networth_professor_bot. After setup, `/brief` sends this month's brief (once per day; a repeat resends the same text), and free text, forwards, links and photos get chat answers.
 
 ## Local development
 
