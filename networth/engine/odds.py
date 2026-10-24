@@ -3,10 +3,13 @@
     odds("oil_supply", "JETS")
     position_range(2000, "JETS", "oil_supply")
     compare("oil_supply", ["JETS", "XLE", "SPY"])
+    odds("fed_cut", "XLF", regime="recession_followed=no")
+    split("fed_cut", "XLF", "recession_followed")
 
 Run: uv run python -m networth.engine.odds odds oil_supply JETS
      uv run python -m networth.engine.odds range 2000 JETS oil_supply
      uv run python -m networth.engine.odds compare oil_supply JETS XLE SPY
+     uv run python -m networth.engine.odds split fed_cut XLF recession_followed
 
 Reads only through model.RatesDB. Every value is a JSON scalar, floats rounded to 4 places, so
 later phases can record exactly which numbers a message quoted. Nothing here ranks assets or
@@ -21,6 +24,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Final, Literal, TypedDict
 
+from networth.engine import macro
 from networth.engine.model import (
     CURRENCY,
     DEFAULT_DB,
@@ -41,6 +45,10 @@ COMPARE_MIN, COMPARE_MAX = 2, 3
 
 class NoBaseRate(LookupError):
     """No row for this question. The message lists the rows that do exist."""
+
+
+class NoRegimeData(LookupError):
+    """The macro series a regime needs was missing when the file was built."""
 
 
 class EpisodeJSON(TypedDict):
@@ -103,6 +111,41 @@ class OddsJSON(TypedDict):
     episodes: list[EpisodeJSON]
     other_eras: list[EraJSON]
     eras_disagree: bool  # two eras put hit_rate on opposite sides of their baselines
+
+
+class RegimeOddsJSON(OddsJSON):
+    regime: str  # e.g. "recession_followed=no"
+    hindsight: bool  # True: what happened in each case, never a live signal
+
+
+class SideJSON(TypedDict):
+    value: macro.RegimeValue
+    regime: str
+    n_episodes: int
+    n_hits: int
+    hit_rate: float | None  # None when the side has no episodes
+    baseline: float
+    median: float | None
+    p10: float | None
+    p90: float | None
+    weak_signal: bool
+    hindsight: bool
+    episode_ids: list[str]
+
+
+class SplitJSON(TypedDict):
+    type: str
+    asset: str
+    cause: str | None
+    era: str
+    horizon_days: int
+    regime: str  # the rule name, e.g. "recession_followed"
+    hindsight: bool
+    baseline: float
+    measure: Measure
+    n_episodes_all: int  # the row without a regime
+    n_unclassified: int  # episodes the rule could not decide: in neither side
+    sides: list[SideJSON]  # "yes" then "no"
 
 
 class PositionRangeJSON(TypedDict):
@@ -229,6 +272,39 @@ def _beats_baseline(r: BaseRate) -> bool:
     return r.hit_rate > r.baseline_hit_rate
 
 
+def _rule_for(t: EventType, name: str) -> macro.RegimeRule:
+    rule = macro.REGIMES.get(name)
+    if rule is None:
+        raise ValueError(f"unknown regime {name!r}; one of {sorted(macro.REGIMES)}")
+    if t not in rule.types:
+        allowed = sorted(x.value for x in rule.types)
+        raise ValueError(f"{name} does not apply to {t.value}; it applies to {allowed}")
+    return rule
+
+
+def _check_regime_data(rates: RatesDB, t: EventType, rule: macro.RegimeRule) -> None:
+    series = rule.series_by_type[t]
+    if reason := rates.macro_gaps().get(series):
+        raise NoRegimeData(f"no {macro.SERIES_TITLE[series]} for {rule.name}: {reason}")
+
+
+def _regime_rows(
+    rates: RatesDB, t: EventType, asset: str, cause: str | None, era: EraName | None, label: str
+) -> tuple[BaseRate, list[BaseRate]]:
+    base, _ = _rows(rates, t, asset, cause, era)
+    rows = [r.rate for r in rates.regime_rates(t, asset, cause, label)]
+    primary = next((r for r in rows if r.era == base.era), None)
+    if primary is None:
+        existing = ", ".join(
+            f"{e}/{c or 'all causes'}/{g}" for e, c, g in rates.regime_rows_for(t, asset)
+        )
+        raise NoBaseRate(
+            f"no {t.value} row for {asset} at {base.era}/{cause or 'all causes'} with {label}; "
+            f"regime rows that exist: {existing or 'none'}"
+        )
+    return primary, rows
+
+
 def odds(
     type: str,
     asset: str,
@@ -236,17 +312,39 @@ def odds(
     era: str | None = None,
     *,
     db: Path = DEFAULT_DB,
-) -> OddsJSON:
+    regime: str | None = None,
+) -> OddsJSON | RegimeOddsJSON:
     """The odds for one (type, asset), on the requested era or the asset's own series. Every
-    other era with a row goes in other_eras. Raises ValueError on an unknown type, asset or
-    era, NoBaseRate when no row exists."""
+    other era with a row goes in other_eras. With regime="<rule>=<yes|no>", the same answer
+    over only the episodes with that regime value, plus `regime` and `hindsight`. Raises
+    ValueError on an unknown type, asset, era or regime, NoBaseRate when no row exists,
+    NoRegimeData when the regime's macro series was missing at build time."""
     t, e = _parse_type(type), _parse_era(era)
+    rule = None if regime is None else _rule_for(t, macro.parse_label(regime)[0].name)
     rates = RatesDB.open(db)
     try:
-        primary, rows = _rows(rates, t, asset, cause, e)
+        if rule is None:
+            primary, rows = _rows(rates, t, asset, cause, e)
+        else:
+            _check_regime_data(rates, t, rule)
+            primary, rows = _regime_rows(rates, t, asset, cause, e, regime)
         details = rates.episodes(primary)
     finally:
         rates.close()
+    out = _odds_json(t, asset, cause, primary, rows, details)
+    if rule is None:
+        return out
+    return RegimeOddsJSON(**out, regime=regime, hindsight=rule.hindsight)
+
+
+def _odds_json(
+    t: EventType,
+    asset: str,
+    cause: str | None,
+    primary: BaseRate,
+    rows: list[BaseRate],
+    details: list[EpisodeDetail],
+) -> OddsJSON:
     era_view = _era_json(primary, primary)
     return OddsJSON(
         type=t.value,
@@ -272,6 +370,75 @@ def odds(
         episodes=[_episode_json(d, primary.measure) for d in details],
         other_eras=[_era_json(r, primary) for r in rows if r is not primary],
         eras_disagree=len({_beats_baseline(r) for r in rows}) > 1,
+    )
+
+
+def _side_json(
+    rule: macro.RegimeRule, value: macro.RegimeValue, rate: BaseRate | None, baseline: float
+) -> SideJSON:
+    return SideJSON(
+        value=value,
+        regime=macro.regime_label(rule.name, value),
+        n_episodes=rate.n_episodes if rate else 0,
+        n_hits=rate.n_hits if rate else 0,
+        hit_rate=_r(rate.hit_rate) if rate else None,
+        baseline=_r(baseline),
+        median=_r(rate.median) if rate else None,
+        p10=_r(rate.p10) if rate else None,
+        p90=_r(rate.p90) if rate else None,
+        weak_signal=rate.weak_signal if rate else True,
+        hindsight=rule.hindsight,
+        episode_ids=list(rate.episode_ids) if rate else [],
+    )
+
+
+def _side_rate(
+    rates: RatesDB, t: EventType, asset: str, cause: str | None, label: str, era: EraName
+) -> BaseRate | None:
+    return next(
+        (r.rate for r in rates.regime_rates(t, asset, cause, label) if r.rate.era == era), None
+    )
+
+
+def split(
+    type: str,
+    asset: str,
+    regime_name: str,
+    cause: str | None = None,
+    era: str | None = None,
+    *,
+    db: Path = DEFAULT_DB,
+) -> SplitJSON:
+    """Both sides of one regime for (type, asset), on the era odds() would answer on. A side
+    with no episodes is still returned, with n_episodes 0. Raises ValueError on an unknown
+    regime or one that does not apply to the type, NoRegimeData when its macro series was
+    missing at build time, NoBaseRate when the plain row does not exist."""
+    t, e = _parse_type(type), _parse_era(era)
+    rule = _rule_for(t, regime_name)
+    rates = RatesDB.open(db)
+    try:
+        _check_regime_data(rates, t, rule)
+        base, _ = _rows(rates, t, asset, cause, e)
+        sides = {
+            v: _side_rate(rates, t, asset, cause, macro.regime_label(rule.name, v), base.era)
+            for v in macro.REGIME_VALUES
+        }
+    finally:
+        rates.close()
+    classified = sum(r.n_episodes for r in sides.values() if r)
+    return SplitJSON(
+        type=t.value,
+        asset=asset,
+        cause=cause,
+        era=base.era.value,
+        horizon_days=base.horizon_days,
+        regime=rule.name,
+        hindsight=rule.hindsight,
+        baseline=_r(base.baseline_hit_rate),
+        measure=base.measure,
+        n_episodes_all=base.n_episodes,
+        n_unclassified=base.n_episodes - classified,
+        sides=[_side_json(rule, v, sides[v], base.baseline_hit_rate) for v in macro.REGIME_VALUES],
     )
 
 
@@ -372,13 +539,18 @@ def compare(
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = list(sys.argv[1:] if argv is None else argv)
-    usage = "usage: odds TYPE ASSET | range VALUE ASSET TYPE | compare TYPE ASSET ASSET [ASSET]"
+    usage = (
+        "usage: odds TYPE ASSET [REGIME] | range VALUE ASSET TYPE | "
+        "compare TYPE ASSET ASSET [ASSET] | split TYPE ASSET REGIME_NAME"
+    )
     if not args:
         print(usage, file=sys.stderr)
         return 2
     command, rest = args[0], args[1:]
-    if command == "odds" and len(rest) == 2:
-        out: object = odds(rest[0], rest[1])
+    if command == "odds" and len(rest) in (2, 3):
+        out: object = odds(rest[0], rest[1], regime=rest[2] if len(rest) == 3 else None)
+    elif command == "split" and len(rest) == 3:
+        out = split(rest[0], rest[1], rest[2])
     elif command == "range" and len(rest) == 3:
         out = position_range(float(rest[0]), rest[1], rest[2])
     elif command == "compare" and len(rest) >= 3:

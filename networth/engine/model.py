@@ -10,7 +10,9 @@ Spec mapping:
     BaseRate -> table base_rates (+ weak_signal, includes_vault, measure, market, series,
                                     benchmark, data_start, data_end, raw_p10/raw_median/raw_p90)
     (new)    -> table episodes   (the spec's episode_id needs somewhere to point)
-    (new)    -> table meta       (as_of, seed, horizons: how this file was built)
+    (new)    -> table meta       (as_of, seed, horizons, macro_gaps: how this file was built)
+    (new)    -> table regime_rates (a base_rates row restricted to one regime value, + regime,
+                                    hindsight; its own table so base_rates readers never see it)
 """
 
 from __future__ import annotations
@@ -20,9 +22,10 @@ import json
 import os
 import sqlite3
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final, Literal
 from zoneinfo import ZoneInfo
 
@@ -241,6 +244,19 @@ class BaseRate:
 
 
 @dataclass(frozen=True)
+class RegimeRate:
+    """A BaseRate over only the episodes whose onset had one regime value.
+
+    regime is the label, e.g. "recession_followed=no". hindsight=True means the value was only
+    knowable after the fact: "what happened in each case", never a live signal.
+    """
+
+    regime: str
+    hindsight: bool
+    rate: BaseRate
+
+
+@dataclass(frozen=True)
 class BuildMeta:
     as_of: dt.date | None  # None = everything
     baseline_seed: int
@@ -249,6 +265,7 @@ class BuildMeta:
     events_sha256: str
     skipped_series: tuple[str, ...]
     built_at: dt.datetime
+    macro_gaps: Mapping[str, str] = MappingProxyType({})
 
 
 @dataclass(frozen=True)
@@ -258,6 +275,7 @@ class Build:
     episodes: tuple[Episode, ...]
     reactions: tuple[Reaction, ...]
     base_rates: tuple[BaseRate, ...]
+    regime_rates: tuple[RegimeRate, ...] = field(default=())
 
 
 SCHEMA: Final = """
@@ -289,6 +307,18 @@ CREATE TABLE base_rates (
   data_start TEXT NOT NULL, data_end TEXT NOT NULL,
   raw_median REAL NOT NULL, raw_p10 REAL NOT NULL, raw_p90 REAL NOT NULL,
   PRIMARY KEY (type, cause, asset, era));
+CREATE TABLE regime_rates (
+  type TEXT NOT NULL, cause TEXT NOT NULL, asset TEXT NOT NULL, market TEXT NOT NULL,
+  horizon_days INTEGER NOT NULL, era TEXT NOT NULL,
+  n_events INTEGER NOT NULL, n_episodes INTEGER NOT NULL, n_hits INTEGER NOT NULL,
+  hit_rate REAL NOT NULL, baseline_hit_rate REAL NOT NULL,
+  median REAL NOT NULL, p10 REAL NOT NULL, p90 REAL NOT NULL,
+  episode_ids TEXT NOT NULL, weak_signal INTEGER NOT NULL, includes_vault INTEGER NOT NULL,
+  measure TEXT NOT NULL, series TEXT NOT NULL, benchmark TEXT NOT NULL,
+  data_start TEXT NOT NULL, data_end TEXT NOT NULL,
+  raw_median REAL NOT NULL, raw_p10 REAL NOT NULL, raw_p90 REAL NOT NULL,
+  regime TEXT NOT NULL, hindsight INTEGER NOT NULL,
+  PRIMARY KEY (type, cause, asset, era, regime));
 """
 
 _BASE_RATE_COLUMNS: Final = (
@@ -318,6 +348,7 @@ def _meta_rows(meta: BuildMeta) -> list[tuple[str, str]]:
         ("events_sha256", meta.events_sha256),
         ("skipped_series", json.dumps(list(meta.skipped_series))),
         ("built_at", meta.built_at.isoformat()),
+        ("macro_gaps", json.dumps(dict(meta.macro_gaps))),
     ]
 
 
@@ -363,6 +394,14 @@ def write_db(path: Path, build: Build) -> None:
             conn.executemany(
                 f"INSERT INTO base_rates ({', '.join(_BASE_RATE_COLUMNS)}) VALUES ({marks})",
                 [_base_rate_values(r) for r in build.base_rates],
+            )
+            regime_columns = ", ".join((*_BASE_RATE_COLUMNS, "regime", "hindsight"))
+            conn.executemany(
+                f"INSERT INTO regime_rates ({regime_columns}) VALUES ({marks}, ?, ?)",
+                [
+                    (*_base_rate_values(r.rate), r.regime, int(r.hindsight))
+                    for r in build.regime_rates
+                ],
             )
     finally:
         conn.close()
@@ -428,6 +467,33 @@ class RatesDB:
             (type.value, asset),
         ).fetchall()
         return [(r["era"], None if r["cause"] == ALL_CAUSES else r["cause"]) for r in rows]
+
+    def macro_gaps(self) -> dict[str, str]:
+        return json.loads(self.meta().get("macro_gaps", "{}"))
+
+    def regime_rates(
+        self, type: EventType, asset: str, cause: str | None, regime: str
+    ) -> list[RegimeRate]:
+        """Every era's row for (type, cause, asset, regime label), in EraName order."""
+        rows = self._conn.execute(
+            "SELECT * FROM regime_rates WHERE type = ? AND asset = ? AND cause = ? AND regime = ?",
+            (type.value, asset, cause or ALL_CAUSES, regime),
+        ).fetchall()
+        rates = [
+            RegimeRate(r["regime"], bool(r["hindsight"]), _base_rate_from_row(r)) for r in rows
+        ]
+        return sorted(rates, key=lambda r: _ERA_RANK[r.rate.era])
+
+    def regime_rows_for(self, type: EventType, asset: str) -> list[tuple[str, str | None, str]]:
+        """(era, cause, regime) of every regime row that exists for this type and asset."""
+        rows = self._conn.execute(
+            "SELECT era, cause, regime FROM regime_rates WHERE type = ? AND asset = ? "
+            "ORDER BY era, cause, regime",
+            (type.value, asset),
+        ).fetchall()
+        return [
+            (r["era"], None if r["cause"] == ALL_CAUSES else r["cause"], r["regime"]) for r in rows
+        ]
 
     def episodes(self, rate: BaseRate) -> list[EpisodeDetail]:
         """The scored episodes behind one row, chronological, with the onset's Reaction."""

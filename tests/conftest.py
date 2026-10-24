@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from networth.engine import backtest
+from networth.engine import backtest, macro
 from networth.engine.model import EraName, Event, EventType, KnownTime, Market, Region, UnknownTime
 
 US_HOLIDAYS_2019 = {dt.date(2019, 4, 19)}  # Good Friday
@@ -138,6 +138,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="run test_leak against a deliberately broken react() from tests/canaries.py, "
         "to show the leak test failing: e.g. --leak-impl=previous_close_entry",
     )
+    parser.addoption(
+        "--regime-impl",
+        default="real",
+        help="run the inflation-regime leak test in test_regimes against a deliberately broken "
+        "classifier from tests/canaries.py: e.g. --regime-impl=same_month_print",
+    )
 
 
 @pytest.fixture
@@ -146,3 +152,16 @@ def react_impl(request: pytest.FixtureRequest):
 
     name = request.config.getoption("--leak-impl")
     return backtest.react if name == "real" else canaries.CANARIES[name]
+
+
+@pytest.fixture
+def inflation_impl(request: pytest.FixtureRequest) -> macro.Classifier:
+    from tests import canaries
+
+    name = request.config.getoption("--regime-impl")
+    return macro.inflation_high if name == "real" else canaries.REGIME_CANARIES[name]
+
+
+@pytest.fixture(autouse=True)
+def no_real_macro(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(macro, "MACRO_DIR", tmp_path_factory.getbasetemp() / "no-macro-data")

@@ -1,0 +1,279 @@
+{
+ "odds_oil_supply_JETS": {
+  "asset": "JETS",
+  "baseline": 0.447,
+  "benchmark": "SPY",
+  "cause": null,
+  "data_end": "2023-06-30",
+  "data_start": "2015-04-30",
+  "episodes": [
+   {
+    "cause": "cause_a",
+    "date": "2016-11-30",
+    "day0_excess": 0.0088,
+    "day0_raw": 0.0035,
+    "entry_date": "2016-12-01",
+    "episode_id": "oil_supply:oil_2016a",
+    "event_ids": [
+     "oil_2016a"
+    ],
+    "excess_return": 0.0192,
+    "exit_date": "2016-12-30",
+    "headline": "headline oil_2016a",
+    "hit": true,
+    "raw_return": 0.0039,
+    "sources": [
+     "https://example.org/oil_2016a"
+    ]
+   },
+   {
+    "cause": "cause_b",
+    "date": "2018-05-08",
+    "day0_excess": 0.0341,
+    "day0_raw": 0.0057,
+    "entry_date": "2018-05-08",
+    "episode_id": "oil_supply:oil_2018b",
+    "event_ids": [
+     "oil_2018b"
+    ],
+    "excess_return": -0.0425,
+    "exit_date": "2018-06-06",
+    "headline": "headline oil_2018b",
+    "hit": false,
+    "raw_return": 0.0088,
+    "sources": [
+     "https://example.org/oil_2018b"
+    ]
+   },
+   {
+    "cause": "cause_a",
+    "date": "2019-09-16",
+    "day0_excess": 0.0032,
+    "day0_raw": -0.0068,
+    "entry_date": "2019-09-17",
+    "episode_id": "oil_supply:oil_2019a",
+    "event_ids": [
+     "oil_2019a"
+    ],
+    "excess_return": 0.0318,
+    "exit_date": "2019-10-16",
+    "headline": "headline oil_2019a",
+    "hit": true,
+    "raw_return": 0.005,
+    "sources": [
+     "https://example.org/oil_2019a"
+    ]
+   },
+   {
+    "cause": "cause_b",
+    "date": "2020-03-09",
+    "day0_excess": -0.009,
+    "day0_raw": 0.0016,
+    "entry_date": "2020-03-10",
+    "episode_id": "oil_supply:oil_2020b",
+    "event_ids": [
+     "oil_2020b"
+    ],
+    "excess_return": 0.0021,
+    "exit_date": "2020-04-08",
+    "headline": "headline oil_2020b",
+    "hit": true,
+    "raw_return": 0.0477,
+    "sources": [
+     "https://example.org/oil_2020b"
+    ]
+   },
+   {
+    "cause": "cause_a",
+    "date": "2023-04-03",
+    "day0_excess": 0.0026,
+    "day0_raw": 0.0122,
+    "entry_date": "2023-04-04",
+    "episode_id": "oil_supply:oil_2023a",
+    "event_ids": [
+     "oil_2023a"
+    ],
+    "excess_return": 0.0253,
+    "exit_date": "2023-05-03",
+    "headline": "headline oil_2023a",
+    "hit": true,
+    "raw_return": 0.0277,
+    "sources": [
+     "https://example.org/oil_2023a"
+    ]
+   }
+  ],
+  "era": "since_1998",
+  "eras_disagree": true,
+  "hit_rate": 0.8,
+  "horizon_days": 21,
+  "includes_vault": true,
+  "measure": "excess",
+  "median": 0.0192,
+  "n_episodes": 5,
+  "n_events": 5,
+  "n_hits": 4,
+  "other_eras": [
+   {
+    "baseline": 0.519,
+    "benchmark": "FF:Mkt",
+    "data_end": "2023-06-30",
+    "data_start": "1990-01-01",
+    "era": "since_1926",
+    "hit_rate": 0.4286,
+    "includes_vault": true,
+    "measure": "excess",
+    "median": -0.0045,
+    "n_episodes": 7,
+    "n_events": 7,
+    "n_hits": 3,
+    "n_shared_with_primary": 5,
+    "p10": -0.0219,
+    "p90": 0.0992,
+    "series": "FF49:Trans",
+    "weak_signal": true
+   }
+  ],
+  "p10": -0.0246,
+  "p90": 0.0292,
+  "series": "JETS",
+  "type": "oil_supply",
+  "weak_signal": true
+ },
+ "odds_rbi_hike_NSEBANK": {
+  "asset": "^NSEBANK",
+  "baseline": 0.529,
+  "benchmark": "^NSEI (^BSESN before 2007-09-17)",
+  "cause": null,
+  "data_end": "2023-06-30",
+  "data_start": "2007-09-17",
+  "episodes": [
+   {
+    "cause": "cause_a",
+    "date": "2010-03-19",
+    "day0_excess": 0.0002,
+    "day0_raw": -0.0045,
+    "entry_date": "2010-03-22",
+    "episode_id": "rbi_hike:rbi_2010a",
+    "event_ids": [
+     "rbi_2010a"
+    ],
+    "excess_return": -0.0089,
+    "exit_date": "2010-04-20",
+    "headline": "headline rbi_2010a",
+    "hit": false,
+    "raw_return": -0.0101,
+    "sources": [
+     "https://example.org/rbi_2010a"
+    ]
+   },
+   {
+    "cause": "cause_b",
+    "date": "2011-05-03",
+    "day0_excess": 0.0071,
+    "day0_raw": 0.008,
+    "entry_date": "2011-05-03",
+    "episode_id": "rbi_hike:rbi_2011b",
+    "event_ids": [
+     "rbi_2011b"
+    ],
+    "excess_return": 0.0629,
+    "exit_date": "2011-06-01",
+    "headline": "headline rbi_2011b",
+    "hit": true,
+    "raw_return": 0.1178,
+    "sources": [
+     "https://example.org/rbi_2011b"
+    ]
+   },
+   {
+    "cause": "cause_a",
+    "date": "2014-01-28",
+    "day0_excess": 0.0136,
+    "day0_raw": 0.0181,
+    "entry_date": "2014-01-29",
+    "episode_id": "rbi_hike:rbi_2014a",
+    "event_ids": [
+     "rbi_2014a"
+    ],
+    "excess_return": -0.1698,
+    "exit_date": "2014-02-27",
+    "headline": "headline rbi_2014a",
+    "hit": false,
+    "raw_return": -0.0815,
+    "sources": [
+     "https://example.org/rbi_2014a"
+    ]
+   },
+   {
+    "cause": "cause_b",
+    "date": "2018-06-06",
+    "day0_excess": 0.0112,
+    "day0_raw": 0.0021,
+    "entry_date": "2018-06-07",
+    "episode_id": "rbi_hike:rbi_2018b",
+    "event_ids": [
+     "rbi_2018b"
+    ],
+    "excess_return": -0.074,
+    "exit_date": "2018-07-06",
+    "headline": "headline rbi_2018b",
+    "hit": false,
+    "raw_return": 0.0151,
+    "sources": [
+     "https://example.org/rbi_2018b"
+    ]
+   },
+   {
+    "cause": "cause_a",
+    "date": "2023-02-08",
+    "day0_excess": -0.0041,
+    "day0_raw": 0.0006,
+    "entry_date": "2023-02-09",
+    "episode_id": "rbi_hike:rbi_2023a",
+    "event_ids": [
+     "rbi_2023a"
+    ],
+    "excess_return": -0.0303,
+    "exit_date": "2023-03-10",
+    "headline": "headline rbi_2023a",
+    "hit": false,
+    "raw_return": 0.0244,
+    "sources": [
+     "https://example.org/rbi_2023a"
+    ]
+   }
+  ],
+  "era": "since_2007",
+  "eras_disagree": false,
+  "hit_rate": 0.2,
+  "horizon_days": 21,
+  "includes_vault": true,
+  "measure": "excess",
+  "median": -0.0303,
+  "n_episodes": 5,
+  "n_events": 5,
+  "n_hits": 1,
+  "other_eras": [],
+  "p10": -0.1315,
+  "p90": 0.0342,
+  "series": "^NSEBANK",
+  "type": "rbi_hike",
+  "weak_signal": true
+ },
+ "position_range_2000_JETS_oil_supply": {
+  "asset": "JETS",
+  "basis": "raw",
+  "cause": null,
+  "currency": "USD",
+  "era": "since_1998",
+  "horizon_days": 21,
+  "median": 18,
+  "n_episodes": 5,
+  "p10": 9,
+  "p90": 79,
+  "type": "oil_supply",
+  "value": 2000,
+  "weak_signal": true
+ }
+}

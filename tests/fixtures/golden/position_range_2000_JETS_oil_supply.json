@@ -1,0 +1,1 @@
+{"value": 2000, "currency": "USD", "asset": "JETS", "type": "oil_supply", "cause": null, "era": "since_1998", "horizon_days": 21, "basis": "raw", "p10": -258, "median": -1, "p90": 211, "n_episodes": 11, "weak_signal": false}

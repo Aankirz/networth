@@ -1,10 +1,3 @@
-"""Deliberately broken versions of backtest.react. Test-only.
-
-Each has react's signature and one realistic bug. test_leak.py proves the leak check catches
-every one on every run. `pytest tests/test_leak.py --leak-impl=<name>` swaps one in for the
-real function so the leak test can be watched going red.
-"""
-
 from __future__ import annotations
 
 import dataclasses
@@ -15,9 +8,9 @@ from zoneinfo import ZoneInfo
 import numpy as np
 import pandas as pd
 
-from networth.engine import backtest
+from networth.engine import backtest, macro
 from networth.engine.backtest import Panel
-from networth.engine.model import Event, KnownTime, Reaction, UnknownTime
+from networth.engine.model import Event, EventType, KnownTime, Reaction, UnknownTime
 
 ReactFn = Callable[[Event, Panel, int], Reaction | None]
 _react = backtest.react  # bound at import, so a canary patched over backtest.react cannot recurse
@@ -89,4 +82,40 @@ CANARIES: dict[str, ReactFn] = {
         inclusive_close,
         peek_past_exit,
     )
+}
+
+
+def _high(month: dt.date, type_: EventType, m: macro.Macro) -> bool | None:
+    region = macro.CPI_REGION[type_]
+    yoy = m.cpi_yoy.get(region, {}).get(month)
+    return None if yoy is None else yoy >= macro.INFLATION_HIGH_PCT[region]
+
+
+def same_month_print(day: dt.date, type_: EventType, m: macro.Macro) -> bool | None:
+    return _high(day.replace(day=1), type_, m)
+
+
+def no_release_lag(day: dt.date, type_: EventType, m: macro.Macro) -> bool | None:
+    return _high(macro.add_months(day.replace(day=1), -1), type_, m)
+
+
+def release_day_counts(day: dt.date, type_: EventType, m: macro.Macro) -> bool | None:
+    region = macro.CPI_REGION[type_]
+    month = day.replace(day=1)
+    while m.release_date(month, region) > day:
+        month = macro.add_months(month, -1)
+    return _high(month, type_, m)
+
+
+def ignores_release_dates(day: dt.date, type_: EventType, m: macro.Macro) -> bool | None:
+    region = macro.CPI_REGION[type_]
+    month = day.replace(day=1)
+    while macro.fixed_lag_release(month, region) >= day:
+        month = macro.add_months(month, -1)
+    return _high(month, type_, m)
+
+
+REGIME_CANARIES: dict[str, macro.Classifier] = {
+    f.__name__: f
+    for f in (same_month_print, no_release_lag, release_day_counts, ignores_release_dates)
 }

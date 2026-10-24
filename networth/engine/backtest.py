@@ -7,11 +7,13 @@ Run: uv run python -m networth.engine.backtest [--exclude-vault] [--out PATH]
     (Event, Panel, horizon) --react--> Reaction        # the no-peeking rule lives here only
     (Panel, horizon) --baseline_hit_rate--> float
     Reaction[] of episode onsets --summarize--> BaseRate
+    (same onsets, same baseline) filtered by macro.REGIMES value --> RegimeRate
     Build --model.write_db--> sqlite
 
 --exclude-vault is one parameter, as_of = 2021-12-31, applied at the two inputs: events after
 as_of are dropped before episodes are merged, and every price after as_of is removed from the
-PriceBook. Nothing downstream knows about the vault, so nothing downstream can leak it.
+PriceBook. Nothing downstream knows about the vault, so nothing downstream can leak it. Macro
+data is cut the same way by macro.Macro.load(as_of).
 """
 
 from __future__ import annotations
@@ -27,13 +29,14 @@ from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 import pandas as pd
 
-from networth.engine import fetch
+from networth.engine import fetch, macro
 from networth.engine.model import (
     DEFAULT_DB,
     PRE_VAULT_DB,
@@ -49,6 +52,7 @@ from networth.engine.model import (
     Market,
     Measure,
     Reaction,
+    RegimeRate,
     Region,
     UnknownTime,
     is_hit,
@@ -547,12 +551,41 @@ def base_rate_row(
     )
 
 
+EpisodeRegimes = Mapping[str, Mapping[str, macro.RegimeValue]]
+
+
+def regime_rows(
+    type_: EventType,
+    cause: str | None,
+    panel: Panel,
+    scored: Sequence[tuple[Episode, Reaction]],
+    baseline: float,
+    regimes: EpisodeRegimes,
+) -> list[RegimeRate]:
+    """The same row restricted to each regime value. Only the episode set changes: same
+    reactions, same baseline, same base_rate_row."""
+    out = []
+    for rule in macro.REGIMES.values():
+        if type_ not in rule.types:
+            continue
+        for value in macro.REGIME_VALUES:
+            sub = [(ep, r) for ep, r in scored if regimes.get(ep.id, {}).get(rule.name) == value]
+            if sub:
+                row = base_rate_row(type_, cause, panel, sub, baseline)
+                out.append(RegimeRate(macro.regime_label(rule.name, value), rule.hindsight, row))
+    return out
+
+
 def rows_for_panel(
-    panel: Panel, events: Sequence[Event], episodes: Sequence[Episode]
-) -> tuple[list[Reaction], list[BaseRate]]:
+    panel: Panel,
+    events: Sequence[Event],
+    episodes: Sequence[Episode],
+    regimes: EpisodeRegimes = MappingProxyType({}),
+) -> tuple[list[Reaction], list[BaseRate], list[RegimeRate]]:
     reactions = {e.id: r for e in events if (r := react(e, panel, HORIZONS[e.type]))}
     baselines: dict[int, float] = {}
     rows: list[BaseRate] = []
+    by_regime: list[RegimeRate] = []
     for type_ in EventType:
         eps = [ep for ep in episodes if ep.type == type_]
         for cause in (None, *sorted({ep.cause for ep in eps})):
@@ -567,7 +600,8 @@ def rows_for_panel(
             if h not in baselines:
                 baselines[h] = baseline_hit_rate(panel, h)
             rows.append(base_rate_row(type_, cause, panel, scored, baselines[h]))
-    return list(reactions.values()), rows
+            by_regime += regime_rows(type_, cause, panel, scored, baselines[h], regimes)
+    return list(reactions.values()), rows, by_regime
 
 
 # ---- the build ------------------------------------------------------------------------------
@@ -578,8 +612,10 @@ def build(
     prices_dir: Path | None = None,
     *,
     exclude_vault: bool = False,
+    macro_dir: Path | None = None,
 ) -> Build:
-    """events + prices -> Build. Raises ValueError listing every RowProblem."""
+    """events + prices (+ cached macro series) -> Build. Raises ValueError listing every
+    RowProblem. Missing macro series only drop the regime rows that need them."""
     as_of = VAULT_START - dt.timedelta(days=1) if exclude_vault else None
     events, problems = parse_events(events_csv)
     if problems:
@@ -588,16 +624,20 @@ def build(
     events = [e for e in events if as_of is None or e.date <= as_of]
     book = PriceBook.load(prices_dir, as_of)
     episodes = merge_episodes(events, book.calendars())
+    macro_data = macro.Macro.load(macro_dir, as_of)
+    regimes = {ep.id: macro.episode_regimes(ep, macro_data) for ep in episodes}
     all_reactions: list[Reaction] = []
     all_rows: list[BaseRate] = []
+    all_regime_rows: list[RegimeRate] = []
     for asset in ASSETS:
         for era in ERAS:
             panel = book.panel(asset, era)
             if panel is None or len(panel.sessions) <= max(HORIZONS.values()) + 1:
                 continue
-            reactions, rows = rows_for_panel(panel, events, episodes)
+            reactions, rows, by_regime = rows_for_panel(panel, events, episodes, regimes)
             all_reactions += reactions
             all_rows += rows
+            all_regime_rows += by_regime
     meta = BuildMeta(
         as_of=as_of,
         baseline_seed=BASELINE_SEED,
@@ -606,8 +646,12 @@ def build(
         events_sha256=hashlib.sha256(events_csv.read_bytes()).hexdigest(),
         skipped_series=tuple(a for a in ASSETS if a not in book.closes),
         built_at=dt.datetime.now(dt.UTC),
+        macro_gaps=dict(macro_data.gaps),
     )
-    return Build(meta, tuple(events), tuple(episodes), tuple(all_reactions), tuple(all_rows))
+    return Build(
+        meta, tuple(events), tuple(episodes), tuple(all_reactions), tuple(all_rows),
+        tuple(all_regime_rows),
+    )  # fmt: skip
 
 
 def summary(result: Build, out: Path) -> str:
@@ -631,6 +675,11 @@ def summary(result: Build, out: Path) -> str:
     lines += [f"  {a:<14} {', '.join(e)}" for a, e in eras.items()]
     skipped = result.meta.skipped_series
     lines += ["", f"skipped series (no price file): {', '.join(skipped) or 'none'}"]
+    labels = Counter(r.regime for r in result.regime_rates)
+    lines += ["", f"regime rows: {len(result.regime_rates)}"]
+    lines += [f"  {label:<26} {n:>6}" for label, n in sorted(labels.items())]
+    gaps = result.meta.macro_gaps
+    lines += [f"macro gaps: {'; '.join(f'{k}: {v}' for k, v in gaps.items()) or 'none'}"]
     return "\n".join(lines)
 
 
