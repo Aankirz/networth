@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}What if: {{ v.asset_name }} after {{ v.type_plural }} · Networth{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">On {{ v.amount }} in {{ v.asset_name }}, a typical {{ v.period }} after {{ v.type_plural }} ranged from {{ v.p10 }} to {{ v.p90 }}.</h1>
+  <p class="normal">History, not a forecast. An illustration of {{ v.n_episodes }} {{ v.type_plural }}, {{ v.horizon }}.</p>
+  {% if v.weak_signal %}
+  <p class="callout callout--weak">Weak signal, only {{ v.n_episodes }} past cases.</p>
+  {% endif %}
+
+  <dl class="range">
+    <div><dt>A bad case (1 in 10 did worse)</dt><dd class="num">{{ v.p10 }}</dd></div>
+    <div><dt>The middle case</dt><dd class="num">{{ v.median }}</dd></div>
+    <div><dt>A good case (1 in 10 did better)</dt><dd class="num">{{ v.p90 }}</dd></div>
+  </dl>
+
+  <figure class="strip">
+    <svg viewBox="0 0 {{ v.strip.width }} {{ v.strip.height }}" role="img" aria-labelledby="strip-title">
+      <title id="strip-title">One dot per past case, placed by what it would have meant for {{ v.amount }}. The shaded band runs from {{ v.p10 }} to {{ v.p90 }}.</title>
+      <rect class="strip__band" x="{{ v.strip.band_x }}" y="0" width="{{ v.strip.band_w }}" height="{{ v.strip.base_y }}"></rect>
+      <line class="strip__axis" x1="0" x2="{{ v.strip.width }}" y1="{{ v.strip.base_y }}" y2="{{ v.strip.base_y }}"></line>
+      <line class="strip__zero" x1="{{ v.strip.zero_x }}" x2="{{ v.strip.zero_x }}" y1="0" y2="{{ v.strip.base_y + 8 }}"></line>
+      <line class="strip__median" x1="{{ v.strip.median_x }}" x2="{{ v.strip.median_x }}" y1="0" y2="{{ v.strip.base_y }}"></line>
+      {% for d in v.strip.dots %}<circle class="strip__dot" cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ v.strip.r }}"><title>{{ d.label }}</title></circle>{% endfor %}
+      <text class="strip__label" x="{{ v.strip.zero_x }}" y="{{ v.strip.base_y + 30 }}" text-anchor="middle">no change</text>
+    </svg>
+    <figcaption>Each dot is one past case. Left of “no change” lost money, right of it gained. The shaded band holds the middle 8 in 10 cases; the dark line is the middle case.</figcaption>
+  </figure>
+
+  <p>{{ v.normal }}</p>
+  {% if v.fx_note %}
+  <p class="callout callout--quiet">Returns are measured in the asset's own currency ({{ v.engine_currency }}). Exchange-rate moves are left out.</p>
+  {% endif %}
+
+  <form class="amount" method="get" action="/what-if/{{ v.type }}/{{ v.asset|urlencode }}">
+    <label for="amount">Amount</label>
+    <input id="amount" name="amount" inputmode="decimal" value="{{ v.amount_value }}" required>
+    <label for="currency">Currency</label>
+    <select id="currency" name="currency">
+      {% for c in currencies %}<option value="{{ c }}"{% if c == v.currency %} selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+    <button class="button" type="submit">Show this amount</button>
+  </form>
+
+  <nav class="next" aria-label="More on this">
+    <a class="button" href="/why/{{ v.type }}/{{ v.asset|urlencode }}">See every past case</a>
+    <a href="/scoreboard/{{ v.type }}">Scoreboard for {{ v.type_plural }}</a>
+  </nav>
+</article>
+{% endblock %}

@@ -115,6 +115,15 @@
 ## 2026-10-25 — Phase 1 report: review round 1 numbers
 - Updated docs/phases/phase-1-report.md with the per-host cap and 429 rules, the CDC source for pandemic_20090611, the new test counts (59 pass and 4 skip on a clean clone, 63 with a build), and two clean-clone check_events runs that both exited 0. Why: the report must match a fresh run.
 
+## 2026-10-25 — Phase 1 passed, Phase 2 launched
+- Phase 1 review passed at 517915e. Spawned Phase 2 builder 4b8feb90. Monitor cron now watches the Phase 2 pane.
+
+## 2026-10-25 — Parallel briefs for Phase 3A and Phase 4
+- Added docs/phases/phase-3a-delivery.md and phase-4-web.md with split file ownership so they run alongside Phase 2.
+
+## 2026-10-25 — PRODUCT.md: simplify angle
+- Added the "Explain this" moment, widened the promise to simple investing for anyone, logged the decision.
+
 ## 2026-10-25 — Watcher config and model layer
 - Added networth/config.toml + config.py (typed Config, roles to OpenAI models with prices and source URLs, Exa query table and budget, confirm and trigger thresholds; keys from env or .env, ConfigError names a missing key), net.py (IPv4-only httpx2 client, thread deadline, one jsonl line per paid call) and llm.py (group_articles and classify_story over the Responses API, output validated against inputs and the events.csv table), with tests. Added openai and httpx2 (openai's own HTTP library, imported directly for the IPv4 transport). Why: Phase 2 model layer.
 
@@ -127,9 +136,18 @@
 ## 2026-10-25 — Watcher cycle, decision log and report
 - Added networth/watcher/log.py (decision log entries and their text), run.py (python -m networth.watcher.run --once: pull, group, confirm, classify, trigger, a cycles row and a one-screen summary with counts, rejections by reason and the cycle's spend from llm_calls.jsonl; ConfigError exits 2 with the message) and report.py (confirmed stories with publishers or primary source, rejected stories with reasons, insight headline numbers, latest cycle, spend; last 48 h or --today), with tests for a repeat run leaving counts unchanged, Exa and OpenAI calls that never connect ending at the deadline and logged as failed, and the missing-key exit. Why: Phase 2 done-when 2, 5, 9 and 10.
 
+## 2026-10-25 — Beginner video research doc
+- Added docs/research/research-beginner-videos.md (6 reference videos: concepts, teaching patterns, no-copy advice).
+
 ## 2026-10-25 — Watcher fixes from the first live cycles
 - networth/llm.py: a rule-breaking grouping answer is repaired (unknown ids dropped, duplicates keep the first group, unknown story ids become new stories, left-out articles become their own story) instead of discarded; the judge returns event_date and code rejects an event dated before the lookback window as "old news". Why: live run 1 split 2 of 3 batches into single-article stories (84 artificial "1 publisher" rejections), and Exa dates recrawled pages, so a May 2025 airstrike and the Oct 7 RBI hike read as new events.
 - networth/config.toml: judge cap 12 -> 40 (about $0.0033 a call, measured). networth/watcher/group.py: "1 publisher" wording.
 
 ## 2026-10-25 — Watcher report lists what the cycle decided
 - networth/watcher/store.py and report.py: the decision log filters stories by when they were decided, not by their first article's publish date, with a test that a stale publish date still shows. Why: the live report listed 24 confirmed while the cycle counted 30, because Exa returns date-only or recrawl dates.
+
+## 2026-10-25 — Phase 4 web pages
+- Added networth/web/ (FastAPI router: /, /why, /what-if, /scoreboard, /track-record, /stats; Jinja2 templates; one stylesheet with light and dark tokens; python -m networth.web on :8090), tests/test_web.py, docs/phases/phase-4-report.md and 24 screenshots in docs/phases/phase-4-shots/. Added jinja2 via uv add. Why: Phase 4 brief; every number on the pages comes from odds(), compare() or position_range().
+
+## 2026-10-25 — FRED key added
+- FRED_API_KEY in GrowwOS .env, verified with USREC, CPIAUCSL, FEDFUNDS.

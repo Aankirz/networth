@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ v.asset_name }} after {{ v.type_plural }} · Networth{% endblock %}
+{% block description %}{{ v.headline }} {{ v.normal }}{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">{{ v.headline }}</h1>
+  <p class="normal">{{ v.normal }}</p>
+
+  <p class="lean lean--{{ v.lean.kind }}">
+    <span class="lean__mark">{{ v.lean.mark }}</span>
+    <span>{{ v.odds_words }}{% if not v.weak_signal %}, {{ v.n_hits }} of {{ v.n_episodes }}{% endif %}.</span>
+  </p>
+  {% if v.weak_signal %}
+  <p class="callout callout--weak">Fewer than 8 independent past cases is too few to call a pattern. Read this count as a hint.</p>
+  {% endif %}
+
+  <dl class="facts">
+    <div><dt>Measured</dt><dd>{{ v.horizon }}{% if v.measure == "excess" %}, against {{ v.benchmark }}{% endif %}.</dd></div>
+    <div><dt>History used</dt><dd>{{ v.era }}, {{ v.data_start }} to {{ v.data_end }}. Events close together count as one episode.</dd></div>
+    <div><dt>The news day</dt><dd>We start counting at the close of the first trading day after the news, so the jump on the news day itself is left out. It is shown below as the news-day move.</dd></div>
+  </dl>
+
+  {% if v.eras_disagree %}
+  <p class="callout">The eras disagree. One period of history puts this above its normal rate and another puts it below. Read the main count with care.</p>
+  {% endif %}
+
+  <section aria-labelledby="cases">
+    <h2 id="cases">Every past case</h2>
+    <table class="ledger">
+      <caption>{{ v.n_episodes }} past episodes, oldest first. Return is the asset's own move; versus market is that move minus {{ v.benchmark }}.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Date</th>
+          <th scope="col">What happened</th>
+          <th scope="col" class="num">Return</th>
+          <th scope="col" class="num">Versus market</th>
+          <th scope="col" class="num">News-day move</th>
+          <th scope="col">Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in v.episodes %}
+        <tr>
+          <th scope="row" data-label="Date">{{ e.date }}</th>
+          <td data-label="What happened">
+            {{ e.headline }}
+            <span class="cause">Cause: {{ e.cause }}.</span>
+            {% for s in e.sources %}<a class="source" href="{{ s }}" rel="noopener" target="_blank">Source{% if e.sources|length > 1 %} {{ loop.index }}{% endif %}<span class="sr"> for {{ e.date }} (opens in a new tab)</span></a>{% endfor %}
+          </td>
+          <td class="num" data-label="Return">{{ e.raw }}</td>
+          <td class="num" data-label="Versus market">{{ e.excess }}</td>
+          <td class="num" data-label="News-day move">{{ e.day0 }}</td>
+          <td data-label="Result"><span class="result result--{{ 'hit' if e.hit else 'miss' }}">{{ e.result }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if v.other_eras %}
+  <section aria-labelledby="eras">
+    <h2 id="eras">Other stretches of history</h2>
+    <ul class="eras">
+      {% for era in v.other_eras %}
+      <li class="lean--{{ era.lean.kind }}">
+        <strong>{{ era.name }}.</strong>
+        {{ era.sentence }}
+        {{ era.shared }} of these episodes are also in the main count.{% if era.weak_signal %} Weak signal.{% endif %}
+        <span class="cause">Measured on {{ era.series }}.</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if v.includes_vault %}
+  <p class="callout callout--quiet">This count includes episodes from 2022 on. We held those years back while testing the method, so the engine was checked on years it never saw.</p>
+  {% endif %}
+
+  <section aria-labelledby="change">
+    <h2 id="change">What would change this view</h2>
+    <ul class="changes">
+      {% for line in v.changes %}<li>{{ line }}</li>{% endfor %}
+    </ul>
+  </section>
+
+  <nav class="next" aria-label="More on this">
+    <a class="button" href="/what-if/{{ v.type }}/{{ v.asset|urlencode }}">See it in your money</a>
+    <a href="/scoreboard/{{ v.type }}">Scoreboard for {{ v.type_plural }}</a>
+  </nav>
+
+  {% include "share.html" %}
+</article>
+{% endblock %}

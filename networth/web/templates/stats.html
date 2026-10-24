@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Stats · Networth{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">What the engine counts</h1>
+  <p class="normal">Counts from the history database behind every page. No personal data.</p>
+  <dl class="tally">
+    {% for label, n in counts %}<div><dt>{{ label }}</dt><dd class="num">{{ n }}</dd></div>{% endfor %}
+  </dl>
+  {% if built_at %}<p class="fineprint">Last rebuilt {{ built_at }}.</p>{% endif %}
+</article>
+{% endblock %}

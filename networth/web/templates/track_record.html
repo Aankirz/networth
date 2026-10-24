@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Track record · Networth{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">Track record</h1>
+  {% if columns %}
+  <p class="normal">Everything we said, next to what happened afterwards, misses included.</p>
+  <table class="ledger ledger--plain">
+    <caption>{{ rows|length }} lines, as recorded.</caption>
+    <thead><tr>{% for c in columns %}<th scope="col">{{ c }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for r in rows %}<tr>{% for cell in r %}<td data-label="{{ columns[loop.index0] }}">{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="normal">We start counting from our first message.</p>
+  <p>Every scoreboard line we send will appear here, next to what happened 30 days later, including the times history was wrong.</p>
+  {% endif %}
+</article>
+{% endblock %}

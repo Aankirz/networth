@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Not found · Networth{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">That page isn't here.</h1>
+  <p class="normal">{{ what }} Pick a kind of news to see where history leans after it.</p>
+  <nav class="types" aria-label="Event types">
+    <ul>
+      {% for key, t in types.items() %}<li><a href="/scoreboard/{{ key }}">{{ t.title }}</a></li>{% endfor %}
+    </ul>
+  </nav>
+</article>
+{% endblock %}

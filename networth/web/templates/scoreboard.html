@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}After {{ v.type_plural }} · Networth scoreboard{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">Where history leans after {{ v.type_plural }}.</h1>
+  <p class="normal">Each line counts how often a sector did better than its market, next to how often it does in a normal period. Sectors stay in a fixed order. Nothing here is ranked.</p>
+  {% if v.markets %}
+  {% include "scoreboard_groups.html" %}
+  {% else %}
+  <p class="callout">We have no sectors to compare after {{ v.type_plural }} yet.</p>
+  {% endif %}
+  <nav class="types" aria-label="Other event types">
+    <h2>Other kinds of news</h2>
+    <ul>
+      {% for key, t in types.items() %}<li><a href="/scoreboard/{{ key }}"{% if key == v.type %} aria-current="page"{% endif %}>{{ t.title }}</a></li>{% endfor %}
+    </ul>
+  </nav>
+</article>
+{% endblock %}

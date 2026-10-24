@@ -1,0 +1,19 @@
+{% for market in v.markets %}
+<section class="board" aria-labelledby="market-{{ loop.index }}">
+  <h{{ heading_level|default(2) }} id="market-{{ loop.index }}">{{ market.label }}</h{{ heading_level|default(2) }}>
+  {% for g in market.groups %}
+  <div class="board__group">
+    <p class="board__note">Scored on the same {{ g.n_episodes }} {{ v.type_plural }}.{% if g.weak_signal %} Weak signal, only {{ g.n_episodes }} past cases.{% endif %}</p>
+    <ul class="board__rows">
+      {% for r in g.rows %}
+      <li class="board__row lean--{{ r.lean.kind }}">
+        <span class="lean__mark">{{ r.lean.mark }}</span>
+        <a href="/why/{{ v.type }}/{{ r.asset|urlencode }}">{{ r.name }}</a>
+        <span class="board__text">{{ r.text }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}

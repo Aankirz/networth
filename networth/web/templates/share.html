@@ -1,0 +1,17 @@
+<section class="share" aria-labelledby="share">
+  <h2 id="share">Share this page</h2>
+  <p><span class="share__url" id="share-url">{{ share_url }}</span></p>
+  <button type="button" class="button button--quiet" id="share-btn" hidden>Copy link</button>
+  <p class="share__status" id="share-status" role="status"></p>
+  <script>
+    (function () {
+      var b = document.getElementById("share-btn"), s = document.getElementById("share-status");
+      if (!navigator.clipboard) return;
+      b.hidden = false;
+      b.addEventListener("click", function () {
+        navigator.clipboard.writeText(document.getElementById("share-url").textContent)
+          .then(function () { s.textContent = "Link copied."; }, function () { s.textContent = "Copy the link above."; });
+      });
+    })();
+  </script>
+</section>

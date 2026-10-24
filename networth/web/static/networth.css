@@ -1,0 +1,702 @@
+/* Networth: a printed research note. Ink on ledger paper, a serif for the verdict,
+   tabular figures for every count. Green, grey and red mean lean, nothing else. */
+
+:root {
+  --paper: #f1f3ef;
+  --ink: #16212c;
+  --muted: #4b5761;
+  --rule: #c3cbc7;
+  --link: #1f4e79;
+  --up: #17623a;
+  --down: #9e2424;
+  --flat: #525c67;
+  --up-wash: #e0ede4;
+  --down-wash: #f6e2e0;
+  --flat-wash: #e4e8ea;
+  --band: #d3e0d8;
+  --dot: #1f4e79;
+  --focus: #1f4e79;
+
+  --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --sans: "Public Sans", "Segoe UI", system-ui, sans-serif;
+
+  --text-small: 0.875rem;
+  --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.0625rem);
+  --text-h2: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --text-verdict: clamp(1.75rem, 1.15rem + 3vw, 3rem);
+  --text-hero: clamp(2.25rem, 1.2rem + 5vw, 4.25rem);
+
+  --measure: 44rem;
+  --gutter: 1rem;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.75rem;
+  --space-4: 3rem;
+  --radius: 3px;
+  --duration-fast: 150ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121a20;
+    --ink: #e5e9e4;
+    --muted: #a9b3b6;
+    --rule: #36434c;
+    --link: #9cc7ee;
+    --up: #79d29b;
+    --down: #f39a93;
+    --flat: #b4bdc4;
+    --up-wash: #183429;
+    --down-wash: #3b2120;
+    --flat-wash: #222c33;
+    --band: #1f3a2e;
+    --dot: #9cc7ee;
+    --focus: #9cc7ee;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #121a20;
+  --ink: #e5e9e4;
+  --muted: #a9b3b6;
+  --rule: #36434c;
+  --link: #9cc7ee;
+  --up: #79d29b;
+  --down: #f39a93;
+  --flat: #b4bdc4;
+  --up-wash: #183429;
+  --down-wash: #3b2120;
+  --flat-wash: #222c33;
+  --band: #1f3a2e;
+  --dot: #9cc7ee;
+  --focus: #9cc7ee;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -3rem;
+  background: var(--ink);
+  color: var(--paper);
+  padding: var(--space-1) var(--space-2);
+}
+
+.skip:focus {
+  top: var(--space-1);
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.masthead,
+main,
+.colophon {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-2);
+  padding-block: var(--space-2);
+  border-bottom: 2px solid var(--ink);
+}
+
+.wordmark {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.375rem;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.masthead nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--text-small);
+}
+
+main {
+  padding-block: var(--space-3) var(--space-4);
+}
+
+h1,
+h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+
+h2 {
+  font-size: var(--text-h2);
+  margin-block: var(--space-4) var(--space-2);
+}
+
+.verdict {
+  font-size: var(--text-verdict);
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+  max-width: 22ch;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.verdict--hero {
+  font-size: var(--text-hero);
+  max-width: 14ch;
+}
+
+.normal {
+  font-size: 1.125em;
+  color: var(--muted);
+  margin-block: var(--space-2) var(--space-3);
+  max-width: 38rem;
+}
+
+.fineprint {
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+/* Lean: the only place colour carries meaning, always beside a text mark. */
+.lean {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  padding: var(--space-1) 0.75rem;
+  border-left: 4px solid var(--lean, var(--flat));
+  background: var(--lean-wash, var(--flat-wash));
+  margin: 0 0 var(--space-2);
+}
+
+.lean--leans-up {
+  --lean: var(--up);
+  --lean-wash: var(--up-wash);
+}
+
+.lean--leans-down {
+  --lean: var(--down);
+  --lean-wash: var(--down-wash);
+}
+
+.lean--no-pattern {
+  --lean: var(--flat);
+  --lean-wash: var(--flat-wash);
+}
+
+.lean__mark {
+  font-weight: 600;
+  color: var(--lean, var(--flat));
+  white-space: nowrap;
+}
+
+.callout {
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--ink);
+  padding: 0.75rem var(--space-2);
+  margin-block: var(--space-2);
+}
+
+.callout--weak {
+  border-left-color: var(--flat);
+  font-weight: 600;
+}
+
+.callout--quiet {
+  border-left-color: var(--rule);
+  color: var(--muted);
+}
+
+.facts {
+  margin: var(--space-3) 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.facts div {
+  display: grid;
+  gap: 0 var(--space-2);
+  padding-block: var(--space-1);
+  border-top: 1px solid var(--rule);
+}
+
+.facts dt {
+  font-weight: 600;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+@media (min-width: 40rem) {
+  .facts div {
+    grid-template-columns: 9rem 1fr;
+  }
+}
+
+/* The ledger: every past case on its own ruled line. */
+.ledger {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-small);
+}
+
+.ledger caption {
+  text-align: left;
+  color: var(--muted);
+  padding-bottom: var(--space-1);
+}
+
+.ledger th,
+.ledger td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.6rem 0.5rem 0.6rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+
+.ledger thead th {
+  border-bottom: 2px solid var(--ink);
+  font-weight: 600;
+}
+
+.ledger tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ledger .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cause {
+  display: block;
+  color: var(--muted);
+}
+
+.source {
+  display: inline-block;
+  margin-right: 0.75rem;
+  padding-block: 0.25rem;
+}
+
+.result {
+  font-weight: 600;
+}
+
+.result--hit::before {
+  content: "\2713\00a0";
+}
+
+.result--miss::before {
+  content: "\2717\00a0";
+}
+
+@media (max-width: 39.99rem) {
+  .ledger thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .ledger tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.25rem 0.75rem;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .ledger th,
+  .ledger td {
+    border: 0;
+    padding: 0;
+  }
+
+  .ledger tbody th,
+  .ledger td[data-label="What happened"] {
+    grid-column: 1 / -1;
+  }
+
+  .ledger td[data-label="Result"] {
+    grid-column: 1 / -1;
+  }
+
+  .ledger .num {
+    text-align: left;
+  }
+
+  .ledger .num::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .ledger--plain td::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .ledger--plain td {
+    grid-column: 1 / -1;
+  }
+}
+
+.eras,
+.changes,
+.board__rows,
+.types ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.eras li {
+  padding: 0.75rem 0 0.75rem 0.75rem;
+  border-left: 4px solid var(--lean, var(--flat));
+  margin-bottom: var(--space-1);
+}
+
+.changes li {
+  padding-block: var(--space-1);
+  border-top: 1px solid var(--rule);
+}
+
+/* Scoreboard: fixed order, no ranks, each row stamped with its lean in words. */
+.board__group {
+  margin-bottom: var(--space-3);
+}
+
+.board__note {
+  color: var(--muted);
+  font-size: var(--text-small);
+  margin: 0 0 var(--space-1);
+}
+
+.board__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.15rem;
+  padding: 0.75rem;
+  margin-bottom: 0.35rem;
+  border-left: 4px solid var(--lean);
+  background: var(--lean-wash);
+}
+
+.board__row a {
+  font-weight: 600;
+  font-family: var(--serif);
+  font-size: 1.125rem;
+}
+
+.board__text {
+  color: var(--ink);
+}
+
+@media (min-width: 40rem) {
+  .board__row {
+    grid-template-columns: 8.5rem 1fr;
+    gap: 0.15rem var(--space-2);
+  }
+
+  .board__row .board__text {
+    grid-column: 2;
+  }
+}
+
+/* What-if */
+.range {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-1);
+  margin: var(--space-3) 0;
+}
+
+.range div {
+  border-top: 2px solid var(--ink);
+  padding-top: var(--space-1);
+}
+
+.range dt {
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+
+.range dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+@media (min-width: 40rem) {
+  .range {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+}
+
+.strip {
+  margin: var(--space-3) 0;
+}
+
+.strip svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.strip__band {
+  fill: var(--band);
+}
+
+.strip__axis {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.strip__zero {
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+}
+
+.strip__median {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.strip__dot {
+  fill: var(--dot);
+  fill-opacity: 0.8;
+}
+
+.strip__label {
+  fill: var(--muted);
+  font: 600 22px var(--sans);
+}
+
+.strip figcaption {
+  color: var(--muted);
+  font-size: var(--text-small);
+  margin-top: var(--space-1);
+}
+
+.amount {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+  margin: var(--space-3) 0;
+  padding: var(--space-2);
+  border: 1px solid var(--rule);
+}
+
+.amount label {
+  font-weight: 600;
+}
+
+.amount input,
+.amount select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--muted);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.6rem;
+  min-height: 44px;
+}
+
+.amount .button {
+  margin-top: var(--space-1);
+}
+
+/* Buttons and links out */
+.button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.6rem 1.1rem;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink);
+  font: 600 1rem var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease-out, color var(--duration-fast) ease-out;
+}
+
+.button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.button:active {
+  transform: translateY(1px);
+}
+
+.button--primary {
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 1.125rem;
+  padding-inline: 1.5rem;
+}
+
+.button--primary:hover {
+  background: transparent;
+  color: var(--ink);
+}
+
+.button--quiet {
+  border-width: 1px;
+}
+
+.next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.share {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+}
+
+.share h2 {
+  margin-top: 0;
+  font-size: 1.125rem;
+}
+
+.share__url {
+  font-size: var(--text-small);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.share__status {
+  min-height: 1.5em;
+  color: var(--muted);
+}
+
+.types ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+}
+
+.types a {
+  display: inline-block;
+  padding-block: 0.3rem;
+}
+
+.types a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tally {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-2);
+  margin: var(--space-3) 0;
+}
+
+.tally div {
+  border-top: 2px solid var(--ink);
+  padding-top: var(--space-1);
+}
+
+.tally dt {
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+
+.tally dd {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.25rem;
+  font-weight: 600;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.landing .sample {
+  margin-top: var(--space-4);
+}
+
+.colophon {
+  border-top: 2px solid var(--ink);
+  padding-block: var(--space-2) var(--space-4);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+
+.disclaimer {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

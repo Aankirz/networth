@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "Networth history engine: event studies and base rates for US and Indian assets"
 requires-python = ">=3.12"
 dependencies = [
+    "fastapi>=0.162.0",
     "httpx2>=2.16.0",
+    "jinja2>=3.1.6",
     "openai>=3.37.0",
     "pandas>=3.1.0",
+    "uvicorn>=0.54.0",
     "yfinance>=1.7.0",
 ]
 
