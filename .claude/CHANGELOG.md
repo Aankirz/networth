@@ -105,3 +105,6 @@
 
 ## 2026-10-24 — Odds API, event checker and outside check
 - Added networth/engine/odds.py (odds, position_range, compare as TypedDict shapes over the sqlite file), check_events.py (one parser, library targets, live link check with a 20 s per-URL deadline, IPv4 first, one retry on transport errors) and outside_check.py (pre-FOMC drift on SPY and ^GSPC daily closes against Lucca and Moench 2015), with tests. Why: Phase 1 done-when items 3, 8 and 9; the retry exists because one resolver blip failed a live run.
+
+## 2026-10-25 — Phase 1 hand-off report
+- Added docs/phases/phase-1-report.md: coverage table, event counts by type and region, the method as built, every done-when result with its command, five base rates with episodes and baselines, the pre-FOMC outside check (matches in the paper's sample, fades after 2011), known gaps and every deviation from the brief. Why: the coordinator reviews Phase 1 against it.
