@@ -48,14 +48,14 @@
     <p class="subtitle">Know what the news means for your money. An always-on agent in WhatsApp and Telegram that reads the news every day so you don't have to, checks every story against decades of market history, and shows up on the day you invest. Every number comes with its reasons and its odds, out in the open. The goal is delight and peace of mind.</p>
     <div class="badges">
       <span class="badge green">Product spec · final</span>
-      <span class="badge">Keiki × Maritime week one</span>
+      <span class="badge">Telegram on Maritime · Keiki optional</span>
       <span class="badge">India and US markets</span>
       <span class="badge amber">Numbers in mockups are placeholders</span>
     </div>
     <dl class="props">
       <dt>Owner</dt><dd>Ankit Kiran</dd>
-      <dt>Updated</dt><dd>Oct 24, 2026</dd>
-      <dt>Surfaces</dt><dd>Telegram and WhatsApp through one Keiki agent, plus a web view opened from a link</dd>
+      <dt>Updated</dt><dd>Oct 25, 2026</dd>
+      <dt>Surfaces</dt><dd>Telegram first, then WhatsApp, plus a web view opened from a link. Our own server sends every message. Keiki is an optional extra surface.</dd>
       <dt>Ship by</dt><dd>Mon Oct 26, 9am IST, before the likely week-one cut</dd>
       <dt>Companion</dt><dd><a href="tech.html">Tech spec</a>, how each part gets built</dd>
       <dt>Agents read</dt><dd><code>knowledge/PRODUCT.md</code>, the same product knowledge in plain text. Every agent loads it, and if anything conflicts, that file wins.</dd>
@@ -113,7 +113,7 @@
       <div class="steps">
         <div><p><b>Messages first.</b> The text is the product. The web view is depth for people who want it, never a place you must go.</p></div>
         <div><p><b>One decision, one moment.</b> People decide once a month, on payday or their SIP date. We show up then, and stay quiet otherwise. No daily, weekly and monthly feeds competing for attention.</p></div>
-        <div><p><b>We come to you.</b> Nobody pastes headlines. Networth reads the news every day and decides what's worth your attention. Forwarding a tip you got is the one thing you might send us.</p></div>
+        <div><p><b>We come to you.</b> Nobody pastes headlines. Networth reads the news every day and decides what's worth your attention. Forwarding something you got is the one thing you might send us. That can be a tip, an IPO page, a news story or a screenshot you don't understand.</p></div>
         <div><p><b>Every call shows its work.</b> Each insight carries its reasons and its odds, and anyone can open the full trail. No black box.</p></div>
         <div><p><b>The engine makes every number.</b> The AI writes words. If a number in a message doesn't match the engine, the message doesn't send.</p></div>
         <div><p><b>Calm over hype.</b> "Nothing needs your attention" is a good message. We never push people to trade.</p></div>
@@ -223,7 +223,7 @@
         <tbody>
           <tr><td>Discover</td><td>A friend forwards a tip check: "That WhatsApp tip wasn't confirmed. Here's what history says."</td><td>Interesting, and someone I trust sent it.</td></tr>
           <tr><td>Start</td><td>Landing page with one sentence, a real sample, and buttons for Telegram and WhatsApp.</td><td>No risk, no sign up.</td></tr>
-          <tr><td>Onboard</td><td>Five quick questions: goal, horizon, monthly amount, investing day, drop comfort. Then pick a starter plan or make your own.</td><td>That was easy. It gets what I'm saving for.</td></tr>
+          <tr><td>Onboard</td><td>Seven quick taps: goal, horizon, monthly amount, investing day, drop comfort, what to leave out, language. Then pick a starter plan or make your own.</td><td>That was easy. It gets what I'm saving for.</td></tr>
           <tr><td>First value</td><td>Within a minute: "Here's what history says about this month so far." Plus the first forwarded tip it checks.</td><td>It already knows something useful.</td></tr>
           <tr><td>Monthly</td><td>The investing-day brief, on the day they picked. Rare alerts in between. "What happened today?" any time they ask.</td><td>I'm on top of it without trying.</td></tr>
           <tr><td>Trust</td><td>The public track record. What we said, and what happened 30 days later, misses included.</td><td>It's honest with me.</td></tr>
@@ -234,11 +234,11 @@
 
     <section class="block" id="messages">
       <div class="sec-head"><span class="sec-num">08</span><h2>Messages</h2></div>
-      <p class="lede">Six moments, one anatomy. The verdict first, then what happened, where history leans, what it means for your plan, and two or three tap replies.</p>
+      <p class="lede">Seven moments, one anatomy. The verdict first, then what happened, where history leans, what it means for your plan, and two or three tap replies.</p>
       <div class="phones">
         <div><div class="phone"><div class="bar">Onboarding · 60 seconds</div>
           <div class="bubble me">start</div>
-          <div class="bubble">Hi. I read the market news every day so you don't have to, and I'll check in on the day you invest. Five quick questions. What's this money for?</div>
+          <div class="bubble">Hi. I read the market news every day so you don't have to, and I'll check in on the day you invest. A few quick taps to set you up. What's this money for?</div>
           <div class="chips"><span>A house</span><span>Retirement</span><span>Just growing it</span></div>
           <div class="bubble me">house, in 4 years. about 1 lakh a month, on the 1st</div>
           <div class="bubble">Got it. Pick a starting plan, or make your own. Here's how each did through every crash since 2008.</div>
@@ -261,6 +261,13 @@
           <div class="bubble"><b>Not confirmed.</b> 0 major outlets and no NSE filing mention an order. Only forwards and one blog.</div>
           <div class="bubble">History check: small-cap stocks after viral tips without filings fell in 7 of 10 cases over the next month.</div>
           <div class="chips"><span>Why?</span><span>Share this check</span></div>
+        </div></div>
+        <div><div class="phone"><div class="bar">Explain this</div>
+          <div class="bubble me">[forwarded screenshot of an IPO page]</div>
+          <div class="bubble"><b>This is an IPO.</b> ABC Foods is selling its shares to the public for the first time. It plans to raise about ₹1,200 crore.</div>
+          <div class="bubble">Four things to know. Part of it is an OFS, an offer for sale, where existing owners sell and the company gets none of that money. A lot is 14 shares. "Subscribed 3 times" means people asked for 3 times the shares on offer. The DRHP is the draft document filed with SEBI.</div>
+          <div class="bubble">All of this comes from the page you sent. I don't say apply or skip, and I don't score IPOs.</div>
+          <div class="chips"><span>Decode more</span><span>Why?</span></div>
         </div></div>
         <div><div class="phone"><div class="bar">Alert · rare</div>
           <div class="bubble"><b>Big, confirmed, and history has a lot to say.</b> Union Budget raised capital gains tax. PIB plus 8 outlets.</div>
@@ -324,7 +331,7 @@
           <tr><td>Why</td><td>"why?", "how do you know?"</td><td>Sends the reasoning trail in short form, links the Why card</td></tr>
           <tr><td>Go deeper</td><td>"show the cases", "what about airlines?"</td><td>Expands the last message, links the What if page</td></tr>
           <tr><td>Today</td><td>"what happened today?", "aaj market kyun gira?"</td><td>One line on the day, with history if a confirmed event moved things</td></tr>
-          <tr><td>Explain</td><td>"what's a rate hike?", "what does OFS mean?"</td><td>Two plain sentences with a size or an example</td></tr>
+          <tr><td>Explain</td><td>a forwarded IPO page, news story or screenshot, "what's a rate hike?", "what does OFS mean?"</td><td>Says what it is, how big, the 3 or 4 things to know, and decodes the jargon. Facts only from what was sent or a confirmed source. Never apply, skip, buy or sell, and never a score.</td></tr>
           <tr><td>Check a tip</td><td>a forwarded message, "is this true?"</td><td>Says whether it's confirmed, and what history says about its claim</td></tr>
           <tr><td>Control</td><td>"pause", "no alerts", "invest on the 5th", "stop"</td><td>Changes it right away, never argues</td></tr>
           <tr><td>Asks for a decision</td><td>"should I put it all in banks?"</td><td>Says it can't decide for them, then shows the scoreboard and their own plan</td></tr>
@@ -344,12 +351,13 @@
       <div class="grid g3">
         <div class="card feature"><div class="k">In v1</div><ul>
           <li>India and US markets and events</li>
-          <li>Onboarding in 6 texts: goal, horizon, monthly amount, investing day, drop comfort, exclusions</li>
+          <li>Onboarding in 7 taps: goal, horizon, monthly amount, investing day, drop comfort, exclusions, language</li>
           <li>3 starter plans or your own</li>
           <li>The investing-day brief with the scoreboard</li>
           <li>The "Why?" reasoning trail</li>
           <li>"What happened today?" on request</li>
           <li>Forwarded-tip checking</li>
+          <li>"Explain this" for a forwarded IPO page, news story or screenshot</li>
           <li>Replies in English, Hindi or Hinglish</li>
           <li>Why card page, landing page, live stats</li>
         </ul></div>
@@ -363,6 +371,7 @@
         </ul></div>
         <div class="card"><div class="k">Cut</div><ul>
           <li>Buy or sell calls</li>
+          <li>Scores, ratings or ranks for any stock, IPO or sector</li>
           <li>"Put $X here" allocations for a specific person</li>
           <li>Futures, options, leverage, shorting. Never mentioned or promoted.</li>
           <li>Accounts, passwords, payments</li>
@@ -396,7 +405,7 @@
       <div class="sec-head"><span class="sec-num">14</span><h2>The demo</h2></div>
       <p class="lede">About 2 minutes. Nobody pastes a headline, and nothing is faked. Every screen is the live system running on real news and real history.</p>
       <div class="steps">
-        <div><p><b>0:00 · The problem.</b> "I lost money copying other people's picks. My friends earn well and have no time to follow markets."</p></div>
+        <div><p><b>0:00 · The problem, then a real IPO page made plain.</b> "I lost money copying other people's picks. My friends earn well and have no time to follow markets." Forward a real Groww IPO page. Back come what it is, how big, the 3 or 4 things to know and the jargon decoded, with no apply or skip and no score.</p></div>
         <div><p><b>0:12 · Onboarding.</b> Six quick answers and a starter plan, in under a minute. Then forward a viral WhatsApp tip and watch it get checked.</p></div>
         <div><p><b>0:28 · The investing-day brief arrives on its own.</b> The month in one line, the scoreboard with both base rates, your plan, one clear choice.</p></div>
         <div><p><b>0:40 · Tap "Why?".</b> The full reasoning trail. Every past episode behind the number.</p></div>
@@ -411,12 +420,12 @@
     <section class="block" id="open">
       <div class="sec-head"><span class="sec-num">15</span><h2>Open questions</h2></div>
       <details><summary>What is the exact week-one cutoff, and what is the rubric?</summary><div class="body">Not published anywhere we could find. Ask at office hours. The answer decides where the last 6 hours go.</div></details>
-      <details><summary>Does Keiki keep our numbers word for word?</summary><div class="body">Keiki's agent rewrites pushed notices in its own words. If "8 of 11" becomes "most of the time", briefs go out straight from Maritime through Telegram instead.</div></details>
+      <details><summary>Is Keiki in the delivery path?</summary><div class="body">No. Keiki's notice API lets its agent reword our text, and we quote exact counts like "8 of 11". So our server sends every message straight to Telegram through the Bot API. Keiki stays an optional extra surface through its external harness mode, where our server sends the exact text back.</div></details>
       <details><summary>Which tagline?</summary><div class="body">"A personal wealth manager of yours" says the dream well, but it tells US users and regulators that we give personal advice. Safer options that keep the dream: "Think like your own wealth manager." "The research the rich pay for, now in your texts." "Know what the news means for your money." Ankit decides.</div></details>
       <details><summary>Do people prefer the text or the page?</summary><div class="body">Ask the five interviewees where they check their investments today. If most say a page, give the web view more weight.</div></details>
     </section>
 
-    <footer class="end">Networth product spec · Oct 24, 2026 · Book ideas are summarized in our own words. Mockup figures are placeholders.</footer>
+    <footer class="end">Networth product spec · Oct 25, 2026 · Book ideas are summarized in our own words. Mockup figures are placeholders.</footer>
   </main>
 </div>
 

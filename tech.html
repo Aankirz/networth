@@ -32,7 +32,7 @@
     <a href="#harness">Agents and skills</a>
     <a href="#flows">Request flows</a>
     <a href="#web">Web view</a>
-    <a href="#delivery">Maritime and Keiki</a>
+    <a href="#delivery">Maritime, Telegram, Keiki</a>
     <a href="#evals">Evals and the loop</a>
     <a href="#phases">Phases</a>
     <a href="#fleet">Agent fleet</a>
@@ -47,17 +47,17 @@
     <div class="badges">
       <span class="badge green">Tech spec · final</span>
       <span class="badge">Python 3.12 · FastAPI · SQLite</span>
-      <span class="badge">Live: Opus 5.5 judges · Sonnet 5.5 writes · Haiku 5.5 sorts</span><span class="badge">Build: Claude Code</span>
-      <span class="badge blue">Maritime + Keiki · Telegram, WhatsApp</span>
+      <span class="badge">Live: OpenAI · luna sorts · sol judges · terra writes</span><span class="badge">Build: Claude Code on Opus 5.5</span>
+      <span class="badge blue">Maritime · Telegram · Keiki optional</span>
     </div>
     <dl class="props">
-      <dt>Repo</dt><dd><code>networth/</code>, forked from your <code>zoya-harness</code></dd>
-      <dt>Runs on</dt><dd>One Maritime VM, one Docker container, state in <code>/data</code></dd>
-      <dt>Talks through</dt><dd>One Keiki agent on Telegram and WhatsApp. Our own Telegram bot is the fallback.</dd>
+      <dt>Repo</dt><dd><code>networth/</code>, forked from your <code>zoya-harness</code>. The repo is public, so no secret, no user data and no <code>.env</code> is ever committed.</dd>
+      <dt>Runs on</dt><dd>One Maritime agent, one Docker container, state in <code>/data</code>, at <code>https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea</code></dd>
+      <dt>Talks through</dt><dd>Our own Telegram bot, straight from our server through the Bot API. Keiki is an optional extra surface.</dd>
       <dt>Budget</dt><dd>24 build hours, many agents in parallel</dd>
     </dl>
 
-    <div class="callout green"><div class="ic">✓</div><p><b>Two kinds of Claude.</b> <b>Claude Code</b>, on Ankit's plan, does all build-time thinking: writing the code, curating the event library, running backtests, the improvement loop and the evals. <b>The Claude API</b>, through Bedrock or an Anthropic key, runs only the live product on Maritime: classifying news, writing briefs, answering chat and checking forwarded tips. The product has to keep running when the laptop is closed and serve other people, so it can't sit on a personal Claude Code plan.</p></div>
+    <div class="callout green"><div class="ic">✓</div><p><b>Two kinds of model.</b> <b>Claude Code</b>, on Opus 5.5 and Ankit's plan, does all build-time work. It writes the code, curates the event library, runs the backtests, and runs the improvement loop and the evals. <b>OpenAI models</b> run only the live product on Maritime, in three roles set in <code>networth/config.toml</code>. The <code>cheap</code> role (gpt-5.6-luna) groups news into stories. The <code>judge</code> role (gpt-5.6-sol) classifies each confirmed story once. The <code>writer</code> role (gpt-5.6-terra) words every user-facing message. Bedrock and Simbian are out. The product has to keep running when the laptop is closed and serve other people, so it can't sit on a personal Claude Code plan.</p></div>
 
     <section class="block" id="parts">
       <div class="sec-head"><span class="sec-num">01</span><h2>What we build</h2></div>
@@ -69,11 +69,11 @@
           <tr><td>Price store</td><td>US: 17 ETFs since 1998, industry returns since 1926. India: Nifty 50 and Nifty sector indices, NSE stocks, mutual fund NAVs</td><td>yfinance (already cached for the US, <code>^NSEI</code>, <code>^CNXIT</code>, <code>^NSEBANK</code> and <code>.NS</code> tickers for India), Kenneth French data library, FRED, AMFI NAV history for funds</td></tr>
           <tr><td>Backtest</td><td>Turns events and prices into base rates</td><td>pandas, about 300 lines, writes <code>base_rates.sqlite</code></td></tr>
           <tr><td>Odds API</td><td>Answers "what happened after events like this" for any asset or position</td><td><code>engine/odds.py</code> behind FastAPI</td></tr>
-          <tr><td>News watcher</td><td>Pulls news, groups it into stories, confirms them</td><td>Exa news search, GDELT as backup, Haiku for grouping</td></tr>
+          <tr><td>News watcher</td><td>Pulls news, groups it into stories, confirms them</td><td>Exa news search, GDELT as backup, the cheap model (luna) for grouping</td></tr>
           <tr><td>Triggers</td><td>Decides which stories become insights</td><td>Price-first z-score check plus news-first type match</td></tr>
-          <tr><td>Harness</td><td>Runs agents from spec files with skills, tools, budgets</td><td>zoya-harness fork, Claude models</td></tr>
-          <tr><td>Composer and guardrails</td><td>Writes the five-line message, blocks any untraceable number</td><td>Sonnet 5.5, <code>guardrails.py</code></td></tr>
-          <tr><td>Onboarding</td><td>Asks 6 questions and records the plan the user picks</td><td>Sonnet 5.5, answers parsed into a typed Profile</td></tr>
+          <tr><td>Harness</td><td>Runs agents from spec files with skills, tools, budgets</td><td>zoya-harness fork, OpenAI models through <code>networth/llm.py</code></td></tr>
+          <tr><td>Composer and guardrails</td><td>Writes the brief, blocks any untraceable number</td><td>The writer model (terra), <code>networth/guard.py</code></td></tr>
+          <tr><td>Onboarding</td><td>Asks 7 questions with buttons and records the plan the user picks</td><td>A state machine, no model, answers parsed into a typed Profile</td></tr>
           <tr><td>Web view</td><td>How am I doing, What if, Why card, landing, stats</td><td>FastAPI with Jinja templates, server-drawn SVG charts</td></tr>
           <tr><td>Evals and loop</td><td>Frozen tests and a keep-or-discard improvement loop</td><td><code>evals/</code>, git, Claude Code agents propose the edits at build time</td></tr>
         </tbody>
@@ -82,12 +82,12 @@
 
     <section class="block" id="arch">
       <div class="sec-head"><span class="sec-num">02</span><h2>Architecture</h2></div>
-      <p class="lede">One VM does the thinking. Keiki does the talking. Everything the user sees traces back to the engine box.</p>
-      <figure class="sketch"><svg id="t-arch" viewBox="0 0 1000 600" role="img" aria-label="Architecture showing user phone, Keiki or Telegram, the Maritime VM with harness, engine, watcher and storage, and external data sources"></svg>
+      <p class="lede">One VM does the thinking and the talking. Telegram is the door, and Keiki is an optional second one. Everything the user sees traces back to the engine box.</p>
+      <figure class="sketch"><svg id="t-arch" viewBox="0 0 1000 600" role="img" aria-label="Architecture showing user phone, Telegram, optional Keiki, the Maritime VM with harness, engine, watcher and storage, and external data sources"></svg>
         <figcaption>Solid lines are the main path. Dashed lines are the fallback or offline jobs.</figcaption></figure>
       <div class="grid g3">
-        <div class="card"><div class="k">Maritime VM</div><p>A Docker container that listens on <code>$PORT</code>, answers <code>GET /health</code> and <code>POST /chat</code> within 30 seconds, and keeps everything in <code>/data</code>. Maritime cron triggers wake it daily for investing-day briefs and every 15 minutes in Indian and US market hours.</p></div>
-        <div class="card"><div class="k">Keiki</div><p>Handles the Telegram and WhatsApp conversations, per-user memory and forwarded messages. It calls our <code>/tools/*</code> endpoints as webhook tools. We push briefs with its notice API.</p></div>
+        <div class="card"><div class="k">Maritime VM</div><p>A Docker container that listens on <code>$PORT</code>, answers <code>GET /health</code> and <code>POST /telegram/webhook</code>, serves the web pages, and keeps everything in <code>/data</code>. Schedules registered with Maritime wake it for the news pull and the investing-day brief, because in-VM timers don't fire while it sleeps.</p></div>
+        <div class="card"><div class="k">Telegram</div><p>Our server sends every message straight to Telegram through the Bot API, and Telegram posts each update to our webhook with a secret header we check. Keiki is not in this path. It is an optional extra surface, described under Delivery.</p></div>
         <div class="card"><div class="k">Offline</div><p>The backtest runs once at build time, then nightly. It reads the price store and the event library and writes the base-rate table. Nothing user-facing waits on it.</p></div>
       </div>
     </section>
@@ -123,9 +123,9 @@
         <div><p><b>Filter per user.</b> Drop any asset in <code>exclude[]</code> and any market not in <code>markets[]</code>.</p></div>
         <div><p><b>Order per user.</b> The scoreboard is the same for everyone. What leads changes with the goal: a 3-year house goal hears about drops and recovery first, a 25-year horizon hears about long-run history.</p></div>
         <div><p><b>Size per user.</b> Ranges shown on their <code>monthly_amount</code>, in rupees or dollars, as illustrations. Their own plan is quoted back, never changed by us.</p></div>
-        <div><p><b>Compose per user.</b> One Sonnet call with the profile in context. At large scale the five lines become a template filled from the engine, and the model handles only chat. That keeps cost roughly flat per user.</p></div>
+        <div><p><b>Compose per user.</b> One writer-model call with the profile in context. At large scale the five lines become a template filled from the engine, and the model handles only chat. That keeps cost roughly flat per user.</p></div>
       </div>
-      <div class="callout green"><div class="ic">✓</div><p><b>Why <code>numbers_used</code> exists.</b> Every message records which engine values it quoted. The guardrail checks that every number in the text appears in that list. That is how "every call shows its work" becomes something the code enforces.</p></div>
+      <div class="callout green"><div class="ic">✓</div><p><b>Why <code>numbers_used</code> exists.</b> Every message records which engine values it quoted. The guardrail checks that every number in the text appears in that list. That is how "every call shows its work" becomes something the code enforces. The send gate is <code>networth/guard.py</code>, described under Agents and skills.</p></div>
     </section>
 
     <section class="block" id="engine">
@@ -153,6 +153,12 @@ GET /tools/position_range
 → { value: 2000, p10: -180,
     median: -48, p90: 60 }</code></pre></div>
       </div>
+      <h3 style="margin-top:22px">Economic context</h3>
+      <p>Phase 1B adds the economy as context. <code>engine/macro.py</code> downloads and caches FRED series into <code>data/macro/</code> (USREC for recessions, CPIAUCSL for US inflation, FEDFUNDS and UNRATE) and the all-India CPI from MoSPI. The engine can then split one event type into two cases with <code>split()</code>. Existing <code>odds()</code> output is unchanged.</p>
+      <div class="grid g2">
+        <div class="card"><div class="k">After Fed cuts</div><p>No recession followed compared with one did. This split sees the future, so every row is labelled <code>hindsight: true</code>. The product can show it as what happened in each case, never as a live signal.</p></div>
+        <div class="card"><div class="k">After hikes</div><p>When inflation was high compared with low. It uses only data published before the event, with the CPI release lag, and a leak test fails the build if it doesn't. The cut-offs are fixed before any result is looked at.</p></div>
+      </div>
       <div class="callout amber"><div class="ic">!</div><p><b>The outside check.</b> Before we trust any number, the engine must reproduce a published result. The candidate is Lucca and Moench (2015), who report that the S&amp;P tends to rise in the 24 hours before scheduled Fed announcements. That's cited from memory, so step one is to confirm it in the paper. If our engine, run on SPY and real FOMC dates, can't show the effect, the engine has a bug.</p></div>
     </section>
 
@@ -160,10 +166,11 @@ GET /tools/position_range
       <div class="sec-head"><span class="sec-num">05</span><h2>News watcher and triggers</h2></div>
       <p class="lede">This replaces the old "paste a headline" idea. The system finds the stories itself.</p>
       <div class="grid g3">
-        <div class="card"><div class="k">Pull</div><p>Every 15 minutes in NSE hours (9:15 to 15:30 IST) and US hours, hourly otherwise. Exa news search over the last 48 hours with queries per event type and per asset held by any user. GDELT as backup.</p></div>
-        <div class="card"><div class="k">Group and confirm</div><p>Haiku groups articles into stories by title and summary. A story is confirmed with 3 or more original publishers in 24 hours, or 1 primary source such as the Fed, SEC, RBI, SEBI, PIB, NSE filings, OPEC or a company's investor page. Indian publishers include Economic Times, Mint, Business Standard and Moneycontrol. Wire reposts count once.</p></div>
+        <div class="card"><div class="k">Pull</div><p>Every 15 minutes in NSE hours (9:15 to 15:30 IST) and US hours, hourly otherwise. Exa news search over the last 48 hours with queries per event type and region. GDELT as backup.</p></div>
+        <div class="card"><div class="k">Group and confirm</div><p>The cheap model (luna) groups articles into stories by title and summary. A story is confirmed with 3 or more original publishers in 24 hours, or 1 primary source such as the Fed, SEC, RBI, SEBI, PIB, NSE filings, OPEC or a company's investor page. Indian publishers include Economic Times, Mint, Business Standard and Moneycontrol. Wire reposts count once.</p></div>
         <div class="card"><div class="k">Trigger</div><p><b>Price first.</b> An asset's excess return today beyond 2.5 times its 60-day volatility, then find the confirmed story behind it. <b>News first.</b> A confirmed story that classifies into a known type and cause.</p></div>
       </div>
+      <div class="callout green"><div class="ic">✓</div><p><b>Measured on real news.</b> One live cycle took 144 seconds and cost $0.30. It read 146 articles, built 75 stories, confirmed 33 and rejected 42. At 43 cycles a day, Exa is $4.52 a day and the models add an estimated $0.3 to $1.0. That is about $5 to $5.50 a day, or $150 to $165 a month, an estimate from two measured cycles.</p></div>
       <p style="margin-top:14px">Every story that fails a check is still logged with the reason. That log is the "honesty moment" in the demo, and it's how we tune the thresholds.</p>
     </section>
 
@@ -173,44 +180,46 @@ GET /tools/position_range
       <div class="tw"><table class="t">
         <thead><tr><th>Decision</th><th>Who makes it</th><th>How often</th><th>Rough cost</th></tr></thead>
         <tbody>
-          <tr><td>Sort hundreds of articles into stories</td><td>Haiku 5.5</td><td>Every 15 min</td><td>Under $0.20 a day</td></tr>
+          <tr><td>Sort hundreds of articles into stories</td><td>The cheap model, gpt-5.6-luna</td><td>Every cycle</td><td>$0.008 for the first cycle, $0.001 for a quiet one, measured</td></tr>
           <tr><td>Is it confirmed? (3+ publishers or a primary source)</td><td>Code, counting publishers</td><td>Every story</td><td>Free</td></tr>
-          <tr><td><b>What kind of event is this, and what caused it?</b> Oil supply shock or demand drop? Surprise Fed hike or already expected? Which past episodes are truly comparable, and what are the second-order effects?</td><td><b>Opus 5.5</b>, with the classify-event, priced-in-check, reference-class, regime-check and second-order-effects skills</td><td>0 to 5 confirmed stories a day, done once for all users</td><td>About $0.14 each, under $0.50 a day</td></tr>
+          <tr><td><b>What kind of event is this, and what caused it?</b> Oil supply shock or demand drop? Surprise Fed hike or already expected? Which past episodes are truly comparable, and what are the second-order effects?</td><td><b>The judge model, gpt-5.6-sol</b>, with the classify-event, priced-in-check, reference-class, regime-check and second-order-effects skills</td><td>Every newly confirmed story, once for all users, capped at 40 calls a cycle</td><td>$0.0058 a call on average over 31 calls, $0.011 at most, measured</td></tr>
           <tr><td>The odds, the dollar ranges, a comparison of 2 or 3 stocks after this kind of event</td><td><b>The engine</b>, counting episodes against the baseline</td><td>On demand</td><td>Free</td></tr>
           <tr><td>Which events matter to this user</td><td>Code: exposure × size of the effect × confidence × goal weight</td><td>Per user</td><td>Free</td></tr>
-          <tr><td>Write the brief, answer "why?" or "NVDA or AMD after this?"</td><td>Sonnet 5.5, quoting only engine numbers</td><td>Per user, per message</td><td>About $0.02 a message</td></tr>
+          <tr><td>Which closed type a chat message is (what happened today, why, tip check, explain this, plan question, other)</td><td><b>Jev</b>, TypeSafe's typed decisions through its Python SDK and the Vercel AI Gateway. Kept only if it is at least as accurate as the cheap model on a labelled set. The model decides on any Jev error.</td><td>Every chat message</td><td>Not yet measured</td></tr>
+          <tr><td>Write the brief, answer "why?", explain a forwarded page</td><td>The writer model, gpt-5.6-terra, quoting only engine numbers. <code>guard.py</code> checks every draft.</td><td>Per user, per message</td><td>Not yet measured</td></tr>
           <tr><td>Where to put money</td><td><b>Nobody.</b> That's personalized advice. The user decides, and we show what history says about their choice.</td><td></td><td></td></tr>
         </tbody>
       </table></div>
-      <h3 style="margin-top:22px">Unit economics (estimates, not yet measured)</h3>
-      <p>Prices are Anthropic's list prices per million tokens: Haiku 5.5 $0.10 in / $0.50 out. Sonnet 5.5 $2 in / $10 out, $0.20 cached. Opus 5.5 $4 in / $20 out. Bedrock may price differently. Thinking tokens bill as output.</p>
+      <h3 style="margin-top:22px">Unit economics</h3>
+      <p>Prices are OpenAI's list prices per million tokens, from each model's page, fetched 2026-10-25. luna $0.20 in, $0.02 cached, $1.20 out. terra $2 in, $0.20 cached, $12 out. sol $4 in, $0.40 cached, $20 out. Sol's price is promotional, through at least Nov 21, 2026. Watcher rows are measured. Per-user rows are not yet measured.</p>
       <div class="tw"><table class="t">
         <thead><tr><th>Model call</th><th>Input</th><th>Output</th><th>Per call</th><th>Volume</th><th>Monthly</th></tr></thead>
         <tbody>
-          <tr><td>Group a news pull (Haiku)</td><td>25k: about 100 articles × 250</td><td>2k</td><td>$0.0035</td><td>About 43 pulls a day</td><td>About $4.50, shared</td></tr>
-          <tr><td>Judge one confirmed event (Opus)</td><td>15k: articles 8k, skills 5k, candidate episodes 2k</td><td>4k including thinking</td><td>$0.14</td><td>About 3 a day</td><td>About $13, shared</td></tr>
-          <tr><td>Investing-day brief (Sonnet)</td><td>4k cached system and skills + 2k fresh (profile, plan, scoreboard numbers)</td><td>1.5k: 400 visible, the rest thinking</td><td>$0.02, plus about 20% for redrafts</td><td>1 per user, plus 0 to 2 alerts</td><td>About $0.07 per user</td></tr>
-          <tr><td>Chat reply (Sonnet)</td><td>4k cached + 3k fresh (history, stored trail)</td><td>800</td><td>$0.015</td><td>10 to 30 per user</td><td>$0.15 to $0.45 per user</td></tr>
-          <tr><td>Tip check (Sonnet)</td><td>4k cached + 3k fresh (the tip, matching stories, engine numbers)</td><td>800</td><td>$0.02</td><td>About 5 per user</td><td>About $0.10 per user</td></tr>
-          <tr><td>Intent router fallback (Haiku)</td><td>500</td><td>50</td><td>Under $0.0001</td><td>When rules miss</td><td>About $0</td></tr>
+          <tr><td>Group a news pull (luna)</td><td>21,386 tokens over 3 calls, first cycle</td><td>3,348 over 3 calls</td><td>$0.0083 for the cycle</td><td>One cycle, then only new articles</td><td>$0.001 for a quiet cycle</td></tr>
+          <tr><td>Judge one confirmed event (sol)</td><td>29,197 over 30 calls, first cycle</td><td>2,851 over 30 calls</td><td>$0.0058 average, $0.011 at most</td><td>One per newly confirmed story</td><td>$0.1738 for the first cycle's 30</td></tr>
+          <tr><td>Investing-day brief (terra)</td><td>Not yet measured</td><td>Not yet measured</td><td>Not yet measured</td><td>1 per user, plus 0 to 2 alerts</td><td>Not yet measured</td></tr>
+          <tr><td>Chat reply (terra)</td><td>Not yet measured</td><td>Not yet measured</td><td>Not yet measured</td><td>Per message</td><td>Not yet measured</td></tr>
+          <tr><td>Tip check (terra)</td><td>Not yet measured</td><td>Not yet measured</td><td>Not yet measured</td><td>Per forwarded tip</td><td>Not yet measured</td></tr>
+          <tr><td>Explain this (terra, vision for photos)</td><td>Not yet measured</td><td>Not yet measured</td><td>Not yet measured</td><td>Per forwarded page</td><td>Not yet measured</td></tr>
+          <tr><td>Intent pick (Jev, or the cheap model)</td><td>Not yet measured</td><td>Not yet measured</td><td>Not yet measured</td><td>Every chat message</td><td>Not yet measured</td></tr>
         </tbody>
       </table></div>
-      <div class="callout green"><div class="ic">↓</div><p><b>Free levers, no quality loss.</b> Build each day's investing-day briefs in one Batch API job, which is 50% off. Keep the system prompt and skills byte-identical so every user after the first reads them from cache. Store the "why" trail so a "why?" reply never recomputes it.</p></div>
+      <div class="callout green"><div class="ic">↓</div><p><b>Free levers, no quality loss.</b> Keep the system prompt and skills byte-identical so every user after the first reads them at the cached rate (terra $0.20 against $2 per million). Store the "why" trail so a "why?" reply never recomputes it. Do the hard judgment once per event for all users.</p></div>
       <div class="tw"><table class="t">
         <thead><tr><th>Other cost</th><th>Monthly</th><th>Note</th></tr></thead>
         <tbody>
-          <tr><td>News search (Exa)</td><td>$45 to $90, shared</td><td>5 to 10 queries per pull × 43 pulls a day, at about $7 per 1,000. About $10 free credit a month.</td></tr>
+          <tr><td>News search (Exa)</td><td>About $4.52 a day, shared</td><td>16 queries a cycle cost $0.105, at 43 cycles a day. Halving the queries to 8 halves it, and that is a config change.</td></tr>
           <tr><td>Market prices</td><td>$0 for the demo</td><td>yfinance is free but not licensed for commercial use. A real launch needs a paid feed such as Tiingo (price not checked).</td></tr>
           <tr><td>History data (French library, FRED, GDELT)</td><td>$0</td><td>Free. FRED needs a free key.</td></tr>
           <tr><td>Maritime compute and storage</td><td>$0 on promo</td><td>Scale lists at $500 a month. A smaller plan likely fits one agent. SQLite in <code>/data</code> is a few MB.</td></tr>
-          <tr><td>Keiki</td><td>Unknown</td><td>The $25 credit covers its chat turns. Plan price after that is not checked.</td></tr>
+          <tr><td>Keiki</td><td>Optional</td><td>Only if we turn on the extra surface. Plan price is not checked.</td></tr>
           <tr><td>WhatsApp templates</td><td>Per message</td><td>Meta's fee varies by country. Telegram is free.</td></tr>
           <tr><td>Domain</td><td>About $1</td><td><code>getnetworth.app</code>, about $15 a year (price not checked)</td></tr>
           <tr><td>Logs and monitoring</td><td>$0</td><td>Maritime logs plus the <code>/stats</code> page</td></tr>
         </tbody>
       </table></div>
-      <p class="mock-note">All in, before Keiki, WhatsApp and paid market data, estimated: about $1.30 a user a month at 100 users (about $0.45 variable, mostly chat, + about $85 shared). About $0.55 at 1,000 users. Moving to one brief a month cut the variable cost by more than half.</p>
-      <div class="callout"><div class="ic">$</div><p><b>Who pays.</b> We bring the key. Maritime runs the code but doesn't pay for the models, beyond a $5 welcome credit. Keiki's $25 covers only Keiki's own chat turns. Plan A is Claude through Amazon Bedrock on the $100 AWS credit, if the credit applies to Bedrock. Plan B is an Anthropic API key. Expected spend for the build plus week one is about $15 to $40.</p></div>
+      <p class="mock-note">The shared cost is mostly Exa, about $5 to $5.50 a day all in with the models, or $150 to $165 a month, estimated from two measured cycles. The cost per user is not yet measured. It will be summed from <code>data/llm_calls.jsonl</code>.</p>
+      <div class="callout"><div class="ic">$</div><p><b>Who pays.</b> We bring the key. The live product calls OpenAI with our own <code>OPENAI_API_KEY</code>, set on Maritime with <code>maritime env set</code>. Maritime runs the code but doesn't pay for the models, beyond a $5 welcome credit. Claude Code on Ankit's plan pays for all build-time work. Bedrock is out.</p></div>
     </section>
 
     <section class="block" id="harness">
@@ -247,7 +256,7 @@ GET /tools/position_range
         <div>
 <pre style="margin:0"><code><span class="c"># agents/brief.yaml</span>
 <span class="k">name</span>: brief
-<span class="k">model</span>: claude-sonnet-5-5
+<span class="k">role</span>: writer  <span class="c"># model id lives only in config.toml</span>
 <span class="k">prompt</span>: prompts/brief.md
 <span class="k">skills</span>: [base-rate-odds, priced-in-check,
          second-order-effects,
@@ -266,12 +275,13 @@ GET /tools/position_range
           </ul></div>
         </div>
       </div>
-      <h3 style="margin-top:24px">Guardrails, run after every draft</h3>
+      <h3 style="margin-top:24px">Guardrails, <code>networth/guard.py</code>, run on every model-written message</h3>
       <div class="tw"><table class="t">
         <thead><tr><th>Check</th><th>Fails when</th><th>Then</th></tr></thead>
         <tbody>
-          <tr><td>Numbers traceable</td><td>A number in the text isn't in <code>numbers_used</code></td><td>Redraft once, then drop the line</td></tr>
-          <tr><td>Banned words</td><td>"buy", "sell", "guaranteed", "can't lose" and similar</td><td>Redraft</td></tr>
+          <tr><td>Numbers traceable</td><td>A number in the text isn't in the engine output it was written from, after formats like ₹1,00,000, 56% and 14 of 22 are normalised</td><td>Redraft once. Fails twice, the plain template is sent with no model text</td></tr>
+          <tr><td>Banned words</td><td>"buy", "sell", "guaranteed", "can't lose" and similar, in English and Hinglish</td><td>Redraft</td></tr>
+          <tr><td>No advice phrasing</td><td>"you should", "put your money", "move ₹" and similar</td><td>Redraft</td></tr>
           <tr><td>Weak signal label</td><td>Fewer than 8 episodes without the words "weak signal"</td><td>Insert it</td></tr>
           <tr><td>Length</td><td>Over 400 characters before the first tap</td><td>Redraft shorter</td></tr>
           <tr><td>Confirmed</td><td>The insight's story isn't confirmed</td><td>Block the message</td></tr>
@@ -282,17 +292,23 @@ GET /tools/position_range
     <section class="block" id="flows">
       <div class="sec-head"><span class="sec-num">07</span><h2>Request flows</h2></div>
       <h3>The investing-day brief</h3>
-      <figure class="sketch"><svg id="t-brief" viewBox="0 0 1000 470" role="img" aria-label="Sequence of the investing-day brief from cron through watcher, engine, composer, guardrails and delivery to the user"></svg>
+      <figure class="sketch"><svg id="t-brief" viewBox="0 0 1000 470" role="img" aria-label="Sequence of the investing-day brief from the schedule through watcher, engine, composer, guardrails and Telegram to the user"></svg>
         <figcaption>One brief per user per month, on the day they picked. If nothing is a strong signal, the brief says so in one line.</figcaption></figure>
       <h3>Onboarding</h3>
       <figure class="sketch"><svg id="t-onboard" viewBox="0 0 1000 210" role="img" aria-label="Onboarding flow from start message to first value"></svg>
         <figcaption>Target: under 60 seconds from "start" to the first useful message.</figcaption></figure>
       <h3>A reply like "why?" or a forwarded tip</h3>
       <div class="steps">
-        <div><p>Keiki or Telegram posts the message to <code>/chat</code> with the user id.</p></div>
-        <div><p>The router maps it to one of 7 intents with rules first, Haiku only if the rules miss.</p></div>
+        <div><p>Telegram posts the update to <code>/telegram/webhook</code>. With the optional Keiki surface, Keiki pushes the turn to our server instead.</p></div>
+        <div><p>Jev picks one closed intent. The cheap model decides if Jev errors or times out.</p></div>
         <div><p><code>chat.yaml</code> runs with the skills for that intent. "Why" reads the stored <code>Trail</code> and never recomputes it.</p></div>
         <div><p>Guardrails check the draft. The reply goes out with 2 or 3 suggested taps and, when useful, a link to the web view.</p></div>
+      </div>
+      <h3 style="margin-top:22px">Explain this</h3>
+      <div class="steps">
+        <div><p>The user forwards text, a link or a photo. A photo is fetched with Telegram's <code>getFile</code> and read by the vision-capable model in config.</p></div>
+        <div><p>The writer model says what it is, how big, the 3 or 4 things to know, and decodes the jargon, using only facts from what was sent or a confirmed source.</p></div>
+        <div><p><code>guard.py</code> checks it with the sent content as its number source. It never says apply, skip, buy or sell, and it never gives a score or a rank.</p></div>
       </div>
     </section>
 
@@ -302,45 +318,45 @@ GET /tools/position_range
       <div class="tw"><table class="t">
         <thead><tr><th>Route</th><th>Page</th><th>Reads</th></tr></thead>
         <tbody>
-          <tr><td><code>/</code></td><td>Landing</td><td>A real recent brief, anonymized</td></tr>
-          <tr><td><code>/u/{token}</code></td><td>How am I doing</td><td>Profile, prices, this week's insights</td></tr>
-          <tr><td><code>/u/{token}/what-if/{type}</code></td><td>What if</td><td>BaseRate, episodes, position ranges</td></tr>
-          <tr><td><code>/why/{insight_id}</code></td><td>Why card, shareable</td><td>Trail, episodes with dates and sources</td></tr>
+          <tr><td><code>/</code></td><td>Landing</td><td>The tagline and a real scoreboard sample</td></tr>
+          <tr><td><code>/why/{type}/{asset}</code></td><td>Why card, shareable</td><td>Every past episode with its date, source, return and the baseline</td></tr>
+          <tr><td><code>/what-if/{type}/{asset}</code></td><td>What if</td><td>Position ranges in rupees or dollars, one dot per past episode</td></tr>
+          <tr><td><code>/scoreboard/{type}</code></td><td>Scoreboard</td><td>Sector groups in a fixed order, no ranks</td></tr>
+          <tr><td><code>/track-record</code></td><td>Track record</td><td>The <code>track_record</code> table once it exists</td></tr>
+          <tr><td><code>/u/{token}</code></td><td>Your plan and last brief</td><td>Profile and the last brief, token signed with <code>LINK_SIGNING_SECRET</code></td></tr>
           <tr><td><code>/stats</code></td><td>Live stats</td><td>Counts only, no personal data</td></tr>
         </tbody>
       </table></div>
     </section>
 
     <section class="block" id="delivery">
-      <div class="sec-head"><span class="sec-num">09</span><h2>Maritime and Keiki</h2></div>
-      <p class="lede">The two sponsor platforms each do one job. Maritime is where Networth thinks and keeps its memory. Keiki is how Networth talks to people. Using both as intended is part of the pitch, not just plumbing.</p>
+      <div class="sec-head"><span class="sec-num">09</span><h2>Maritime, Telegram and Keiki</h2></div>
+      <p class="lede">Maritime is where Networth thinks and keeps its memory. Telegram is how it talks to people, through our own bot. Keiki is an optional extra surface, because its notice API lets its agent reword our text and we quote exact counts.</p>
       <div class="tw"><table class="t">
         <thead><tr><th></th><th>Maritime</th><th>Keiki</th></tr></thead>
         <tbody>
-          <tr><td>Its job for us</td><td>Runs the always-on agent: harness, engine, watcher, web view, SQLite in <code>/data</code></td><td>Owns the Telegram bot and WhatsApp number, per-user memory, forwarded messages, outgoing notices</td></tr>
-          <tr><td>How we use it</td><td>One Docker container on <code>$PORT</code>. <code>GET /health</code>, <code>POST /chat</code>, <code>/tools/*</code>, <code>/u/*</code>. A daily cron for investing-day briefs per timezone and the 15-minute news pull.</td><td>A Keiki agent whose tools are webhooks to our <code>/tools/odds</code>, <code>/tools/position_range</code>, <code>/tools/profile</code>, <code>/tools/why</code>. Briefs and alerts go out through <code>POST /developer/agents/{id}/notice</code>.</td></tr>
-          <tr><td>Why it fits</td><td>"Always-on" is the brief. A VM that wakes on a schedule and keeps state is exactly that.</td><td>People already live in Telegram and WhatsApp. No app to install is the biggest lever on reaching 1,000 users.</td></tr>
-          <tr><td>Setup</td><td>Sign up, Billing, Scale plan, code <code>2A6Y73QF</code> at Stripe checkout. Two free months, about $1,000 per person.</td><td>Sign up, your name, organization "Networth", invite code <code>FIRST1000</code>. Gives build access plus $25 in LLM credits for users.</td></tr>
-          <tr><td>Keys we need</td><td><code>MARITIME_TOKEN</code> for the CLI only, never in the container</td><td><code>KEIKI_API_KEY</code>, <code>KEIKI_AGENT_ID</code>, webhook signing secret</td></tr>
-          <tr><td>Open question for Darshan</td><td>Can a cron trigger fan out per user, or do we loop users inside one run?</td><td>Is a notice delivered word for word? Is WhatsApp template approval quick?</td></tr>
+          <tr><td>Its job for us</td><td>Runs the always-on agent: server, engine, watcher, web pages, SQLite in <code>/data</code></td><td>An optional extra surface. Keiki owns the channel, inbound screening and traces.</td></tr>
+          <tr><td>How we use it</td><td>One agent at <code>https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea</code>. <code>GET /health</code>, <code>POST /telegram/webhook</code>, <code>/why/*</code>, <code>/u/*</code>. Schedules registered with Maritime run the news pull and the daily brief, because in-VM timers don't fire while the VM sleeps.</td><td>External harness mode (<a href="https://onkeiki.com/docs/external-harness.md">docs</a>). Keiki pushes each turn to our server. Our server runs the same chat intents and <code>guard.py</code>, then sends the exact text back with <code>POST {turnUrl}/messages</code>.</td></tr>
+          <tr><td>Why it fits</td><td>"Always-on" is the brief. A VM that wakes on a schedule and keeps state is exactly that.</td><td>Our words go out unchanged and our guardrails stay ours, while Keiki carries the channel and screens what comes in.</td></tr>
+          <tr><td>Setup</td><td>Sign up, Billing, Scale plan, the promo code from the organisers' email at Stripe checkout. Two free months, about $1,000 per person.</td><td>Sign up, your name, organization "Networth", the invite code from the organisers' email.</td></tr>
+          <tr><td>Keys we need</td><td><code>MARITIME_TOKEN</code> for the CLI only, never in the container</td><td><code>KEIKI_API_KEY</code>, only if the Keiki surface is on</td></tr>
+          <tr><td>Open question</td><td>Can a schedule fan out per user, or do we loop users inside one run?</td><td>Does external harness mode work on our plan? If it blocks for more than 30 minutes, we record the exact error as a known gap and ship Telegram only.</td></tr>
         </tbody>
       </table></div>
-      <div class="callout green"><div class="ic">✓</div><p><b>Checked in the Keiki dashboard on Oct 24.</b> One Keiki agent can attach a <b>Telegram bot</b> and a <b>WhatsApp number</b>, and both go through the same <code>/tools/*</code>. We are not using iMessage. Launch order is Telegram first (free, global, one t.me link, though users must tap Start before we can message them), then WhatsApp (the monthly brief falls outside its 24-hour reply window, so it needs an approved message template). Maritime is on the Scale plan with 0 of 500 agents used and the first charge at $0 on Nov 19.</p></div>
-      <div class="callout amber"><div class="ic">!</div><p><b>Spend the $25 Keiki credit on users, not on us.</b> Composing runs on our own Anthropic key on Maritime. Keiki's credits cover its own conversational turns, so every new user costs us close to nothing in week one.</p></div>
+      <div class="callout green"><div class="ic">✓</div><p><b>Checked on Oct 24.</b> We are not using iMessage. Launch order is Telegram first (free, global, one t.me link, though users must tap Start before we can message them), then WhatsApp (the monthly brief falls outside its 24-hour reply window, so it needs an approved message template). Maritime is on the Scale plan with 0 of 500 agents used and the first charge at $0 on Nov 19.</p></div>
+      <div class="callout amber"><div class="ic">!</div><p><b>Why Keiki is not in the delivery path.</b> Keiki's notice API lets its agent reword our text. A brief that says "8 of 11" could come out as "most of the time". So our server sends every message straight to Telegram through the Bot API, and we control every word.</p></div>
       <div class="grid g2">
-        <div class="card"><div class="k">Plan A · Keiki on Telegram and WhatsApp</div><ul>
-          <li>Keiki holds the conversation, memory and images.</li>
-          <li>It calls our <code>/tools/*</code> as webhook tools.</li>
-          <li>We push with <code>POST /developer/agents/{id}/notice</code>.</li>
-          <li>Limits: users start the chat first on every channel. WhatsApp briefs need an approved template.</li>
-          <li><b>Risk:</b> Keiki's agent rewrites notices. Spike test at H0.</li>
+        <div class="card"><div class="k">The path · our own Telegram bot (Phase 3A)</div><ul>
+          <li>Telegram posts each update to <code>/telegram/webhook</code>, and we check the secret header.</li>
+          <li><code>sendMessage</code> with inline keyboards for every message. Forwarded tips arrive as normal messages.</li>
+          <li><code>send()</code> is the only way out. It sends nothing to a stopped user and no proactive message to a paused one.</li>
+          <li>Works globally, no line cost. Users tap Start first.</li>
         </ul></div>
-        <div class="card"><div class="k">Plan B · Our own Telegram bot from Maritime</div><ul>
-          <li>Our own bot, webhook into <code>/chat</code>.</li>
-          <li><code>sendMessage</code> for briefs. Forwarded tips arrive as normal messages.</li>
-          <li>We control every word, so numbers can't drift.</li>
-          <li>Works globally, no line cost.</li>
-          <li>Switch if the H0 spike shows numbers changing.</li>
+        <div class="card"><div class="k">Optional · Keiki external harness</div><ul>
+          <li>Keiki owns the channel, inbound screening and traces.</li>
+          <li>It pushes each signed turn to our server.</li>
+          <li>We send the exact text with <code>POST {turnUrl}/messages</code> and complete the turn.</li>
+          <li>Time-boxed. A block over 30 minutes is recorded as a known gap, and Telegram ships alone.</li>
         </ul></div>
       </div>
     </section>
@@ -360,14 +376,16 @@ GET /tools/position_range
     <section class="block" id="phases">
       <div class="sec-head"><span class="sec-num">11</span><h2>Phases</h2></div>
       <p class="lede">Tracks overlap on purpose. Each phase ends at a gate, a check that has to pass before work that depends on it starts.</p>
-      <figure class="sketch"><svg id="t-gantt" viewBox="0 0 1000 420" role="img" aria-label="Timeline of seven phases across 24 hours with gates"></svg>
-        <figcaption>Hours from the start of the build. Diamonds are gates.</figcaption></figure>
-      <details open><summary>P0 · Spikes and skeleton · H0 to H2</summary><div class="body">Fork zoya-harness into <code>networth/</code>, strip voice and Mac parts. Deploy a hello <code>/chat</code> on Maritime. Test Keiki tool calls and whether a notice keeps "8 of 11" word for word. Stand up the Telegram bot. <b>Gate:</b> a phone message reaches our code and our code can push one back.</div></details>
-      <details><summary>P1 · Engine · H2 to H6</summary><div class="body">Curate <code>events.csv</code> with 4 agents (one for India) and a checker. Pull Nifty sector history and AMFI NAVs. Download French industry data. Build the backtest, episodes, baseline and eras. <b>Gate:</b> base-rate table exists, the leak test passes, the outside check reproduces pre-FOMC drift.</div></details>
-      <details><summary>P2 · Watcher and triggers · H4 to H10</summary><div class="body">News pull, grouping, confirmation, price-first and news-first triggers, the rejection log. <b>Gate:</b> yesterday's real news produces the right confirmed stories, and fake ones are rejected.</div></details>
-      <details><summary>P3 · Agents and delivery · H6 to H12</summary><div class="body">Spec files, 12 skills, composer, guardrails, onboarding with plan pick, the investing-day cron, tip check. <b>Gate:</b> a real brief built from real news arrives on a real phone.</div></details>
-      <details><summary>P4 · Web view · H10 to H16</summary><div class="body">How am I doing, What if, Why card, landing, stats, from the Figma designs. <b>Gate:</b> every link opens on mobile, and every number matches the message it came from.</div></details>
-      <details><summary>P5 · Evals and the loop · H14 to H18</summary><div class="body">25-headline eval, walk-forward test, then 4 to 6 improvement rounds. <b>Gate:</b> no unconfirmed story gets numbers, and every number traces to the engine.</div></details>
+      <figure class="sketch"><svg id="t-gantt" viewBox="0 0 1000 420" role="img" aria-label="Planned timeline of the phases across 24 hours with gates"></svg>
+        <figcaption>Planned hours from the start of the build. Diamonds are gates. The list below says where each phase stands.</figcaption></figure>
+      <details open><summary>P0 · Spikes and skeleton · H0 to H2</summary><div class="body">Fork zoya-harness into <code>networth/</code>, strip voice and Mac parts. Deploy a hello <code>/health</code> on Maritime. Stand up the Telegram bot. <b>Gate:</b> a phone message reaches our code and our code can push one back.</div></details>
+      <details><summary>P1 · Engine · H2 to H6 · passed</summary><div class="body">Curate <code>events.csv</code> with 4 agents (one for India) and a checker. Pull Nifty sector history and AMFI NAVs. Download French industry data. Build the backtest, episodes, baseline and eras. <b>Gate:</b> base-rate table exists, the leak test passes, the outside check reproduces pre-FOMC drift.</div></details>
+      <details><summary>P1B · Economic context for the engine</summary><div class="body">FRED series (USREC, CPIAUCSL, FEDFUNDS, UNRATE) and MoSPI all-India CPI, regimes fixed before any result is seen, and <code>split()</code>. Fed cuts with and without a recession (hindsight, never live). Hikes when inflation was high or low (only data published before the event). <b>Gate:</b> <code>split()</code> returns both sides with counts, baseline and the hindsight flag, and existing <code>odds()</code> output is byte-identical.</div></details>
+      <details><summary>P2 · Watcher and triggers · H4 to H10 · passed</summary><div class="body">News pull, grouping, confirmation, price-first and news-first triggers, the rejection log, all on the OpenAI roles in config. <b>Gate:</b> yesterday's real news produces the right confirmed stories, and fake ones are rejected.</div></details>
+      <details><summary>P3A · Server, Telegram and onboarding · passed, deployed</summary><div class="body">FastAPI server, the Telegram webhook, seven-question button onboarding with the plan pick, <code>/plan</code>, <code>/pause</code>, <code>/resume</code>, <code>/stop</code> and <code>/help</code>, a Docker image, and the Maritime deploy. <b>Gate:</b> a phone message reaches our code, onboarding completes, and <code>/health</code> answers on the public URL.</div></details>
+      <details><summary>P3B · Brief, chat, Explain this, guard, Jev, Keiki</summary><div class="body">The investing-day brief composer, chat intents, Explain this, <code>guard.py</code>, Jev for the intent pick, per-user pages, rare alerts, Maritime schedules, and Keiki's external harness as a time-boxed stretch. <b>Gate:</b> a real brief built from real news arrives in Telegram, a fake tip is rejected with its reason, and a real IPO page comes back in plain words.</div></details>
+      <details><summary>P4 · Web pages · passed</summary><div class="body">Why card, What if, Scoreboard, Track record, landing and stats, server-rendered from the engine. <b>Gate:</b> every link opens on mobile, and every number matches what the engine returns.</div></details>
+      <details><summary>P5 · Evals and walk-forward calibration · H14 to H18</summary><div class="body">25-headline eval, walk-forward test, then 4 to 6 improvement rounds. <b>Gate:</b> no unconfirmed story gets numbers, and every number traces to the engine.</div></details>
       <details><summary>P6 · Launch · H18 to H24</summary><div class="body">Bring in users, record the demo, write the submission, fix what breaks. <b>Gate:</b> 5 people outside the team onboarded, 3 replied to a brief unprompted, entry submitted.</div></details>
     </section>
 
@@ -391,15 +409,20 @@ GET /tools/position_range
       <div class="sec-head"><span class="sec-num">13</span><h2>Security and secrets</h2></div>
       <div class="grid g2">
         <div class="card"><div class="k">Rules</div><ul>
-          <li>Secrets only in Maritime env vars, never in the repo.</li>
+          <li>The repo is public. Secrets only in Maritime env vars, never in the repo. No user data and no <code>.env</code> is committed, and <code>data/</code> stays gitignored and out of the image.</li>
           <li>Check Telegram's secret header and Keiki's request signature on every webhook.</li>
           <li>Link tokens are signed, random, and can be rotated by texting "new link".</li>
           <li>We store no holdings, account numbers or broker logins.</li>
           <li>The stats page shows counts only.</li>
-          <li>Rate-limit <code>/chat</code> per user.</li>
+          <li>Rate-limit chat per user.</li>
         </ul></div>
         <div class="card"><div class="k">Env vars, names only</div>
-<pre style="margin:0"><code>ANTHROPIC_API_KEY
+<pre style="margin:0"><code>OPENAI_API_KEY
+AI_GATEWAY_API_KEY
+AI_GATEWAY_BASE_URL
+JEV_MODEL
+FRED_API_KEY
+PUBLIC_URL
 EXA_API_KEY
 KEIKI_API_KEY
 KEIKI_AGENT_ID
@@ -415,8 +438,8 @@ LINK_SIGNING_SECRET</code></pre></div>
       <div class="tw"><table class="t">
         <thead><tr><th>Risk</th><th>Fallback</th></tr></thead>
         <tbody>
-          <tr><td>Keiki rewrites our numbers</td><td>Briefs through Telegram, Keiki kept for chat only or dropped</td></tr>
-          <tr><td>Maritime VM asleep at brief time</td><td>Platform cron triggers wake it. Test this in P0.</td></tr>
+          <tr><td>Keiki's notice API rewrites our words</td><td>Already avoided. Every message goes straight to Telegram. Keiki is optional, and only through external harness mode where our server sends the exact text.</td></tr>
+          <tr><td>Maritime VM asleep at brief time</td><td>Schedules run through Maritime, which wakes it, because in-VM timers don't fire while it sleeps. The registered schedule is listed by its CLI or API.</td></tr>
           <tr><td>yfinance breaks or rate-limits</td><td>Prices are already cached. Tiingo as a second source.</td></tr>
           <tr><td>Indian history is shorter. Checked on Oct 24 in yfinance: Sensex from 1997. Nifty 50, Bank and IT from 2007. Auto, Pharma, FMCG, Metal, Energy, Realty, PSU Bank and Infra from 2010 or 2011. Media and Financial Services are not available.</td><td>Show "weak signal" more often in India. Use the Sensex for long windows. Use Bank Nifty in place of Financial Services.</td></tr>
           <tr><td>SEBI research rules</td><td>History only, no buy or sell, research label on every message, a legal check before scaling</td></tr>
@@ -428,7 +451,7 @@ LINK_SIGNING_SECRET</code></pre></div>
       </table></div>
     </section>
 
-    <footer class="end">Networth tech spec · Oct 24, 2026 · Built from the session's research reports. Placeholder figures are marked.</footer>
+    <footer class="end">Networth tech spec · Oct 25, 2026 · Built from the session's research reports. Placeholder figures are marked.</footer>
   </main>
 </div>
 
@@ -438,8 +461,8 @@ LINK_SIGNING_SECRET</code></pre></div>
 sketch("t-arch", (s) => {
   const { C } = s;
   s.box(30, 230, 130, 110, "You", "Telegram, WhatsApp,\nbrowser", { color: C.green });
-  s.box(220, 150, 150, 90, "Keiki", "2 channels, memory,\nforwards", { color: C.blue });
-  s.box(220, 320, 150, 80, "Own Telegram bot", "fallback", { color: C.muted, dash: [6, 6] });
+  s.box(220, 150, 150, 90, "Telegram", "our bot, Bot API,\nwebhook", { color: C.blue });
+  s.box(220, 320, 150, 80, "Keiki", "optional, external\nharness", { color: C.muted, dash: [6, 6] });
   s.arrow(162, 265, 217, 205, { color: C.green }); s.arrow(217, 220, 162, 280);
   s.arrow(162, 300, 217, 355, { dash: [6, 6], color: C.muted });
   s.rect(420, 40, 400, 520, { color: C.violet, fill: s.tint(C.violet, .06), gap: 14 });
@@ -451,13 +474,13 @@ sketch("t-arch", (s) => {
   s.box(445, 305, 170, 80, "Watcher", "pull, group,\nconfirm, trigger", { size: 19 });
   s.box(630, 305, 170, 80, "Web view", "/u, /why, /stats", { size: 19, color: C.blue });
   s.box(445, 410, 355, 70, "/data · SQLite", "base_rates, stories, profiles, messages, trails", { size: 19 });
-  s.box(445, 495, 355, 50, "Cron triggers · daily and every 15 min", "", { size: 17 });
+  s.box(445, 495, 355, 50, "Maritime schedules · news pull, daily brief", "", { size: 17 });
   s.arrow(372, 195, 442, 135); s.arrow(442, 150, 372, 210);
   s.arrow(372, 360, 442, 145, { dash: [6, 6], color: C.muted });
   s.arrow(617, 135, 627, 135); s.arrow(715, 177, 715, 197); s.arrow(627, 240, 617, 240);
   s.arrow(530, 387, 530, 407); s.arrow(715, 282, 715, 407, { color: C.green });
   s.box(860, 90, 125, 90, "News", "Exa, GDELT", { size: 19 });
-  s.box(860, 230, 125, 90, "Claude API", "Haiku, Sonnet,\nOpus", { size: 19 });
+  s.box(860, 230, 125, 90, "OpenAI API", "luna, sol,\nterra", { size: 19 });
   s.box(860, 380, 125, 100, "History", "yfinance cache,\nFrench, FRED", { size: 19 });
   s.arrow(857, 140, 617, 335, { bend: { x: 20, y: 80 } });
   s.arrow(857, 275, 802, 140);
@@ -481,11 +504,11 @@ sketch("t-engine", (s) => {
 
 sketch("t-brief", (s) => {
   const { C } = s;
-  const lanes = ["Cron", "Watcher", "Engine", "Composer", "Guardrails", "Keiki / TG", "User"];
+  const lanes = ["Schedule", "Watcher", "Engine", "Composer", "Guardrails", "Telegram", "User"];
   const xs = lanes.map((_, i) => 75 + i * 142);
   lanes.forEach((l, i) => { s.box(xs[i] - 60, 15, 120, 44, l, "", { size: 19, color: i === 6 ? C.green : i === 4 ? C.amber : C.ink }); s.line(xs[i], 62, xs[i], 455, { color: C.muted, dash: [3, 7] }); });
   const msg = (from, to, y, label, o = {}) => s.arrow(xs[from] + (to > from ? 4 : -4), y, xs[to] + (to > from ? -4 : 4), y, { label, lsize: 16, ...o });
-  msg(0, 1, 95, "invest day, 8:45");
+  msg(0, 1, 95, "invest day, 08:00");
   msg(1, 1 + 0, 95, "");
   s.text(xs[1] + 8, 130, "confirmed stories\nthis month", { sans: true, size: 11, color: C.muted, anchor: "start" });
   msg(1, 2, 170, "events × sectors");
@@ -493,7 +516,7 @@ sketch("t-brief", (s) => {
   msg(3, 4, 250, "draft + numbers_used");
   msg(4, 3, 290, "fail: redraft once", { color: C.red, lcolor: C.red });
   msg(4, 5, 330, "pass", { color: C.green, lcolor: C.green });
-  msg(5, 6, 370, "9:00 brief", { color: C.green, lcolor: C.green });
+  msg(5, 6, 370, "the brief", { color: C.green, lcolor: C.green });
   msg(6, 5, 410, "\"why?\"", { dash: [6, 6] });
   s.text(xs[2], 445, "the Trail is stored, so 'why' is instant", { color: C.amber, size: 18 });
 });
@@ -519,7 +542,7 @@ sketch("t-gantt", (s) => {
   const { C } = s;
   const x0 = 210, W = 760, hx = (h) => x0 + (h / 24) * W;
   for (let h = 0; h <= 24; h += 2) { s.line(hx(h), 30, hx(h), 395, { color: "#27272a", roughness: .4 }); s.text(hx(h), 22, "H" + h, { mono: true, size: 11, color: C.muted }); }
-  const rows = [["P0 Spikes", 0, 2, C.violet], ["Design (Figma)", 0, 3, C.blue], ["P1 Engine", 2, 6, C.green], ["P2 Watcher", 4, 10, C.ink], ["P3 Agents", 6, 12, C.ink], ["P4 Web", 10, 16, C.blue], ["P5 Evals + loop", 14, 18, C.amber], ["P6 Launch", 18, 24, C.green], ["You: interviews, pitch", 0, 24, C.muted]];
+  const rows = [["P0 Spikes", 0, 2, C.violet], ["Design (Figma)", 0, 3, C.blue], ["P1 + P1B Engine", 2, 6, C.green], ["P2 Watcher", 4, 10, C.ink], ["P3A + P3B Product", 6, 12, C.ink], ["P4 Web", 10, 16, C.blue], ["P5 Evals + loop", 14, 18, C.amber], ["P6 Launch", 18, 24, C.green], ["You: interviews, pitch", 0, 24, C.muted]];
   rows.forEach(([l, a, b, c], i) => {
     const y = 48 + i * 38;
     s.text(20, y + 18, l, { sans: true, size: 13, anchor: "start", color: C.ink });
