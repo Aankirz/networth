@@ -133,6 +133,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "insight_id": "TEXT", "numbers_used": "TEXT NOT NULL DEFAULT '[]'",
         "sent_at": "TEXT NOT NULL",
     },
+    "updates": {"update_id": "INTEGER PRIMARY KEY", "seen_at": "TEXT NOT NULL"},
 }  # fmt: skip
 
 
@@ -220,6 +221,15 @@ class Store:
                 "INSERT INTO messages (user_id, direction, text, sent_at) VALUES (?, ?, ?, ?)",
                 (user_id, direction, text, now_iso()),
             )
+
+    def claim_update(self, update_id: int) -> bool:
+        """True the first time an update id is seen. Telegram delivers at least once."""
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO updates (update_id, seen_at) VALUES (?, ?)",
+                (update_id, now_iso()),
+            )
+        return cursor.rowcount == 1
 
     def messages(self, user_id: str) -> list[Message]:
         with self._connect() as conn:

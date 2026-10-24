@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import itertools
+import threading
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -309,3 +311,39 @@ def test_store_migrations_are_idempotent(tmp_path: Path) -> None:
     first.log_message(USER, "in", "hi")
     again = Store(tmp_path)
     assert [m.text for m in again.messages(USER)] == ["hi"]
+
+
+def test_a_redelivered_update_is_applied_once(chat: Chat) -> None:
+    chat.say("/start")
+    tap = tap_update("ob:goal:house")
+    handle_update(tap, chat.store, chat.bot, NOW)
+    handle_update(tap, chat.store, chat.bot, NOW)
+    assert (chat.profile.goal, chat.profile.step) == ("house", Step.HORIZON)
+    assert chat.bot.texts.count("When will you need it?") == 1, "next question sent once"
+    assert len(chat.bot.answers) == 1, "the replay is not even answered"
+
+
+class SlowStore(Store):
+    """Widens the read-then-write window so two concurrent taps would both see the old step."""
+
+    def get_plan(self, user_id: str) -> Plan | None:
+        time.sleep(0.05)
+        return super().get_plan(user_id)
+
+
+def test_two_taps_on_one_question_at_once_apply_only_one(tmp_path: Path) -> None:
+    chat = Chat(tmp_path)
+    chat.store = SlowStore(tmp_path / "data")
+    chat.say("/start")
+    for data in TAPS_TO_CONFIRM[:4]:
+        chat.tap(data)
+    taps = [tap_update("ob:drop:20"), tap_update("ob:drop:10")]
+    threads = [threading.Thread(target=handle_update, args=(t, chat.store, chat.bot, NOW))
+               for t in taps]  # fmt: skip
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert chat.profile.step is Step.EXCLUDE
+    assert chat.profile.drop_comfort in (10, 20)
+    assert [text for _, text in chat.bot.answers].count("That question has moved on.") == 1

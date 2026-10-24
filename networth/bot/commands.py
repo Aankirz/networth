@@ -11,6 +11,7 @@ answer.
 
 from __future__ import annotations
 
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Final
@@ -131,7 +132,20 @@ def profile_for(turn: Turn, chat_id: int) -> Profile:
     return existing or turn.save(new_profile(chat_id, turn.now))
 
 
+# ponytail: one process-wide lock, so two taps never read the same step at once. One container
+# serves every user; per-chat locks are the upgrade if throughput ever matters.
+HANDLE_LOCK: Final = threading.Lock()
+
+
 def handle_update(update: dict, store: Store, bot: Bot, now: str | None = None) -> None:
+    with HANDLE_LOCK:
+        update_id = update.get("update_id")
+        if isinstance(update_id, int) and not store.claim_update(update_id):
+            return
+        dispatch(update, store, bot, now)
+
+
+def dispatch(update: dict, store: Store, bot: Bot, now: str | None) -> None:
     incoming = parse_update(update)
     if incoming is None:
         return
