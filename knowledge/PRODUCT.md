@@ -8,7 +8,7 @@ Networth is an always-on agent in WhatsApp and Telegram. It reads the market new
 
 **Tagline (working):** Know what the news means for your money.
 
-**The promise:** delight and peace of mind. The user should finish every message calmer and clearer than before, never more anxious, and never with more homework.
+**The promise:** investing made simple enough for anyone, with delight and peace of mind. Most people who invest don't work in finance. Terms like DRHP, PAT, dividends and order book make them anxious, and anxious people freeze or follow tips. The user should finish every message calmer and clearer than before, never more anxious, and never with more homework.
 
 ## Who it's for
 
@@ -29,6 +29,7 @@ The user isn't asking what happened in the news today. The user is asking: **"I'
 | **"What happened today?"** | A one-line answer, any time they ask | Pull only |
 | **"Why?"** | The full trail: the confirmation, the event type and cause, every past episode with its date and source, the baseline, and what would change the view | One tap |
 | **A forwarded tip** | Is the story confirmed? What does history say about its claim? | When they forward one |
+| **"Explain this"** | Forward anything confusing (an IPO page, a news story, a broker alert, a screenshot) and get it back in plain words: what it is, how big, the 3 or 4 things to know, and the jargon decoded. Facts only from what was sent or a confirmed source. We never say apply, skip, buy or sell. | When they forward one |
 | **Track record** | Everything we said, next to what happened 30 days later | Public page |
 
 We do **not** send daily briefs, weekly recaps and monthly briefs as three separate feeds. Three feeds is noise, and noise is the problem we exist to remove.
@@ -101,3 +102,4 @@ Perplexity Finance is a free, excellent research terminal. You visit it and you 
 - 2026-10-24: There is no "your money" or holdings segment for now. Broker linking is parked until Ankit asks for it.
 - 2026-10-24: India comes first for users. The data covers both India and the US. The channels are Telegram, then WhatsApp. No iMessage.
 - 2026-10-24: The track record, tip checking and Hindi are adopted as differentiators against Perplexity Finance.
+- 2026-10-25: "Explain this" is a core moment. Simplicity for non-finance people is the main value. The demo can open with a real Groww IPO page turned into plain words. History lines on IPOs wait until the engine has IPO data.
