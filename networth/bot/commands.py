@@ -4,40 +4,47 @@
 
 The update is parsed here, at the boundary, into Text, Tap or Media. Onboarding answers go to
 the pure onboarding.advance; commands are one COMMANDS entry each. Every outgoing message goes
-through send(), the one gate that keeps a stopped user silent and a paused user free of
-proactive messages. State is saved before anything is sent, so a failed send never loses an
-answer.
+through outbox.send(), the one gate that keeps a stopped user silent and a paused user free
+of proactive messages. State is saved before anything is sent, so a failed send never loses an
+answer. Chat answers search and call models, so they run after the update lock is released and
+one slow tip check never holds up another user's setup.
 """
 
 from __future__ import annotations
 
+import datetime as dt
+import logging
 import threading
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Final
 
+from networth import brief, chat
+from networth.app.services import Services
 from networth.app.store import Plan, Profile, Status, Step, Store, new_profile, now_iso, user_id_for
+from networth.bot import briefs
 from networth.bot.onboarding import CALLBACK_PREFIX, Outcome, Reply, advance, ordinal, plan_line
 from networth.bot.onboarding import prompt as ask_for
+from networth.bot.outbox import send
 from networth.bot.telegram import Bot
 
+log = logging.getLogger("networth.bot")
+
 STALE_TAP: Final = "That question has moved on."
-COMING_SOON: Final = (
-    "Good question. Daily answers and tip checks are coming soon. "
-    "I'll let you know when they're ready."
-)
-NO_FREE_CHAT: Final = (
-    "I can't chat freely yet. That's coming soon. Type /help to see what I can do."
-)
-TODAY_PHRASES: Final = ("what happened today", "aaj market")
+NOT_A_PHOTO: Final = "I can read photos and text. Send a screenshot, or paste the text."
+TRY_AGAIN: Final = "Something went wrong on my side. Please try again in a minute."
+PLAN_KEPT: Final = "Noted. Your plan stays as it is."
 HELP: Final = (
     "Here's what I can do.\n\n"
+    'Ask "What happened today?" or "Why?"\n'
+    "Forward me a tip and I'll check who reported it\n"
+    "Send an IPO page, a link or a screenshot and I'll explain it\n\n"
+    "/brief this month's brief\n"
     "/plan see or change your plan\n"
     "/pause pause briefs and alerts\n"
     "/resume turn them back on\n"
     "/stop stop all messages\n"
     "/start set up again or see your answers\n\n"
-    'Soon you\'ll be able to ask "What happened today?" or forward me a tip to check.\n\n'
     "Research, not advice."
 )
 UNKNOWN_COMMAND: Final = "I don't know that one yet. Type /help to see what I can do."
@@ -67,6 +74,7 @@ class Tap:
 @dataclass(frozen=True)
 class Media:
     chat_id: int
+    file_id: str | None  # the largest size of a photo; None for stickers, voice and the rest
 
 
 Incoming = Text | Tap | Media
@@ -88,27 +96,39 @@ def parse_update(update: dict) -> Incoming | None:
     if isinstance(message.get("text"), str):
         is_forward = "forward_origin" in message or "forward_date" in message
         return Text(chat_id, message["text"], is_forward)
-    return Media(chat_id)
-
-
-def send(
-    store: Store, bot: Bot, profile: Profile, reply: Reply, *, proactive: bool = False
-) -> bool:
-    """The only way a message leaves the bot. False, and nothing sent, when the user said no."""
-    if profile.status is Status.STOPPED or (proactive and profile.status is Status.PAUSED):
-        return False
-    bot.send_message(profile.chat_id, reply.text, reply.buttons)
-    store.log_message(profile.user_id, "out", reply.text)
-    return True
+    photos = message.get("photo")
+    largest = photos[-1] if isinstance(photos, list) and photos else {}
+    file_id = largest.get("file_id") if isinstance(largest, dict) else None
+    return Media(chat_id, file_id if isinstance(file_id, str) else None)
 
 
 @dataclass(frozen=True)
 class Turn:
-    """One update's worth of IO: where to save, where to send, and the time it arrived."""
+    """One update's worth of IO: where to save, where to send, the time it arrived, and the
+    slow work to run once the update lock is released."""
 
     store: Store
     bot: Bot
     now: str
+    services: Services
+    later: list[Callable[[], None]] = field(default_factory=list)
+
+    @property
+    def clock(self) -> dt.datetime:
+        return dt.datetime.fromisoformat(self.now)
+
+    def answer(self, profile: Profile, make: Callable[[], Reply]) -> None:
+        """Queue a slow reply; a failure still tells the user something went wrong."""
+
+        def job() -> None:
+            try:
+                reply = make()
+            except Exception:
+                log.exception("chat answer for %s failed", profile.user_id)
+                reply = Reply(TRY_AGAIN)
+            self.send(profile, reply)
+
+        self.later.append(job)
 
     def send(self, profile: Profile, reply: Reply) -> bool:
         return send(self.store, self.bot, profile, reply)
@@ -137,19 +157,24 @@ def profile_for(turn: Turn, chat_id: int) -> Profile:
 HANDLE_LOCK: Final = threading.Lock()
 
 
-def handle_update(update: dict, store: Store, bot: Bot, now: str | None = None) -> None:
+def handle_update(
+    update: dict, store: Store, bot: Bot, now: str | None = None,
+    services: Services | None = None,
+) -> None:  # fmt: skip
+    turn = Turn(store, bot, now or now_iso(), services or Services(store.path.parent))
     with HANDLE_LOCK:
         update_id = update.get("update_id")
         if isinstance(update_id, int) and not store.claim_update(update_id):
             return
-        dispatch(update, store, bot, now)
+        dispatch(update, turn)
+    for job in turn.later:
+        job()
 
 
-def dispatch(update: dict, store: Store, bot: Bot, now: str | None) -> None:
+def dispatch(update: dict, turn: Turn) -> None:
     incoming = parse_update(update)
     if incoming is None:
         return
-    turn = Turn(store, bot, now or now_iso())
     match incoming:
         case Tap():
             on_tap(turn, incoming)
@@ -176,10 +201,9 @@ def on_text(turn: Turn, msg: Text) -> None:
             turn.send(profile, Reply(f"{outcome.toast}.\n\n{ask.text}", ask.buttons))
         for reply in outcome.replies:
             turn.send(profile, reply)
-    elif msg.is_forward or any(p in text.lower() for p in TODAY_PHRASES):
-        turn.send(profile, Reply(COMING_SOON))
     else:
-        turn.send(profile, Reply(NO_FREE_CHAT))
+        turn.answer(profile, lambda: chat.respond(turn.store, profile, text, msg.is_forward,
+                                                  turn.services, turn.clock))  # fmt: skip
 
 
 def parse_callback(data: str) -> tuple[str, str] | None:
@@ -189,9 +213,21 @@ def parse_callback(data: str) -> tuple[str, str] | None:
     return parts[1], parts[2]
 
 
+def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
+    """Invest as planned only acknowledges: the user invests in their own app."""
+    turn.bot.answer_callback(tap.callback_id)
+    if tap.data == f"{brief.CALLBACK_PREFIX}:plan":
+        cmd_plan(turn, profile)
+    elif tap.data == f"{brief.CALLBACK_PREFIX}:ok":
+        turn.send(profile, Reply(PLAN_KEPT))
+
+
 def on_tap(turn: Turn, tap: Tap) -> None:
     profile = profile_for(turn, tap.chat_id)
     turn.store.log_message(profile.user_id, "in", tap.data)
+    if profile.status is not Status.STOPPED and tap.data.startswith(f"{brief.CALLBACK_PREFIX}:"):
+        on_brief_tap(turn, profile, tap)
+        return
     parsed = parse_callback(tap.data)
     if profile.status is Status.STOPPED or parsed is None:
         turn.bot.answer_callback(tap.callback_id)
@@ -214,8 +250,14 @@ def on_tap(turn: Turn, tap: Tap) -> None:
 
 def on_media(turn: Turn, media: Media) -> None:
     profile = turn.store.get_profile(user_id_for(media.chat_id))
-    if profile is not None and profile.step is Step.DONE:
-        turn.send(profile, Reply(COMING_SOON))
+    if profile is None or profile.step is not Step.DONE or profile.status is Status.STOPPED:
+        return
+    if media.file_id is None:
+        turn.send(profile, Reply(NOT_A_PHOTO))
+        return
+    file_id = media.file_id
+    turn.answer(profile, lambda: chat.respond_image(profile, turn.bot.download_file(file_id),
+                                                    turn.services))  # fmt: skip
 
 
 # --- commands ------------------------------------------------------------------------------
@@ -260,6 +302,19 @@ def cmd_stop(turn: Turn, profile: Profile) -> None:
     turn.save(replace(profile, status=Status.STOPPED))
 
 
+def cmd_brief(turn: Turn, profile: Profile) -> None:
+    today = briefs.local_today(profile, turn.clock)
+
+    def job() -> None:
+        try:
+            briefs.send_brief(turn.store, turn.bot, profile, turn.services, today)
+        except Exception:
+            log.exception("brief for %s failed", profile.user_id)
+            turn.send(profile, Reply(TRY_AGAIN))
+
+    turn.later.append(job)
+
+
 def cmd_help(turn: Turn, profile: Profile) -> None:
     turn.send(profile, Reply(HELP))
 
@@ -270,6 +325,7 @@ def cmd_unknown(turn: Turn, profile: Profile) -> None:
 
 COMMANDS: Final[dict[str, Callable[[Turn, Profile], None]]] = {
     "/start": cmd_start,
+    "/brief": cmd_brief,
     "/plan": cmd_plan,
     "/pause": cmd_pause,
     "/resume": cmd_resume,

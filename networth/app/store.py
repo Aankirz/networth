@@ -3,8 +3,10 @@
     store = Store(data_dir)
     profile = store.get_profile("tg:42")
 
-Tables: profiles (one per chat), plans (one per user, rewritten on change) and messages (every
-text in and out, the trail Phase 3B builds on). Each operation opens its own short connection,
+Tables: profiles (one per chat), plans (one per user, rewritten on change), messages (every
+text in and out), briefs (one per user per investing day) and alerts (one per user per event).
+A brief or an alert row is claimed before the message goes out, so a retried trigger never
+sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
 additively: a column missing from an older file is added, so opening twice is a no-op.
 """
@@ -134,6 +136,14 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "sent_at": "TEXT NOT NULL",
     },
     "updates": {"update_id": "INTEGER PRIMARY KEY", "seen_at": "TEXT NOT NULL"},
+    "briefs": {
+        "user_id": "TEXT NOT NULL", "day": "TEXT NOT NULL", "text": "TEXT NOT NULL DEFAULT ''",
+        "used": "TEXT NOT NULL DEFAULT ''", "sent_at": "TEXT NOT NULL",
+    },
+    "alerts": {
+        "user_id": "TEXT NOT NULL", "event_key": "TEXT NOT NULL", "month": "TEXT NOT NULL",
+        "text": "TEXT NOT NULL", "sent_at": "TEXT NOT NULL",
+    },
 }  # fmt: skip
 
 
@@ -146,6 +156,10 @@ def migrate(conn: sqlite3.Connection) -> None:
             if name not in present:
                 conn.execute(f'ALTER TABLE {table} ADD COLUMN "{name}" {decl}')
     conn.execute("CREATE INDEX IF NOT EXISTS messages_user ON messages (user_id, id)")
+    conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS briefs_user_day ON briefs (user_id, day)")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS alerts_user_event ON alerts (user_id, event_key)"
+    )
 
 
 def _profile_row(p: Profile) -> dict[str, object]:
@@ -228,6 +242,61 @@ class Store:
             cursor = conn.execute(
                 "INSERT OR IGNORE INTO updates (update_id, seen_at) VALUES (?, ?)",
                 (update_id, now_iso()),
+            )
+        return cursor.rowcount == 1
+
+    def profiles(self) -> list[Profile]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT * FROM profiles ORDER BY user_id").fetchall()
+        return [_profile_from(r) for r in rows]
+
+    def profile_by_token(self, link_token: str) -> Profile | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM profiles WHERE link_token = ?", (link_token,)
+            ).fetchone()
+        return _profile_from(row) if row else None
+
+    def claim_brief(self, user_id: str, day: str) -> bool:
+        """True the first time this user's brief for this day is claimed."""
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO briefs (user_id, day, sent_at) VALUES (?, ?, ?)",
+                (user_id, day, now_iso()),
+            )
+        return cursor.rowcount == 1
+
+    def save_brief(self, user_id: str, day: str, text: str, used: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "UPDATE briefs SET text = ?, used = ?, sent_at = ? WHERE user_id = ? AND day = ?",
+                (text, used, now_iso(), user_id, day),
+            )
+
+    def last_brief(self, user_id: str) -> tuple[str, str] | None:
+        """(day, text) of the newest brief that was written, if any."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT day, text FROM briefs WHERE user_id = ? AND text != '' "
+                "ORDER BY day DESC LIMIT 1",
+                (user_id,),
+            ).fetchone()
+        return (row["day"], row["text"]) if row else None
+
+    def claim_alert(self, user_id: str, event_key: str, month: str, cap: int, text: str) -> bool:
+        """True when this user has not had this event's alert and is under the month's cap.
+        The check and the claim are one transaction."""
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            sent = conn.execute(
+                "SELECT COUNT(*) FROM alerts WHERE user_id = ? AND month = ?", (user_id, month)
+            ).fetchone()[0]
+            if sent >= cap:
+                return False
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO alerts (user_id, event_key, month, text, sent_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, event_key, month, text, now_iso()),
             )
         return cursor.rowcount == 1
 

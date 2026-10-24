@@ -36,10 +36,12 @@ logging.getLogger("httpx2").setLevel(logging.WARNING)
 @dataclass(frozen=True)
 class Button:
     label: str
-    data: str  # callback data, at most 64 bytes
+    data: str  # callback data, at most 64 bytes; ignored when url is set
+    url: str | None = None  # a link button that opens this page instead of calling back
 
 
 Keyboard = tuple[tuple[Button, ...], ...]
+HTTP_OK: Final = 200
 
 
 class TelegramError(Exception):
@@ -64,10 +66,15 @@ class Bot(Protocol):
 
     def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]: ...
 
+    def download_file(self, file_id: str) -> bytes: ...
+
+
+def _button(b: Button) -> dict:
+    return {"text": b.label, "url": b.url} if b.url else {"text": b.label, "callback_data": b.data}
+
 
 def markup(buttons: Keyboard) -> dict:
-    return {"inline_keyboard": [[{"text": b.label, "callback_data": b.data} for b in row]
-                                for row in buttons]}  # fmt: skip
+    return {"inline_keyboard": [[_button(b) for b in row] for row in buttons]}
 
 
 class TelegramClient:
@@ -113,6 +120,24 @@ class TelegramClient:
         if offset is not None:
             params["offset"] = offset
         return self._call("getUpdates", params, read_timeout_s=timeout_s + LONG_POLL_SLACK_S)
+
+    def download_file(self, file_id: str) -> bytes:
+        """getFile, then the file itself. Telegram serves bot downloads up to 20 MB."""
+        path = self._call("getFile", {"file_id": file_id}).get("file_path")
+        if not path:
+            raise TelegramError("getFile", "no file_path")
+        url = f"{API_BASE}/file/bot{self._token}/{path}"
+
+        def get() -> bytes:
+            try:
+                response = self._client.get(url, timeout=HTTP_TIMEOUT_S)
+            except httpx2.HTTPError as exc:
+                raise TelegramError("file download", type(exc).__name__) from None
+            if response.status_code != HTTP_OK:
+                raise TelegramError("file download", f"HTTP {response.status_code}")
+            return response.content
+
+        return call_with_deadline(get, HTTP_TIMEOUT_S + DEADLINE_SLACK_S, "telegram file")
 
     def _call(self, method: str, params: dict, *, read_timeout_s: float = HTTP_TIMEOUT_S) -> Any:
         body = self._post(method, params, read_timeout_s)

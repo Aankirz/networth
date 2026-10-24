@@ -17,6 +17,7 @@ COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY networth ./networth
+COPY knowledge ./knowledge
 RUN uv sync --frozen --no-dev
 
 ENV DATA_DIR=/data \

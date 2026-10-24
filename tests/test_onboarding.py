@@ -10,9 +10,11 @@ from pathlib import Path
 
 import pytest
 
+from networth.app.services import Services
 from networth.app.store import Plan, Profile, Status, Step, Store
-from networth.bot.commands import handle_update, send
+from networth.bot.commands import handle_update
 from networth.bot.onboarding import Reply
+from networth.bot.outbox import send
 from networth.bot.telegram import Keyboard
 
 CHAT = 4242
@@ -42,6 +44,7 @@ class FakeBot:
     answers: list[tuple[str, str | None]] = field(default_factory=list)
     edits: list[tuple[int, int, Keyboard]] = field(default_factory=list)
     webhooks: list[tuple[str, str]] = field(default_factory=list)
+    downloads: list[str] = field(default_factory=list)
     _ids: itertools.count = field(default_factory=lambda: itertools.count(100))
 
     def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict:
@@ -62,6 +65,10 @@ class FakeBot:
 
     def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]:
         return []
+
+    def download_file(self, file_id: str) -> bytes:
+        self.downloads.append(file_id)
+        return b"\xff\xd8 fake jpeg"
 
     @property
     def texts(self) -> list[str]:
@@ -92,15 +99,23 @@ def tap_update(data: str, chat: int = CHAT, message_id: int = 7) -> dict:
 class Chat:
     """One user talking to the bot."""
 
-    def __init__(self, tmp_path: Path) -> None:
+    def __init__(self, tmp_path: Path, services: Services | None = None) -> None:
         self.store = Store(tmp_path / "data")
         self.bot = FakeBot()
+        self.services = services or Services(tmp_path / "data")
 
     def say(self, text: str, **extra: object) -> None:
-        handle_update(text_update(text, **extra), self.store, self.bot, NOW)
+        handle_update(text_update(text, **extra), self.store, self.bot, NOW, self.services)
 
     def tap(self, data: str) -> None:
-        handle_update(tap_update(data), self.store, self.bot, NOW)
+        handle_update(tap_update(data), self.store, self.bot, NOW, self.services)
+
+    def send_photo(self, file_id: str | None) -> None:
+        sizes = [{"file_id": "small"}, {"file_id": file_id}] if file_id else []
+        message = {"message_id": 1, "chat": {"id": CHAT}, "photo": sizes} if file_id else {
+            "message_id": 1, "chat": {"id": CHAT}, "sticker": {}}  # fmt: skip
+        handle_update({"update_id": next(_update_ids), "message": message}, self.store,
+                      self.bot, NOW, self.services)  # fmt: skip
 
     @property
     def profile(self) -> Profile:
@@ -288,14 +303,14 @@ def test_plan_before_setup_asks_to_finish(chat: Chat) -> None:
     assert chat.bot.last.startswith("Let's finish setting up first.\n\nHi.")
 
 
-def test_after_setup_free_text_and_forwards_get_coming_soon(chat: Chat) -> None:
+def test_after_setup_free_text_gets_an_answer_even_without_models(chat: Chat) -> None:
     onboard(chat)
     chat.say("Aaj market kaisa tha?")
-    assert chat.bot.last.startswith("Good question. Daily answers and tip checks are coming soon")
+    assert chat.bot.last == "I haven't read today's news yet. Ask me again in a little while."
     chat.say("Stock X will double", forward_date=1_700_000_000)
-    assert chat.bot.last.startswith("Good question.")
+    assert chat.bot.last.startswith("I can't search the news right now")
     chat.say("hello")
-    assert chat.bot.last.startswith("I can't chat freely yet.")
+    assert chat.bot.last.startswith("I can tell you what happened today")
     chat.say("/frobnicate@networth_professor_bot")
     assert chat.bot.last == "I don't know that one yet. Type /help to see what I can do."
 

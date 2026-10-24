@@ -37,6 +37,7 @@ class Role(StrEnum):
     CHEAP = "cheap"
     JUDGE = "judge"
     WRITER = "writer"
+    VISION = "vision"
 
 
 Provider = Literal["openai"]
@@ -115,6 +116,17 @@ class TriggerConfig:
 
 
 @dataclass(frozen=True)
+class ProductConfig:
+    use_jev_for_intent: bool  # set from the measured Jev vs cheap-model accuracy
+    jev_min_confidence: float  # below this Jev's pick is ignored and the model decides
+    jev_deadline_s: float
+    alert_min_episodes: int
+    alert_min_gap: float  # |hit rate - baseline| an alert needs
+    alert_max_per_month: int
+    tip_lookback_days: int
+
+
+@dataclass(frozen=True)
 class Secrets:
     openai_api_key: str = field(repr=False)
     exa_api_key: str = field(repr=False)
@@ -131,6 +143,7 @@ class Config:
     max_judge_calls_per_cycle: int
     event_max_age_days: int  # an event older than this, on the cycle's own date, is old news
     triggers: TriggerConfig
+    product: ProductConfig
     secrets: Secrets
 
     def price_of(self, role: Role) -> Price:
@@ -294,6 +307,19 @@ def _triggers(raw: Mapping[str, object]) -> TriggerConfig:
     )
 
 
+def _product(raw: Mapping[str, object]) -> ProductConfig:
+    t = _table(raw, "product")
+    return ProductConfig(
+        _get(t, "use_jev_for_intent", bool, "product"),
+        _get(t, "jev_min_confidence", float, "product"),
+        _get(t, "jev_deadline_s", float, "product"),
+        _get(t, "alert_min_episodes", int, "product"),
+        _get(t, "alert_min_gap", float, "product"),
+        _get(t, "alert_max_per_month", int, "product"),
+        _get(t, "tip_lookback_days", int, "product"),
+    )
+
+
 def read_env_file(path: Path) -> dict[str, str]:
     """KEY=VALUE lines; blank lines, comments and an optional `export ` prefix are ignored,
     one layer of matching quotes is stripped."""
@@ -347,6 +373,7 @@ def parse_config(raw: Mapping[str, object], secrets: Secrets) -> Config:
         max_judge_calls_per_cycle=_get(classify, "max_judge_calls_per_cycle", int, "classify"),
         event_max_age_days=_get(classify, "event_max_age_days", int, "classify"),
         triggers=_triggers(raw),
+        product=_product(raw),
         secrets=secrets,
     )
 

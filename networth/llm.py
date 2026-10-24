@@ -4,6 +4,9 @@
     grouping = models.group_articles(articles, open_stories)   # role cheap
     verdict = models.classify_story(story, allowed_causes)     # role judge
     related = models.match_related(events, rejected_stories)   # role cheap
+    text = models.write(task, facts, feedback)                # role writer, PRODUCT.md voice
+    seen = models.read_image(jpeg_bytes, "image/jpeg")        # role vision, the image's text
+    intent = models.pick(question, choices, text)             # role cheap, one closed choice
 
 Model output is parsed into pydantic wire types, then validated here against the inputs and
 the allowed table. The watcher only sees the dataclasses below. Watcher code takes a `Models`
@@ -12,6 +15,7 @@ object, so tests pass a fake and never touch the network.
 
 from __future__ import annotations
 
+import base64
 import datetime as dt
 import json
 from collections.abc import Mapping, Sequence
@@ -23,7 +27,7 @@ import openai
 from pydantic import BaseModel
 
 from networth import net
-from networth.config import Config, Role
+from networth.config import REPO, Config, Role
 from networth.engine.model import EventType, Region
 
 SNIPPET_CHARS: Final = 300
@@ -31,6 +35,7 @@ STORY_ARTICLES_FOR_JUDGE: Final = 8
 OPENAI_MAX_RETRIES: Final = 1
 NONE_TYPE: Final = "none"
 INVALID_OUTPUT: Final = "invalid model output"
+VOICE_FILES: Final = (REPO / "knowledge" / "PRODUCT.md", REPO / "knowledge" / "glossary.md")
 
 AllowedCauses = Mapping[EventType, tuple[str, ...]]
 
@@ -114,6 +119,25 @@ class Models(Protocol):
     ) -> Mapping[str, str | None]: ...
 
 
+class ChatModels(Protocol):
+    """The calls behind what a user reads. write and read_image raise net.CallFailed or
+    NoAnswer; pick answers None when the model names no listed choice."""
+
+    def write(self, task: str, facts: str, feedback: str | None = None) -> str: ...
+
+    def read_image(self, image: bytes, mime: str) -> str: ...
+
+    def pick(self, question: str, choices: Mapping[str, str], text: str) -> str | None: ...
+
+    def same_claim(self, claim: str, articles: Sequence[ArticleBrief]) -> set[str]: ...
+
+    def classify_story(self, story: StoryForJudge, allowed: AllowedCauses) -> Classification: ...
+
+
+class NoAnswer(Exception):
+    """The model replied but gave no usable text."""
+
+
 class _WireGroup(BaseModel):
     existing_story_id: str  # "" for a new story
     title: str
@@ -122,6 +146,18 @@ class _WireGroup(BaseModel):
 
 class _WireGrouping(BaseModel):
     groups: list[_WireGroup]
+
+
+class _WireText(BaseModel):
+    text: str
+
+
+class _WirePick(BaseModel):
+    choice: str
+
+
+class _WireIds(BaseModel):
+    ids: list[str]
 
 
 class _WireMatch(BaseModel):
@@ -165,6 +201,22 @@ rate, the same tariff action, the same bank, the same outbreak, the same conflic
 earlier or conflicting reports on that subject match too (a report that the RBI held its rate
 matches an RBI rate hike event). A story about anything else matches nothing. Answer one entry
 per story: its id and the matching event id, or "" for none."""
+
+SAME_CLAIM_INSTRUCTIONS: Final = """You check which news articles report the claim a user was
+sent. An article matches only when it reports that same thing happening: the same company,
+policy, person or event, and the same direction. Articles on a related subject that do not
+report the claim do not match, and neither do articles that deny it. Answer the ids of the
+matching articles, or an empty list."""
+
+READ_IMAGE_TASK: Final = """Transcribe every piece of text in this image, in reading order,
+exactly as written: names, numbers, dates, labels and their values. Keep each label next to its
+value ("Price band: ₹95 to ₹100"). Do not explain, summarise or add anything that is not
+written in the image."""
+
+
+def voice() -> str:
+    """PRODUCT.md and the glossary, read once per call so an edit needs no restart."""
+    return "\n\n".join(path.read_text(encoding="utf-8") for path in VOICE_FILES)
 
 
 def fallback_grouping(articles: Sequence[ArticleBrief], reason: str) -> Grouping:
@@ -310,7 +362,7 @@ class OpenAIModels:
         )
 
     def _parse[W: BaseModel](
-        self, role: Role, call: str, instructions: str, prompt: str, wire: type[W]
+        self, role: Role, call: str, instructions: str, prompt: str | list, wire: type[W]
     ) -> W | None:
         rc = self._cfg.roles[role]
         price = self._cfg.price_of(role)
@@ -361,3 +413,40 @@ class OpenAIModels:
         prompt, event_ids, story_ids = _related_prompt(events, stories)
         wire = self._parse(Role.CHEAP, "match_related", RELATED_INSTRUCTIONS, prompt, _WireMatches)
         return validate_matches(wire, event_ids, story_ids)
+
+    def write(self, task: str, facts: str, feedback: str | None = None) -> str:
+        """The writer words `facts` for a user. PRODUCT.md and the glossary are its system
+        prompt, as PRODUCT.md requires of every agent; `task` says what to write."""
+        prompt = facts if feedback is None else (
+            f"{facts}\n\nYour last draft was blocked: {feedback}. Write it again without that."
+        )  # fmt: skip
+        wire = self._parse(Role.WRITER, "write", f"{voice()}\n\n{task}", prompt, _WireText)
+        if wire is None or not wire.text.strip():
+            raise NoAnswer("writer gave no text")
+        return wire.text.strip()
+
+    def read_image(self, image: bytes, mime: str) -> str:
+        url = f"data:{mime};base64,{base64.b64encode(image).decode()}"
+        content = [{"type": "input_text", "text": READ_IMAGE_TASK},
+                   {"type": "input_image", "image_url": url}]  # fmt: skip
+        wire = self._parse(
+            Role.VISION, "read_image", READ_IMAGE_TASK, [{"role": "user", "content": content}],
+            _WireText,
+        )  # fmt: skip
+        if wire is None or not wire.text.strip():
+            raise NoAnswer("no text read from the image")
+        return wire.text.strip()
+
+    def pick(self, question: str, choices: Mapping[str, str], text: str) -> str | None:
+        listed = "\n".join(f"- {name}: {meaning}" for name, meaning in choices.items())
+        instructions = f"{question}\nAnswer with exactly one choice name.\n{listed}"
+        wire = self._parse(Role.CHEAP, "pick", instructions, text, _WirePick)
+        return wire.choice if wire and wire.choice in choices else None
+
+    def same_claim(self, claim: str, articles: Sequence[ArticleBrief]) -> set[str]:
+        """The ids of the articles that report `claim`. Unknown ids are dropped."""
+        listed = [{"id": a.id, "publisher": a.publisher, "title": a.title,
+                   "snippet": a.snippet[:SNIPPET_CHARS]} for a in articles]  # fmt: skip
+        prompt = json.dumps({"claim": claim, "articles": listed}, ensure_ascii=False)
+        wire = self._parse(Role.CHEAP, "same_claim", SAME_CLAIM_INSTRUCTIONS, prompt, _WireIds)
+        return {i for i in wire.ids if i in {a.id for a in articles}} if wire else set()

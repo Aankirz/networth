@@ -13,10 +13,16 @@ model = "gpt-5.6-sol"
 reasoning_effort = "low"
 max_output_tokens = 4000
 
-[roles.writer]  # later phases
+[roles.writer]  # words every user-facing sentence: briefs, chat answers, Explain this
 provider = "openai"
 model = "gpt-5.6-terra"
 reasoning_effort = "medium"
+max_output_tokens = 4000
+
+[roles.vision]  # reads the text in a forwarded screenshot; terra takes "Text, Image" input
+provider = "openai"
+model = "gpt-5.6-terra"
+reasoning_effort = "low"
 max_output_tokens = 4000
 
 # USD per 1M tokens, from each model's page on developers.openai.com, fetched 2026-10-25.
@@ -85,6 +91,22 @@ max_judge_calls_per_cycle = 40  # about $0.006 a call, measured 2026-10-25
 # week is still news. 7 days is far inside the engine's 21-session horizon, so the base rate
 # still describes what lies ahead. Decided every cycle, never stored with the answer.
 event_max_age_days = 7
+
+[product]
+# Jev picks the chat intent only while its accuracy on the labelled set in
+# evals/intent_accuracy.py is at least the cheap model's. Below the confidence, on an error or
+# past the deadline, the cheap model decides.
+use_jev_for_intent = true
+jev_min_confidence = 0.7
+jev_deadline_s = 4
+# A rare alert needs at least 8 independent past episodes (PRODUCT.md) and a gap of 15 points
+# between the hit rate and the normal-period rate. The pages call 10 points a lean; 15 is
+# half again as wide, so an alert fires only where the scoreboard would already show a clear
+# green or red and the count is not a weak signal. At most 2 a month per user (PRODUCT.md).
+alert_min_episodes = 8
+alert_min_gap = 0.15
+alert_max_per_month = 2
+tip_lookback_days = 7  # how far back a tip check searches the news
 
 [group]
 batch_size = 50  # articles per grouping call

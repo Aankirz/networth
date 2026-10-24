@@ -207,3 +207,6 @@
 
 ## 2026-10-25 — Phase 3B: guard.py send gate and push_rates.sh
 - networth/guard.py checks every model draft: numbers must appear in the source text after normalising (lakh, crore, k, commas, %, ordinals, Devanagari digits), no banned words in English, transliterated Hindi or Devanagari, no advice phrasing; one rewrite then the template; verdicts appended to a jsonl log. tests/test_guard.py. scripts/push_rates.sh uploads data/base_rates.sqlite to the Maritime /data volume in 80 KB gzip chunks with a sha256 check, because Maritime's upload fails above about 80 KB.
+
+## 2026-10-25 — Phase 3B chat, briefs and explain-this
+- Added networth/chat (intent pick via Jev or the cheap model, what happened today, why, tip check, explain-this for text, links and screenshots, plan question), networth/brief and bot/briefs (investing-day brief, once per day), /brief and brief buttons, photo handling, same_claim model call, Services, glossary. 353 tests green.
