@@ -33,7 +33,7 @@ class GroupResult:
     calls: int
     new_stories: int
     assigned: int
-    fallbacks: tuple[str, ...]
+    repairs: tuple[str, ...]
     errors: tuple[str, ...]
 
 
@@ -63,7 +63,7 @@ def assign_stories(
     cycle; its articles stay unassigned and are grouped next cycle."""
     pending = store.unassigned_articles()
     calls = new_stories = assigned = 0
-    fallbacks: list[str] = []
+    repairs: list[str] = []
     errors: list[str] = []
     for start in range(0, len(pending), batch_size):
         batch = pending[start : start + batch_size]
@@ -74,12 +74,11 @@ def assign_stories(
         except net.CallFailed as exc:
             errors.append(str(exc))
             break
-        if grouping.fallback_reason:
-            fallbacks.append(grouping.fallback_reason)
+        repairs += grouping.repairs
         n_new, n_assigned = _apply(grouping, batch, store)
         new_stories += n_new
         assigned += n_assigned
-    return GroupResult(calls, new_stories, assigned, tuple(fallbacks), tuple(errors))
+    return GroupResult(calls, new_stories, assigned, tuple(repairs), tuple(errors))
 
 
 def primary_source(url: str, cfg: ConfirmConfig) -> str | None:
@@ -115,7 +114,8 @@ def confirm(articles: Sequence[Article], cfg: ConfirmConfig) -> Verdict:
     if len(publishers) == 1:
         return Rejected("rejected: 1 publisher, no primary source", publishers)
     reason = (
-        f"rejected: {n} publishers in {cfg.window_hours}h (need {cfg.min_publishers}), "
+        f"rejected: {n} publisher{'s' if n != 1 else ''} in {cfg.window_hours}h "
+        f"(need {cfg.min_publishers}), "
         "no primary source"
     )
     return Rejected(reason, publishers)

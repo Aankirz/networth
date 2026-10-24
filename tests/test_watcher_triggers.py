@@ -43,7 +43,13 @@ def confirmed_cycle(cfg, store, models):
     group.assign_stories(store, models, cfg.group_batch_size, SINCE)
     verdicts = group.decide(store, cfg.confirm, NOW)
     return verdicts, classify.classify_confirmed(
-        store, models, verdicts, classify.allowed_causes(), cfg.max_judge_calls_per_cycle, NOW
+        store,
+        models,
+        verdicts,
+        classify.allowed_causes(),
+        cfg.max_judge_calls_per_cycle,
+        SINCE,
+        NOW,
     )
 
 
@@ -55,7 +61,13 @@ def test_only_confirmed_stories_are_classified_and_only_once(cfg, store) -> None
     models = FakeModels()
     verdicts, first = confirmed_cycle(cfg, store, models)
     second = classify.classify_confirmed(
-        store, models, verdicts, classify.allowed_causes(), cfg.max_judge_calls_per_cycle, NOW
+        store,
+        models,
+        verdicts,
+        classify.allowed_causes(),
+        cfg.max_judge_calls_per_cycle,
+        SINCE,
+        NOW,
     )
     assert sorted(models.classified) == ["opec_cut", "rbi_hike"]
     assert (first.classified, second.classified) == (2, 0)
@@ -66,7 +78,7 @@ def test_stories_over_the_cap_wait_and_are_counted(cfg, store) -> None:
     group.assign_stories(store, FakeModels(), cfg.group_batch_size, SINCE)
     verdicts = group.decide(store, cfg.confirm, NOW)
     out = classify.classify_confirmed(
-        store, FakeModels(), verdicts, classify.allowed_causes(), 1, NOW
+        store, FakeModels(), verdicts, classify.allowed_causes(), 1, SINCE, NOW
     )
     assert (out.classified, out.over_cap) == (1, 1)
 

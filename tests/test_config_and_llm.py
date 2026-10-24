@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import datetime as dt
 import time
 import tomllib
 from pathlib import Path
@@ -138,49 +139,70 @@ def wire(*groups: tuple[str, list[str]]) -> _WireGrouping:
 
 def test_grouping_maps_short_ids_back_and_keeps_existing_stories() -> None:
     out = validate_grouping(wire(("s_old", ["a1"]), ("", ["a2", "a3"])), ARTICLES, OPEN, SHORT)
-    assert out.fallback_reason is None
+    assert out.repairs == ()
     assert [(g.existing_story_id, g.article_ids) for g in out.groups] == [
         ("s_old", (ARTICLES[0].id,)),
         (None, (ARTICLES[1].id, ARTICLES[2].id)),
     ]
 
 
+A1, A2, A3 = (a.id for a in ARTICLES)
+
+
 @pytest.mark.parametrize(
-    "bad",
+    ("bad", "groups"),
     [
-        wire(("", ["a1", "a2"])),  # a3 missing
-        wire(("", ["a1", "a2"]), ("", ["a2", "a3"])),  # a2 twice
-        wire(("", ["a1", "a2", "a3", "a9"])),  # unknown article
-        wire(("s_nope", ["a1", "a2", "a3"])),  # unknown story
-        None,
+        (wire(("", ["a1", "a2"])), [(None, (A1, A2)), (None, (A3,))]),  # a3 left out
+        (wire(("", ["a1", "a2"]), ("", ["a2", "a3"])), [(None, (A1, A2)), (None, (A3,))]),
+        (wire(("", ["a1", "a2", "a3", "a9"])), [(None, (A1, A2, A3))]),  # unknown article
+        (wire(("s_nope", ["a1", "a2", "a3"])), [(None, (A1, A2, A3))]),  # unknown story
     ],
 )
-def test_bad_grouping_falls_back_to_one_story_per_article(bad) -> None:
+def test_a_rule_breaking_grouping_keeps_its_valid_groups(bad, groups) -> None:
     out = validate_grouping(bad, ARTICLES, OPEN, SHORT)
-    assert out.fallback_reason
+    assert out.repairs
+    assert [(g.existing_story_id, g.article_ids) for g in out.groups] == groups
+
+
+def test_no_parsed_grouping_falls_back_to_one_story_per_article() -> None:
+    out = validate_grouping(None, ARTICLES, OPEN, SHORT)
+    assert out.repairs == ("no parsed output",)
     assert [g.article_ids for g in out.groups] == [(a.id,) for a in ARTICLES]
 
 
 ALLOWED = {EventType.RBI_HIKE: ("inflation",), EventType.FED_CUT: ("growth_slowdown",)}
 
 
+WINDOW_START = dt.date(2026, 10, 23)
+
+
+def judged(type_: str, cause: str, event_date: str = "2026-10-24", reason: str = "r"):
+    wire = _WireClassification(type=type_, cause=cause, event_date=event_date, reason=reason)
+    return validate_classification(wire, ALLOWED, WINDOW_START)
+
+
 def test_classification_accepts_an_allowed_type_and_cause() -> None:
-    out = validate_classification(
-        _WireClassification(type="rbi_hike", cause="inflation", reason="r"), ALLOWED
-    )
-    assert out == Classified(EventType.RBI_HIKE, "inflation", "r")
+    assert judged("rbi_hike", "inflation") == Classified(EventType.RBI_HIKE, "inflation", "r")
 
 
 @pytest.mark.parametrize(
     ("type_", "cause"), [("rbi_hike", "growth_slowdown"), ("moon_landing", ""), ("oil_supply", "")]
 )
 def test_classification_outside_the_table_is_none(type_: str, cause: str) -> None:
-    out = validate_classification(_WireClassification(type=type_, cause=cause, reason="r"), ALLOWED)
-    assert out == NotAnEvent(INVALID_OUTPUT)
+    assert judged(type_, cause) == NotAnEvent(INVALID_OUTPUT)
 
 
 def test_classification_none_keeps_the_model_reason() -> None:
-    out = validate_classification(
-        _WireClassification(type="none", cause="", reason="commentary"), ALLOWED
+    assert judged("none", "", "", "commentary") == NotAnEvent("commentary")
+
+
+def test_an_event_dated_before_the_window_is_old_news_not_a_trigger() -> None:
+    out = judged("rbi_hike", "inflation", "2025-05-07")
+    assert isinstance(out, NotAnEvent)
+    assert out.reason.startswith("old news: rbi_hike dated 2025-05-07, before 2026-10-23")
+
+
+def test_an_event_with_no_readable_date_is_none() -> None:
+    assert judged("rbi_hike", "inflation", "last week") == NotAnEvent(
+        f"{INVALID_OUTPUT}: no event date"
     )
-    assert out == NotAnEvent("commentary")

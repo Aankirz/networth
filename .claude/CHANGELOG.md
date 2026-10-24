@@ -126,3 +126,7 @@
 
 ## 2026-10-25 — Watcher cycle, decision log and report
 - Added networth/watcher/log.py (decision log entries and their text), run.py (python -m networth.watcher.run --once: pull, group, confirm, classify, trigger, a cycles row and a one-screen summary with counts, rejections by reason and the cycle's spend from llm_calls.jsonl; ConfigError exits 2 with the message) and report.py (confirmed stories with publishers or primary source, rejected stories with reasons, insight headline numbers, latest cycle, spend; last 48 h or --today), with tests for a repeat run leaving counts unchanged, Exa and OpenAI calls that never connect ending at the deadline and logged as failed, and the missing-key exit. Why: Phase 2 done-when 2, 5, 9 and 10.
+
+## 2026-10-25 — Watcher fixes from the first live cycles
+- networth/llm.py: a rule-breaking grouping answer is repaired (unknown ids dropped, duplicates keep the first group, unknown story ids become new stories, left-out articles become their own story) instead of discarded; the judge returns event_date and code rejects an event dated before the lookback window as "old news". Why: live run 1 split 2 of 3 batches into single-article stories (84 artificial "1 publisher" rejections), and Exa dates recrawled pages, so a May 2025 airstrike and the Oct 7 RBI hike read as new events.
+- networth/config.toml: judge cap 12 -> 40 (about $0.0033 a call, measured). networth/watcher/group.py: "1 publisher" wording.

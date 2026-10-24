@@ -67,10 +67,16 @@ def run_cycle(
         grouped = group.assign_stories(store, models, cfg.group_batch_size, since)
         verdicts = group.decide(store, cfg.confirm, now)
         judged = classify.classify_confirmed(
-            store, models, verdicts, classify.allowed_causes(), cfg.max_judge_calls_per_cycle, now
+            store,
+            models,
+            verdicts,
+            classify.allowed_causes(),
+            cfg.max_judge_calls_per_cycle,
+            since,
+            now,
         )
-        fallbacks = [f"grouping fell back: {r}" for r in grouped.fallbacks]
-        errors = [*pulled.errors, *grouped.errors, *fallbacks, *judged.errors]
+        repairs = [f"grouping repaired: {r}" for r in grouped.repairs]
+        errors = [*pulled.errors, *grouped.errors, *repairs, *judged.errors]
         if paths.rates_db.exists():
             fired = triggers.write_insights(
                 store, verdicts, cfg.triggers,
