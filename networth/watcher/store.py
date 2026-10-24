@@ -4,7 +4,9 @@
 
 Tables:
     articles  (url key, normalized)        one row per article ever pulled; INSERT OR IGNORE
-    stories   (id = hash of first url)     the model's grouping, plus the judge's answer once
+    stories   (id = hash of first url)     the model's grouping, plus the judge's answer once,
+                                           and for a rejected story the confirmed event it is
+                                           about, if any
     decisions (story_id key)               the latest verdict per story, rewritten every cycle
     insights  (type + event date + asset + trigger)  engine numbers only, the exact odds() dict;
               one event reported as several stories writes one set, under the first story
@@ -44,7 +46,7 @@ CREATE TABLE IF NOT EXISTS articles (
 CREATE TABLE IF NOT EXISTS stories (
   id TEXT PRIMARY KEY, title TEXT NOT NULL, first_seen TEXT NOT NULL,
   type TEXT, cause TEXT, classify_reason TEXT, classified_at TEXT, event_date TEXT,
-  region TEXT);
+  region TEXT, related_event TEXT, related_at TEXT);
 CREATE TABLE IF NOT EXISTS decisions (
   story_id TEXT PRIMARY KEY, verdict TEXT NOT NULL CHECK (verdict IN ('confirmed', 'rejected')),
   reason TEXT NOT NULL, publishers TEXT NOT NULL, primary_source TEXT, decided_at TEXT NOT NULL);
@@ -74,6 +76,13 @@ MIGRATE_EVENT_INSIGHTS: Final = """
 BEGIN;
 ALTER TABLE insights ADD COLUMN event_date TEXT;
 DELETE FROM insights;
+COMMIT;
+"""
+# A file from before rejected stories were matched to confirmed events.
+MIGRATE_RELATED: Final = """
+BEGIN;
+ALTER TABLE stories ADD COLUMN related_event TEXT;
+ALTER TABLE stories ADD COLUMN related_at TEXT;
 COMMIT;
 """
 
@@ -125,6 +134,13 @@ class Story:
     first_seen: dt.datetime
     classification: Classification | None  # None until the judge has answered
     classified_at: dt.datetime | None
+    related_event: str | None = None  # "type:event_date" of the confirmed event it is about
+    related_at: dt.datetime | None = None  # when that was last asked; None means never
+
+    @property
+    def event_key(self) -> str | None:
+        c = self.classification
+        return f"{c.type.value}:{c.event_date}" if isinstance(c, Classified) else None
 
 
 @dataclass(frozen=True)
@@ -205,9 +221,10 @@ def _classification(r: sqlite3.Row) -> Classification | None:
 
 
 def _story(r: sqlite3.Row) -> Story:
-    at = r["classified_at"]
+    at, related_at = r["classified_at"], r["related_at"]
     return Story(r["id"], r["title"], _time(r["first_seen"]), _classification(r),
-                 _time(at) if at else None)  # fmt: skip
+                 _time(at) if at else None, r["related_event"],
+                 _time(related_at) if related_at else None)  # fmt: skip
 
 
 def _verdict(r: sqlite3.Row) -> Verdict:
@@ -235,6 +252,8 @@ class Store:
             conn.executescript(MIGRATE_REGION)
         if "event_date" not in _columns(conn, "insights"):
             conn.executescript(MIGRATE_EVENT_INSIGHTS)
+        if "related_at" not in _columns(conn, "stories"):
+            conn.executescript(MIGRATE_RELATED)
         return cls(conn)
 
     def close(self) -> None:
@@ -331,6 +350,14 @@ class Store:
                 "UPDATE stories SET type = ?, cause = ?, classify_reason = ?, classified_at = ?, "
                 "event_date = ?, region = ? WHERE id = ? AND classified_at IS NULL",
                 (type_, cause, c.reason, _iso(now), event_date, region, story_id),
+            )
+
+    def set_related(self, related: Mapping[str, str | None], now: dt.datetime) -> None:
+        """Record, per story id, the confirmed event it is about (or None) as of now."""
+        with self._conn:
+            self._conn.executemany(
+                "UPDATE stories SET related_event = ?, related_at = ? WHERE id = ?",
+                [(key, _iso(now), story_id) for story_id, key in related.items()],
             )
 
     def put_insights(self, insights: Iterable[Insight], now: dt.datetime) -> None:

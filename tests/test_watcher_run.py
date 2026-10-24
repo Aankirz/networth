@@ -13,7 +13,7 @@ import pytest
 from networth import config, net
 from networth.engine import backtest
 from networth.engine.model import EventType, Region, write_db
-from networth.llm import Classified
+from networth.llm import Classified, NotAnEvent
 from networth.watcher import log, prices, report, run
 from networth.watcher.pull import ExaSearch
 from tests.watcher_fakes import (
@@ -198,3 +198,33 @@ def test_an_asset_missing_from_the_download_is_named(cfg, paths) -> None:
     assert "no closes for XLK: no closes in the download" in outcome.cycle.errors
     counts = outcome.cycle.counts
     assert counts["price_assets_checked"] == counts["price_assets_total"] - 1
+
+
+def test_a_rejected_story_about_a_confirmed_event_prints_under_that_event(cfg, paths) -> None:
+    models = FakeModels(related={"rumour": f"rbi_hike:{EVENT_DAY}"})
+    run.run_cycle(cfg, paths, FakeSearch(), models, NOW, FakeCloses())
+    lines = report.render(paths, NOW - report.dt.timedelta(hours=48), AGE)
+    titles = [ln.strip().split("  [")[0] for ln in lines]
+    event, rejected = lines.index(f"  EVENT rbi_hike on {EVENT_DAY}"), titles.index("REJECTED (3)")
+    assert event < titles.index("rumour") < rejected
+    assert "rumour" not in titles[rejected:]
+    assert "tariff_slow" in titles[rejected:]
+    assert "  1 listed above, under the confirmed event they are about" in lines
+
+
+def test_rejected_stories_are_matched_once_until_a_new_event_is_judged(cfg, paths) -> None:
+    models = FakeModels(related={"rumour": f"rbi_hike:{EVENT_DAY}"})
+    first = run.run_cycle(cfg, paths, FakeSearch(), models, NOW, FakeCloses()).cycle.counts
+    second = run.run_cycle(cfg, paths, FakeSearch(), models, NOW, FakeCloses()).cycle.counts
+    assert (first["related_asked"], first["related_matched"]) == (3, 1)
+    assert second["related_asked"] == 0 and len(models.related_asked) == 1
+
+
+def test_the_india_line_says_plainly_when_the_story_is_no_event_type(cfg, paths) -> None:
+    models = FakeModels({"rbi_hike": NotAnEvent("an RBI bulletin", Region.IN)})
+    run.run_cycle(cfg, paths, FakeSearch(), models, NOW, FakeCloses())
+    lines = report.render(paths, NOW - report.dt.timedelta(hours=48), AGE)
+    assert (
+        "Newest confirmed India story: rbi_hike (2026-10-24), not one of the event types we count"
+        in lines
+    )

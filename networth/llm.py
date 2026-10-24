@@ -3,6 +3,7 @@
     models = OpenAIModels(cfg, log_path=DATA_DIR / "llm_calls.jsonl")
     grouping = models.group_articles(articles, open_stories)   # role cheap
     verdict = models.classify_story(story, allowed_causes)     # role judge
+    related = models.match_related(events, rejected_stories)   # role cheap
 
 Model output is parsed into pydantic wire types, then validated here against the inputs and
 the allowed table. The watcher only sees the dataclasses below. Watcher code takes a `Models`
@@ -93,12 +94,24 @@ class NotAnEvent:
 Classification = Classified | NotAnEvent
 
 
+@dataclass(frozen=True)
+class EventBrief:
+    """A confirmed event, keyed "type:event_date", that rejected stories may be about."""
+
+    key: str
+    title: str
+
+
 class Models(Protocol):
     def group_articles(
         self, articles: Sequence[ArticleBrief], open_stories: Sequence[StoryBrief]
     ) -> Grouping: ...
 
     def classify_story(self, story: StoryForJudge, allowed: AllowedCauses) -> Classification: ...
+
+    def match_related(
+        self, events: Sequence[EventBrief], stories: Sequence[StoryForJudge]
+    ) -> Mapping[str, str | None]: ...
 
 
 class _WireGroup(BaseModel):
@@ -109,6 +122,15 @@ class _WireGroup(BaseModel):
 
 class _WireGrouping(BaseModel):
     groups: list[_WireGroup]
+
+
+class _WireMatch(BaseModel):
+    story_id: str
+    event_id: str  # "" when the story is about none of the events
+
+
+class _WireMatches(BaseModel):
+    matches: list[_WireMatch]
 
 
 class _WireClassification(BaseModel):
@@ -136,6 +158,13 @@ recrawl dates. Articles often mention older events; date the event, not the arti
 region for every answer, "none" included: "in" when the event happens in India or is about
 India's market, "us" when it happens in the US or is about the US market, "global" when it
 moves markets everywhere (a war, an OPEC decision, a pandemic). Give a one-sentence reason."""
+
+RELATED_INSTRUCTIONS: Final = """You match unconfirmed news stories to confirmed market events.
+A story matches an event when it is about the same subject: the same central bank's policy
+rate, the same tariff action, the same bank, the same outbreak, the same conflict. Older,
+earlier or conflicting reports on that subject match too (a report that the RBI held its rate
+matches an RBI rate hike event). A story about anything else matches nothing. Answer one entry
+per story: its id and the matching event id, or "" for none."""
 
 
 def fallback_grouping(articles: Sequence[ArticleBrief], reason: str) -> Grouping:
@@ -209,6 +238,30 @@ def validate_classification(
     except ValueError:
         return NotAnEvent(f"{INVALID_OUTPUT}: no event date")
     return Classified(event_type, wire.cause, event_date, region, wire.reason)
+
+
+def validate_matches(
+    wire: _WireMatches | None, events: Mapping[str, str], stories: Mapping[str, str]
+) -> dict[str, str | None]:
+    """events and stories map the prompt's short ids back to event keys and story ids. Every
+    story gets an answer; an unknown event id, or no answer at all, means no match."""
+    answers = {m.story_id: events.get(m.event_id) for m in (wire.matches if wire else [])}
+    return {story_id: answers.get(short) for short, story_id in stories.items()}
+
+
+def _related_prompt(
+    events: Sequence[EventBrief], stories: Sequence[StoryForJudge]
+) -> tuple[str, dict[str, str], dict[str, str]]:
+    event_ids = {f"e{i}": e.key for i, e in enumerate(events, start=1)}
+    story_ids = {f"s{i}": s.id for i, s in enumerate(stories, start=1)}
+    payload = {
+        "events": [{"id": short, "type_and_date": e.key, "title": e.title}
+                   for short, e in zip(event_ids, events, strict=True)],
+        "stories": [{"id": short, "title": s.title,
+                     "snippet": s.articles[0].snippet[:SNIPPET_CHARS] if s.articles else ""}
+                    for short, s in zip(story_ids, stories, strict=True)],
+    }  # fmt: skip
+    return json.dumps(payload, ensure_ascii=False), event_ids, story_ids
 
 
 def _group_prompt(
@@ -301,3 +354,10 @@ class OpenAIModels:
             Role.JUDGE, "classify_story", CLASSIFY_INSTRUCTIONS, prompt, _WireClassification
         )
         return validate_classification(wire, allowed)
+
+    def match_related(
+        self, events: Sequence[EventBrief], stories: Sequence[StoryForJudge]
+    ) -> dict[str, str | None]:
+        prompt, event_ids, story_ids = _related_prompt(events, stories)
+        wire = self._parse(Role.CHEAP, "match_related", RELATED_INSTRUCTIONS, prompt, _WireMatches)
+        return validate_matches(wire, event_ids, story_ids)

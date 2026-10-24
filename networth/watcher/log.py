@@ -89,18 +89,21 @@ def _story_lines(d: Decision) -> list[str]:
     return [*lines, f"  confirmed via {via}; publishers: {publishers}"]
 
 
-def _events(confirmed: Sequence[LogEntry]) -> list[list[LogEntry]]:
-    """Confirmed stories the judge dated to the same event, in first-seen order. A story with
-    no engine type is an event of its own."""
-    events: dict[object, list[LogEntry]] = {}
+def _events(confirmed: Sequence[LogEntry]) -> dict[str, list[LogEntry]]:
+    """Confirmed stories the judge dated to the same event, keyed "type:event_date", in
+    first-seen order. A story with no engine type is an event of its own, keyed by its id."""
+    events: dict[str, list[LogEntry]] = {}
     for e in confirmed:
-        c = e.decision.story.classification
-        key = (c.type, c.event_date) if isinstance(c, Classified) else e.decision.story.id
-        events.setdefault(key, []).append(e)
-    return list(events.values())
+        story = e.decision.story
+        events.setdefault(story.event_key or story.id, []).append(e)
+    return events
 
 
-def render_event(event: Sequence[LogEntry], age: Age) -> list[str]:
+def render_event(
+    event: Sequence[LogEntry], age: Age, related: Sequence[LogEntry] = ()
+) -> list[str]:
+    """The event's confirmed stories, its classification and numbers, then the rejected
+    stories about the same subject, each with its own reason."""
     first = event[0]
     c = first.decision.story.classification
     lines: list[str] = []
@@ -111,7 +114,11 @@ def render_event(event: Sequence[LogEntry], age: Age) -> list[str]:
     lines += [indent + line for e in event for line in _story_lines(e.decision)]
     insights = {i.id: i for e in event for i in e.insights}.values()
     tail = [*_classification_lines(first, age), *(_insight_line(i) for i in insights)]
-    return lines + [f"{indent}  {line}" for line in tail]
+    lines += [f"{indent}  {line}" for line in tail]
+    if related:
+        lines.append(f"{indent}reports on the same subject we did not confirm ({len(related)}):")
+        lines += [f"{indent}  {line}" for e in related for line in _story_lines(e.decision)]
+    return lines
 
 
 def india_line(entries: Sequence[LogEntry], age: Age) -> str:
@@ -124,7 +131,7 @@ def india_line(entries: Sequence[LogEntry], age: Age) -> str:
         india, key=lambda e: (e.decision.story.first_seen, e.decision.story.id)
     ).decision.story
     c = story.classification
-    kind = "none"
+    kind = "not one of the event types we count"
     if isinstance(c, Classified):
         old = c.event_date < oldest_event(age.now, age.max_days)
         kind = f"{c.type.value} dated {c.event_date}{', old news' if old else ''}"
@@ -132,10 +139,24 @@ def india_line(entries: Sequence[LogEntry], age: Age) -> str:
 
 
 def render_log(entries: Sequence[LogEntry], age: Age) -> list[str]:
+    """Rejected stories about a confirmed event print under that event, so a rejected "RBI
+    holds" never sits in a separate list from the RBI hike it contradicts."""
     confirmed = [e for e in entries if isinstance(e.decision.verdict, Confirmed)]
     rejected = [e for e in entries if isinstance(e.decision.verdict, Rejected)]
+    events = _events(confirmed)
+    related: dict[str, list[LogEntry]] = {}
+    unrelated: list[LogEntry] = []
+    for e in rejected:
+        key = e.decision.story.related_event
+        if key in events:
+            related.setdefault(key, []).append(e)
+        else:
+            unrelated.append(e)
     lines = [india_line(entries, age), "", f"CONFIRMED ({len(confirmed)})"]
-    lines += [line for ev in _events(confirmed) for line in render_event(ev, age)] or ["  none"]
+    lines += [line for key, ev in events.items()
+              for line in render_event(ev, age, related.get(key, ()))] or ["  none"]  # fmt: skip
     lines += ["", f"REJECTED ({len(rejected)})"]
-    lines += [f"  {line}" for e in rejected for line in _story_lines(e.decision)] or ["  none"]
+    if under_events := len(rejected) - len(unrelated):
+        lines.append(f"  {under_events} listed above, under the confirmed event they are about")
+    lines += [f"  {line}" for e in unrelated for line in _story_lines(e.decision)] or ["  none"]
     return lines

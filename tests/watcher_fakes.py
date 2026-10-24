@@ -18,6 +18,7 @@ from networth.llm import (
     ArticleBrief,
     Classification,
     Classified,
+    EventBrief,
     Group,
     Grouping,
     NotAnEvent,
@@ -58,8 +59,14 @@ class FakeModels:
     """Groups by the fixture's story label, titles each new story with its label, and
     classifies by a label -> answer table."""
 
-    def __init__(self, answers: Mapping[str, Classification] | None = None) -> None:
+    def __init__(
+        self,
+        answers: Mapping[str, Classification] | None = None,
+        related: Mapping[str, str] | None = None,
+    ) -> None:
         self.labels = story_labels()
+        self.related = related or {}  # rejected story title -> event key it is about
+        self.related_asked: list[list[str]] = []
         self.answers = (
             answers
             if answers is not None
@@ -90,6 +97,13 @@ class FakeModels:
     def classify_story(self, story: StoryForJudge, allowed: AllowedCauses) -> Classification:
         self.classified.append(story.title)
         return self.answers.get(story.title, NotAnEvent("not a market event"))
+
+    def match_related(
+        self, events: Sequence[EventBrief], stories: Sequence[StoryForJudge]
+    ) -> dict[str, str | None]:
+        self.related_asked.append([s.title for s in stories])
+        keys = {e.key for e in events}
+        return {s.id: k if (k := self.related.get(s.title)) in keys else None for s in stories}
 
 
 class NeverConnects(httpx2.BaseTransport):

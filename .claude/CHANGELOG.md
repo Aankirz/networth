@@ -154,3 +154,53 @@
 
 ## 2026-10-25 — Phase 2 hand-off report
 - Added docs/phases/phase-2-report.md: role-to-model map with OpenAI prices and source URLs, one live cycle's counts (146 articles, 71 stories, 30 confirmed, 41 rejected by reason, 10 insights), cost per cycle ($0.29 cold, $0.11 warm) and per day at 43 cycles (about $5 to $5.50, mostly Exa), every done-when result, known gaps and deviations. Corrected the judge cost comment in networth/config.toml to the measured $0.006 a call (the earlier entry's $0.0033 predates the event-date field). Why: the coordinator reviews Phase 2 against it.
+
+## 2026-10-25 — Phase 1B brief
+- Added docs/phases/phase-1b-regimes.md: FRED and India CPI regimes, additive engine change.
+
+## 2026-10-25 — Phase 3A: server, Telegram bot and onboarding
+- Added networth/app (FastAPI: /health, secret-checked /telegram/webhook, optional networth.web mount, SQLite Profile/Plan/Message store, env settings), networth/bot (IPv4 deadline Bot API client with one 429 retry, pure onboarding state machine with amount parser, command shell with a stop/pause send gate, long-poll runner), Dockerfile, .dockerignore, docs/deploy.md, docs/phases/phase-3a-report.md and 62 tests. Added fastapi and uvicorn. Why: Phase 3A brief.
+
+## 2026-10-25 — Phase 1B: macro regimes in the engine (uncommitted, for lead review)
+- Added networth/engine/macro.py (FRED USREC/CPIAUCSL/FEDFUNDS/UNRATE and MoSPI India CPI into data/macro/, the recession_followed and inflation_high rules as a registry), regime_rates table and RegimeRate in model.py, regime rows in backtest.py, odds(regime=) and split() in odds.py, regime canaries and --regime-impl in tests, tests/test_regimes.py. Why: Phase 1B brief; base_rates rows unchanged (3,020).
+
+## 2026-10-25 — Watcher: event date and region from the judge, age decided each cycle
+- The judge's answer now carries event_date and region (in/us/global) and is cached as a fact; validate_classification no longer drops old events, so a verdict never depends on when it was asked.
+- triggers writes insights only for events no older than classify.event_max_age_days (7, reason in config.toml) on the cycle's date, and only for assets in the story's region (India story -> Indian assets).
+- Store.open migrates old files once (adds event_date, region; clears every old answer and the derived insights so each story is judged again). The report prints "old news" at render time and now loads config.
+
+## 2026-10-25 — Phase 3B brief drafted
+- docs/phases/phase-3b-product.md: brief, chat intents, Explain this, guard, deploy fix for missing sqlite, Jev for intent picks (gated on accuracy), Keiki via external harness. Copied Jev gateway keys from zoya .env into Networth .env (values not printed).
+
+## 2026-10-25 — Watcher: one event, many stories
+- Grouping now offers the model every story with an article pulled in the lookback (articles.pulled_at), not stories filtered by first_seen, which comes from stale or date-only search publish dates; a later batch can now join a story an earlier batch made.
+- Insights are keyed by type + event date + asset + trigger, stored under the first story, so two stories of one event write one insight set (insights table gains event_date; old rows are cleared and rebuilt).
+- The report groups confirmed stories of one (type, event date) under an EVENT heading and opens with the newest confirmed India story.
+
+## 2026-10-25 — Watcher: price-first on fresh closes, threshold pinned
+- New networth/watcher/prices.py downloads recent closes for every price_watch asset and benchmark in one yfinance call over an IPv4 curl session, under http.prices_deadline_s (60); nothing is written to data/prices. A failed download is one "price-first skipped" error; each missing asset is its own error line; counts gain price_assets_checked and price_assets_total.
+- Threshold tests now build last-day moves at exactly 1.01, 0.99, -1.01 and -0.9 times 2.5 sigma, raw and on the excess, plus one test through the shipped config.toml that goes red if price_multiple is changed to 3.0.
+
+## 2026-10-25 — Phase 3A: idempotent updates and serialized handling
+- Added an updates table with claim_update(update_id) and a process-wide lock in handle_update, plus replay and concurrent-tap tests. Why: Telegram delivers at least once and the webhook runs on a threadpool; the live check exposed both risks.
+
+## 2026-10-25 — Bedrock added to Phase 3B brief
+- Owner reports CTO approval for Simbian Bedrock. Phase 3B adds a bedrock provider and compares it with OpenAI for the writer role.
+
+## 2026-10-25 — Bedrock removed from Phase 3B brief
+- Owner clarified Simbian Bedrock is only for running Claude Code builders when plan usage runs out, never in the product. Reverted the brief line.
+
+## 2026-10-25 — Phase 2 review round 2
+- networth/watcher/log.py: the "Newest confirmed India story" line prints the event date and marks old news, with tests. docs/phases/phase-2-report.md: round 2 live cycle (146 articles, 73 stories, 28 confirmed, 45 rejected, 5 region-filtered insights, 24 of 24 price assets on fresh closes, $0.29), 250 tests, the 7-day old-news rule, event-keyed insights, the store migration, and the remaining gap that rejected stories are not merged with their event. Why: coordinator review round 1 items 1 to 6.
+
+## 2026-10-25 — Spec pages brought up to date
+- product.html and tech.html now match what was built (OpenAI live models, direct Telegram delivery with Keiki optional, guard.py, Jev, Maritime deploy, 1B regimes, measured watcher cost, Explain this, real phase list), because the pages still described Claude/Bedrock and Keiki notice delivery.
+
+## 2026-10-25 — Phase 1B CPI release dates from ALFRED
+- networth/engine/macro.py: US CPI is now FRED/ALFRED initial releases (output_type=4), cached as date,value,released; the inflation rule and the vault cut use each month's recorded first-publication date and fall back to the fixed lag (US 21, IN 14) only where none is recorded. Why: three fed events (fed_cut_19960131, fed_hike_20050322, fed_cut_20251210) read a CPI print released after them under the fixed 21-day lag. Also renames url->url_template, needs->series_by_type, keep->is_all_india_general, and types regime values as Literal["yes","no"]. Tests: delayed-release leak cases, ignores_release_dates canary, real-data check over every fed event.
+
+## 2026-10-25 — Phase 3B: web reads the engine sqlite from DATA_DIR
+- networth/web/routes.py rates_db now uses Settings.rates_db (DATA_DIR/base_rates.sqlite) instead of the engine's repo-relative default, because in the container that path is /app/data, which does not exist, and every engine page returned 500. track_record.html gets its row count from the view. The 404 and 400 pages joined the banned-word and disclaimer test.
+
+## 2026-10-25 — Phase 3B: rejected stories shown under the confirmed event they are about
+- One cheap-model call per cycle (llm.match_related, classify.relate_rejected) records, for each rejected story, the confirmed event (type:event_date) it is about; stories table gains related_event and related_at. The decision log prints those stories under their EVENT heading with their own rejection reason, and the newest-India line says 'not one of the event types we count' instead of ', none'. Why: the honesty log showed 'RBI holds repo rate' as an unrelated rejection next to the confirmed RBI hike.

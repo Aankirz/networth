@@ -102,8 +102,9 @@ def run_cycle(
             cfg.max_judge_calls_per_cycle,
             now,
         )
+        related = classify.relate_rejected(store, models, verdicts, cfg.group_batch_size, now)
         repairs = [f"grouping repaired: {r}" for r in grouped.repairs]
-        errors = [*pulled.errors, *grouped.errors, *repairs, *judged.errors]
+        errors = [*pulled.errors, *grouped.errors, *repairs, *judged.errors, *related.errors]
         checked = 0
         if paths.rates_db.exists():
             watch, load_closes, price_errors = _price_first(cfg.triggers, fetch_closes)
@@ -130,6 +131,8 @@ def run_cycle(
             "rejected": len(verdicts) - confirmed,
             "classified": judged.classified,
             "classify_over_cap": judged.over_cap,
+            "related_asked": related.asked,
+            "related_matched": related.matched,
             "insights": insights,
             "price_jumps": jumps,
             "price_assets_checked": checked,
