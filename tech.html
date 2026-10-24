@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Networth Tech Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="logo" href="product.html"><i></i>Networth</a>
+  <span class="crumb">/ specs / tech</span>
+  <nav aria-label="Spec pages">
+    <a href="product.html">Product</a>
+    <a href="tech.html" aria-current="page">Tech</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="toc" aria-label="On this page">
+    <div class="label">On this page</div>
+    <a href="#parts">What we build</a>
+    <a href="#arch">Architecture</a>
+    <a href="#data">Data model</a>
+    <a href="#engine">The engine</a>
+    <a href="#watcher">News watcher</a>
+    <a href="#brains">Who decides what</a>
+    <a href="#harness">Agents and skills</a>
+    <a href="#flows">Request flows</a>
+    <a href="#web">Web view</a>
+    <a href="#delivery">Maritime and Keiki</a>
+    <a href="#evals">Evals and the loop</a>
+    <a href="#phases">Phases</a>
+    <a href="#fleet">Agent fleet</a>
+    <a href="#security">Security</a>
+    <a href="#risks">Risks</a>
+  </aside>
+
+  <main>
+    <div class="page-icon" aria-hidden="true">{}</div>
+    <h1>Networth, how it's built</h1>
+    <p class="subtitle">Every part we build, how it works, and the order we build it in over 24 hours. Read with the <a href="product.html">product spec</a>. One rule runs through all of it: the engine computes every number, and the AI only writes words around them.</p>
+    <div class="badges">
+      <span class="badge green">Tech spec · final</span>
+      <span class="badge">Python 3.12 · FastAPI · SQLite</span>
+      <span class="badge">Live: Opus 5.5 judges · Sonnet 5.5 writes · Haiku 5.5 sorts</span><span class="badge">Build: Claude Code</span>
+      <span class="badge blue">Maritime + Keiki · Telegram, WhatsApp</span>
+    </div>
+    <dl class="props">
+      <dt>Repo</dt><dd><code>networth/</code>, forked from your <code>zoya-harness</code></dd>
+      <dt>Runs on</dt><dd>One Maritime VM, one Docker container, state in <code>/data</code></dd>
+      <dt>Talks through</dt><dd>One Keiki agent on Telegram and WhatsApp. Our own Telegram bot is the fallback.</dd>
+      <dt>Budget</dt><dd>24 build hours, many agents in parallel</dd>
+    </dl>
+
+    <div class="callout green"><div class="ic">✓</div><p><b>Two kinds of Claude.</b> <b>Claude Code</b>, on Ankit's plan, does all build-time thinking: writing the code, curating the event library, running backtests, the improvement loop and the evals. <b>The Claude API</b>, through Bedrock or an Anthropic key, runs only the live product on Maritime: classifying news, writing briefs, answering chat and reading screenshots. The product has to keep running when the laptop is closed and serve other people, so it can't sit on a personal Claude Code plan.</p></div>
+
+    <section class="block" id="parts">
+      <div class="sec-head"><span class="sec-num">01</span><h2>What we build</h2></div>
+      <p class="lede">Eleven parts. Each one can be tested on its own, and each has a single owner in the agent fleet.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Part</th><th>What it does</th><th>Built with</th></tr></thead>
+        <tbody>
+          <tr><td>Event library</td><td>80+ dated past events in 11 types, US and India, each with cause and source</td><td><code>events.csv</code>, seeded from FRED, the SF Fed FOMC database, RBI policy statements, Union Budget dates, FDIC, the GPR index, PIIE, Wikipedia</td></tr>
+          <tr><td>Price store</td><td>US: 17 ETFs since 1998, industry returns since 1926. India: Nifty 50 and Nifty sector indices, NSE stocks, mutual fund NAVs</td><td>yfinance (already cached for the US, <code>^NSEI</code>, <code>^CNXIT</code>, <code>^NSEBANK</code> and <code>.NS</code> tickers for India), Kenneth French data library, FRED, AMFI NAV history for funds</td></tr>
+          <tr><td>Backtest</td><td>Turns events and prices into base rates</td><td>pandas, about 300 lines, writes <code>base_rates.sqlite</code></td></tr>
+          <tr><td>Odds API</td><td>Answers "what happened after events like this" for any asset or position</td><td><code>engine/odds.py</code> behind FastAPI</td></tr>
+          <tr><td>News watcher</td><td>Pulls news, groups it into stories, confirms them</td><td>Exa news search, GDELT as backup, Haiku for grouping</td></tr>
+          <tr><td>Triggers</td><td>Decides which stories become insights</td><td>Price-first z-score check plus news-first type match</td></tr>
+          <tr><td>Harness</td><td>Runs agents from spec files with skills, tools, budgets</td><td>zoya-harness fork, Claude models</td></tr>
+          <tr><td>Composer and guardrails</td><td>Writes the five-line message, blocks any untraceable number</td><td>Sonnet 5.5, <code>guardrails.py</code></td></tr>
+          <tr><td>Onboarding</td><td>Reads holdings from text or a screenshot</td><td>Sonnet 5.5 vision, ticker validation against yfinance</td></tr>
+          <tr><td>Web view</td><td>How am I doing, What if, Why card, landing, stats</td><td>FastAPI with Jinja templates, server-drawn SVG charts</td></tr>
+          <tr><td>Evals and loop</td><td>Frozen tests and a keep-or-discard improvement loop</td><td><code>evals/</code>, git, Claude Code agents propose the edits at build time</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="block" id="arch">
+      <div class="sec-head"><span class="sec-num">02</span><h2>Architecture</h2></div>
+      <p class="lede">One VM does the thinking. Keiki does the talking. Everything the user sees traces back to the engine box.</p>
+      <figure class="sketch"><svg id="t-arch" viewBox="0 0 1000 600" role="img" aria-label="Architecture showing user phone, Keiki or Telegram, the Maritime VM with harness, engine, watcher and storage, and external data sources"></svg>
+        <figcaption>Solid lines are the main path. Dashed lines are the fallback or offline jobs.</figcaption></figure>
+      <div class="grid g3">
+        <div class="card"><div class="k">Maritime VM</div><p>A Docker container that listens on <code>$PORT</code>, answers <code>GET /health</code> and <code>POST /chat</code> within 30 seconds, and keeps everything in <code>/data</code>. Maritime cron triggers wake it for the 7am brief and every 15 minutes in US market hours.</p></div>
+        <div class="card"><div class="k">Keiki</div><p>Handles the Telegram and WhatsApp conversations, per-user memory and incoming screenshots. It calls our <code>/tools/*</code> endpoints as webhook tools. We push briefs with its notice API.</p></div>
+        <div class="card"><div class="k">Offline</div><p>The backtest runs once at build time, then nightly. It reads the price store and the event library and writes the base-rate table. Nothing user-facing waits on it.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="data">
+      <div class="sec-head"><span class="sec-num">03</span><h2>Data model</h2></div>
+      <p class="lede">Name the shapes first. Every other part reads or writes one of these.</p>
+<pre><code><span class="c"># engine, offline</span>
+<span class="k">Event</span>      id, date, type, cause, region, headline, sources[], episode_id
+<span class="k">Reaction</span>   event_id, asset, horizon_days, raw_return, excess_return
+<span class="k">BaseRate</span>   type, cause, asset, horizon_days, era,
+           n_events, n_episodes, hit_rate, baseline_hit_rate,
+           median, p10, p90, episode_ids[]
+
+<span class="c"># live</span>
+<span class="k">Story</span>      id, first_seen, title, publishers[], primary_source?, confirmed, type?, cause?
+<span class="k">Insight</span>    id, story_id, user_id, assets[], base_rate_ids[], dollar_range, trail, status
+<span class="k">Trail</span>      confirmed, type_cause, episodes, odds_vs_normal, priced_in,
+           winners_losers, your_money, what_changes_view      <span class="c"># the 8 steps, as JSON</span>
+
+<span class="c"># users</span>
+<span class="k">Profile</span>    user_id, channel, holdings[{ticker, qty, cost?}], watch[], brief_time, tz, link_token,
+           goal, horizon_years, drop_comfort, monthly_amount, currency, markets[], exclude[]
+<span class="k">Plan</span>       user_id, buckets{safety, core, growth}, targets_pct, max_drop_ok, written_at   <span class="c"># chosen by the user, never by us</span>
+<span class="k">Message</span>    id, user_id, direction, text, insight_id?, numbers_used[], sent_at
+
+<span class="k">type</span>    ∈ oil_supply, fed_hike, fed_cut, rbi_hike, rbi_cut, union_budget, inr_shock,
+          military_conflict, tariff, bank_stress, pandemic, election   <span class="c"># each tagged region ∈ us, in, global</span>
+<span class="k">horizon</span> fixed per type before the backtest runs   <span class="k">era</span> ∈ since_1926, since_1998</code></pre>
+      <h3 style="margin-top:22px">How one event becomes a million different messages</h3>
+      <div class="steps">
+        <div><p><b>Shared, computed once per event.</b> Base rates per (event type, asset) come from the engine and are cached. A million users don't mean a million backtests.</p></div>
+        <div><p><b>Filter per user.</b> Drop any asset in <code>exclude[]</code>. Keep events that touch holdings or the user's plan buckets.</p></div>
+        <div><p><b>Rank per user.</b> <code>score = exposure × |median| × confidence × goal_weight</code>. A 3-year house goal puts more weight on downside events. A 25-year horizon weighs recovery time.</p></div>
+        <div><p><b>Size per user.</b> Dollar ranges on their own positions, also stated in months of their <code>monthly_amount</code>. Plan drift is checked against their own <code>targets_pct</code>.</p></div>
+        <div><p><b>Compose per user.</b> One Sonnet call with the profile in context. At large scale the five lines become a template filled from the engine, and the model handles only chat. That keeps cost roughly flat per user.</p></div>
+      </div>
+      <div class="callout green"><div class="ic">✓</div><p><b>Why <code>numbers_used</code> exists.</b> Every message records which engine values it quoted. The guardrail checks that every number in the text appears in that list. That is how "every call shows its work" becomes something the code enforces.</p></div>
+    </section>
+
+    <section class="block" id="engine">
+      <div class="sec-head"><span class="sec-num">04</span><h2>The engine</h2></div>
+      <p class="lede">An event study, the standard method from finance research. For each past event, measure what each asset did against its own market (the S&amp;P for US assets, the Nifty 50 for Indian ones) over a fixed window, then summarize honestly.</p>
+      <figure class="sketch"><svg id="t-engine" viewBox="0 0 1000 250" role="img" aria-label="Engine pipeline from events and prices to the odds API"></svg>
+        <figcaption>The backtest pipeline. Every arrow is a pure function with its own test.</figcaption></figure>
+      <div class="grid g2">
+        <div class="card"><div class="k">Rules it enforces</div><ul>
+          <li><b>No peeking.</b> An event after 4pm ET counts from the next session. A leak test fails the build if any return uses future data.</li>
+          <li><b>Episodes.</b> Events within 21 trading days merge into one episode. Odds count episodes.</li>
+          <li><b>Baseline.</b> Hit rate in 1,000 random windows of the same length, next to the event hit rate.</li>
+          <li><b>Two eras.</b> Since 1926 from industry portfolios, since 1998 from ETFs. Both are shown when they disagree.</li>
+          <li><b>Weak signal</b> under 8 episodes, in words and numbers.</li>
+        </ul></div>
+        <div class="card"><div class="k">The odds API</div>
+<pre style="margin:0"><code>GET /tools/odds?type=oil_supply&amp;asset=JETS
+→ { n_episodes: 9, hit_rate: .73,
+    baseline: .49, median: -.024,
+    p10: -.09, p90: .03, era: "since_1998",
+    episodes: [...] }
+
+GET /tools/position_range
+    ?user=u_1&amp;ticker=JETS&amp;type=oil_supply
+→ { value: 2000, p10: -180,
+    median: -48, p90: 60 }</code></pre></div>
+      </div>
+      <div class="callout amber"><div class="ic">!</div><p><b>The outside check.</b> Before we trust any number, the engine must reproduce a published result. The candidate is Lucca and Moench (2015), who report that the S&amp;P tends to rise in the 24 hours before scheduled Fed announcements. That's cited from memory, so step one is to confirm it in the paper. If our engine, run on SPY and real FOMC dates, can't show the effect, the engine has a bug.</p></div>
+    </section>
+
+    <section class="block" id="watcher">
+      <div class="sec-head"><span class="sec-num">05</span><h2>News watcher and triggers</h2></div>
+      <p class="lede">This replaces the old "paste a headline" idea. The system finds the stories itself.</p>
+      <div class="grid g3">
+        <div class="card"><div class="k">Pull</div><p>Every 15 minutes in NSE hours (9:15 to 15:30 IST) and US hours, hourly otherwise. Exa news search over the last 48 hours with queries per event type and per asset held by any user. GDELT as backup.</p></div>
+        <div class="card"><div class="k">Group and confirm</div><p>Haiku groups articles into stories by title and summary. A story is confirmed with 3 or more original publishers in 24 hours, or 1 primary source such as the Fed, SEC, RBI, SEBI, PIB, NSE filings, OPEC or a company's investor page. Indian publishers include Economic Times, Mint, Business Standard and Moneycontrol. Wire reposts count once.</p></div>
+        <div class="card"><div class="k">Trigger</div><p><b>Price first.</b> An asset's excess return today beyond 2.5 times its 60-day volatility, then find the confirmed story behind it. <b>News first.</b> A confirmed story that classifies into a known type and cause.</p></div>
+      </div>
+      <p style="margin-top:14px">Every story that fails a check is still logged with the reason. That log is the "honesty moment" in the demo, and it's how we tune the thresholds.</p>
+    </section>
+
+    <section class="block" id="brains">
+      <div class="sec-head"><span class="sec-num">05.1</span><h2>Who decides what</h2></div>
+      <p class="lede">The probability never comes from a model's opinion. It's counted from history by the engine. The models decide which history applies, and then explain it. Hard judgment happens once per event and is shared by every user, so we can afford the smartest model for it.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Decision</th><th>Who makes it</th><th>How often</th><th>Rough cost</th></tr></thead>
+        <tbody>
+          <tr><td>Sort hundreds of articles into stories</td><td>Haiku 5.5</td><td>Every 15 min</td><td>Under $0.20 a day</td></tr>
+          <tr><td>Is it confirmed? (3+ publishers or a primary source)</td><td>Code, counting publishers</td><td>Every story</td><td>Free</td></tr>
+          <tr><td><b>What kind of event is this, and what caused it?</b> Oil supply shock or demand drop? Surprise Fed hike or already expected? Which past episodes are truly comparable, and what are the second-order effects?</td><td><b>Opus 5.5</b>, with the classify-event, priced-in-check, reference-class, regime-check and second-order-effects skills</td><td>0 to 5 confirmed stories a day, done once for all users</td><td>About $0.14 each, under $0.50 a day</td></tr>
+          <tr><td>The odds, the dollar ranges, a comparison of 2 or 3 stocks after this kind of event</td><td><b>The engine</b>, counting episodes against the baseline</td><td>On demand</td><td>Free</td></tr>
+          <tr><td>Which events matter to this user</td><td>Code: exposure × size of the effect × confidence × goal weight</td><td>Per user</td><td>Free</td></tr>
+          <tr><td>Write the brief, answer "why?" or "NVDA or AMD after this?"</td><td>Sonnet 5.5, quoting only engine numbers</td><td>Per user, per message</td><td>About $0.02 a message</td></tr>
+          <tr><td>Where to put money</td><td><b>Nobody.</b> That's personalized advice. The user decides, and we show what history says about their choice.</td><td></td><td></td></tr>
+        </tbody>
+      </table></div>
+      <h3 style="margin-top:22px">Unit economics (estimates, not yet measured)</h3>
+      <p>Prices are Anthropic's list prices per million tokens: Haiku 5.5 $0.10 in / $0.50 out. Sonnet 5.5 $2 in / $10 out, $0.20 cached. Opus 5.5 $4 in / $20 out. Bedrock may price differently. Thinking tokens bill as output.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Model call</th><th>Input</th><th>Output</th><th>Per call</th><th>Volume</th><th>Monthly</th></tr></thead>
+        <tbody>
+          <tr><td>Group a news pull (Haiku)</td><td>25k: about 100 articles × 250</td><td>2k</td><td>$0.0035</td><td>About 43 pulls a day</td><td>About $4.50, shared</td></tr>
+          <tr><td>Judge one confirmed event (Opus)</td><td>15k: articles 8k, skills 5k, candidate episodes 2k</td><td>4k including thinking</td><td>$0.14</td><td>About 3 a day</td><td>About $13, shared</td></tr>
+          <tr><td>Daily brief (Sonnet)</td><td>4k cached system and skills + 2k fresh (profile, holdings, engine numbers)</td><td>1.5k: 400 visible, the rest thinking</td><td>$0.02, plus about 20% for redrafts</td><td>30 per user</td><td>$0.72 per user</td></tr>
+          <tr><td>Chat reply (Sonnet)</td><td>4k cached + 3k fresh (history, stored trail)</td><td>800</td><td>$0.015</td><td>10 to 30 per user</td><td>$0.15 to $0.45 per user</td></tr>
+          <tr><td>Read a screenshot (Sonnet vision)</td><td>About 1.6k image + 1k prompt</td><td>300</td><td>$0.008</td><td>Once</td><td>$0.06 one time, with the profile chat</td></tr>
+          <tr><td>Intent router fallback (Haiku)</td><td>500</td><td>50</td><td>Under $0.0001</td><td>When rules miss</td><td>About $0</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout green"><div class="ic">↓</div><p><b>Free levers, no quality loss.</b> Build all briefs at 6:45 in one Batch API job, which is 50% off, so the brief drops to about $0.36 a user a month. Keep the system prompt and skills byte-identical so every user after the first reads them from cache. Store the "why" trail so a "why?" reply never recomputes it.</p></div>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Other cost</th><th>Monthly</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>News search (Exa)</td><td>$45 to $90, shared</td><td>5 to 10 queries per pull × 43 pulls a day, at about $7 per 1,000. About $10 free credit a month.</td></tr>
+          <tr><td>Market prices</td><td>$0 for the demo</td><td>yfinance is free but not licensed for commercial use. A real launch needs a paid feed such as Tiingo (price not checked).</td></tr>
+          <tr><td>History data (French library, FRED, GDELT)</td><td>$0</td><td>Free. FRED needs a free key.</td></tr>
+          <tr><td>Maritime compute and storage</td><td>$0 on promo</td><td>Scale lists at $500 a month. A smaller plan likely fits one agent. SQLite in <code>/data</code> is a few MB.</td></tr>
+          <tr><td>Keiki</td><td>Unknown</td><td>The $25 credit covers its chat turns. Plan price after that is not checked.</td></tr>
+          <tr><td>WhatsApp templates</td><td>Per message</td><td>Meta's fee varies by country. Telegram is free.</td></tr>
+          <tr><td>Domain</td><td>About $1</td><td><code>getnetworth.app</code>, about $15 a year (price not checked)</td></tr>
+          <tr><td>Logs and monitoring</td><td>$0</td><td>Maritime logs plus the <code>/stats</code> page</td></tr>
+        </tbody>
+      </table></div>
+      <p class="mock-note">All in, with the Batch API, before Keiki, WhatsApp and paid market data: about $1.60 a user a month at 100 users ($0.75 variable + about $85 shared). About $0.85 at 1,000 users. About $0.45 at 1,000 if the brief also moves to Haiku, with chat still on Sonnet.</p>
+      <div class="callout"><div class="ic">$</div><p><b>Who pays.</b> We bring the key. Maritime runs the code but doesn't pay for the models, beyond a $5 welcome credit. Keiki's $25 covers only Keiki's own chat turns. Plan A is Claude through Amazon Bedrock on the $100 AWS credit, if the credit applies to Bedrock. Plan B is an Anthropic API key. Expected spend for the build plus week one is about $15 to $40.</p></div>
+    </section>
+
+    <section class="block" id="harness">
+      <div class="sec-head"><span class="sec-num">06</span><h2>Agents and skills</h2></div>
+      <p class="lede">Spec-driven and skill-driven. An agent is a spec file. A skill is a folder with a <code>SKILL.md</code>. The harness turns a spec into a running agent with only the skills and tools it lists.</p>
+      <div class="grid g2">
+<pre style="margin:0"><code>networth/
+  agents/
+    brief.yaml     <span class="c"># 7am, per user</span>
+    alert.yaml     <span class="c"># same day, rare</span>
+    chat.yaml      <span class="c"># replies</span>
+    onboard.yaml
+  skills/
+    verify-event/SKILL.md
+    classify-event/SKILL.md
+    priced-in-check/SKILL.md
+    reference-class/SKILL.md
+    regime-check/SKILL.md
+    second-order-effects/SKILL.md
+    base-rate-odds/SKILL.md
+    risk-first-explainer/SKILL.md
+    signposts/SKILL.md
+    jargon-decoder/SKILL.md
+    macro-playbook/SKILL.md
+    morning-brief/SKILL.md
+  engine/   backtest.py  odds.py  events.csv
+  watcher/  pull.py  group.py  triggers.py
+  harness/  run.py  guardrails.py  models.py
+  web/      app.py  templates/
+  evals/    prepare_eval.py  headlines.jsonl
+  program.md   lessons.md</code></pre>
+        <div>
+<pre style="margin:0"><code><span class="c"># agents/brief.yaml</span>
+<span class="k">name</span>: brief
+<span class="k">model</span>: claude-sonnet-5-5
+<span class="k">prompt</span>: prompts/brief.md
+<span class="k">skills</span>: [base-rate-odds, priced-in-check,
+         second-order-effects,
+         risk-first-explainer, morning-brief]
+<span class="k">tools</span>: [odds, position_range, profile,
+        stories_today]
+<span class="k">budget</span>: { max_tool_calls: 20, max_usd: 0.05 }
+<span class="k">goal</span>: one message in the five-line format,
+      every number from a tool result
+<span class="k">guardrails</span>: [numbers_traceable,
+             banned_words, disclaimer]</code></pre>
+          <div class="card" style="margin-top:12px"><div class="k">Where the ideas come from</div><ul>
+            <li><b>zoya-harness</b>, reused: SKILL.md loader, per-skill tool limits, router, budget limits, model adapter, eval replay.</li>
+            <li><b>SimbianOS</b>, as patterns only: spec with permissions and budget together, stop on budget or goal, tools loaded on demand, sub-agents from the same factory.</li>
+            <li><b>investment-os</b>, your Oct 16 design: number traceability, point-in-time rules.</li>
+          </ul></div>
+        </div>
+      </div>
+      <h3 style="margin-top:24px">Guardrails, run after every draft</h3>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Check</th><th>Fails when</th><th>Then</th></tr></thead>
+        <tbody>
+          <tr><td>Numbers traceable</td><td>A number in the text isn't in <code>numbers_used</code></td><td>Redraft once, then drop the line</td></tr>
+          <tr><td>Banned words</td><td>"buy", "sell", "guaranteed", "can't lose" and similar</td><td>Redraft</td></tr>
+          <tr><td>Weak signal label</td><td>Fewer than 8 episodes without the words "weak signal"</td><td>Insert it</td></tr>
+          <tr><td>Length</td><td>Over 400 characters before the first tap</td><td>Redraft shorter</td></tr>
+          <tr><td>Confirmed</td><td>The insight's story isn't confirmed</td><td>Block the message</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="block" id="flows">
+      <div class="sec-head"><span class="sec-num">07</span><h2>Request flows</h2></div>
+      <h3>The 7am brief</h3>
+      <figure class="sketch"><svg id="t-brief" viewBox="0 0 1000 470" role="img" aria-label="Sequence of the morning brief from cron through watcher, engine, composer, guardrails and delivery to the user"></svg>
+        <figcaption>One brief per user. If nothing touches them, the brief says so in one line.</figcaption></figure>
+      <h3>Onboarding</h3>
+      <figure class="sketch"><svg id="t-onboard" viewBox="0 0 1000 210" role="img" aria-label="Onboarding flow from start message to first value"></svg>
+        <figcaption>Target: under 60 seconds from "start" to the first useful message.</figcaption></figure>
+      <h3>A reply like "why?" or "what about BTC?"</h3>
+      <div class="steps">
+        <div><p>Keiki or Telegram posts the message to <code>/chat</code> with the user id.</p></div>
+        <div><p>The router maps it to one of 7 intents with rules first, Haiku only if the rules miss.</p></div>
+        <div><p><code>chat.yaml</code> runs with the skills for that intent. "Why" reads the stored <code>Trail</code> and never recomputes it.</p></div>
+        <div><p>Guardrails check the draft. The reply goes out with 2 or 3 suggested taps and, when useful, a link to the web view.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="web">
+      <div class="sec-head"><span class="sec-num">08</span><h2>Web view</h2></div>
+      <p class="lede">Server-rendered pages from the same FastAPI app. No frontend framework, no login. Each user gets a signed link token.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Route</th><th>Page</th><th>Reads</th></tr></thead>
+        <tbody>
+          <tr><td><code>/</code></td><td>Landing</td><td>A real recent brief, anonymized</td></tr>
+          <tr><td><code>/u/{token}</code></td><td>How am I doing</td><td>Profile, prices, this week's insights</td></tr>
+          <tr><td><code>/u/{token}/what-if/{type}</code></td><td>What if</td><td>BaseRate, episodes, position ranges</td></tr>
+          <tr><td><code>/why/{insight_id}</code></td><td>Why card, shareable</td><td>Trail, episodes with dates and sources</td></tr>
+          <tr><td><code>/stats</code></td><td>Live stats</td><td>Counts only, no personal data</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="block" id="delivery">
+      <div class="sec-head"><span class="sec-num">09</span><h2>Maritime and Keiki</h2></div>
+      <p class="lede">The two sponsor platforms each do one job. Maritime is where Networth thinks and keeps its memory. Keiki is how Networth talks to people. Using both as intended is part of the pitch, not just plumbing.</p>
+      <div class="tw"><table class="t">
+        <thead><tr><th></th><th>Maritime</th><th>Keiki</th></tr></thead>
+        <tbody>
+          <tr><td>Its job for us</td><td>Runs the always-on agent: harness, engine, watcher, web view, SQLite in <code>/data</code></td><td>Owns the Telegram bot and WhatsApp number, per-user memory, incoming screenshots, outgoing notices</td></tr>
+          <tr><td>How we use it</td><td>One Docker container on <code>$PORT</code>. <code>GET /health</code>, <code>POST /chat</code>, <code>/tools/*</code>, <code>/u/*</code>. Cron triggers for the 7am brief per timezone and the 15-minute news pull.</td><td>A Keiki agent whose tools are webhooks to our <code>/tools/odds</code>, <code>/tools/position_range</code>, <code>/tools/profile</code>, <code>/tools/why</code>. Briefs and alerts go out through <code>POST /developer/agents/{id}/notice</code>.</td></tr>
+          <tr><td>Why it fits</td><td>"Always-on" is the brief. A VM that wakes on a schedule and keeps state is exactly that.</td><td>People already live in Telegram and WhatsApp. No app to install is the biggest lever on reaching 1,000 users.</td></tr>
+          <tr><td>Setup</td><td>Sign up, Billing, Scale plan, code <code>2A6Y73QF</code> at Stripe checkout. Two free months, about $1,000 per person.</td><td>Sign up, your name, organization "Networth", invite code <code>FIRST1000</code>. Gives build access plus $25 in LLM credits for users.</td></tr>
+          <tr><td>Keys we need</td><td><code>MARITIME_TOKEN</code> for the CLI only, never in the container</td><td><code>KEIKI_API_KEY</code>, <code>KEIKI_AGENT_ID</code>, webhook signing secret</td></tr>
+          <tr><td>Open question for Darshan</td><td>Can a cron trigger fan out per user, or do we loop users inside one run?</td><td>Is a notice delivered word for word? Is WhatsApp template approval quick?</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout green"><div class="ic">✓</div><p><b>Checked in the Keiki dashboard on Oct 24.</b> One Keiki agent can attach a <b>Telegram bot</b> and a <b>WhatsApp number</b>, and both go through the same <code>/tools/*</code>. We are not using iMessage. Launch order is Telegram first (free, global, one t.me link, though users must tap Start before we can message them), then WhatsApp (the 7am brief falls outside its 24-hour reply window, so it needs an approved message template). Maritime is on the Scale plan with 0 of 500 agents used and the first charge at $0 on Nov 19.</p></div>
+      <div class="callout amber"><div class="ic">!</div><p><b>Spend the $25 Keiki credit on users, not on us.</b> Composing runs on our own Anthropic key on Maritime. Keiki's credits cover its own conversational turns, so every new user costs us close to nothing in week one.</p></div>
+      <div class="grid g2">
+        <div class="card"><div class="k">Plan A · Keiki on Telegram and WhatsApp</div><ul>
+          <li>Keiki holds the conversation, memory and images.</li>
+          <li>It calls our <code>/tools/*</code> as webhook tools.</li>
+          <li>We push with <code>POST /developer/agents/{id}/notice</code>.</li>
+          <li>Limits: users start the chat first on every channel. WhatsApp briefs need an approved template.</li>
+          <li><b>Risk:</b> Keiki's agent rewrites notices. Spike test at H0.</li>
+        </ul></div>
+        <div class="card"><div class="k">Plan B · Our own Telegram bot from Maritime</div><ul>
+          <li>Our own bot, webhook into <code>/chat</code>.</li>
+          <li><code>getFile</code> for screenshots, <code>sendMessage</code> for briefs.</li>
+          <li>We control every word, so numbers can't drift.</li>
+          <li>Works globally, no line cost.</li>
+          <li>Switch if the H0 spike shows numbers changing.</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <section class="block" id="evals">
+      <div class="sec-head"><span class="sec-num">10</span><h2>Evals and the improvement loop</h2></div>
+      <p class="lede">Inspired by Karpathy's autoresearch and Google's Harness², rebuilt small. One frozen test, one file the loop may edit, keep or discard.</p>
+      <figure class="sketch"><svg id="t-loop" viewBox="0 0 1000 320" role="img" aria-label="Improvement loop of propose, run, compare, keep or discard, and lessons"></svg>
+        <figcaption>About 15 to 40 minutes per round. 4 to 6 rounds fit after the product works.</figcaption></figure>
+      <div class="grid g3">
+        <div class="card"><div class="k">Frozen tests</div><p>Walk forward through history. Using only events before year Y, predict sector direction after events in year Y. Score calibration. Plus 25 headlines: 15 real with known outcomes, 5 fake, 5 ambiguous.</p></div>
+        <div class="card"><div class="k">Editable</div><p><code>engine/odds.py</code> for matching, similarity and era weights. The prompts and skills. Nothing else.</p></div>
+        <div class="card"><div class="k">Locked vault</div><p>Events from 2022 to 2026 never enter the loop. They're scored once, at the end, so we can say honestly how well it does on unseen history.</p></div>
+      </div>
+    </section>
+
+    <section class="block" id="phases">
+      <div class="sec-head"><span class="sec-num">11</span><h2>Phases</h2></div>
+      <p class="lede">Tracks overlap on purpose. Each phase ends at a gate, a check that has to pass before work that depends on it starts.</p>
+      <figure class="sketch"><svg id="t-gantt" viewBox="0 0 1000 420" role="img" aria-label="Timeline of seven phases across 24 hours with gates"></svg>
+        <figcaption>Hours from the start of the build. Diamonds are gates.</figcaption></figure>
+      <details open><summary>P0 · Spikes and skeleton · H0 to H2</summary><div class="body">Fork zoya-harness into <code>networth/</code>, strip voice and Mac parts. Deploy a hello <code>/chat</code> on Maritime. Test Keiki tool calls and whether a notice keeps "8 of 11" word for word. Stand up the Telegram bot. <b>Gate:</b> a phone message reaches our code and our code can push one back.</div></details>
+      <details><summary>P1 · Engine · H2 to H6</summary><div class="body">Curate <code>events.csv</code> with 4 agents (one for India) and a checker. Pull Nifty sector history and AMFI NAVs. Download French industry data. Build the backtest, episodes, baseline and eras. <b>Gate:</b> base-rate table exists, the leak test passes, the outside check reproduces pre-FOMC drift.</div></details>
+      <details><summary>P2 · Watcher and triggers · H4 to H10</summary><div class="body">News pull, grouping, confirmation, price-first and news-first triggers, the rejection log. <b>Gate:</b> yesterday's real news produces the right confirmed stories, and fake ones are rejected.</div></details>
+      <details><summary>P3 · Agents and delivery · H6 to H12</summary><div class="body">Spec files, 12 skills, composer, guardrails, onboarding with screenshot reading, the 7am cron. <b>Gate:</b> a real brief built from real news arrives on a real phone.</div></details>
+      <details><summary>P4 · Web view · H10 to H16</summary><div class="body">How am I doing, What if, Why card, landing, stats, from the Figma designs. <b>Gate:</b> every link opens on mobile, and every number matches the message it came from.</div></details>
+      <details><summary>P5 · Evals and the loop · H14 to H18</summary><div class="body">25-headline eval, walk-forward test, then 4 to 6 improvement rounds. <b>Gate:</b> no unconfirmed story gets numbers, and every number traces to the engine.</div></details>
+      <details><summary>P6 · Launch · H18 to H24</summary><div class="body">Bring in users, record the demo, write the submission, fix what breaks. <b>Gate:</b> 5 people outside the team onboarded, 3 replied to a brief unprompted, entry submitted.</div></details>
+    </section>
+
+    <section class="block" id="fleet">
+      <div class="sec-head"><span class="sec-num">12</span><h2>Agent fleet</h2></div>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Stream</th><th>Agents</th><th>Output</th><th>Done when</th></tr></thead>
+        <tbody>
+          <tr><td>Event library</td><td>3 US curators, 1 India curator, 1 checker</td><td><code>events.csv</code></td><td>Every row has date, cause, source URL. The checker finds no conflicts.</td></tr>
+          <tr><td>Engine</td><td>1 builder, 1 reviewer</td><td><code>backtest.py</code>, <code>odds.py</code></td><td>Tests, leak test and outside check pass</td></tr>
+          <tr><td>Watcher</td><td>1 builder</td><td><code>watcher/</code></td><td>Real stories confirmed, fakes rejected</td></tr>
+          <tr><td>Harness and skills</td><td>1 lead, 1 skill writer</td><td><code>harness/</code>, <code>skills/</code>, <code>agents/</code></td><td>Brief on a real phone</td></tr>
+          <tr><td>Web</td><td>1 builder</td><td><code>web/</code></td><td>Matches Figma, opens on mobile</td></tr>
+          <tr><td>Evals</td><td>1 adversarial tester</td><td><code>evals/</code> report</td><td>All P5 gates pass</td></tr>
+          <tr><td>Launch kit</td><td>1 writer</td><td>Demo script, posts, submission draft</td><td>You approve before anything is posted</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="block" id="security">
+      <div class="sec-head"><span class="sec-num">13</span><h2>Security and secrets</h2></div>
+      <div class="grid g2">
+        <div class="card"><div class="k">Rules</div><ul>
+          <li>Secrets only in Maritime env vars, never in the repo.</li>
+          <li>Check Telegram's secret header and Keiki's request signature on every webhook.</li>
+          <li>Link tokens are signed, random, and can be rotated by texting "new link".</li>
+          <li>Screenshots are deleted right after holdings are read.</li>
+          <li>The stats page shows counts only.</li>
+          <li>Rate-limit <code>/chat</code> per user.</li>
+        </ul></div>
+        <div class="card"><div class="k">Env vars, names only</div>
+<pre style="margin:0"><code>ANTHROPIC_API_KEY
+EXA_API_KEY
+KEIKI_API_KEY
+KEIKI_AGENT_ID
+TELEGRAM_BOT_TOKEN
+TELEGRAM_WEBHOOK_SECRET
+KEIKI_WEBHOOK_SECRET
+LINK_SIGNING_SECRET</code></pre></div>
+      </div>
+    </section>
+
+    <section class="block" id="risks">
+      <div class="sec-head"><span class="sec-num">14</span><h2>Risks and fallbacks</h2></div>
+      <div class="tw"><table class="t">
+        <thead><tr><th>Risk</th><th>Fallback</th></tr></thead>
+        <tbody>
+          <tr><td>Keiki rewrites our numbers</td><td>Briefs through Telegram, Keiki kept for chat only or dropped</td></tr>
+          <tr><td>Maritime VM asleep at 7am</td><td>Platform cron triggers wake it. Test this in P0.</td></tr>
+          <tr><td>yfinance breaks or rate-limits</td><td>Prices are already cached. Tiingo as a second source.</td></tr>
+          <tr><td>Indian history is shorter. Checked on Oct 24 in yfinance: Sensex from 1997. Nifty 50, Bank and IT from 2007. Auto, Pharma, FMCG, Metal, Energy, Realty, PSU Bank and Infra from 2010 or 2011. Media and Financial Services are not available.</td><td>Show "weak signal" more often in India. Use the Sensex for long windows. Use Bank Nifty in place of Financial Services.</td></tr>
+          <tr><td>SEBI research rules</td><td>History only, no buy or sell, research label on every message, a legal check before scaling</td></tr>
+          <tr><td>Too few episodes for some types</td><td>Show "weak signal", lean on the 1926 era where it makes sense</td></tr>
+          <tr><td>Exa costs or limits</td><td>GDELT plus TinyFish search</td></tr>
+          <tr><td>Screenshot misread</td><td>Always confirm holdings with the user before saving</td></tr>
+          <tr><td>Running out of time</td><td>Cut in this order: alerts, report card, plan builder, WhatsApp. Never cut the history check, news watcher or verification. Never cut the guardrails.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <footer class="end">Networth tech spec · Oct 24, 2026 · Built from the session's research reports. Placeholder figures are marked.</footer>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script src="assets/sketch.js"></script>
+<script>
+sketch("t-arch", (s) => {
+  const { C } = s;
+  s.box(30, 230, 130, 110, "You", "Telegram, WhatsApp,\nbrowser", { color: C.green });
+  s.box(220, 150, 150, 90, "Keiki", "3 channels, memory,\nscreenshots", { color: C.blue });
+  s.box(220, 320, 150, 80, "Own Telegram bot", "fallback", { color: C.muted, dash: [6, 6] });
+  s.arrow(162, 265, 217, 205, { color: C.green }); s.arrow(217, 220, 162, 280);
+  s.arrow(162, 300, 217, 355, { dash: [6, 6], color: C.muted });
+  s.rect(420, 40, 400, 520, { color: C.violet, fill: s.tint(C.violet, .06), gap: 14 });
+  s.text(620, 70, "Maritime VM · one container", { size: 23, color: C.violet });
+  s.box(445, 95, 170, 80, "/chat · /tools/*", "FastAPI", { size: 19 });
+  s.box(630, 95, 170, 80, "Harness", "agents/*.yaml\nskills/*/SKILL.md", { size: 19 });
+  s.box(445, 200, 170, 80, "Guardrails", "numbers traceable,\nbanned words", { size: 19, color: C.amber });
+  s.box(630, 200, 170, 80, "Engine", "odds.py\nposition ranges", { size: 19, color: C.green });
+  s.box(445, 305, 170, 80, "Watcher", "pull, group,\nconfirm, trigger", { size: 19 });
+  s.box(630, 305, 170, 80, "Web view", "/u, /why, /stats", { size: 19, color: C.blue });
+  s.box(445, 410, 355, 70, "/data · SQLite", "base_rates, stories, profiles, messages, trails", { size: 19 });
+  s.box(445, 495, 355, 50, "Cron triggers · 7am and every 15 min", "", { size: 17 });
+  s.arrow(372, 195, 442, 135); s.arrow(442, 150, 372, 210);
+  s.arrow(372, 360, 442, 145, { dash: [6, 6], color: C.muted });
+  s.arrow(617, 135, 627, 135); s.arrow(715, 177, 715, 197); s.arrow(627, 240, 617, 240);
+  s.arrow(530, 387, 530, 407); s.arrow(715, 282, 715, 407, { color: C.green });
+  s.box(860, 90, 125, 90, "News", "Exa, GDELT", { size: 19 });
+  s.box(860, 230, 125, 90, "Claude API", "Haiku, Sonnet,\nOpus", { size: 19 });
+  s.box(860, 380, 125, 100, "History", "yfinance cache,\nFrench, FRED", { size: 19 });
+  s.arrow(857, 140, 617, 335, { bend: { x: 20, y: 80 } });
+  s.arrow(857, 275, 802, 140);
+  s.arrow(857, 430, 802, 440, { dash: [6, 6], label: "nightly backtest", ly: 22 });
+  s.arrow(160, 330, 627, 360, { bend: { x: 0, y: 170 }, color: C.blue, dash: [6, 6], label: "tap a link", ly: 30 });
+});
+
+sketch("t-engine", (s) => {
+  const { C } = s;
+  s.box(15, 30, 140, 70, "events.csv", "80+ events", { size: 19 });
+  s.box(15, 140, 140, 70, "prices", "US 1926/1998,\nIndia ~2007", { size: 19 });
+  const st = [["Align", "next session\nafter 4pm ET"], ["Returns", "vs S&P over\nfixed horizon"], ["Episodes", "merge within\n21 days"], ["Baseline", "1,000 random\nwindows"], ["Summarize", "hit rate, median,\np10, p90"]];
+  st.forEach(([t, sub], i) => s.box(205 + i * 140, 80, 118, 90, t, sub, { size: 19 }));
+  s.arrow(157, 65, 202, 110); s.arrow(157, 175, 202, 140);
+  for (let i = 0; i < 4; i++) s.arrow(205 + i * 140 + 120, 125, 205 + (i + 1) * 140 - 3, 125);
+  s.box(905 - 10, 80, 100, 90, "base_rates", "sqlite", { color: C.green, size: 18 });
+  s.arrow(205 + 4 * 140 + 120, 125, 892, 125, { color: C.green });
+  s.text(430, 215, "leak test here: no return may use data after the event date", { color: C.amber, size: 19 });
+  s.arrow(330, 205, 290, 175, { color: C.amber });
+});
+
+sketch("t-brief", (s) => {
+  const { C } = s;
+  const lanes = ["Cron", "Watcher", "Engine", "Composer", "Guardrails", "Keiki / TG", "User"];
+  const xs = lanes.map((_, i) => 75 + i * 142);
+  lanes.forEach((l, i) => { s.box(xs[i] - 60, 15, 120, 44, l, "", { size: 19, color: i === 6 ? C.green : i === 4 ? C.amber : C.ink }); s.line(xs[i], 62, xs[i], 455, { color: C.muted, dash: [3, 7] }); });
+  const msg = (from, to, y, label, o = {}) => s.arrow(xs[from] + (to > from ? 4 : -4), y, xs[to] + (to > from ? -4 : 4), y, { label, lsize: 16, ...o });
+  msg(0, 1, 95, "6:45 wake");
+  msg(1, 1 + 0, 95, "");
+  s.text(xs[1] + 8, 130, "confirmed stories\nsince yesterday", { sans: true, size: 11, color: C.muted, anchor: "start" });
+  msg(1, 2, 170, "stories × holdings");
+  msg(2, 3, 210, "base rates, $ ranges, trail");
+  msg(3, 4, 250, "draft + numbers_used");
+  msg(4, 3, 290, "fail: redraft once", { color: C.red, lcolor: C.red });
+  msg(4, 5, 330, "pass", { color: C.green, lcolor: C.green });
+  msg(5, 6, 370, "7:00 brief", { color: C.green, lcolor: C.green });
+  msg(6, 5, 410, "\"why?\"", { dash: [6, 6] });
+  s.text(xs[2], 445, "the Trail is stored, so 'why' is instant", { color: C.amber, size: 18 });
+});
+
+sketch("t-onboard", (s) => {
+  const { C } = s;
+  const st = [["start", "user texts first"], ["What do you own?", "tickers, words,\nor a screenshot"], ["Read holdings", "Sonnet vision,\nvalidate tickers"], ["Confirm", "\"Right?\" Yes / Fix"], ["Brief time", "7am / 8am / lunch"], ["First value", "this week's events\nthat touched you"]];
+  st.forEach(([t, sub], i) => s.box(15 + i * 165, 50, 140, 100, t, sub, { size: 19, color: i === 5 ? C.green : C.ink }));
+  for (let i = 0; i < 5; i++) s.arrow(15 + i * 165 + 142, 100, 15 + (i + 1) * 165 - 3, 100);
+  s.text(500, 190, "under 60 seconds end to end", { color: C.amber, size: 20 });
+});
+
+sketch("t-loop", (s) => {
+  const { C } = s;
+  const n = [[500, 45, "Propose", "Claude Code suggests\nedits to odds.py", C.violet], [830, 150, "Run", "frozen tests on\nthe train years", C.ink], [500, 270, "Compare", "train up and\nheld-out not down?", C.amber], [170, 150, "Keep or discard", "git commit +\nlessons.md", C.green]];
+  n.forEach(([x, y, t, sub, c]) => { s.ellipse(x, y, 230, 80, { color: c, fill: s.tint(c, .14) }); s.text(x, y - 6, t, { size: 22 }); s.text(x, y + 14, sub, { sans: true, size: 11, color: C.muted }); });
+  s.arrow(615, 60, 770, 115, { bend: { x: 40, y: -20 } }); s.arrow(790, 190, 615, 262, { bend: { x: 40, y: 20 } });
+  s.arrow(385, 262, 210, 190, { bend: { x: -40, y: 20 } }); s.arrow(210, 110, 385, 60, { bend: { x: -40, y: -20 } });
+  s.text(500, 160, "2022 to 2026 stays\nlocked outside", { color: C.red, size: 21 });
+});
+
+sketch("t-gantt", (s) => {
+  const { C } = s;
+  const x0 = 210, W = 760, hx = (h) => x0 + (h / 24) * W;
+  for (let h = 0; h <= 24; h += 2) { s.line(hx(h), 30, hx(h), 395, { color: "#27272a", roughness: .4 }); s.text(hx(h), 22, "H" + h, { mono: true, size: 11, color: C.muted }); }
+  const rows = [["P0 Spikes", 0, 2, C.violet], ["Design (Figma)", 0, 3, C.blue], ["P1 Engine", 2, 6, C.green], ["P2 Watcher", 4, 10, C.ink], ["P3 Agents", 6, 12, C.ink], ["P4 Web", 10, 16, C.blue], ["P5 Evals + loop", 14, 18, C.amber], ["P6 Launch", 18, 24, C.green], ["You: interviews, pitch", 0, 24, C.muted]];
+  rows.forEach(([l, a, b, c], i) => {
+    const y = 48 + i * 38;
+    s.text(20, y + 18, l, { sans: true, size: 13, anchor: "start", color: C.ink });
+    s.rect(hx(a), y + 4, hx(b) - hx(a), 22, { color: c, fill: s.tint(c, .25), gap: 5 });
+  });
+  [[2, "phone ↔ code"], [6, "outside check"], [12, "real brief"], [16, "every number traced"], [24, "submitted"]].forEach(([h, l], i) => {
+    const x = hx(h), y = 398;
+    s.line(x - 7, y, x, y - 8, { color: C.amber }); s.line(x, y - 8, x + 7, y, { color: C.amber }); s.line(x + 7, y, x, y + 8, { color: C.amber }); s.line(x, y + 8, x - 7, y, { color: C.amber });
+    s.text(x, y - 14, l, { color: C.amber, size: 15, anchor: i === 4 ? "end" : "middle" });
+  });
+});
+</script>
+</body>
+</html>

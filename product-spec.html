@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Networth Product Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1ea; --surface: #fffdf8; --ink: #1b1a17; --muted: #6b665c; --rule: #d9d3c5;
+  --accent: #0f5c4a; --accent-soft: #dcebe5; --warn: #9a5b00; --warn-soft: #f6e8cf;
+  --stop: #8f2d22; --stop-soft: #f3dcd7; --bubble-in: #e9e5db; --bubble-out: #0f5c4a; --bubble-out-ink: #f4f1ea;
+  --serif: "Fraunces", Georgia, serif; --sans: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  --gutter: clamp(16px, 4vw, 48px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12130f; --surface: #1a1b16; --ink: #ece8dd; --muted: #a09a8c; --rule: #33342c;
+    --accent: #5fc3a5; --accent-soft: #1c3a31; --warn: #e0a54a; --warn-soft: #3a2c14;
+    --stop: #e3806f; --stop-soft: #3d1f1a; --bubble-in: #26271f; --bubble-out: #2a6b58; --bubble-out-ink: #f4f1ea;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12130f; --surface: #1a1b16; --ink: #ece8dd; --muted: #a09a8c; --rule: #33342c;
+  --accent: #5fc3a5; --accent-soft: #1c3a31; --warn: #e0a54a; --warn-soft: #3a2c14;
+  --stop: #e3806f; --stop-soft: #3d1f1a; --bubble-in: #26271f; --bubble-out: #2a6b58; --bubble-out-ink: #f4f1ea;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+main { max-width: 1120px; margin: 0 auto; padding: 0 var(--gutter) 96px; }
+h1, h2, h3 { font-family: var(--serif); line-height: 1.1; margin: 0; }
+h2 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem); font-weight: 600; margin-bottom: 18px; }
+h3 { font-size: 1.12rem; font-weight: 600; margin-bottom: 8px; }
+p { margin: 0 0 12px; }
+section { padding: 64px 0 0; }
+.kicker { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 64ch; }
+.mono { font-family: var(--mono); }
+header { padding: 72px 0 28px; border-bottom: 1px solid var(--rule); }
+header h1 { font-size: clamp(2.6rem, 1.5rem + 4.6vw, 5rem); font-weight: 800; letter-spacing: -.02em; }
+header h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+
+.books { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.book { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; }
+.book .src { font: 600 11px var(--mono); color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.book p { font-size: 14.5px; }
+.book .rule { font-size: 14px; color: var(--accent); font-weight: 600; margin: 0; }
+
+.hook { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.hook > div { padding: 22px 18px; border-right: 1px solid var(--rule); }
+.hook > div:last-child { border-right: 0; }
+.hook .n { font: 600 12px var(--mono); color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+.hook p { font-size: 14.5px; color: var(--muted); margin: 0; }
+.note { margin-top: 14px; padding: 14px 18px; border-left: 3px solid var(--warn); background: var(--surface); border-radius: 0 10px 10px 0; font-size: 14.5px; }
+
+.journey { display: grid; gap: 0; border-left: 2px solid var(--rule); margin-left: 8px; }
+.step { position: relative; padding: 0 0 24px 28px; }
+.step::before { content: ""; position: absolute; left: -7px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg); border: 2px solid var(--accent); }
+.step .h { font: 600 13px var(--mono); color: var(--accent); }
+.step p { font-size: 14.5px; margin: 4px 0 0; }
+.step .feel { color: var(--muted); font-style: italic; }
+
+.screens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.screen h3 { margin-bottom: 4px; }
+.screen .why { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; min-height: 3.2em; }
+.phone { background: var(--surface); border: 1px solid var(--rule); border-radius: 26px; padding: 16px 12px; box-shadow: 0 24px 48px -28px rgba(0,0,0,.35); }
+.phone .bar { text-align: center; font: 600 11px var(--mono); color: var(--muted); margin-bottom: 10px; }
+.msg { padding: 9px 12px; border-radius: 17px; margin: 6px 0; font-size: 13.5px; line-height: 1.45; max-width: 90%; }
+.msg.me { background: var(--bubble-out); color: var(--bubble-out-ink); margin-left: auto; border-bottom-right-radius: 6px; }
+.msg.bot { background: var(--bubble-in); border-bottom-left-radius: 6px; }
+.msg .v { font-weight: 600; display: block; margin-bottom: 3px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.chips span { font: 500 11.5px var(--sans); border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 4px 9px; }
+.web { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 48px -28px rgba(0,0,0,.35); }
+.web .url { font: 11px var(--mono); color: var(--muted); padding: 8px 12px; border-bottom: 1px solid var(--rule); }
+.web .body { padding: 14px; font-size: 13.5px; }
+.web .big { font: 700 1.3rem/1.15 var(--serif); margin-bottom: 8px; }
+.bars { display: grid; gap: 4px; margin: 10px 0; }
+.bars div { display: grid; grid-template-columns: 70px 1fr 44px; align-items: center; gap: 8px; font: 11px var(--mono); }
+.bars i { display: block; height: 8px; border-radius: 4px; background: var(--accent); }
+.bars i.neg { background: var(--stop); }
+.btn { display: inline-block; font: 600 13px var(--sans); background: var(--accent); color: var(--bg); padding: 9px 14px; border-radius: 999px; margin: 4px 4px 0 0; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.placeholder { font-size: 11px; color: var(--muted); margin-top: 8px; text-align: center; }
+
+.anatomy { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; align-items: start; }
+.lines { counter-reset: l; display: grid; gap: 10px; }
+.line { display: grid; grid-template-columns: 34px 1fr; gap: 12px; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; }
+.line b.n { font: 700 1.2rem var(--serif); color: var(--accent); }
+.line p { margin: 0; font-size: 14.5px; }
+
+table.t { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--rule); font-size: 14px; }
+table.t th, table.t td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.t th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; }
+.card ul { margin: 8px 0 0; padding-left: 18px; }
+.card li { font-size: 14.5px; margin-bottom: 6px; }
+.card.bad { background: var(--stop-soft); border-color: transparent; }
+.card.good { background: var(--accent-soft); border-color: transparent; }
+
+footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); }
+@media (max-width: 900px) {
+  .books, .hook, .screens, .anatomy, .two { grid-template-columns: 1fr; }
+  .hook > div { border-right: 0; border-bottom: 1px solid var(--rule); }
+  table.t { display: block; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="kicker">Networth · product spec v1 · Oct 24, 2026</div>
+  <h1>Know what the news means <em>for your money.</em></h1>
+  <p class="lede" style="margin-top:18px">A calm friend in your messages who reads the world's news, checks it against 25 years of market history, and tells you only what touches what you own. Most days the message is short. Some days it says nothing needs your attention, and that is the point.</p>
+</header>
+
+<section>
+  <div class="kicker">01 · What the books tell us to do</div>
+  <h2>Four books, one rule each.</h2>
+  <div class="books">
+    <div class="book"><div class="src">The Mom Test · Fitzpatrick</div><p>Ask people about what they did last time, not whether they would use your idea. Compliments are noise. Time, money and reputation are signal.</p><p class="rule">Talk to 5 real investors before H4. Count commitments, not compliments.</p></div>
+    <div class="book"><div class="src">Don't Make Me Think · Krug</div><p>People scan, they don't read. Each screen should be obvious at a glance, and every question a user has to stop and answer costs you.</p><p class="rule">Line 1 of every message is the verdict for you. No typing without suggested replies.</p></div>
+    <div class="book"><div class="src">Hooked · Eyal</div><p>Habits form from a loop of trigger, action, variable reward and investment. The loop must make the user's life better, or it is manipulation.</p><p class="rule">Hook on reassurance and understanding, never on trading.</p></div>
+    <div class="book"><div class="src">Keep it simple</div><p>Every feature, channel and setting has a cost to the user and to us. Ship the smallest thing that delivers the core value, polished.</p><p class="rule">3 message types, 1 web page, 0 accounts, 0 passwords.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">02 · The habit loop</div>
+  <h2>Why someone opens this every morning.</h2>
+  <div class="hook">
+    <div><div class="n">Trigger</div><h3>7am brief, and the worry itself</h3><p>External: a message at the time they chose. Internal: the jolt of "is my money ok?" after a scary headline. Over time the internal one does the work. They see the news and think "let me check what Networth says".</p></div>
+    <div><div class="n">Action</div><h3>Glance at a text</h3><p>The lowest effort action that exists. It arrives in iMessage or Telegram, an app they already open 50 times a day. No app to install, no login, no dashboard.</p></div>
+    <div><div class="n">Variable reward</div><h3>Relief, surprise, status</h3><p>Some days "nothing you own is affected". Some days "this one matters, here's why". Often a surprising fact from history. And a card worth forwarding, which makes them look smart in the group chat.</p></div>
+    <div><div class="n">Investment</div><h3>Every reply makes it better</h3><p>Adding a holding, saying "I care about oil", asking a follow up. Each one makes tomorrow's brief more personal. A weekly scorecard builds a track record they trust more each week.</p></div>
+  </div>
+  <div class="note"><b>The ethical line.</b> Investing apps that hook people on action cause overtrading and losses. Ours hooks people on understanding. The most common honest message is "no action needed". If a feature would make people trade more, it doesn't ship.</div>
+</section>
+
+<section>
+  <div class="kicker">03 · The journey</div>
+  <h2>From stranger to daily habit in one minute.</h2>
+  <div class="journey">
+    <div class="step"><div class="h">Discover</div><p>A friend forwards an evidence card, like "What happened to airlines the last 11 times OPEC cut supply". The bottom of the card says "Get this every morning for what you own".</p><p class="feel">Feels like: that's interesting, and someone I trust sent it.</p></div>
+    <div class="step"><div class="h">Start · 1 tap</div><p>The landing page has one sentence, a real sample brief, and three buttons. iMessage, WhatsApp and Telegram. Tapping one opens a chat with "start" already typed.</p><p class="feel">Feels like: no sign up, no risk.</p></div>
+    <div class="step"><div class="h">Onboard · under 60 seconds</div><p>Two questions. "What do you own or watch?" They can type tickers, plain words like "tech and gold", or send a screenshot of their brokerage app. Then "When do you want your brief?" with buttons.</p><p class="feel">Feels like: that was easy. It understood my screenshot.</p></div>
+    <div class="step"><div class="h">First value · immediately</div><p>Before the first 7am, they get "Here's what happened this week that touched your stuff". Time to first value is under a minute, not tomorrow.</p><p class="feel">Feels like: oh, it already knows something useful about my money.</p></div>
+    <div class="step"><div class="h">Daily</div><p>A morning brief. A same-day alert only when something large hits what they hold, about a few times a month.</p><p class="feel">Feels like: I'm on top of it without trying.</p></div>
+    <div class="step"><div class="h">Weekly</div><p>Sunday scorecard: what we flagged, what actually happened, including misses. Plus one question to deepen their profile.</p><p class="feel">Feels like: it's honest with me. I trust it more.</p></div>
+    <div class="step"><div class="h">Share</div><p>Any message has a "forward this" card. The card is the growth engine. It carries the evidence and the invite.</p><p class="feel">Feels like: I look smart sending this.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">04 · Screens</div>
+  <h2>Seven screens. Six of them are messages.</h2>
+  <p class="lede" style="margin-bottom:28px">The chat is the interface. The only web page that matters is the evidence card, because it's the thing people share and the thing that earns trust. Numbers below are placeholders.</p>
+  <div class="screens">
+
+    <div class="screen"><h3>S1 · Landing page</h3><p class="why">One sentence, one real sample, three buttons. Nothing to think about.</p>
+      <div class="web"><div class="url">getnetworth.app</div><div class="body">
+        <div class="big">Know what the news means for your money. Before you ask.</div>
+        <p style="color:var(--muted);font-size:13px">A morning text that checks today's news against 25 years of market history. Only what touches what you own.</p>
+        <div class="msg bot" style="max-width:100%"><span class="v">Nothing you own needs attention today.</span>Oil fell 3% overnight. Your holdings don't track oil closely. One thing to watch this week is the Fed on Wednesday.</div>
+        <span class="btn">Start in iMessage</span><span class="btn ghost">WhatsApp</span><span class="btn ghost">Telegram</span>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px">Free. No account. Text STOP anytime. Research, not advice.</p>
+      </div></div></div>
+
+    <div class="screen"><h3>S2 · Onboarding</h3><p class="why">Two questions, buttons for the second, and a screenshot so nobody has to type.</p>
+      <div class="phone"><div class="bar">Networth</div>
+        <div class="msg me">start</div>
+        <div class="msg bot">Hi. I'll text you each morning with what the news means for your money. What do you own or keep an eye on? Tickers, plain words, or a screenshot of your app all work.</div>
+        <div class="msg me">[screenshot of brokerage app]</div>
+        <div class="msg bot">Got it. NVDA, VOO, JETS and some BTC. Right?</div>
+        <div class="chips"><span>Yes</span><span>Fix something</span></div>
+        <div class="msg bot">When should your brief arrive?</div>
+        <div class="chips"><span>7am</span><span>8am</span><span>Lunch</span></div>
+      </div></div>
+
+    <div class="screen"><h3>S3 · First value</h3><p class="why">Pay off the onboarding right away. Don't make them wait until tomorrow.</p>
+      <div class="phone"><div class="bar">Networth</div>
+        <div class="msg bot"><span class="v">This week, one thing touched what you own.</span>JETS fell 6% after the OPEC cut on Tuesday. In 11 similar cuts since 1998, airlines lagged the S&amp;P 8 times over the next month.</div>
+        <div class="msg bot">Everything else you own was quiet. See you at 7.</div>
+        <div class="chips"><span>Why airlines?</span><span>Show the 11 cases</span></div>
+      </div></div>
+
+    <div class="screen"><h3>S4 · Morning brief</h3><p class="why">Readable in 5 seconds. Verdict first, then the reason, then the history.</p>
+      <div class="phone"><div class="bar">Networth · 7:00</div>
+        <div class="msg bot"><span class="v">Good morning. One thing matters for you today.</span>The Fed raised rates overnight. You hold NVDA. In 14 surprise hikes since 1998, big tech trailed the S&amp;P over the next month 9 times, median −2.1%.</div>
+        <div class="msg bot">Worth knowing, not a reason to act. Long-term holders saw these dips recover in most cases.</div>
+        <div class="chips"><span>See evidence</span><span>What about BTC?</span><span>Less detail</span></div>
+      </div></div>
+
+    <div class="screen"><h3>S5 · Alert</h3><p class="why">Rare by design. A few a month at most, or users mute us.</p>
+      <div class="phone"><div class="bar">Networth · 2:14 pm</div>
+        <div class="msg bot"><span class="v">Heads up: big move in something you own.</span>Bitcoin is down 11% today. 9 outlets link it to an exchange collapse. Since 2014, BTC fell further in the next week after 5 of 7 similar events.</div>
+        <div class="chips"><span>What happened after?</span><span>Mute BTC alerts</span></div>
+      </div></div>
+
+    <div class="screen"><h3>S6 · Evidence card (web)</h3><p class="why">The trust screen and the share screen. Every number traces to a dated event.</p>
+      <div class="web"><div class="url">getnetworth.app/e/fed-surprise-hike</div><div class="body">
+        <div class="big">After 14 surprise Fed hikes, big tech trailed 9 times.</div>
+        <p style="font-size:12px;color:var(--muted)">Verified by 12 outlets · Oct 23, 2026</p>
+        <div class="bars">
+          <div><span>Tech XLK</span><i class="neg" style="width:62%"></i><span>−2.1%</span></div>
+          <div><span>Banks XLF</span><i style="width:40%"></i><span>+1.3%</span></div>
+          <div><span>Gold GLD</span><i style="width:18%"></i><span>+0.4%</span></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted)">1 month vs S&amp;P 500 · median · N=14 · small sample</p>
+        <span class="btn">Get this for what you own</span><span class="btn ghost">See all 14 events</span>
+      </div></div></div>
+
+    <div class="screen"><h3>S7 · Weekly scorecard</h3><p class="why">Honesty, including misses, is what builds long-term trust.</p>
+      <div class="phone"><div class="bar">Networth · Sun 9:00</div>
+        <div class="msg bot"><span class="v">Your week: 3 flags, 2 played out like history, 1 didn't.</span>Airlines lagged after OPEC, as usual. Banks did not rally after the Fed, unlike most past cases. Here's why that might be.</div>
+        <div class="msg bot">One question to make next week better. Do you plan to hold NVDA for months or for years?</div>
+        <div class="chips"><span>Months</span><span>Years</span><span>Not sure</span></div>
+      </div></div>
+
+  </div>
+  <p class="placeholder" style="text-align:left;margin-top:18px">All figures above are placeholders for layout. Real numbers come from the backtest.</p>
+</section>
+
+<section>
+  <div class="kicker">05 · Message anatomy</div>
+  <h2>Every message has the same five lines.</h2>
+  <div class="anatomy">
+    <div class="lines">
+      <div class="line"><b class="n">1</b><p><b>Verdict for you.</b> "One thing matters for you today" or "Nothing you own needs attention." Readable in under 2 seconds.</p></div>
+      <div class="line"><b class="n">2</b><p><b>What happened.</b> One plain sentence. No jargon, or the jargon is explained in the same sentence.</p></div>
+      <div class="line"><b class="n">3</b><p><b>What history says.</b> N, how often, typical size. Always vs the S&amp;P. Always says "small sample" under 8.</p></div>
+      <div class="line"><b class="n">4</b><p><b>What it means for you.</b> Usually calm. Says "not a reason to act" whenever true.</p></div>
+      <div class="line"><b class="n">5</b><p><b>Next tap.</b> 2 or 3 suggested replies, so they never wonder what to type.</p></div>
+    </div>
+    <div class="card">
+      <h3>Voice</h3>
+      <ul>
+        <li>A calm friend who reads filings for fun. Not a trader, not a hype account.</li>
+        <li>Short sentences. Under 400 characters before the first tap.</li>
+        <li>Never "buy" or "sell". It says "historically" and gives N.</li>
+        <li>Admits misses in public. The scorecard shows them.</li>
+        <li>Plain-language commands always work: "pause", "add TSLA", "fewer alerts", "stop".</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">06 · How users talk to us</div>
+  <h2>Anything they type maps to one of six intents.</h2>
+  <table class="t">
+    <thead><tr><th>Intent</th><th>They say</th><th>We do</th></tr></thead>
+    <tbody>
+      <tr><td>Go deeper</td><td>"why?", "show the cases", "what about airlines?"</td><td>Expand the last message, link the evidence card</td></tr>
+      <tr><td>My money</td><td>"how's my BTC?", "am I ok?"</td><td>What touched that holding this week, plus history</td></tr>
+      <tr><td>Explain</td><td>"what's a rate hike?", "what does OFS mean?"</td><td>Plain definition in 2 sentences, with a size or an example</td></tr>
+      <tr><td>Edit profile</td><td>"add TSLA", "I sold JETS", screenshot</td><td>Update holdings, confirm in one line</td></tr>
+      <tr><td>Control</td><td>"pause", "fewer alerts", "8am instead", "stop"</td><td>Change it, confirm, never argue</td></tr>
+      <tr><td>Advice request</td><td>"should I sell NVDA?"</td><td>Gently say we can't tell you what to do, then show what history says for holders in that situation</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="kicker">07 · Keep it simple</div>
+  <h2>What's in v1, and what we cut.</h2>
+  <div class="two">
+    <div class="card good"><h3>In v1</h3><ul>
+      <li>One agent on iMessage or SMS plus Telegram, via Keiki</li>
+      <li>Onboarding with screenshot parsing</li>
+      <li>Morning brief, rare alert, follow-up answers</li>
+      <li>Evidence card web page with share link</li>
+      <li>Landing page</li>
+      <li>Sunday scorecard, if time allows</li>
+    </ul></div>
+    <div class="card bad"><h3>Cut</h3><ul>
+      <li>Accounts, passwords, email login</li>
+      <li>A web dashboard or portfolio view</li>
+      <li>Brokerage account sync. A screenshot does the job.</li>
+      <li>Settings screens. Settings are things you type.</li>
+      <li>Payments</li>
+      <li>Push notifications from our own app. There is no app.</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">08 · Proof it works</div>
+  <h2>Measure behavior, not compliments.</h2>
+  <div class="two">
+    <div class="card"><h3>Mom Test interviews, first 4 hours</h3><p style="font-size:14.5px">Five people who invest, 10 minutes each, in parallel with the build. Ask about the past only.</p><ul>
+      <li>"Tell me about the last time news made you worry about your money. What did you do?"</li>
+      <li>"Where did you hear about it? How long after it happened?"</li>
+      <li>"Have you ever bought or sold because of a headline? How did it go?"</li>
+      <li>"What did you use to make sense of it? Google, ChatGPT, a friend?"</li>
+      <li>"How much time a week do you spend on this?"</li>
+    </ul><p style="font-size:13.5px;color:var(--muted);margin-top:8px">Don't ask "would you use this?" A yes costs them nothing. Ask for their holdings and a time for the brief. That costs them something.</p></div>
+    <div class="card"><h3>The numbers we watch</h3>
+      <table class="t" style="border:0">
+        <tr><td>Activation</td><td>Finished onboarding and got first value</td></tr>
+        <tr><td>Morning reply rate</td><td>% of briefs that get any reply or tap</td></tr>
+        <tr><td>Day 7 retention</td><td>% still not muted after a week</td></tr>
+        <tr><td>Share rate</td><td>Cards forwarded per active user per week</td></tr>
+        <tr><td>Mute rate</td><td>Early warning that we're sending too much</td></tr>
+      </table>
+      <p style="font-size:13.5px;color:var(--muted);margin-top:10px">Outside check before we submit. At least 5 people who aren't on the team finish onboarding, and at least 3 reply to a brief without being asked.</p>
+    </div>
+  </div>
+</section>
+
+<footer>Networth product spec · Oct 24, 2026 · Book ideas are summarized in our own words. All figures in the mockups are placeholders.</footer>
+</main>
+</body>
+</html>

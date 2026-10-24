@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Networth Build Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f1ea; --surface: #fffdf8; --ink: #1b1a17; --muted: #6b665c; --rule: #d9d3c5;
+  --accent: #0f5c4a; --accent-soft: #dcebe5; --warn: #9a5b00; --warn-soft: #f6e8cf;
+  --stop: #8f2d22; --stop-soft: #f3dcd7; --bubble-in: #e9e5db;
+  --serif: "Fraunces", Georgia, serif; --sans: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+  --gutter: clamp(16px, 4vw, 48px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12130f; --surface: #1a1b16; --ink: #ece8dd; --muted: #a09a8c; --rule: #33342c;
+    --accent: #5fc3a5; --accent-soft: #1c3a31; --warn: #e0a54a; --warn-soft: #3a2c14;
+    --stop: #e3806f; --stop-soft: #3d1f1a; --bubble-in: #26271f;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12130f; --surface: #1a1b16; --ink: #ece8dd; --muted: #a09a8c; --rule: #33342c;
+  --accent: #5fc3a5; --accent-soft: #1c3a31; --warn: #e0a54a; --warn-soft: #3a2c14;
+  --stop: #e3806f; --stop-soft: #3d1f1a; --bubble-in: #26271f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--sans); }
+main { max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter) 96px; }
+h1, h2, h3 { font-family: var(--serif); line-height: 1.1; margin: 0; }
+h2 { font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.4rem); font-weight: 600; margin-bottom: 18px; }
+h3 { font-size: 1.12rem; font-weight: 600; margin-bottom: 8px; }
+p { margin: 0 0 12px; }
+section { padding: 60px 0 0; }
+.kicker { font: 600 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+.lede { font-size: 1.12rem; color: var(--muted); max-width: 64ch; }
+.mono { font-family: var(--mono); }
+header { padding: 72px 0 28px; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 1.2fr 1fr; gap: 44px; align-items: center; }
+header h1 { font-size: clamp(2.8rem, 1.6rem + 5vw, 5.6rem); font-weight: 800; letter-spacing: -.02em; }
+header h1 em { font-style: italic; font-weight: 400; color: var(--accent); }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.chip { font: 500 12px/1 var(--mono); padding: 7px 10px; border: 1px solid var(--rule); border-radius: 999px; background: var(--surface); }
+.phone { background: var(--surface); border: 1px solid var(--rule); border-radius: 26px; padding: 16px 12px; box-shadow: 0 28px 56px -30px rgba(0,0,0,.35); max-width: 380px; justify-self: end; width: 100%; }
+.phone .bar { text-align: center; font: 600 11px var(--mono); color: var(--muted); margin-bottom: 10px; }
+.msg { padding: 9px 12px; border-radius: 17px; margin: 6px 0; font-size: 13.5px; line-height: 1.45; max-width: 90%; background: var(--bubble-in); border-bottom-left-radius: 6px; }
+.msg.me { background: var(--accent); color: var(--bg); margin-left: auto; border-radius: 17px 17px 6px 17px; }
+.msg .v { font-weight: 600; display: block; margin-bottom: 3px; }
+.placeholder { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+.flow { display: grid; grid-template-columns: repeat(6, 1fr); border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; background: var(--surface); }
+.flow > div { padding: 18px 16px; border-right: 1px solid var(--rule); }
+.flow > div:last-child { border-right: 0; }
+.flow .n { font: 600 30px/1 var(--serif); color: var(--accent); margin-bottom: 8px; }
+.flow p { font-size: 13.5px; color: var(--muted); margin: 0; }
+
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+pre { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px; font: 12.5px/1.6 var(--mono); overflow-x: auto; }
+pre .k { color: var(--accent); } pre .c { color: var(--muted); }
+.card { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 20px; }
+.card ul { margin: 8px 0 0; padding-left: 18px; } .card li { font-size: 14.5px; margin-bottom: 6px; }
+
+table.t { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--rule); font-size: 14px; }
+table.t th, table.t td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+table.t th { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+table.t tr:last-child td { border-bottom: 0; }
+
+.skills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.skill { background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 14px 16px; }
+.skill .nm { font: 600 13px var(--mono); color: var(--accent); }
+.skill p { font-size: 13.5px; color: var(--muted); margin: 4px 0 0; }
+
+.tiers { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 14px; }
+.tier { border-radius: 14px; padding: 20px; }
+.tier.sure { background: var(--accent-soft); } .tier.maybe { background: var(--warn-soft); } .tier.no { background: var(--stop-soft); }
+.tier .tag { font: 600 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.tier.sure .tag { color: var(--accent); } .tier.maybe .tag { color: var(--warn); } .tier.no .tag { color: var(--stop); }
+.tier ul { margin: 10px 0 0; padding-left: 18px; } .tier li { margin-bottom: 7px; font-size: 14px; }
+
+.tracks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.track { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 18px; }
+.track .who { font: 600 11px var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.track ol { margin: 10px 0 0; padding-left: 18px; } .track li { font-size: 14px; margin-bottom: 6px; }
+.gates { margin-top: 16px; }
+.gate { display: grid; grid-template-columns: 90px 1fr; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--rule); font-size: 14.5px; }
+.gate b { font: 600 13px var(--mono); color: var(--accent); }
+
+.demo { display: grid; gap: 10px; }
+.beat { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 13px 16px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); }
+.beat .t { font: 600 13px var(--mono); color: var(--accent); } .beat p { margin: 0; font-size: 14.5px; }
+.risks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.risk { padding: 14px 16px; border-left: 3px solid var(--warn); background: var(--surface); border-radius: 0 10px 10px 0; }
+.risk p { font-size: 14px; color: var(--muted); margin: 4px 0 0; }
+footer { margin-top: 72px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted); }
+@media (max-width: 900px) {
+  header, .two, .tiers, .risks, .skills, .tracks { grid-template-columns: 1fr; }
+  .phone { justify-self: stretch; max-width: none; }
+  .flow { grid-template-columns: 1fr; } .flow > div { border-right: 0; border-bottom: 1px solid var(--rule); }
+  table.t { display: block; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div>
+    <div class="kicker">Keiki × Maritime · week-one build · plan v2</div>
+    <h1>Networth<br><em>know what the news means for your money.</em></h1>
+    <p class="lede" style="margin-top:18px">An always-on agent in your messages. It watches the world's news, keeps only what many outlets confirm, checks it against decades of market history, and texts you only when something touches what you own.</p>
+    <div class="meta">
+      <span class="chip">Working name, swap anytime</span>
+      <span class="chip">US first, global via Telegram</span>
+      <span class="chip">Push, not paste</span>
+      <span class="chip">Submit by Mon Oct 26, 9am IST</span>
+    </div>
+  </div>
+  <div class="phone" aria-label="Illustrative morning brief">
+    <div class="bar">Networth · 7:00 am</div>
+    <div class="msg"><span class="v">Good morning. One thing matters for you today.</span>Airlines fell 6% yesterday after OPEC cut supply. You hold JETS.</div>
+    <div class="msg">In 11 past surprise cuts, airlines trailed the S&amp;P over the next month 8 times. In a random month they trail about half the time. So this pattern is real, but N is small.</div>
+    <div class="msg">Worth knowing, not a reason to act.</div>
+    <div class="msg me">what about my BTC?</div>
+    <div class="msg">Quiet. BTC hasn't tracked oil in a consistent way since 2014, N=6.</div>
+    <div class="placeholder">Illustrative. Numbers are placeholders until the backtest runs.</div>
+  </div>
+</header>
+
+<section>
+  <div class="kicker">01 · The core loop</div>
+  <h2>Nobody pastes headlines. Networth comes to them.</h2>
+  <div class="flow">
+    <div><div class="n">1</div><h3>Watch</h3><p>Pull news all day on the Maritime VM.</p></div>
+    <div><div class="n">2</div><h3>Confirm</h3><p>Group articles into stories. A story counts only when several original publishers carry it. Wire reposts don't count twice.</p></div>
+    <div><div class="n">3</div><h3>Trigger</h3><p>Price first: an asset made an unusual move, so find the story behind it. News first: a big story of a known type.</p></div>
+    <div><div class="n">4</div><h3>Measure</h3><p>Look up base rates from the engine. Two numbers each: after events like this, and in any random window.</p></div>
+    <div><div class="n">5</div><h3>Rank</h3><p>Keep only what touches the user's holdings. Most days that's 0 to 3 items.</p></div>
+    <div><div class="n">6</div><h3>Push</h3><p>7am brief, a rare alert, then answer follow-ups about their own money.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">02 · Data shape</div>
+  <h2>The engine makes every number. The LLM only explains.</h2>
+  <div class="two">
+    <pre><span class="c">// hand-curated + seeded from public lists</span>
+<span class="k">Event</span>    { id, date, type, cause, region,
+           headline, sources[], episode_id }
+
+<span class="c">// precomputed by the backtest script</span>
+<span class="k">Reaction</span> { event_id, asset, horizon, excess_return }
+
+<span class="c">// what the agent reads, and nothing else</span>
+<span class="k">BaseRate</span> { type, cause, asset, horizon, era,
+           n_events, n_episodes,
+           hit_rate, baseline_hit_rate,
+           median, p10, p90 }
+
+<span class="c">// per user, from onboarding</span>
+<span class="k">Profile</span>  { user_id, holdings[], watch[], brief_time }
+
+<span class="k">horizon</span> fixed per event type in advance
+<span class="k">era</span>     ∈ { since_1926, since_1998 }</pre>
+    <div class="card">
+      <h3>Rules from the investor research</h3>
+      <ul>
+        <li><b>Two base rates, always.</b> "After events like this" next to "in any random window". Most assets rise in most windows anyway.</li>
+        <li><b>Count episodes, not events.</b> Events within 21 trading days merge into one episode. 2008 doesn't count 30 times.</li>
+        <li><b>Tag the cause, not just the size.</b> Oil rising on demand behaves unlike oil rising on a supply shock.</li>
+        <li><b>Fix the horizon per event type up front.</b> Picking the best-looking window afterwards is data mining.</li>
+        <li><b>Two eras.</b> Since 1926 via the Kenneth French industry portfolios, and since 1998 via tradeable ETFs. Disagreement between them is shown.</li>
+        <li><b>Under 8 episodes says "weak signal"</b>, in words and in numbers like "8 of 11".</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">03 · Stack</div>
+  <h2>Picked from the tooling research.</h2>
+  <table class="t">
+    <thead><tr><th>Need</th><th>Pick</th><th>Fallback</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>ETF prices since 1998</td><td>yfinance, pulled once and cached</td><td>Tiingo free tier</td><td>Done. 17 assets downloaded.</td></tr>
+      <tr><td>Industry returns since 1926</td><td>Kenneth French data library</td><td>S&amp;P index only</td><td>Expected, not yet downloaded</td></tr>
+      <tr><td>Macro and Fed dates</td><td>FRED, SF Fed FOMC database</td><td>Hand list</td><td>Free</td></tr>
+      <tr><td>Event seeds</td><td>FDIC bank failures, Caldara–Iacoviello GPR index, PIIE tariff timeline, Wikipedia</td><td>OPEC decisions by hand</td><td>Free</td></tr>
+      <tr><td>News watch and confirm</td><td>Exa news search, last 48h, count original publishers</td><td>TinyFish search plus GDELT</td><td>Paid per call, small</td></tr>
+      <tr><td>Reading an article URL</td><td>TinyFish fetch</td><td>Firecrawl scrape</td><td>Firecrawl's time filter skips news, so not our watcher</td></tr>
+      <tr><td>Agent loop</td><td>Fork of zoya-harness, Claude models</td><td>Claude Agent SDK directly</td><td>Your own code</td></tr>
+      <tr><td>Brief template</td><td>Borrow from Anthropic's <span class="mono">financial-services</span> morning-note skill</td><td>Write our own</td><td>Apache-2.0</td></tr>
+      <tr><td>Hosting and engine</td><td>Maritime VM. Docker on <span class="mono">$PORT</span>, <span class="mono">/health</span> and <span class="mono">/chat</span>, state in <span class="mono">/data</span>, cron triggers for 7am</td><td>None needed</td><td>Docs read</td></tr>
+      <tr><td>Conversation, memory, images</td><td>Keiki on iMessage. It calls our engine as webhook tools. We push with its <span class="mono">notice</span> API.</td><td>Telegram Bot API straight from Maritime</td><td>Spike first. The notice is rewritten by Keiki's agent, so numbers may drift.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="kicker">04 · Harness</div>
+  <h2>Spec-driven and skill-driven, without the weight.</h2>
+  <div class="two">
+    <pre>networth/
+  agents/
+    brief.yaml       <span class="c"># prompt, skills, tools, budget, goal</span>
+    alert.yaml
+    chat.yaml
+  skills/
+    verify-event/SKILL.md
+    classify-event/SKILL.md
+    ...              <span class="c"># loaded only when needed</span>
+  engine/
+    backtest.py      <span class="c"># builds base_rates.sqlite</span>
+    odds.py          <span class="c"># the one file the loop may edit</span>
+  harness/
+    run.py           <span class="c"># spec -> agent, from zoya</span>
+    guardrails.py    <span class="c"># every number must trace to engine</span>
+    models.py        <span class="c"># from zoya</span>
+  evals/
+    prepare_eval.py  <span class="c"># frozen, walk-forward</span>
+    headlines.jsonl
+  program.md         <span class="c"># instructions for the improve loop</span>
+  lessons.md</pre>
+    <div class="card">
+      <h3>Where each idea comes from</h3>
+      <ul>
+        <li><b>zoya-harness, reused as is.</b> SKILL.md loader with per-skill tool limits, router, task budget limits, model adapter, eval replay. Voice and Mac parts removed.</li>
+        <li><b>SimbianOS, as a pattern only.</b> One spec file per agent with permissions and budget together. Stop on budget or goal. Tools loaded only when called. Sub-agents built by the same factory with narrower permissions. No security code, no multi-tenant machinery.</li>
+        <li><b>investment-os, your Oct 16 design.</b> Every number in a message must match the engine, or the message is blocked. Point-in-time rules so the backtest can't peek at the future.</li>
+        <li><b>autoresearch and harness2, as ideas.</b> A frozen eval, one editable file, keep or discard. See section 06.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">05 · Skills</div>
+  <h2>How a professional thinks, as files the agent loads.</h2>
+  <div class="skills">
+    <div class="skill"><div class="nm">verify-event</div><p>Count original publishers. Prefer primary sources. No confirmation means no numbers.</p></div>
+    <div class="skill"><div class="nm">classify-event</div><p>Pick the event type and its cause from a fixed list. Say what was assumed.</p></div>
+    <div class="skill"><div class="nm">priced-in-check</div><p>Was this a surprise, or expected? Read what the price already did.</p></div>
+    <div class="skill"><div class="nm">reference-class</div><p>Find the closest past episodes. Start from the outside view.</p></div>
+    <div class="skill"><div class="nm">regime-check</div><p>Is today's backdrop like the past cases? Rates, recession, volatility.</p></div>
+    <div class="skill"><div class="nm">second-order-effects</div><p>Who wins and who loses beyond the obvious sector.</p></div>
+    <div class="skill"><div class="nm">base-rate-odds</div><p>Call the engine. Event rate vs baseline, episodes, range.</p></div>
+    <div class="skill"><div class="nm">risk-first-explainer</div><p>Downside first, plain words, numbers like "8 of 11", never "buy".</p></div>
+    <div class="skill"><div class="nm">signposts</div><p>What would change the view. What to watch this week.</p></div>
+    <div class="skill"><div class="nm">jargon-decoder</div><p>Any term in two sentences, with a size or an example.</p></div>
+    <div class="skill"><div class="nm">macro-playbook</div><p>Seed playbooks for oil, central banks, war, tariffs, bank stress.</p></div>
+    <div class="skill"><div class="nm">morning-brief</div><p>The five-line message format from the product spec.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">06 · Getting better on its own</div>
+  <h2>One loop, tested on history it hasn't seen.</h2>
+  <div class="two">
+    <div class="card">
+      <h3>The loop</h3>
+      <ul>
+        <li><b>Frozen test.</b> Walk forward through history. Using only events before year Y, predict sector direction after events in year Y. Score calibration: did "8 of 11" happen about 73% of the time?</li>
+        <li><b>Editable.</b> <span class="mono">odds.py</span> (matching, era weights, similarity) and the explanation prompts.</li>
+        <li><b>Keep or discard.</b> A change stays only if the train score improves and the held-out score doesn't drop. Each kept change is a git commit plus a line in <span class="mono">lessons.md</span>.</li>
+        <li><b>Locked vault.</b> Events from 2022 to 2026 never enter the loop. They're the final check.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>The outside check</h3>
+      <p style="font-size:14.5px">Before trusting any number, the engine must reproduce a published result. Our candidate is the pre-FOMC drift found by Lucca and Moench (2015). They report that the S&amp;P tends to rise in the 24 hours before scheduled Fed announcements. That's cited from memory and must be confirmed against the paper first.</p>
+      <p style="font-size:14.5px">If our engine, run on SPY and real FOMC dates, can't show that effect, the engine is wrong no matter how good its answers look.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">07 · Confidence</div>
+  <h2>What ships, what might, what we skip.</h2>
+  <div class="tiers">
+    <div class="tier sure"><div class="tag">Confident</div><ul>
+      <li>Event library of 60+ events in 8 types, each with a date, cause and source</li>
+      <li>Backtest with two base rates, episodes and two eras, with tests</li>
+      <li>News watcher that groups articles into stories and confirms them</li>
+      <li>Price-first trigger on unusual moves</li>
+      <li>Onboarding, including reading a brokerage screenshot</li>
+      <li>Morning brief and follow-up chat on Telegram at minimum</li>
+      <li>Evidence card web page with a share link</li>
+      <li>Landing page and a 75-second demo video</li>
+    </ul></div>
+    <div class="tier maybe"><div class="tag">Stretch</div><ul>
+      <li>iMessage and SMS through Keiki, depending on the spike</li>
+      <li>Same-day alerts</li>
+      <li>The improvement loop with 4 to 6 rounds</li>
+      <li>Sunday scorecard</li>
+      <li>Fed answers with recession and no-recession branches</li>
+    </ul></div>
+    <div class="tier no"><div class="tag">Skipping</div><ul>
+      <li>Buy or sell calls</li>
+      <li>Broker connections and trading</li>
+      <li>Training any neural network on prices</li>
+      <li>Accounts, dashboards, payments</li>
+      <li>Indian markets for now</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">08 · How the 24 hours run</div>
+  <h2>Three tracks at once, from hour zero.</h2>
+  <div class="tracks">
+    <div class="track"><div class="who">You · pitch and proof</div><ol>
+      <li>Book office hours. Ask for the cutoff and the rubric.</li>
+      <li>5 Mom Test conversations with people who invest.</li>
+      <li>Draft the submission text and demo script now.</li>
+      <li>Pick the name.</li>
+      <li>From H18, bring in real users.</li>
+    </ol></div>
+    <div class="track"><div class="who">Design · in Figma, 2 to 3 hours</div><ol>
+      <li>Landing page.</li>
+      <li>Evidence card.</li>
+      <li>Message templates for the demo.</li>
+      <li>You review once, then it's locked.</li>
+    </ol></div>
+    <div class="track"><div class="who">Agents · golden path</div><ol>
+      <li>Keiki and Maritime spike. Can a phone message reach our code, and can we push one out?</li>
+      <li>Event library and backtest, then the outside check.</li>
+      <li>News watcher and price trigger.</li>
+      <li>Harness fork, skills, brief agent.</li>
+      <li>Eval, then the improvement loop.</li>
+    </ol></div>
+  </div>
+  <div class="gates">
+    <div class="gate"><b>H2</b><span>A message on a real phone reaches our code, and our code can push one back. If Keiki can't, switch to Telegram and move on.</span></div>
+    <div class="gate"><b>H6</b><span>Skeleton works end to end with fake data. Base-rate table exists. The outside check passes.</span></div>
+    <div class="gate"><b>H12</b><span>A real morning brief, built from yesterday's real news, arrives on a phone.</span></div>
+    <div class="gate"><b>H16</b><span>Eval of 25 headlines. Unconfirmed stories never get numbers. Every number traces to the engine.</span></div>
+    <div class="gate"><b>H20</b><span>Demo recorded. At least 5 people outside the team have onboarded.</span></div>
+    <div class="gate"><b>H24</b><span>At least 3 of them replied to a brief without being asked. Submitted.</span></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">09 · The demo</div>
+  <h2>75 seconds, and the user never pastes anything.</h2>
+  <div class="demo">
+    <div class="beat"><div class="t">0:00</div><p><b>The problem, in your words.</b> "I lost money copying other people's picks. My friends earn well and have no time to follow markets."</p></div>
+    <div class="beat"><div class="t">0:12</div><p><b>Onboarding.</b> Send a brokerage screenshot. Networth reads the holdings. Within a minute it sends "this week, here's what touched your stuff".</p></div>
+    <div class="beat"><div class="t">0:30</div><p><b>The 7am brief arrives on its own.</b> One thing matters, here's what history says, two base rates, N.</p></div>
+    <div class="beat"><div class="t">0:45</div><p><b>The trust moment.</b> Tap the evidence card. Scroll every past episode behind the number.</p></div>
+    <div class="beat"><div class="t">0:55</div><p><b>The honesty moment.</b> A story only one outlet carries stays out of the brief. Show the log that skipped it.</p></div>
+    <div class="beat"><div class="t">1:05</div><p><b>Traction.</b> Real users, real replies, and the path to 1,000.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="kicker">10 · Risks</div>
+  <h2>What could break it, and the fallback.</h2>
+  <div class="risks">
+    <div class="risk"><h3>Keiki rewrites our pushes</h3><p>Its notice API hands our text to Keiki's agent, which rephrases it. Test at H0 whether "8 of 11" survives word for word. iMessage also needs the user to text first and caps new chats at 50 per line per day. The fallback is Telegram straight from Maritime.</p></div>
+    <div class="risk"><h3>Deadline and rubric</h3><p>Not published. Assume Monday morning IST, and ask at office hours.</p></div>
+    <div class="risk"><h3>Small, clustered samples</h3><p>Count episodes, show N per asset, say "weak signal" under 8.</p></div>
+    <div class="risk"><h3>Free data terms</h3><p>Yahoo data is for personal use. Show derived statistics only and cache everything.</p></div>
+    <div class="risk"><h3>Wire reposts inflate confirmation</h3><p>Count original publishers, not URLs.</p></div>
+    <div class="risk"><h3>Regulation</h3><p>Impersonal research only, never personal buy or sell calls. Our understanding, not legal advice.</p></div>
+  </div>
+</section>
+
+<footer>Networth build plan v2 · Oct 24, 2026 · Built from 5 research reports in the session scratchpad. Mock numbers are placeholders.</footer>
+</main>
+</body>
+</html>
