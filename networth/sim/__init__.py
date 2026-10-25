@@ -213,7 +213,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "the time.",
         "recovery": "In the middle case, the worst fall took about {recovery} months to get back.",
         "not_back": "In the middle case, the worst fall was not back by the end.",
-        "label": "This replays real past months. It is not a forecast. Your plan is your choice.",
+        "label": "This replays real past months. It is not a forecast.",
     },
     "hi": {
         "what": "यह आपका अपना प्लान है: {safety}% सुरक्षित पैसा, {core}% ब्रॉड इंडेक्स फ़ंड, "
@@ -230,7 +230,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "fall": "आम तौर पर सबसे बड़ी गिरावट {fall}% थी, यानी उस समय रखे पैसे में लगभग {fall_rupees}।",
         "recovery": "बीच वाले हाल में सबसे बड़ी गिरावट से वापस आने में लगभग {recovery} महीने लगे।",
         "not_back": "बीच वाले हाल में सबसे बड़ी गिरावट आख़िर तक वापस नहीं आई।",
-        "label": "यह असली पुराने महीनों को दोहराता है। यह कोई अनुमान नहीं है। आपका प्लान आपकी अपनी पसंद है।",
+        "label": "यह असली पुराने महीनों को दोहराता है। यह कोई अनुमान नहीं है।",
     },
     "hinglish": {
         "what": "Yeh aapka apna plan hai: {safety}% safe paisa, {core}% broad index funds, "
@@ -249,8 +249,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "recovery": "Beech wale haal mein sabse badi giravat se wapas aane mein lagbhag "
         "{recovery} mahine lage.",
         "not_back": "Beech wale haal mein sabse badi giravat aakhir tak wapas nahin aayi.",
-        "label": "Yeh asli purane mahinon ko dohraata hai. Yeh koi forecast nahin hai. Aapka "
-        "plan aapki apni pasand hai.",
+        "label": "Yeh asli purane mahinon ko dohraata hai. Yeh koi forecast nahin hai.",
     },
 }
 ORDER: Final = ("what", "invested", "nominal", "real", "hit", "fall")

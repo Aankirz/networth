@@ -493,12 +493,10 @@ def test_a_hinglish_hyped_tip_skips_the_writer_it_could_never_pass(tmp_path, cfg
 
 
 PLAN_LEADS = {
-    "Is 70% equity too much for me?": "I can't tell you whether a plan is right for you. "
-    "The plan stays your choice.",
-    "मेरा प्लान 70% इंडेक्स है, क्या ये ठीक है?": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है "
-    "या नहीं। प्लान हमेशा आपकी अपनी पसंद है।",
+    "Is 70% equity too much for me?": "I can't tell you whether a plan is right for you.",
+    "मेरा प्लान 70% इंडेक्स है, क्या ये ठीक है?": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है या नहीं।",
     "Mera plan 70% index hai, theek hai ya change karu?": "Main nahin bata sakta ki koi plan "
-    "aapke liye sahi hai ya nahin. Plan hamesha aapki apni pasand hai.",
+    "aapke liye sahi hai ya nahin.",
 }
 
 

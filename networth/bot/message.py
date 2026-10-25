@@ -42,7 +42,8 @@ LANGS: Final = ("en", "hi", "hinglish")
 FOOTER: Final = {"en": "", "hi": "", "hinglish": ""}
 DISCLAIMER: Final = re.compile(
     r"[^.!?\n]*(?:not (?:financial |investment )?advice|your call|won'?t say yes or no|"
-    r"whether to put money|रिसर्च, सलाह नहीं|advice nahin?)[^.!?\n]*[.!?।]?",
+    r"whether to put money|your choice|(?:aapki|apni) (?:apni )?(?:pasand|choice)|"
+    r"आपकी (?:अपनी )?पसंद|रिसर्च, सलाह नहीं|advice nahin?)[^.!?\n]*[.!?।]?",
     re.I,
 )
 

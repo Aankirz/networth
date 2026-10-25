@@ -136,9 +136,9 @@ def test_every_line_passes_the_guard_against_its_range(lang: str) -> None:
 @pytest.mark.parametrize("lang", LANGS)
 def test_the_lines_end_with_the_plain_label_and_leave_the_footer_to_the_message(lang: str) -> None:
     labels = {
-        "en": "It is not a forecast. Your plan is your choice.",
-        "hi": "यह कोई अनुमान नहीं है। आपका प्लान आपकी अपनी पसंद है।",
-        "hinglish": "Yeh koi forecast nahin hai. Aapka plan aapki apni pasand hai.",
+        "en": "It is not a forecast.",
+        "hi": "यह कोई अनुमान नहीं है।",
+        "hinglish": "Yeh koi forecast nahin hai.",
     }
     lines = plan_range_lines(ranges()[0], lang)
     assert lines[-1].endswith(labels[lang])
@@ -168,7 +168,7 @@ def test_a_rupee_user_gets_their_range(store: Store) -> None:
         "20% safe money, 70% broad index funds, "
         "10% single shares or themes, ₹1,50,000 a month for 3 years" in text
     )
-    assert text.endswith("Your plan is your choice.")
+    assert text.endswith("It is not a forecast.")
 
 
 def test_a_dollar_user_gets_none(store: Store) -> None:

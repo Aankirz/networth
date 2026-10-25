@@ -591,3 +591,6 @@
 
 ## 2026-10-25 — Phase 13A: shared money() formatter
 - networth/money.py: money(amount, currency, lang) in lakh/crore for INR, K/M/B for USD, code + grouping otherwise; tests.
+
+## 2026-10-25 — Phase 13A: last "your choice" lines
+- Removed "your plan is your choice" from the plan range label and the plan decline in all languages; DISCLAIMER now also catches "your choice"/"aapki pasand"/"आपकी पसंद".

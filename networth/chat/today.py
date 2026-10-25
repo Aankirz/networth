@@ -113,10 +113,9 @@ NO_PLAN: Final = {
     "jaata hai.",
 }
 NOT_A_JUDGE: Final = {
-    "en": "I can't tell you whether a plan is right for you. The plan stays your choice.",
-    "hi": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है या नहीं। प्लान हमेशा आपकी अपनी पसंद है।",
-    "hinglish": "Main nahin bata sakta ki koi plan aapke liye sahi hai ya nahin. Plan hamesha "
-    "aapki apni pasand hai.",
+    "en": "I can't tell you whether a plan is right for you.",
+    "hi": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है या नहीं।",
+    "hinglish": "Main nahin bata sakta ki koi plan aapke liye sahi hai ya nahin.",
 }
 SAVED_PLAN: Final = {
     "en": "This is the plan you saved: {plan}.",
