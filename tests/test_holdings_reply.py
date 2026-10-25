@@ -263,3 +263,11 @@ def test_goldbees_shows_as_safe_money_in_the_plan_comparison(tmp_path) -> None:
 def test_no_holdings_reply_carries_a_footer_or_a_disclaimer(tmp_path, lang: str) -> None:
     for text in _every_reply(tmp_path, lang):
         assert not DISCLAIMER.search(text), text
+
+
+def test_the_same_screenshot_twice_adds_nothing_and_says_nothing_about_it(tmp_path) -> None:
+    chat = owner(tmp_path, wire(), wire())
+    photo(chat)
+    photo(chat)
+    assert len(stored(chat).items) == 4
+    assert not any(b.startswith("This screenshot added") for b in last(chat).body)

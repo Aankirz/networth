@@ -579,3 +579,6 @@
 ## 2026-10-25 — Phase 13B spike: A2UI SIP projection, money by currency
 - @a2ui/react and @a2ui/web_core 0.14.0 (exact), zod 3.25.76: a Networth A2UI v0.9 catalog (Column, Text, Slider, SipProjection) rendered client-side from server-shaped messages; sliders write the surface data model and the projection recomputes in the browser. /lab/sip shows it; e2e/a2ui.spec.ts proves no request on slider moves.
 - lib/money.ts: one formatter from the card's currency (en-IN lakh/crore for INR, en-US for USD and $1.2M); --up/--down tokens; range card says "today's money".
+
+## 2026-10-25 — no merge line when nothing new was added
+- networth/bot/holdings.py: a screenshot that adds no new rows no longer says "This screenshot added 0"; test added.

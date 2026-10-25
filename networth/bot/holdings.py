@@ -211,7 +211,11 @@ def photo_reply(store: Store, profile: Profile, image: bytes, services: Services
                                         prices=services.prices)  # fmt: skip
     if not read.added and not read.same:
         return chat.respond_image(profile, image, services)
-    lead = _say(ADDED, profile.lang, added=read.added, same=read.same) if read.same else ""
+    lead = (
+        _say(ADDED, profile.lang, added=read.added, same=read.same)
+        if read.added and read.same
+        else ""
+    )
     return _guarded(summary_reply(read.holdings, profile.lang, lead), services)
 
 
