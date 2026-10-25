@@ -24,7 +24,7 @@ export function AnswerCard({ turn }: { turn: ChatTurn }) {
   return (
     <article className="grid gap-4 rounded-lg bg-sheet p-4 sm:p-5" data-card={turn.card.type}>
       <MessageView message={turn.message} />
-      {body && <div className="border-t border-rule pt-4">{body}</div>}
+      {body && <div className="rounded-md bg-paper p-3 sm:p-4">{body}</div>}
       <Footer text={turn.message.footer} />
     </article>
   );

@@ -36,7 +36,7 @@ function Cases({ title, rows }: { title: string; rows: [string, string][] }) {
       <h4 className="font-medium">{title}</h4>
       <dl className="grid gap-1">
         {rows.map(([name, value]) => (
-          <div key={name} className="flex flex-wrap justify-between gap-x-4 border-b border-rule py-1">
+          <div key={name} className="flex flex-wrap justify-between gap-x-4 border-b border-rule py-1" /* taste-skill-ignore: a passbook ledger's ruled rows, the design idea */>
             <dt className="text-graphite">{name}</dt>
             <dd className="figures font-display text-head">{value}</dd>
           </div>

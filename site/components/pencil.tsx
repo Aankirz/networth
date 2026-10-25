@@ -2,7 +2,7 @@
 export function PencilDefs() {
   return (
     <svg width="0" height="0" aria-hidden="true" focusable="false" className="absolute">
-      <filter id="pencil" x="-5%" y="-20%" width="110%" height="140%">
+      <filter id="pencil" filterUnits="userSpaceOnUse" x="-10" y="-10" width="4000" height="400">
         <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" />
         <feDisplacementMap in="SourceGraphic" scale="1.2" />
       </filter>

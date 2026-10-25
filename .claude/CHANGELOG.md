@@ -455,3 +455,6 @@
 
 ## 2026-10-25 — fix: phase 8 chat carries the phase 7B holdings intent
 - After rebasing onto 7B, the contract test caught the new holdings intent. The API now answers it with the asker's holdings card (a text card when none), and the contract and site types list it.
+
+## 2026-10-25 — fix: phase 8 site polish after the taste gate and screenshots
+- Section dividers became spacing; ledger row rules kept as the design idea. The pencil filter now uses a fixed region so the vertical "what you put in" line draws. Holdings mix bars got fixed-size labels and a bucket legend. Primitives name their transition properties. Screenshots refreshed.

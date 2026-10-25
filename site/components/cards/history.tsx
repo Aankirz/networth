@@ -37,7 +37,7 @@ function Row({ row }: { row: HistoryRow }) {
 export function HistoryRows({ card }: { card: HistoryCard }) {
   if (!card.rows.length) return card.note ? <EmptyLedger note={card.note} /> : null;
   return (
-    <ul className="divide-y divide-rule">
+    <ul className="divide-y divide-rule" /* taste-skill-ignore: a passbook ledger's ruled rows, the design idea */>
       {card.rows.map((row) => (
         <Row key={`${row.type}-${row.asset}`} row={row} />
       ))}

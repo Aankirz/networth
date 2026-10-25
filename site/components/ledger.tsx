@@ -8,7 +8,7 @@ import { withoutFooter } from "@/lib/words";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section aria-labelledby={id} className="grid gap-4 border-t border-rule pt-6">
+    <section aria-labelledby={id} className="grid gap-4 pt-4">
       <h2 id={id} className="text-head">{title}</h2>
       {children}
     </section>
@@ -19,7 +19,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 export function Ledger({ board }: { board: Dashboard }) {
   const { profile } = board;
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-12">
       <header className="grid gap-3">
         <h1 className="text-display">{board.sample ? "A sample plan" : "Your plan"}</h1>
         {profile.plan ? (
@@ -56,7 +56,7 @@ export function Ledger({ board }: { board: Dashboard }) {
         </Section>
       )}
 
-      <div className="grid gap-1 border-t border-rule pt-4">
+      <div className="grid gap-1 pt-2">
         <Footer text={board.footer} />
         {!board.sample && (
           <p className="text-note text-graphite">This page is private to you. Anyone with the link can see it, so don&apos;t share it.</p>
