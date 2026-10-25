@@ -319,3 +319,6 @@
 
 ## 2026-10-25 — Keiki turn traces
 - Every Keiki turn appends one line to data/keiki_turns.jsonl: turn and trace ids, user id, channel, kind (chat, command, onboarding, link, notice), chat intent, guard verdict, cost (llm_calls.jsonl records written during the turn) and outcome; never text, address or token. chat.respond_traced and answer.deliver_traced return the intent and which words went out ("fixed" when no model wrote them); respond and deliver delegate (Phase 3C unit 6).
+
+## 2026-10-25 — Answer a first email before setup
+- networth/keiki/turn.py: a stranger's first email that asks something gets its answer, then the short setup; a greeting gets the setup only. A /link code is only read from a short message, so a six-digit number inside a question never redeems one.

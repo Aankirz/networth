@@ -143,3 +143,10 @@ def test_link_waits_until_setup_is_done(tmp_path: Path, services: Services) -> N
     onboard(chat, confirm=False)
     chat.say("/link")
     assert chat.bot.last == "Let's finish setting up first."
+
+
+def test_a_code_inside_a_longer_message_does_not_link(tmp_path: Path, chat: Chat) -> None:
+    code = chat.store.new_link_code(USER, dt.datetime.now(dt.UTC), TEN_MINUTES)
+    keiki = Keiki(tmp_path, chat.services)
+    keiki.say(f"Did the Nifty really close at {code} points yesterday, or was that a typo?")
+    assert keiki.store.contact_user(ADDRESS) != USER

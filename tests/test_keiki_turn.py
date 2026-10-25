@@ -256,3 +256,17 @@ def test_a_command_turn_logs_no_intent_and_a_failed_turn_logs_its_outcome(tmp_pa
     first, second = turn_log(keiki)
     assert (first["kind"], first["intent"], first["outcome"]) == ("command", None, "completed")
     assert second["outcome"] == "failed"
+
+
+def test_a_first_email_that_asks_something_is_answered_then_set_up(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("What happened today?")
+    assert len(keiki.client.texts) == 2, "an answer, then the first setup question"
+    assert not keiki.client.texts[0].startswith("Hi, I'm Networth.")
+    assert keiki.last.startswith("Hi, I'm Networth.")
+
+
+def test_a_first_email_that_only_greets_gets_just_the_setup(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("Hello")
+    assert keiki.client.texts == [keiki.last]
