@@ -500,3 +500,8 @@
 
 ## 2026-10-25 — report command list without link_broker
 - docs/phases/phase-9-report.md BotFather list matches COMMAND_LIST.
+
+## 2026-10-25 — live plan route and erase wording
+- chat.build: a plain "What is my plan?" skips the last-answer context, which broke the SHOW_PLAN match after any live exchange (live 13:37 UTC). Test through respond_traced with no fake classifier.
+- ERASE_ASK drops "any broker link" in 3 languages (SnapTrade dropped).
+- Live menu check: owner chat has web_app "My page" set since /dashboard 12:58 UTC; no code fix.

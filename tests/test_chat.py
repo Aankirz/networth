@@ -683,3 +683,13 @@ def test_a_language_change_reaches_the_same_day_brief(tmp_path, cfg, monkeypatch
     assert not briefs.send_brief(chat.store, chat.bot, chat.profile, chat.services, local,
                                  proactive=True)  # fmt: skip
     assert len(chat.bot.sent) == sent, "the scheduled run still sends one brief a day"
+
+
+@pytest.mark.parametrize("before", [None, "hi", "What is an IPO?"])
+def test_what_is_my_plan_shows_the_plan_through_the_live_route(tmp_path, cfg, before) -> None:
+    """Live 07:07: "What is my plan?" after an earlier exchange still got the decline."""
+    chat = talk(tmp_path, cfg)
+    if before:
+        chat.say(before)
+    chat.say("What is my plan?")
+    assert chat.bot.last.startswith(SHOW_PLAN["What is my plan?"]), chat.bot.last

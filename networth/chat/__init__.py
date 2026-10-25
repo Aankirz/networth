@@ -239,8 +239,14 @@ def build(
     if kind is not None:
         return Built(talk.TALK[kind](said(lang)), Intent.OTHER, lang, kind)
     asked = text
-    if intent is Intent.PLAN_QUESTION and (last := talk.live_exchange(window, now)):
-        # "what about my plan then?" names its event type only through the last answer
+    shows_plan = intent is Intent.PLAN_QUESTION and today.SHOW_PLAN.match(talk.bare(text))
+    if (
+        intent is Intent.PLAN_QUESTION
+        and not shows_plan
+        and (last := talk.live_exchange(window, now))
+    ):
+        # "what about my plan then?" names its event type only through the last answer; a plain
+        # "What is my plan?" must reach the plan handler as typed, or the show rule misses it
         asked = f"{text}\n\n{talk.clip(last.answered.text)}"
     answer = HANDLERS[intent](store, profile, asked, services, now, lang)
     return Built(answer, intent, lang, intent)
