@@ -24,6 +24,7 @@ from networth.llm import (
     NotAnEvent,
     StoryForJudge,
 )
+from tests.keiki_fakes import MAILTRACK_FOOTER, OPT_OUT
 from tests.test_onboarding import CHAT, NOW, Chat, onboard
 from tests.test_web import web_db  # noqa: F401, F811 - the engine fixture
 from tests.watcher_fakes import FAKE_ENV
@@ -231,6 +232,34 @@ def test_a_sticker_gets_told_what_can_be_read(tmp_path: Path, cfg) -> None:
     chat, _ = explain_chat(tmp_path, cfg, [])
     chat.send_photo(None)
     assert chat.bot.last == "I can read photos and text. Send a screenshot, or paste the text."
+
+
+def test_a_mail_footer_link_is_never_fetched_and_the_text_is_explained(
+    tmp_path, cfg, monkeypatch
+) -> None:
+    fetched: list[str] = []
+    monkeypatch.setattr(explain, "page_text", lambda url, client=None: fetched.append(url) or "")
+    chat, _ = explain_chat(tmp_path, cfg, [GOOD_EXPLANATION])
+    chat.say(IPO_TEXT + MAILTRACK_FOOTER)
+    assert fetched == []
+    assert chat.bot.last == GOOD_EXPLANATION
+
+
+@pytest.mark.parametrize("url", [
+    OPT_OUT, "https://news.example.com/unsubscribe?id=1", "https://example.com/email/click/9",
+    "https://example.com/r?url=https%3A%2F%2Fexample.org", "https://track.example.com/a.png",
+    "https://us1.list-manage.com/profile?u=1",
+])  # fmt: skip
+def test_unsubscribe_tracking_and_redirect_links_are_never_fetched(url: str) -> None:
+    assert not explain.fetchable(url)
+    with pytest.raises(explain.Blocked):
+        explain.page_text(url)
+
+
+def test_a_link_the_user_pasted_is_still_the_one_explained() -> None:
+    article = "https://economictimes.indiatimes.com/markets/ipos/orbit-solar/articleshow/1.cms"
+    assert explain.user_link(f"what is this? {article}{MAILTRACK_FOOTER}") == article
+    assert explain.user_link(f"<{article}>") == article
 
 
 @pytest.mark.parametrize("url", ["http://127.0.0.1/admin", "http://169.254.169.254/latest",

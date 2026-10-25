@@ -34,6 +34,13 @@ TURN: Final = "keiki.turn"
 SLACK: Final = "slack"
 OTHER_TYPES: Final = frozenset({"keiki.turn.arrival", "keiki.turn.cancelled", "keiki.reaction"})
 QUOTE_HEADER: Final = re.compile(r"^(On\b.*\bwrote:|-----\s*Original Message\s*-----)\s*$", re.I)
+# Where a signature or a mail client's footer starts: "-- ", "Sent from my iPhone", Outlook's
+# line, and Mailtrack's "Sender notified with Mailtrack" with its opt-out links.
+FOOTER: Final = re.compile(
+    r"^(--|_{5,}|sent from my\b.*|get outlook for\b.*|sender notified (with|by)\b.*"
+    r"|.*\bmailtrack\b.*|.*\bunsubscribe\b.*)$",
+    re.I,
+)
 _first_payload = threading.Event()
 
 
@@ -114,12 +121,16 @@ def parse(payload: object) -> KeikiTurn | Other | None:
 
 
 def strip_quoted(text: str) -> str:
-    """An email reply without the mail it quotes: '>' lines go, and so does everything from an
-    'On ... wrote:' or '-----Original Message-----' line on."""
+    """What the sender wrote: '>' lines go, and so does everything from a quote header ('On ...
+    wrote:', which Gmail wraps over two lines, or '-----Original Message-----'), a signature or
+    a mail client's footer on. The first line always stays, so a lone '--' is never emptied."""
+    lines = text.splitlines()
     kept: list[str] = []
-    for line in text.splitlines():
-        if QUOTE_HEADER.match(line.strip()):
+    for i, line in enumerate(lines):
+        here = line.strip()
+        joined = f"{here} {lines[i + 1].strip()}" if i + 1 < len(lines) else here
+        if kept and (QUOTE_HEADER.match(here) or QUOTE_HEADER.match(joined) or FOOTER.match(here)):
             break
-        if not line.lstrip().startswith(">"):
+        if not here.startswith(">"):
             kept.append(line)
     return "\n".join(kept).strip()

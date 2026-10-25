@@ -51,8 +51,10 @@ Kind = Literal["chat", "command", "welcome", "onboarding", "link", "notice"]
 # the call log by time window, and that is only exact while no other turn overlaps.
 TURN_LOCK: Final = threading.Lock()
 LINK_CODE: Final = re.compile(r"(?<!\d)\d{6}(?!\d)")
-# Only a short message is read as a /link code, so a number inside a question never redeems one.
+# A /link code is read only from a short line near the top, so a number inside a question never
+# redeems one and a footer the mail client added never hides one.
 LINK_MESSAGE_MAX: Final = 40
+LINK_LINES: Final = 3
 LINKED: Final = (
     "Linked. Your plan, language and what you left out now apply here too. Briefs and alerts "
     "stay on Telegram until you reply /sendto email."
@@ -167,10 +169,16 @@ def email_setup(turn: commands.Turn, profile: Profile, text: str) -> bool:
     return True
 
 
+def link_code(text: str) -> str | None:
+    lines = [line.strip() for line in text.splitlines() if line.strip()][:LINK_LINES]
+    found = (LINK_CODE.search(line) for line in lines if len(line) <= LINK_MESSAGE_MAX)
+    return next((m.group() for m in found if m), None)
+
+
 def link(turn: commands.Turn, address: str, text: str) -> Handled | None:
     """Bind the contact to the user whose /link code the text carries, if it carries one."""
-    code = LINK_CODE.search(text) if len(text) <= LINK_MESSAGE_MAX else None
-    user_id = turn.store.redeem_link_code(code.group(), turn.clock) if code else None
+    code = link_code(text)
+    user_id = turn.store.redeem_link_code(code, turn.clock) if code else None
     profile = turn.store.get_profile(user_id) if user_id else None
     if profile is None:
         return None

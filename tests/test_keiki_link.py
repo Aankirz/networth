@@ -16,7 +16,7 @@ from networth.app.store import Channel, Store
 from networth.bot.briefs import run_daily
 from networth.keiki.mail import Mail
 from networth.keiki.turn import LINKED
-from tests.keiki_fakes import ADDRESS, FakeApi
+from tests.keiki_fakes import ADDRESS, IPHONE, MAILTRACK_FOOTER, FakeApi
 from tests.test_keiki_turn import Keiki, turn_log
 from tests.test_onboarding import NOW, USER, Chat, onboard
 from tests.watcher_fakes import FAKE_ENV
@@ -54,6 +54,13 @@ def test_brief_by_email_in_a_new_thread_is_a_command_for_the_linked_user(tmp_pat
     linked, brief = turn_log(keiki)
     assert (linked["kind"], linked["user_id"]) == ("link", USER)
     assert (brief["kind"], brief["user_id"], brief["intent"]) == ("command", USER, None)
+
+
+@pytest.mark.parametrize("tail", [MAILTRACK_FOOTER, IPHONE, MAILTRACK_FOOTER + IPHONE])
+def test_a_code_with_a_mail_footer_still_links(tmp_path, chat, tail: str) -> None:
+    keiki = Keiki(tmp_path, chat.services)
+    keiki.say(link_code(chat) + tail, now=NOW)
+    assert keiki.last == LINKED
 
 
 def test_link_gives_a_code_the_inbox_and_how_long_it_lasts(chat: Chat) -> None:
