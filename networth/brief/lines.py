@@ -86,14 +86,14 @@ ASSET_WORDS: Final[Mapping[str, Mapping[str, str]]] = {
     "hinglish": {
         "^NSEI": "Nifty 50", "^BSESN": "Sensex",
         "NIFTYBEES.NS": "Nifty 50 index fund (NIFTYBEES)",
-        "GOLDBEES.NS": "Rupee mein gold (GOLDBEES)", "INR=X": "Rupee mein dollar (USD/INR)",
-        "^NSEBANK": "Indian banks (Nifty Bank)", "^CNXPSUBANK": "Sarkari banks (Nifty PSU Bank)",
+        "GOLDBEES.NS": "rupee mein gold (GOLDBEES)", "INR=X": "rupee mein dollar (USD/INR)",
+        "^NSEBANK": "Indian banks (Nifty Bank)", "^CNXPSUBANK": "sarkari banks (Nifty PSU Bank)",
         "^CNXIT": "Indian IT (Nifty IT)", "^CNXAUTO": "Indian car companies (Nifty Auto)",
         "^CNXENERGY": "Indian energy (Nifty Energy)",
-        "^CNXFMCG": "Rozmarra ka saamaan (Nifty FMCG)", "^CNXINFRA": "Indian infra (Nifty Infra)",
+        "^CNXFMCG": "rozmarra ka saamaan (Nifty FMCG)", "^CNXINFRA": "Indian infra (Nifty Infra)",
         "^CNXMETAL": "Indian metals (Nifty Metal)", "^CNXPHARMA": "Indian pharma (Nifty Pharma)",
         "^CNXREALTY": "Indian real estate (Nifty Realty)",
-        "BZ=F": "Brent crude oil", "GLD": "Dollar mein gold (GLD)",
+        "BZ=F": "Brent crude oil", "GLD": "dollar mein gold (GLD)",
     },
 }  # fmt: skip
 BENCHMARK_WORDS: Final[Mapping[str, Mapping[str, str]]] = {
