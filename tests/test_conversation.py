@@ -273,6 +273,15 @@ def test_should_i_gets_the_decline_then_the_facts(tmp_path: Path, cfg, question:
     assert chat.bot.last == f"{talk.SHOULD_I_LEAD[lang]}\n\n{facts[lang]}\n\n{FOOTER[lang]}"
 
 
+def test_should_i_never_asks_the_writer_for_steps_to_decide(tmp_path: Path, cfg) -> None:
+    models = TalkModels(kind="should_i", writes=["Small caps are shares of smaller companies."])
+    chat = chat_with(tmp_path, cfg, models)
+    chat.say("I have 50,000 this month. How much should go into small caps?")
+    task, _ = models.written[-1]
+    assert "before deciding" not in task.lower(), "a checklist for deciding reads as a nudge"
+    assert "never list steps" in task.lower()
+
+
 # --- language --------------------------------------------------------------------------------
 
 

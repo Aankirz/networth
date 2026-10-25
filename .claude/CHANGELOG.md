@@ -485,3 +485,6 @@
 
 ## 2026-10-25 — Phase 9 slice 3: /erase
 - /erase asks with a confirm button, forgets SnapTrade first (aborts on failure), deletes every user_id table plus link_misses, resets the menu, replies in en/hi/hinglish. Added tests/test_erase.py (25 tests).
+
+## 2026-10-25 — should-I answers stop listing steps to decide
+- talk.SHOULD_I_TASK: should-I explains what the thing is and its risks only; lead reworded in 3 languages. Live words eval showed 5 should-I replies graded as advice. Test added.
