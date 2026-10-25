@@ -27,7 +27,7 @@ from networth.llm import (
     StoryForJudge,
 )
 from tests.keiki_fakes import MAILTRACK_FOOTER, OPT_OUT
-from tests.test_onboarding import CHAT, NOW, Chat, onboard
+from tests.test_onboarding import CHAT, NOW, USER, Chat, onboard
 from tests.test_web import web_db  # noqa: F401, F811 - the engine fixture
 from tests.watcher_fakes import FAKE_ENV
 
@@ -136,10 +136,28 @@ def test_each_intent_routes_to_its_own_answer(tmp_path: Path, cfg, sim_table,
 def test_a_plan_question_never_restates_the_split_or_invites_a_change(tmp_path, cfg) -> None:
     """Finding 3: the judge read the saved split and "Type /plan" as an allocation and a nudge."""
     chat = talk(tmp_path, cfg, FakeChatModels(Intent.PLAN_QUESTION.value))
-    chat.say("what is my plan?")
+    chat.say("is my plan right for me?")
     assert "Looks right?" not in chat.bot.last
     assert "%" not in chat.bot.last and "/plan" not in chat.bot.last
     assert chat.bot.last.endswith("Research, not advice.")
+
+
+SHOW_PLAN = {
+    "What is my plan?": "This is the plan you saved: ",
+    "मेरा प्लान क्या है?": "आपने यह प्लान सेव किया है: ",
+    "Mera plan kya hai?": "Aapne yeh plan save kiya hai: ",
+}
+
+
+@pytest.mark.parametrize("question", SHOW_PLAN)
+def test_a_plain_ask_to_see_the_plan_shows_the_saved_plan(tmp_path, cfg, question: str) -> None:
+    """Live: "What is my plan?", which P10's @plan mention sends, got the decline, not the plan."""
+    chat = talk(tmp_path, cfg, FakeChatModels(Intent.PLAN_QUESTION.value))
+    chat.say(question)
+    saved = chat.store.get_plan(USER)
+    assert chat.bot.last.startswith(SHOW_PLAN[question])
+    assert f"{saved.targets_pct['core']}%" in chat.bot.last
+    assert "/plan" not in chat.bot.last and "Looks right?" not in chat.bot.last
 
 
 def jev_on(cfg: config.Config) -> config.Config:

@@ -491,3 +491,6 @@
 
 ## 2026-10-25 — Phase 9 report
 - docs/phases/phase-9-report.md: data shape, caps, samples, command list, /erase, before/after eval, gaps, pending menu check, owner steps.
+
+## 2026-10-25 — a plain ask shows the saved plan
+- today.plan: "What is my plan?" (en/hi/hinglish, SHOW_PLAN rule) reads back the saved plan; judging questions keep NOT_A_JUDGE. Finding 3 test now asks a judging question. Tests in tests/test_chat.py.

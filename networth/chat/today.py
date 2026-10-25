@@ -6,15 +6,18 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
+import re
 from collections.abc import Callable, Mapping
 from typing import Final
 from zoneinfo import ZoneInfo
 
 from networth import brief, sim
 from networth.app.services import Services
-from networth.app.store import INDIA_TZ, Profile, Store
+from networth.app.store import INDIA_TZ, Plan, Profile, Store
 from networth.bot.message import LANGS, Link, say
+from networth.bot.onboarding import plan_line
 from networth.brief.lines import Line, day_words
+from networth.chat import talk
 from networth.chat.answer import Answer
 from networth.sim.data import MissingSeries
 from networth.watcher.store import Confirmed
@@ -115,6 +118,17 @@ NOT_A_JUDGE: Final = {
     "hinglish": "Main nahin bata sakta ki koi plan aapke liye sahi hai ya nahin. Plan hamesha "
     "aapki apni pasand hai.",
 }
+SAVED_PLAN: Final = {
+    "en": "This is the plan you saved: {plan}.",
+    "hi": "आपने यह प्लान सेव किया है: {plan}।",
+    "hinglish": "Aapne yeh plan save kiya hai: {plan}.",
+}
+# A plain ask to see the saved plan, with nothing asking whether it is right. P10's @plan
+# mention sends exactly "What is my plan?".
+SHOW_PLAN: Final = re.compile(
+    r"^(?:what(?:'s| is) my (?:current |saved )?plan|(?:show|tell) me my plan|(?:see|view) my "
+    r"plan|my plan|mera plan(?: kya hai| dikhao| batao)?|मेरा प्लान(?: क्या है| दिखाओ| बताओ)?)$"
+)
 YOUR_PAGE: Final = {"en": "Your page", "hi": "आपका पेज", "hinglish": "Aapka page"}
 RANGE_NOT_READY: Final = {
     "en": "The range isn't available right now. You can ask again in a little while.",
@@ -260,11 +274,14 @@ def page_link(profile: Profile, services: Services, lang: str) -> Link | None:
 
 def plan(store: Store, profile: Profile, text: str, services: Services, today: dt.date,
          lang: str = "en") -> Answer:  # fmt: skip
-    """The fixed line saying a plan is not judged here, then the history line of an event type
-    named in the question and confirmed this month, then a link to the user's own page. It
-    never restates the plan's percentages or invites a change."""
-    if store.get_plan(profile.user_id) is None:
+    """A plain ask to see the plan gets the saved plan. Anything else gets the fixed line saying
+    a plan is not judged here, then the history line of an event type named in the question and
+    confirmed this month, then a link to the user's own page. Neither invites a change."""
+    saved = store.get_plan(profile.user_id)
+    if saved is None:
         return Answer.fixed(NO_PLAN)
+    if SHOW_PLAN.match(talk.bare(text)):
+        return saved_plan(saved, profile, services, lang)
     month = {e.type for e in brief.month_events(services.watcher_db, today)}
     type = named_type(text, services) if month else None
     assets = services.cfg.triggers.assets_by_type.get(type, ()) if services.cfg and type else ()
@@ -272,6 +289,12 @@ def plan(store: Store, profile: Profile, text: str, services: Services, today: d
     extra = history_words(line) if line else {}
     words = by_lang(lambda lang: "\n\n".join(x for x in (say(NOT_A_JUDGE, lang),
                                                          extra.get(lang)) if x))  # fmt: skip
+    return Answer.fixed(words, kind="plan", link=page_link(profile, services, lang))
+
+
+def saved_plan(saved: Plan, profile: Profile, services: Services, lang: str) -> Answer:
+    """The user's own saved plan read back as a fact, never with "Looks right?" or /plan."""
+    words = by_lang(lambda lang: say(SAVED_PLAN, lang).format(plan=plan_line(saved, lang)))
     return Answer.fixed(words, kind="plan", link=page_link(profile, services, lang))
 
 
