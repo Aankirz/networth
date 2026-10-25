@@ -19,20 +19,30 @@
     <div><dt>A good case</dt><dd class="num">{{ pr.real.p90 }}</dd></div>
   </dl>
 
-  <figure class="range-bar">
-    <svg viewBox="0 0 {{ pr.bar.width }} {{ pr.bar.height }}" role="img" aria-labelledby="range-bar-title">
+  {% from "_chart.html" import mark, legend %}
+  {% set bar = pr.bar %}
+  <figure class="chart range-bar">
+    <svg width="100%" height="{{ bar.height }}" role="group" aria-labelledby="range-bar-title">
       <title id="range-bar-title">Before inflation, from {{ pr.nominal.p10 }} to {{ pr.nominal.p90 }}, middle {{ pr.nominal.median }}. After inflation, from {{ pr.real.p10 }} to {{ pr.real.p90 }}, middle {{ pr.real.median }}. Put in: {{ pr.invested }}.</title>
-      {% for row in pr.bar.rows %}
-      <text class="range-bar__name" x="{{ pr.bar.name_x }}" y="{{ row.label_y }}" text-anchor="{{ pr.bar.name_anchor }}">{{ row.name }}</text>
-      <rect class="range-bar__band range-bar__band--{{ loop.index }}" x="{{ row.x }}" y="{{ row.y }}" width="{{ row.w }}" height="{{ row.h }}"></rect>
-      <line class="range-bar__median" x1="{{ row.median_x }}" x2="{{ row.median_x }}" y1="{{ row.y - 6 }}" y2="{{ row.y + row.h + 6 }}"></line>
+      {% for row in bar.rows %}
+      <line class="chart-grid" x1="0" x2="100%" y1="{{ row.grid_y }}" y2="{{ row.grid_y }}"></line>
+      <text class="chart-label chart-label--name" x="{{ bar.name_x }}%" y="{{ row.label_y }}" text-anchor="{{ bar.name_anchor }}">{{ row.name }}</text>
       {% endfor %}
-      <line class="range-bar__axis" x1="{{ pr.bar.zero_x }}" x2="{{ pr.bar.width - pr.bar.zero_x }}" y1="{{ pr.bar.base_y }}" y2="{{ pr.bar.base_y }}"></line>
-      <line class="range-bar__invested" x1="{{ pr.bar.invested_x }}" x2="{{ pr.bar.invested_x }}" y1="8" y2="{{ pr.bar.base_y }}"></line>
-      <text class="range-bar__label" x="{{ pr.bar.zero_x }}" y="{{ pr.bar.base_y + 26 }}">{{ pr.bar.zero_label }}</text>
-      <text class="range-bar__label" x="{{ pr.bar.invested_label_x }}" y="{{ pr.bar.base_y + 26 }}" text-anchor="{{ pr.bar.invested_anchor }}">{{ pr.bar.invested_label }}</text>
+      <text class="chart-label" x="0" y="{{ bar.base_y + 18 }}">{{ bar.zero_label }}</text>
+      <text class="chart-label" x="{{ bar.invested_x }}%" dx="{{ bar.invested_dx }}" y="{{ bar.base_y + 18 }}" text-anchor="{{ bar.invested_anchor }}">{{ bar.invested_label }}</text>
+      {% for row in bar.rows %}
+      {% call mark(row.series, row.name, row.cases, row.median_x, bar.tip_y) %}
+      <rect class="chart-bar" x="{{ row.x }}%" y="{{ row.y }}" width="{{ row.w }}%" height="{{ row.h }}" rx="4"></rect>
+      <line class="chart-median" x1="{{ row.median_x }}%" x2="{{ row.median_x }}%" y1="{{ row.y - 4 }}" y2="{{ row.y + row.h + 4 }}"></line>
+      {% endcall %}
+      {% endfor %}
+      {% call mark("invested", bar.invested_name, [(None, pr.invested)], bar.invested_x, bar.tip_y) %}
+      <line class="chart-hit" x1="{{ bar.invested_x }}%" x2="{{ bar.invested_x }}%" y1="4" y2="{{ bar.base_y }}"></line>
+      <line class="chart-rule" x1="{{ bar.invested_x }}%" x2="{{ bar.invested_x }}%" y1="4" y2="{{ bar.base_y }}"></line>
+      {% endcall %}
     </svg>
-    <figcaption>Each bar runs from the bad case to the good case, on one scale from {{ pr.bar.zero_label }}. The dark tick is the middle case. The dashed line is the {{ pr.invested }} put in.</figcaption>
+    {{ legend(bar.legend) }}
+    <figcaption>Each bar runs from the bad case to the good case, on one scale from {{ bar.zero_label }}. The tick on each bar is the middle case. The dashed line is the {{ pr.invested }} put in.</figcaption>
   </figure>
 
   <h3>What a fall felt like</h3>

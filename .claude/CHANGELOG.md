@@ -405,3 +405,7 @@
 
 ## 2026-10-25 — Phase 3E: Hinglish asset names read naturally mid-sentence
 - networth/brief/lines.py: Hinglish names that are common nouns (sarkari banks, rozmarra ka saamaan, rupee/dollar mein gold, rupee mein dollar) start lower case, since they sit mid-sentence; a line that opens with one still gets its first letter capitalised.
+
+## 2026-10-25 — shadcn-look web charts (phase 3E addition)
+- New networth/web/static/charts.css holds shadcn's published chart tokens (light and dark) and one series-to-token map. The plan-range bar and the what-if strip now draw rounded bars, thin gridlines, 12px muted labels, an HTML legend and CSS-only tooltips on focusable, labelled marks.
+- Chart geometry is now percent across and pixels down, so text, corners and dots keep their size from 320px to 1440px. New `_chart.html` macros, a `/static/charts.css` route and tests/test_charts.py. Before and after shots are in docs/phases/phase-3e-shots/.

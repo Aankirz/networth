@@ -14,17 +14,25 @@
     <div><dt>A good case (1 in 10 did better)</dt><dd class="num">{{ v.p90 }}</dd></div>
   </dl>
 
-  <figure class="strip">
-    <svg viewBox="0 0 {{ v.strip.width }} {{ v.strip.height }}" role="img" aria-labelledby="strip-title">
+  {% from "_chart.html" import mark, legend %}
+  {% set s = v.strip %}
+  <figure class="chart strip">
+    <svg width="100%" height="{{ s.height }}" role="group" aria-labelledby="strip-title">
       <title id="strip-title">One dot per past case, placed by what it would have meant for {{ v.amount }}. The shaded band runs from {{ v.p10 }} to {{ v.p90 }}.</title>
-      <rect class="strip__band" x="{{ v.strip.band_x }}" y="0" width="{{ v.strip.band_w }}" height="{{ v.strip.base_y }}"></rect>
-      <line class="strip__axis" x1="0" x2="{{ v.strip.width }}" y1="{{ v.strip.base_y }}" y2="{{ v.strip.base_y }}"></line>
-      <line class="strip__zero" x1="{{ v.strip.zero_x }}" x2="{{ v.strip.zero_x }}" y1="0" y2="{{ v.strip.base_y + 8 }}"></line>
-      <line class="strip__median" x1="{{ v.strip.median_x }}" x2="{{ v.strip.median_x }}" y1="0" y2="{{ v.strip.base_y }}"></line>
-      {% for d in v.strip.dots %}<circle class="strip__dot" cx="{{ d.cx }}" cy="{{ d.cy }}" r="{{ v.strip.r }}"><title>{{ d.label }}</title></circle>{% endfor %}
-      <text class="strip__label" x="{{ v.strip.zero_x }}" y="{{ v.strip.base_y + 30 }}" text-anchor="middle">no change</text>
+      <line class="chart-grid" x1="0" x2="100%" y1="0" y2="0"></line>
+      <line class="chart-grid" x1="0" x2="100%" y1="{{ s.base_y }}" y2="{{ s.base_y }}"></line>
+      <text class="chart-label" x="{{ s.zero_x }}%" y="{{ s.base_y + 18 }}" text-anchor="{{ s.zero_anchor }}">no change</text>
+      {% call mark("band", "The middle 8 in 10 cases", [(None, v.p10 ~ " to " ~ v.p90), ("Middle case", v.median)], s.median_x, s.tip_y) %}
+      <rect class="chart-bar chart-bar--wash" x="{{ s.band_x }}%" y="0" width="{{ s.band_w }}%" height="{{ s.base_y }}" rx="4"></rect>
+      <line class="chart-median" x1="{{ s.median_x }}%" x2="{{ s.median_x }}%" y1="0" y2="{{ s.base_y }}"></line>
+      {% endcall %}
+      <line class="chart-rule chart-rule--zero" x1="{{ s.zero_x }}%" x2="{{ s.zero_x }}%" y1="0" y2="{{ s.base_y + 4 }}"></line>
+      {% for d in s.dots %}
+      {% call mark("case", d.date, [(None, d.value)], d.cx, s.tip_y) %}<circle class="chart-dot" cx="{{ d.cx }}%" cy="{{ d.cy }}" r="{{ s.r }}"></circle>{% endcall %}
+      {% endfor %}
     </svg>
-    <figcaption>Each dot is one past case. Left of “no change” lost money, right of it gained. The shaded band holds the middle 8 in 10 cases; the dark line is the middle case.</figcaption>
+    {{ legend([("case", "One past case"), ("band", "The middle 8 in 10 cases")]) }}
+    <figcaption>Each dot is one past case. Left of “no change” lost money, right of it gained. The shaded band holds the middle 8 in 10 cases; the solid line is the middle case.</figcaption>
   </figure>
 
   <p>{{ v.normal }}</p>

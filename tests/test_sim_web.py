@@ -165,4 +165,4 @@ def _range_with(invested: int, p10: int, p90: int) -> sim.PlanRange:
 def test_bar_row_names_sit_away_from_the_invested_line(invested, p10, p90) -> None:
     bar = plan_view.bar_geometry(_range_with(invested, p10, p90))
     names_on_right = bar["name_anchor"] == "end"
-    assert names_on_right == (bar["invested_x"] < bar["width"] / 2)
+    assert names_on_right == (bar["invested_x"] < 50)
