@@ -651,3 +651,6 @@
 
 ## 2026-10-25 — site: "Get my brief now" (owner request)
 - Landing step "On your day, a brief" and the brief feature get a "Get my brief now" link: signed out it opens /demo?q=/brief, signed in /dashboard?q=/brief. A `/brief`-style ?q= now runs that server command on arrival (shell `opening`); /u/[token] and /dashboard pass ?q= through. e2e/brief-now.spec.ts covers all three.
+
+## 2026-10-25 — feat: the 13C rating card with a gated lab page
+- site/components/cards/rating.tsx (score dial, view, outlook, drivers with effect and source chips, missing data, track record pill) and source-chip.tsx; /lab/rating renders the HDFC and AAPL fixtures (made by the real rate() on test fakes) only when NETWORTH_LAB=1, set in the Playwright config; e2e/rating.spec.ts.

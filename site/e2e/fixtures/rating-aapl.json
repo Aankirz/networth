@@ -1,0 +1,81 @@
+{
+  "type": "rating",
+  "slug": "aapl",
+  "name": "Apple Inc.",
+  "kind": "stock",
+  "view": "Neutral",
+  "score": 52,
+  "confidence": "high",
+  "outlook": "Over the next 12 months we see Apple as Neutral, helped by growth and sector trend, held back by price momentum, with high confidence (1 input missing).",
+  "drivers": [
+    {
+      "key": "growth",
+      "label": "Growth",
+      "value": "Revenue +20% and profit +10% year on year (latest quarter)",
+      "effect": "up",
+      "source": {
+        "name": "Yahoo",
+        "url": "https://example.test/Yahoo",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "debt",
+      "label": "Balance sheet",
+      "value": "Debt is 0.78x equity",
+      "effect": "up",
+      "source": {
+        "name": "Yahoo",
+        "url": "https://example.test/Yahoo",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "momentum",
+      "label": "Price momentum",
+      "value": "-37% against the S&P 500 over 12 months (last month left out); +4% from its 200-day average",
+      "effect": "down",
+      "source": {
+        "name": "Yahoo:AAPL",
+        "url": "https://example.test/Yahoo:AAPL",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "news",
+      "label": "News tone, 30 days",
+      "value": "No confirmed stories naming it in 30 days",
+      "effect": "flat",
+      "source": {
+        "name": "Networth watcher",
+        "url": "https://example.test/Networth watcher",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "sector",
+      "label": "Sector trend",
+      "value": "US Technology (XLK) +6.2% over 3 months against the S&P 500's +0.2%",
+      "effect": "up",
+      "source": {
+        "name": "Yahoo:XLK",
+        "url": "https://example.test/Yahoo:XLK",
+        "as_of": "2026-10-23"
+      }
+    }
+  ],
+  "missing": [
+    "Valuation against peers: no peer set or no multiple."
+  ],
+  "track": {
+    "text": "Ratings like this beat the S&P 500 5 times in 10 since 2015 (574 of 1054 tested stock months).",
+    "hits": 574,
+    "n": 1054,
+    "since": "2015",
+    "edge": "Every tested stock beat it 6 times in 10, so the edge is -3 points. That is too small to lean on.",
+    "weak": true
+  },
+  "as_of": "2026-10-25T10:00:00+00:00",
+  "url": "/r/aapl",
+  "currency": "USD"
+}

@@ -1,0 +1,79 @@
+{
+  "type": "rating",
+  "slug": "hdfcbank",
+  "name": "HDFC Bank Limited",
+  "kind": "stock",
+  "view": "Neutral",
+  "score": 58,
+  "confidence": "high",
+  "outlook": "Over the next 12 months we see HDFC Bank as Neutral, helped by sector trend and growth, held back by price momentum, with high confidence.",
+  "drivers": [
+    {
+      "key": "growth",
+      "label": "Growth",
+      "value": "Revenue +20% and profit +10% year on year (latest quarter)",
+      "effect": "up",
+      "source": {
+        "name": "Yahoo",
+        "url": "https://example.test/Yahoo",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "valuation",
+      "label": "Valuation against sector peers",
+      "value": "P/E 15.0 against a peer median of 13.5 (ICICIBANK, SBIN)",
+      "effect": "flat",
+      "source": {
+        "name": "Yahoo",
+        "url": "https://example.test/Yahoo",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "momentum",
+      "label": "Price momentum",
+      "value": "-22% against the Nifty 50 over 12 months (last month left out); +3% from its 200-day average",
+      "effect": "down",
+      "source": {
+        "name": "Yahoo:HDFCBANK.NS",
+        "url": "https://example.test/Yahoo:HDFCBANK.NS",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "news",
+      "label": "News tone, 30 days",
+      "value": "1 confirmed story in 30 days, tone positive (1 up, 0 down)",
+      "effect": "up",
+      "source": {
+        "name": "Networth watcher",
+        "url": "https://example.test/Networth watcher",
+        "as_of": "2026-10-23"
+      }
+    },
+    {
+      "key": "sector",
+      "label": "Sector trend",
+      "value": "Nifty Bank +15.5% over 3 months against the Nifty 50's +0.2%",
+      "effect": "up",
+      "source": {
+        "name": "Yahoo:^NSEBANK",
+        "url": "https://example.test/Yahoo:^NSEBANK",
+        "as_of": "2026-10-23"
+      }
+    }
+  ],
+  "missing": [],
+  "track": {
+    "text": "Ratings like this beat the Nifty 6 times in 10 since 2015 (829 of 1435 tested stock months).",
+    "hits": 829,
+    "n": 1435,
+    "since": "2015",
+    "edge": "Every tested stock beat it 6 times in 10, so the edge is 0 points. That is too small to lean on.",
+    "weak": true
+  },
+  "as_of": "2026-10-25T10:00:00+00:00",
+  "url": "/r/hdfcbank",
+  "currency": "INR"
+}

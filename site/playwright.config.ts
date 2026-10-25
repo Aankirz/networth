@@ -29,6 +29,7 @@ export default defineConfig({
         AUTH_TRUST_HOST: "true",
         AUTH_GOOGLE_ID: "e2e-client-id",
         AUTH_GOOGLE_SECRET: "e2e-client-secret",
+        NETWORTH_LAB: "1",
       },
     },
   ],
