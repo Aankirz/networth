@@ -612,3 +612,7 @@
 
 ## 2026-10-25 — Phase 13C: /sectors on Telegram
 - networth/bot/sectors_cmd.py: /sectors sends the sector board with its confirmed stories and names sectors with no prices; registered in commands.py and the command menu. tests/test_bot_sectors.py. make check exit 0. Committed locally, not pushed (owner order).
+
+## 2026-10-25 — Phase 13C: the news notifier and /alerts
+- networth/notify: after each watcher cycle (run_watcher, no new scheduler) a confirmed story about a holding, its sector or the plan's Nifty 50 sends one message through the outbox: the story and publishers, the last close's move with its source, the move in the holding's currency, and the rating when its view changed. 3 a day per user, quiet 22:00-08:00 IST, claims in data/notify.sqlite.
+- networth/bot/alerts_cmd.py: /alerts on|off flips the profile's alerts_on. tests/test_notify.py covers the cap, quiet hours, /alerts off, a failed send and the rating line. make check exit 0. Local commit only.

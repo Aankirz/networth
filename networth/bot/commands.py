@@ -34,6 +34,7 @@ from networth.app.store import (
 )
 from networth.bot import briefs, watches
 from networth.bot import holdings as holdings_flow
+from networth.bot.alerts_cmd import cmd_alerts
 from networth.bot.message import Link, Message, say
 from networth.bot.onboarding import (
     BRIEF_NOW,
@@ -262,6 +263,7 @@ COMMAND_LIST: Final = (
     ("range", "What your plan could become, replayed over past months"),
     ("holdings", "What you hold, read from a screenshot"),
     ("sectors", "Today's sector moves and the news behind them"),
+    ("alerts", "Turn news alerts on or off"),
     ("watch", "Hear once when a confirmed story about something appears"),
     ("watches", "See or stop your watches"),
     ("unwatch", "Stop a watch by its number"),
@@ -867,6 +869,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/holdings": cmd_holdings,
     "/link_broker": cmd_link_broker,
     "/sectors": cmd_sectors,
+    "/alerts": cmd_alerts,
 }
 
 

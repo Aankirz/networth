@@ -98,11 +98,11 @@ def test_a_watcher_run_sends_rare_alerts_once(chat: Chat) -> None:
     rare = lambda s, now: [insight(9)]  # noqa: E731
     assert (
         job(chat, schedule.WATCHER_PROMPT, rare, OPEN)
-        == "watcher ran: 1 insights, 1 alerts sent, 0 watch messages sent"
+        == "watcher ran: 1 insights, 1 alerts sent, 0 watch messages sent, 0 news alerts sent"
     )
     assert (
         job(chat, schedule.WATCHER_PROMPT, rare, OPEN)
-        == "watcher ran: 1 insights, 0 alerts sent, 0 watch messages sent"
+        == "watcher ran: 1 insights, 0 alerts sent, 0 watch messages sent, 0 news alerts sent"
     )
 
 
@@ -117,7 +117,10 @@ def test_alerts_lost_when_the_vm_stopped_after_a_cycle_go_out_on_the_next_run(
     store.close()
     monkeypatch.setattr(schedule.run, "run_cycle", lambda *args: None)
     outcome = schedule.run_job(schedule.WATCHER_PROMPT, chat.store, chat.bot, chat.services, OPEN)
-    assert outcome == "watcher ran: 1 insights, 1 alerts sent, 0 watch messages sent"
+    assert (
+        outcome
+        == "watcher ran: 1 insights, 1 alerts sent, 0 watch messages sent, 0 news alerts sent"
+    )
 
 
 def test_unknown_prompts_and_overlapping_runs_do_nothing(chat: Chat) -> None:

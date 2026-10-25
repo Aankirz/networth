@@ -25,6 +25,7 @@ from dataclasses import asdict, dataclass
 from typing import Final
 from zoneinfo import ZoneInfo
 
+from networth import notify
 from networth.app.services import Services
 from networth.app.store import Store
 from networth.bot import alerts, briefs, watches
@@ -100,7 +101,15 @@ def run_watcher(store: Store, bot: Bot, services: Services, now: dt.datetime,
     fresh = cycle(services, now)
     sent = alerts.run_alerts(store, bot, services, fresh, now.strftime("%Y-%m"))
     watched = watches.run_watches(store, bot, services, now)
-    return f"watcher ran: {len(fresh)} insights, {sent} alerts sent, {watched} watch messages sent"
+    try:
+        news = notify.run_notify(store, bot, services, now)
+    except Exception:  # noqa: BLE001 - the cycle's other messages are already out
+        log.exception("news alerts failed")
+        news = 0
+    return (
+        f"watcher ran: {len(fresh)} insights, {sent} alerts sent, {watched} watch messages "
+        f"sent, {news} news alerts sent"
+    )
 
 
 def run_brief(store: Store, bot: Bot, services: Services, now: dt.datetime) -> str:
