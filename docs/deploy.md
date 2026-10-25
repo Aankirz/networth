@@ -70,7 +70,7 @@ A sleeping VM's timers never fire, so Maritime is the alarm clock (https://marit
 | `watcher` | `*/30 9-15 * * 1-5` | `RUN_WATCHER` | one watcher cycle, then rare alerts |
 | `brief` | `0 8 * * *` | `RUN_BRIEF` | the brief for every user whose investing day is today |
 
-Maritime polls the list while the agent is awake, registers wake triggers, and POSTs each prompt to `/chat` with `source: "scheduled"`. The job runs in a background thread so `/chat` answers at once. `/chat` is public, so a forged call costs nothing: the watcher skips a run within 25 minutes of the last cycle, one job runs at a time, briefs are claimed once per user per day, and alerts once per user per event. After a deploy, wake the agent once (`curl .../health`) and check:
+Maritime polls the list while the agent is awake, registers wake triggers, and POSTs each prompt to `/chat` with `source: "scheduled"`. The job runs in a background thread so `/chat` answers at once. `/chat` is public and Maritime sends no secret with a scheduled prompt (its docs say to treat the URL as the secret), so a forged call is possible and its cost is bounded, not zero. The watcher refuses runs outside Mon to Fri, 09:00 to 15:59 Kolkata, and within 25 minutes of the last cycle, so forgery adds at most about one paid cycle (about $0.10) an hour during market hours. One job runs at a time, briefs are claimed once per user per day, and alerts once per user per event. After a deploy, wake the agent once (`curl .../health`) and check:
 
 ```bash
 maritime agents triggers list <agent-id> --json   # expect watcher and brief

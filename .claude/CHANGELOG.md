@@ -237,3 +237,6 @@
 
 ## 2026-10-25 — Glossary reads as description
 - Reworded advice rows and four guard-flagged rows; dropped teaching patterns 1 and 12; test runs every glossary cell through the guard (round 2 item 3).
+
+## 2026-10-25 — Watcher refuses forged runs outside market hours
+- Maritime scheduled prompts carry no secret, so the watcher now runs only inside its own cron window; schedule.py and deploy.md state the bounded cost instead of claiming it is zero (round 2 item 4).

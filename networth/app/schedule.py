@@ -4,9 +4,12 @@
     POST /chat        Maritime delivers a job's prompt here with source "scheduled"
 
 Each job runs in a background thread so /chat answers inside Maritime's 30 s limit. /chat is
-public, so a forged call must cost nothing: the watcher skips a run when the last cycle
-finished under WATCHER_MIN_GAP ago, the brief is claimed once per user per day, alerts once per
-user per event, and one job at a time runs.
+public and Maritime sends no secret with a scheduled prompt ("treat the URL itself as the
+secret"), so anyone who learns the URL can forge one. What a forger can make us spend is
+bounded, not zero: the watcher runs only inside its own cron window (MARKET_HOURS on weekdays)
+and never within WATCHER_MIN_GAP of the last cycle, so forged calls add at most about one paid
+cycle an hour on top of the two scheduled ones, during market hours only. The brief is claimed
+once per user per day, alerts once per user per event, and one job at a time runs.
 
 https://maritime.sh/docs/triggers
 """
@@ -20,6 +23,7 @@ import threading
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass
 from typing import Final
+from zoneinfo import ZoneInfo
 
 from networth.app.services import Services
 from networth.app.store import Store
@@ -37,6 +41,7 @@ TZ: Final = "Asia/Kolkata"
 WATCHER_PROMPT: Final = "RUN_WATCHER"
 BRIEF_PROMPT: Final = "RUN_BRIEF"
 WATCHER_MIN_GAP: Final = dt.timedelta(minutes=25)
+MARKET_HOURS: Final = range(9, 16)  # the watcher cron's hour field, 9-15
 CHAT_REPLY: Final = "Networth talks on Telegram: https://t.me/networth_professor_bot"
 
 
@@ -89,8 +94,15 @@ def last_cycle_end(services: Services) -> dt.datetime | None:
     return cycle.finished_at if cycle else None
 
 
+def in_watcher_window(now: dt.datetime) -> bool:
+    local = now.astimezone(ZoneInfo(TZ))
+    return local.weekday() < 5 and local.hour in MARKET_HOURS
+
+
 def run_watcher(store: Store, bot: Bot, services: Services, now: dt.datetime,
                 cycle: Cycle = watcher_cycle) -> str:  # fmt: skip
+    if not in_watcher_window(now):
+        return "watcher skipped: outside market hours"
     last = last_cycle_end(services)
     if last is not None and now - last < WATCHER_MIN_GAP:
         return f"watcher skipped: last cycle ended {last.isoformat(timespec='seconds')}"

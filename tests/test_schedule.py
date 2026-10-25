@@ -20,7 +20,8 @@ from tests.test_alerts import insight
 from tests.test_onboarding import Chat, onboard
 from tests.watcher_fakes import FAKE_ENV
 
-NOW = dt.datetime(2026, 10, 25, 2, 30, tzinfo=dt.UTC)  # 08:00 in Kolkata
+NOW = dt.datetime(2026, 10, 25, 2, 30, tzinfo=dt.UTC)  # Sunday 08:00 in Kolkata
+OPEN = dt.datetime(2026, 10, 26, 4, 30, tzinfo=dt.UTC)  # Monday 10:00 in Kolkata
 
 
 @pytest.fixture
@@ -32,8 +33,8 @@ def chat(tmp_path: Path) -> Chat:
     return chat
 
 
-def job(chat: Chat, prompt: str, cycle=lambda services, now: []) -> str | None:
-    return schedule.run_job(prompt, chat.store, chat.bot, chat.services, NOW, cycle)
+def job(chat: Chat, prompt: str, cycle=lambda services, now: [], now=NOW) -> str | None:
+    return schedule.run_job(prompt, chat.store, chat.bot, chat.services, now, cycle)
 
 
 def test_schedules_list_the_watcher_and_the_daily_brief_in_kolkata_time() -> None:
@@ -76,19 +77,42 @@ def add_cycle(chat: Chat, finished: dt.datetime) -> None:
 
 def test_a_watcher_wake_right_after_a_cycle_is_skipped(chat: Chat) -> None:
     ran: list[dt.datetime] = []
-    add_cycle(chat, NOW - dt.timedelta(minutes=10))
-    outcome = job(chat, schedule.WATCHER_PROMPT, lambda s, now: ran.append(now) or [])
+    add_cycle(chat, OPEN - dt.timedelta(minutes=10))
+    outcome = job(chat, schedule.WATCHER_PROMPT, lambda s, now: ran.append(now) or [], OPEN)
     assert outcome.startswith("watcher skipped") and ran == []
 
 
 def test_a_watcher_run_sends_rare_alerts_once(chat: Chat) -> None:
-    add_cycle(chat, NOW - dt.timedelta(minutes=40))
+    add_cycle(chat, OPEN - dt.timedelta(minutes=40))
     rare = lambda s, now: [insight(9)]  # noqa: E731
-    assert job(chat, schedule.WATCHER_PROMPT, rare) == "watcher ran: 1 insights, 1 alerts sent"
-    assert job(chat, schedule.WATCHER_PROMPT, rare) == "watcher ran: 1 insights, 0 alerts sent"
+    assert (
+        job(chat, schedule.WATCHER_PROMPT, rare, OPEN) == "watcher ran: 1 insights, 1 alerts sent"
+    )
+    assert (
+        job(chat, schedule.WATCHER_PROMPT, rare, OPEN) == "watcher ran: 1 insights, 0 alerts sent"
+    )
 
 
 def test_unknown_prompts_and_overlapping_runs_do_nothing(chat: Chat) -> None:
     assert job(chat, "DROP TABLE") is None
     with schedule.JOB_LOCK:
         assert job(chat, schedule.BRIEF_PROMPT) is None
+
+
+def test_a_forged_watcher_call_outside_market_hours_spends_nothing(chat: Chat) -> None:
+    ran: list[dt.datetime] = []
+    count = lambda s, now: ran.append(now) or []  # noqa: E731
+    friday_evening = dt.datetime(2026, 10, 23, 10, 30, tzinfo=dt.UTC)  # 16:00 in Kolkata
+    for when in (NOW, friday_evening):
+        assert job(chat, schedule.WATCHER_PROMPT, count, when) == (
+            "watcher skipped: outside market hours"
+        )
+    assert ran == []
+    assert job(chat, schedule.WATCHER_PROMPT, count, OPEN).startswith("watcher ran")
+
+
+def test_the_market_hours_match_the_watcher_cron() -> None:
+    watcher = next(s for s in schedule.SCHEDULES if s.id == "watcher")
+    first, last = watcher.cron.split()[1].split("-")
+    assert schedule.MARKET_HOURS == range(int(first), int(last) + 1)
+    assert watcher.cron.split()[4] == "1-5"
