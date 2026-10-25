@@ -11,10 +11,10 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from networth import market
+from networth import guard, market
 from networth.app.services import Services
 from networth.chat import markets, today
-from tests.test_chat import cfg, weekend_watcher  # noqa: F401 - cfg is the config fixture
+from tests.test_chat import FakeChatModels, cfg, weekend_watcher  # noqa: F401 - cfg is the config fixture
 from tests.test_market import SWIGGY, TESLA, FakeSource
 from tests.test_onboarding import NOW, Chat, onboard
 
@@ -209,3 +209,37 @@ def test_with_no_index_data_today_is_the_news_alone(chat: Chat, monkeypatch) -> 
     weekend_watcher(chat.services.watcher_db, dt.datetime.fromisoformat(NOW))
     chat.say("what happened today?")
     assert chat.bot.last.startswith("Confirmed in the last 24 hours:")
+
+
+SOURCE = "Networth's read: I would not add to Swiggy Limited right now. It closed at ₹176.00."
+
+
+@pytest.mark.parametrize("draft", [
+    "Networth's read: abhi Swiggy mein aur kharidna theek nahin. ₹176.00 par band hua.",
+    "Networth's read: I would not buy more of it now. It closed at ₹176.00.",
+])  # fmt: skip
+def test_a_view_may_say_what_networth_would_do(draft: str) -> None:
+    assert guard.check(draft, SOURCE, view=True).ok
+    assert not guard.check(draft, SOURCE).ok, "outside a view the old word rules hold"
+
+
+@pytest.mark.parametrize("draft", [
+    "Networth's read: I would buy Swiggy, it will reach ₹250.",
+    "Networth's read: Swiggy is a sure-shot multibagger at ₹176.00.",
+])  # fmt: skip
+def test_a_view_still_never_invents_a_number_or_promises_one(draft: str) -> None:
+    assert not guard.check(draft, SOURCE, view=True).ok
+
+
+def test_a_hinglish_view_keeps_the_writers_words_and_blocks_a_planted_number(
+    tmp_path: Path, cfg, monkeypatch  # noqa: F811
+) -> None:  # fmt: skip
+    monkeypatch.setattr(market, "Yahoo", Yahoo)
+    planted = "Networth's read: Swiggy ₹300 tak jayega, kharid lo."
+    honest = "Networth's read: abhi Swiggy mein aur kharidna theek nahin."
+    models = FakeChatModels(writes=[planted, honest])
+    user = Chat(tmp_path, Services(tmp_path / "data", "https://nw.example", models, None, cfg))
+    onboard(user)
+    user.say("Swiggy kharidna chahiye kya?")
+    assert user.bot.last.startswith(honest)
+    assert "VIEW" not in models.tasks[0] and "Keep Networth's read" in models.tasks[0]

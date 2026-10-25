@@ -334,10 +334,12 @@ def too_slow() -> Answer:
 
 
 def facts_answer(words: str, card: dict, lang: str, kind: str) -> Answer:
-    """English as written; any other language reworded by the writer, numbers kept."""
+    """English as written; any other language reworded by the writer, numbers kept. A
+    stock_view carries Networth's read, so the guard lets its view words through."""
+    view = kind == "stock_view"
     if lang == "en":
-        return Answer.fixed({"en": words}, kind=kind, card=card)
-    return Answer(words, words, TRANSLATE_TASK, kind=kind, card=card)
+        return Answer.fixed({"en": words}, kind=kind, card=card, view=view)
+    return Answer(words, words, TRANSLATE_TASK, kind=kind, card=card, view=view)
 
 
 def price_line(q: Quote) -> str:

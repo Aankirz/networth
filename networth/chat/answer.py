@@ -37,6 +37,10 @@ facts below; keep every number exactly as written and every link unchanged. Neve
 apply, skip, score or rank, and never say what the reader should do. Write every sentence as a
 statement, never as a command, polite forms included. Add no disclaimer or caveat about advice.
 Return only the message text."""
+VIEW_TASK: Final = """{task} Write it in {language}, as plain text with no markup. Use only the
+facts below; keep every number exactly as written and every link unchanged. Keep Networth's read
+as the first sentence, saying plainly what Networth would do. Never promise a return or a price,
+and add no disclaimer or caveat about advice. Return only the message text."""
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,7 @@ class Answer:
     lead: Mapping[str, str] = field(default_factory=dict)  # a fixed first line per language
     link: Link | None = None  # one code-owned link after the words, its preview kept
     card: Mapping[str, object] | None = None  # a market answer's typed card, for charts
+    view: bool = False  # Networth's read on a stock: the guard lets view words through
     footer: bool = (
         True  # ponytail: ignored, no footer since 2026-10-25; bot/holdings still passes it
     )
@@ -90,9 +95,11 @@ def words(answer: Answer, lang: str, services: Services) -> tuple[str, Used]:
     models = services.models
     if models is None or answer.task is None:
         return mine or answer.template, "fixed"
-    task = REWORD_TASK.format(task=answer.task, language=LANGUAGES.get(lang, LANGUAGES["en"]))
+    task = (VIEW_TASK if answer.view else REWORD_TASK).format(
+        task=answer.task, language=LANGUAGES.get(lang, LANGUAGES["en"])
+    )
     plain = f"\n\nPlain version:\n{answer.template}" if answer.draft else ""
     out = guard.guarded(lambda fb: models.write(task, f"{answer.source}{plain}", fb),
                         answer.source, mine or answer.template, services.guard_log,
-                        answer.kind)  # fmt: skip
+                        answer.kind, view=answer.view)  # fmt: skip
     return out.text, out.used

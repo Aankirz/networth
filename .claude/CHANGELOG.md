@@ -676,3 +676,6 @@
 
 ## 2026-10-25 — what happened today leads with the index moves
 - networth/chat/today.py: the reader's home indices (Nifty 50, Sensex and the rest, or the S&P 500, Nasdaq and Dow for USD) lead, then up to 4 confirmed stories first seen in the window; the could-not-confirm count is gone; a market_today card goes with it. api today_stories shares the same query. Tests in tests/test_markets.py.
+
+## 2026-10-25 — the guard lets Networth's view through, still blocks invented numbers
+- networth/guard.py: BANNED split into HYPE (always blocked) and VIEW_WORDS; check/guarded take view=True for stock_view answers, which skips view words and advice phrasing but still checks every number. answer.py: Answer.view and VIEW_TASK. Tests in tests/test_markets.py.

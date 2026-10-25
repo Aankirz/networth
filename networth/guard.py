@@ -6,9 +6,12 @@
 A draft passes only when (a) every number in it appears in `source`, the structured engine or
 sent-content text it was written from, after normalising formats (₹1,00,000 = 1 lakh = 100000,
 56%, 14 of 22, Rs5000, Devanagari digits) and number words ("fifty", "half", "twice"); (b) it
-holds none of PRODUCT.md's banned words, in English, Hindi transliteration or Devanagari; and
-(c) it holds no advice phrasing ("should", "recommend", "put your money", "apply", "skip",
-चाहिए, Hinglish imperatives such as "daal dein" or "ruko"). Matching runs on an NFKC copy with
+holds no hype ("guaranteed", "can't lose", "sure-shot", "multibagger", "target price"), in
+English, Hindi transliteration or Devanagari; and, unless the message carries Networth's view on
+a stock, (c) none of the view words (buy, sell, score, rank, kharid, bech) and (d) no advice
+phrasing ("should", "recommend", "put your money", "apply", "skip", चाहिए, Hinglish imperatives
+such as "daal dein" or "ruko"). A view may say what Networth would do; it may never invent a
+number or promise one. Matching runs on an NFKC copy with
 zero-width characters removed, and again with spaced-out letters joined ("s e l l"), so
 look-alike spellings don't slip through; the text sent is never changed. A failed draft gets
 one rewrite with the problems named. A second failure sends the template, which code wrote
@@ -65,13 +68,17 @@ ZERO_WIDTH: Final = re.compile("[\u00ad\u200b-\u200f\u2060\ufeff]")
 SPACED: Final = re.compile(r"(?<![^\W_])[^\W\d_](?:[\s.*_-]{1,2}[^\W\d_](?![^\W_])){2,}")
 SEPARATORS: Final = re.compile(r"[\s.*_-]")
 
-BANNED: Final = re.compile(
-    r"\b(buy\w*|sell\w*|guarantee\w*|can'?t lose|cannot lose|sure[- ]?shot|multi-?baggers?|"
-    r"target price|scor(e|es|ed|ing)|rank\w*|kharid\w*|khareed\w*|"
-    r"bech(o|en|ein|na|do|iye|kar|ke)?|gaaranti|pakka)\b"
-    r"|खरीद|बेच|गारंटी|पक्का|मल्टीबैगर",
+HYPE: Final = re.compile(
+    r"\b(guarantee\w*|can'?t lose|cannot lose|sure[- ]?shot|multi-?baggers?|target price|"
+    r"gaaranti|pakka)\b|गारंटी|पक्का|मल्टीबैगर",
     re.IGNORECASE,
 )
+VIEW_WORDS: Final = re.compile(
+    r"\b(buy\w*|sell\w*|scor(e|es|ed|ing)|rank\w*|kharid\w*|khareed\w*|"
+    r"bech(o|en|ein|na|do|iye|kar|ke)?)\b|खरीद|बेच",
+    re.IGNORECASE,
+)
+BANNED: Final = re.compile(f"{HYPE.pattern}|{VIEW_WORDS.pattern}", re.IGNORECASE)  # either
 # Plural nouns and pronouns that end like an imperative: "khabrein" is news, "unhein" is them.
 NOT_IMPERATIVE: Final = (
     "unh|tumh|hum|inh|jinh|khabr|baat|cheez|kitaab|kitab|raat|aankh|sharton|shart"
@@ -166,15 +173,19 @@ def _matches(pattern: re.Pattern[str], text: str) -> list[str]:
     return list(seen)
 
 
-def check(text: str, source: str) -> Verdict:
+def check(text: str, source: str, *, view: bool = False) -> Verdict:
+    """view: the message is Networth's read on a stock, so view words and advice phrasing pass;
+    invented numbers and hype never do."""
     allowed = numbers(source)
     invented = sorted(n for n in numbers(text) if not _known(n, allowed))
     problems = [f"number {n:g} is not in the source" for n in invented]
     problems += [f"number word {w!r} is not in the source"
                  for w in _invented_words(text, source, allowed)]  # fmt: skip
     clean = normalise(text)
-    problems += [f"banned word {w!r}" for w in _matches(BANNED, clean)]
-    problems += [f"advice phrasing {w!r}" for w in _matches(ADVICE, clean)]
+    problems += [f"banned word {w!r}" for w in _matches(HYPE, clean)]
+    if not view:
+        problems += [f"banned word {w!r}" for w in _matches(VIEW_WORDS, clean)]
+        problems += [f"advice phrasing {w!r}" for w in _matches(ADVICE, clean)]
     return Verdict(tuple(problems))
 
 
@@ -191,7 +202,8 @@ def log_verdict(path: Path | None, kind: str, attempt: Used, verdict: Verdict) -
 Write = Callable[[str | None], str]  # feedback on the last draft (None first) -> a new draft
 
 
-def guarded(write: Write, source: str, template: str, log_path: Path | None, kind: str) -> Guarded:
+def guarded(write: Write, source: str, template: str, log_path: Path | None, kind: str,
+            *, view: bool = False) -> Guarded:  # fmt: skip
     """The model's draft if it passes, else one rewrite told what failed, else the template.
     A model that raises counts as a failed draft, so the user still gets the template."""
     verdicts: list[Verdict] = []
@@ -202,7 +214,7 @@ def guarded(write: Write, source: str, template: str, log_path: Path | None, kin
         except Exception as exc:  # noqa: BLE001 - any model failure falls through to the template
             draft, verdict = "", Verdict((f"writer failed: {type(exc).__name__}",))
         else:
-            verdict = check(draft, source)
+            verdict = check(draft, source, view=view)
         verdicts.append(verdict)
         log_verdict(log_path, kind, attempt, verdict)
         if verdict.ok:
