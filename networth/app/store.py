@@ -8,7 +8,8 @@ text in and out), briefs (one per user per investing day) and alerts (one per us
 contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn;
 keiki_turns holds every turn id answered; link_codes holds the single-use codes that tie an
 email contact to a Telegram user; watches are standing per-user requests, and watch_hits holds
-one row per watch per confirmed story it matched, claimed before the message goes out.
+one row per watch per confirmed story it matched, claimed before the message goes out;
+asked_terms holds glossary terms a user asked about, until a brief brings one back.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -23,7 +24,7 @@ import json
 import secrets
 import sqlite3
 import threading
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, fields
 from enum import StrEnum
@@ -220,6 +221,10 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
     "watch_hits": {
         "user_id": "TEXT NOT NULL", "watch_id": "INTEGER NOT NULL", "match_key": "TEXT NOT NULL",
         "month": "TEXT NOT NULL", "sent_at": "TEXT NOT NULL",
+    },
+    "asked_terms": {
+        "user_id": "TEXT NOT NULL", "term": "TEXT NOT NULL", "asked_at": "TEXT NOT NULL",
+        "used_at": "TEXT",
     },
     "outbox": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
@@ -555,6 +560,31 @@ class Store:
         with self._connect() as conn:
             conn.execute(
                 "DELETE FROM watch_hits WHERE watch_id = ? AND match_key = ?", (watch_id, match_key)
+            )
+
+    def add_asked_terms(self, user_id: str, terms: Sequence[str], now: str) -> None:
+        with self._connect() as conn:
+            conn.executemany(
+                "INSERT INTO asked_terms (user_id, term, asked_at) VALUES (?, ?, ?)",
+                [(user_id, term, now) for term in terms],
+            )
+
+    def recent_asked_terms(self, user_id: str, since: str) -> list[str]:
+        """Terms asked at or after since and not yet brought back, newest first."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT term FROM asked_terms WHERE user_id = ? AND used_at IS NULL "
+                "AND asked_at >= ? GROUP BY term ORDER BY MAX(asked_at) DESC, MAX(rowid) DESC",
+                (user_id, since),
+            ).fetchall()
+        return [r["term"] for r in rows]
+
+    def mark_terms_used(self, user_id: str, terms: Sequence[str]) -> None:
+        with self._connect() as conn:
+            conn.executemany(
+                "UPDATE asked_terms SET used_at = ? WHERE user_id = ? AND term = ? "
+                "AND used_at IS NULL",
+                [(now_iso(), user_id, term) for term in terms],
             )
 
     def contact_user(self, address: str) -> str | None:

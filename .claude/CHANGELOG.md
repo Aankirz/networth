@@ -313,3 +313,6 @@
 
 ## 2026-10-25 — Watch this for me
 - networth/watch.py parses a watch into watcher event types (TOPICS table) or a named entity, and refuses price targets and trade triggers; every reply passes the guard's word rules. networth/bot/watches.py sets, lists and stops watches (/watch, /watches with Stop buttons, /unwatch, the new chat intent WATCH) and, after each watcher cycle, tells a user once when a confirmed story first seen after the watch matches it, with its source and the engine's history line and Why link when there is one. Store gains watches and watch_hits; caps are 5 active and 4 messages a month per user (Phase 3C unit 4).
+
+## 2026-10-25 — Memory callbacks in the brief
+- networth/memory.py reads glossary terms from knowledge/glossary.md; a short explain-this question with no link stores the terms it asks about (asked_terms table). The investing-day brief adds one line, "Earlier you asked what OFS means. It comes up in this month's news: ...", when a confirmed story of the last 30 days uses an unused term asked in the last memory_days; the line joins the template and the guard source, and the term is marked used once the brief is saved (Phase 3C unit 5).
