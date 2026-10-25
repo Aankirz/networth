@@ -3,6 +3,7 @@ its answer, leads with the number asked for, says its source and date, and carri
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -132,3 +133,21 @@ def test_cards_carry_a_source_with_name_url_and_date(monkeypatch) -> None:
     assert set(card["source"]) == {"name", "url", "as_of"}
     assert card["source"]["url"].startswith("https://finance.yahoo.com/")
     assert len(card["series"]["points"]) <= markets.MAX_POINTS
+
+
+def test_a_slow_name_search_answers_in_time_without_a_number(chat: Chat, monkeypatch) -> None:
+    class Slow(Yahoo):
+        def search(self, text: str) -> list[dict]:
+            time.sleep(0.5)
+            return super().search(text)
+
+    monkeypatch.setattr(market, "Yahoo", Slow)
+    monkeypatch.setattr(markets, "SEARCH_DEADLINE_S", 0.05)
+    chat.say("what is tesla's current price")
+    assert chat.bot.last.startswith("Yahoo Finance didn't answer in time")
+    assert not any(c.isdigit() for c in chat.bot.last)
+
+
+def test_a_slow_search_never_takes_a_question_that_names_nothing(monkeypatch) -> None:
+    monkeypatch.setattr(markets, "found_in_time", lambda text, currency: None)
+    assert markets.route("should i buy now?", "INR") is None

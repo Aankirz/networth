@@ -606,3 +606,6 @@
 
 ## 2026-10-25 — market answers: price, history, holding, compare, Networth's read
 - networth/chat/markets.py routes named-stock questions before the classifier and answers from Yahoo Finance with the source and date, plus typed cards; the web API sends the reply's own card; tests in tests/test_markets.py.
+
+## 2026-10-25 — cap the market name search at 2 seconds
+- networth/chat/markets.py: found_in_time runs the Yahoo name lookup with a 2s deadline; past it the reply says Yahoo Finance did not answer in time and gives no number. Tests in tests/test_markets.py.

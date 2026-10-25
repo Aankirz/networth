@@ -31,6 +31,7 @@ from networth.money import MINUS, indian_grouping, money
 MAX_POINTS: Final = 260  # about a year of trading days; longer series are thinned evenly
 DEFAULT_YEARS: Final = 5
 RATING_DEADLINE_S: Final = 3.0
+SEARCH_DEADLINE_S: Final = 2.0  # the name lookup; past it the answer goes out without a number
 NEAR_LOW: Final = 0.10  # within 10% of the 52-week low
 NEAR_HIGH: Final = 0.05
 BIG_FALL: Final = -0.20
@@ -96,6 +97,18 @@ def _found(text: str, currency: str | None) -> tuple[Found, ...]:
     return market.resolve(text, currency)
 
 
+SEARCHES: Final = cf.ThreadPoolExecutor(max_workers=4, thread_name_prefix="market-search")
+
+
+def found_in_time(text: str, currency: str | None) -> tuple[Found, ...] | None:
+    """What the text names, or None when the lookup outlasts SEARCH_DEADLINE_S. A late lookup
+    still finishes and fills the cache, so asking again is quick."""
+    try:
+        return SEARCHES.submit(_found, text, currency).result(timeout=SEARCH_DEADLINE_S)
+    except cf.TimeoutError:
+        return None
+
+
 def route(text: str, currency: str | None) -> tuple[str, tuple[Found, ...]] | None:
     """The market intent a question asks for, with what it names, or None for every other
     question. Cheap words first; the name lookup runs only when one of them matches."""
@@ -111,7 +124,10 @@ def route(text: str, currency: str | None) -> tuple[str, tuple[Found, ...]] | No
     ]
     if not any(hit for _, hit in asks):
         return None
-    found = _found(text, currency)
+    found = found_in_time(text, currency)
+    if found is None:  # too slow: answer the market question without a number, if it names one
+        first = next(intent for intent, hit in asks if hit)
+        return (first, ()) if market.candidates(text) else None
     if not found:
         return None
     if position is not None:
@@ -271,6 +287,12 @@ def missing(found: Sequence[Found]) -> Answer:
     names = ", ".join(f.name or f.symbol for f in found) or "that"
     words = (f"I couldn't get prices for {names} from {market.SOURCE_NAME} just now, so I'm "
              "not giving a number. Asking again in a minute usually works.")  # fmt: skip
+    return Answer.fixed({"en": words}, kind="market", card={"type": "text"})
+
+
+def too_slow() -> Answer:
+    words = (f"{market.SOURCE_NAME} didn't answer in time, so I don't have a live number for "
+             "that just now. Ask again in a minute and I'll have it.")  # fmt: skip
     return Answer.fixed({"en": words}, kind="market", card={"type": "text"})
 
 

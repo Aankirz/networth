@@ -211,7 +211,9 @@ def market_answer(intent: Intent) -> Handler:
 
     def answer(store: Store, p: Profile, text: str, s: Services, now: dt.datetime,
                lang: str) -> Answer:  # fmt: skip
-        found = markets._found(text, p.currency)  # noqa: SLF001 - the shared cached lookup
+        found = markets.found_in_time(text, p.currency)
+        if found is None:
+            return markets.too_slow()
         if not found:
             return Answer.fixed(NAME_IT, kind="market")
         return MARKET[intent.value](found, text, p, lang)
@@ -287,7 +289,8 @@ def build(
     if not is_forward and (routed := markets.route(text, profile.currency)):
         name, found = routed
         lang = reply_lang(text, profile)
-        return Built(MARKET[name](found, text, profile, lang), Intent(name), lang, Intent(name))
+        answer = MARKET[name](found, text, profile, lang) if found else markets.too_slow()
+        return Built(answer, Intent(name), lang, Intent(name))
     if talk.follows_up(text, is_forward, window, now, services.models):
         last = talk.last_exchange(window)
         before = reply_lang(last.asked.text, profile) if last else profile.lang
