@@ -417,3 +417,6 @@
 
 ## 2026-10-25 — docs: phase 3E words eval rerun
 - `uv run python -m evals --live words` after 3E: 85 of 86 pass (was 78), no advice or score 86 (was 81), right language 85 (was 83), $0.35. summary.json, words.json, words_raw.json and the phase 5 report's words section regenerate from it.
+
+## 2026-10-25 — docs: phase 3E report, brief and before/after shots
+- Added docs/phases/phase-3e-report.md (message types, voice rules, samples in three languages, words eval, deviations, gaps, OWNER NEEDED deploy), the phase brief, and the message before/after PNGs.
