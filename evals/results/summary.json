@@ -110,10 +110,10 @@
  "news_judge": {
   "stories": 63,
   "events": 29,
-  "precision": 0.9667,
+  "precision": 1.0,
   "recall": 1.0,
   "tp": 29,
-  "fp": 1,
+  "fp": 0,
   "fn": 0
  },
  "no_advice": {
@@ -127,5 +127,5 @@
   "numbers": 198,
   "trace_rate": 1.0
  },
- "spend_usd": 1.2206
+ "spend_usd": 2.4163
 }

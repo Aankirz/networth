@@ -362,3 +362,6 @@
 
 ## 2026-10-25 — Same-day /brief follows profile edits
 - networth/bot/briefs.py: the stored brief row keeps a key of the profile and plan fields it was written from (briefs.inputs, networth/app/store.py); a same-day /brief resends the stored text only while the key matches. The once-a-day proactive claim is unchanged. Test in tests/test_chat.py.
+
+## 2026-10-25 — Phase 3D eval rerun and report
+- evals/results: live words and news rerun after findings 1 to 4; evals/intent_results_heldout_3d.json held-out intent rerun with the new criteria. docs/phases/phase-5-report.md before-and-after section and spend $2.42; phase-5-findings.md status per finding; phase-3b-report.md and phase-3b-decisions.tsv record Jev back on; docs/phases/phase-3d-report.md.

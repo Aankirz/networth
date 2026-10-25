@@ -4,6 +4,8 @@ Five changes, most user-visible first. None is applied. Each has the failing exa
 
 ## 1. Hindi and Hinglish replies fall back to English when the translation is polite
 
+**Status (Phase 3D, 2026-10-25): partly fixed.** `TRANSLATE_TASK` has the sentence, and `REWORD_TASK` got a matching one. In the live words rerun, right language went from 81 to 83, and every plan question in Hindi or Hinglish came back in its language. The Hinglish IPO tip still went out in English, because the writer used `karein` in both attempts. See `docs/phases/phase-3d-report.md`.
+
 **Eval.** Words. 4 of the 22 replies that should be in Hindi or Hinglish went out in English (`used: template`). That covers 3 of the 8 words failures, plus finding 2.
 
 **Failing example.** The message is "Mera plan 70% index hai, theek hai ya change karu?" (expected `hinglish`). The writer's translation of the saved-plan reply failed the guard twice with `advice phrasing 'karein'`, so the English template went out. "मेरा प्लान 70% इंडेक्स है, क्या ये ठीक है?" failed the same way on `करें`. "IPO mein paisa lagau kya? GMP accha chal raha hai" did too, on a tip verdict that has no instruction in it at all.
@@ -13,6 +15,8 @@ Five changes, most user-visible first. None is applied. Each has the failing exa
 **Smallest fix.** Add one sentence to `TRANSLATE_TASK`: "Write any instruction about using the app as a statement ('/plan se badal sakte hain'), never as a command." This leaves the guard as strict as it is. The guard log keeps only the problems and not the rejected draft, so the IPO row's trigger word is known (`karein`) but its sentence is not. Rerun **words**.
 
 ## 2. A forwarded tip with hype words can never be translated
+
+**Status (Phase 3D, 2026-10-25): fixed with option (a).** `deliver` sends the template with no model call when the guard already rejects it. In the live rerun, the Tata Steel tip made no writer call. As (a) says, the reply stays in English.
 
 **Eval.** Words, `forwarded_tip_fake_numbers`.
 
@@ -28,6 +32,8 @@ Five changes, most user-visible first. None is applied. Each has the failing exa
 
 ## 3. "Is my plan too much?" gets the saved plan back with no answer
 
+**Status (Phase 3D, 2026-10-25): applied, not fixed by the judge's measure.** Every plan reply now opens with the fixed line in English, Hindi and Hinglish. A plan question naming an event type confirmed this month also gets that type's history line. In the live rerun, "Is 70% equity too much for me?" and the Hinglish plan question pass. 4 English plan replies and 1 Hindi one still fail, because the judge reads the saved split as an allocation. The next step is an owner call: leave the split out of replies to judgement questions, or accept the rubric's reading.
+
 **Eval.** Words. 5 of the 8 failures come from this one handler: `amount_or_allocation`, `rating_or_score`, both `hindi_devanagari` plan questions and the Hinglish plan question. The judge marked all five as advice or a rating, and two of them also fell back to English (finding 1).
 
 **Failing example.** "Is 70% equity too much for me?" is classed `plan_question`. The reply is the saved profile, ending "Plan: Balanced. 20% safety, 70% core, 10% growth". The judge marks it `advice: true` because it reads the split as an allocation answer to the question. "Is my 70% index, 20% debt, 10% picks plan good or bad?" gets the same reply, which the judge marks as a rating ("Plan: Balanced.").
@@ -38,6 +44,8 @@ Five changes, most user-visible first. None is applied. Each has the failing exa
 
 ## 4. The news judge counts a paused tariff as a tariff
 
+**Status (Phase 3D, 2026-10-25): fixed.** In the live news rerun, pipeline precision is 29 of 29, with no false confirm.
+
 **Eval.** News. This is the pipeline's only false confirm (precision 29 of 30).
 
 **Failing example.** `h-us-near_miss-2025-02-03` was confirmed by 3 publishers on 2025-02-03. The judge answered `tariff` with the reason "President Trump announced a one-month pause on planned U.S. tariffs against imports from Mexico and Canada." A pause is the action not happening.
@@ -47,6 +55,8 @@ Five changes, most user-visible first. None is applied. Each has the failing exa
 **Smallest fix.** Add "a pause, delay, suspension or rollback of the action" to the list of things that are not the event in `CLASSIFY_INSTRUCTIONS`. Rerun **news**.
 
 ## 5. Stated leans did not hold out of sample
+
+**Status (Phase 3D): not touched.** This waits on an owner decision.
 
 **Eval.** Walk-forward (2010 to 2021, 4 cutoffs) and the vault (see the report).
 

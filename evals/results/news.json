@@ -8,22 +8,22 @@
  },
  "pipeline": {
   "tp": 29,
-  "fp": 1,
+  "fp": 0,
   "fn": 0,
-  "precision": 0.9667,
+  "precision": 1.0,
   "recall": 1.0
  },
  "judge_alone": {
   "tp": 29,
-  "fp": 8,
+  "fp": 5,
   "fn": 0,
-  "precision": 0.7838,
+  "precision": 0.8529,
   "recall": 1.0
  },
  "judge_type_accuracy": {
-  "right": 55,
+  "right": 58,
   "n": 63,
-  "accuracy": 0.873
+  "accuracy": 0.9206
  },
  "jev_type_accuracy": {
   "right": 57,
@@ -31,7 +31,7 @@
   "accuracy": 0.9048
  },
  "jev_answered": 63,
- "jev_at_least_as_accurate": true,
+ "jev_at_least_as_accurate": false,
  "by_kind": {
   "confirmed_event": {
    "rows": 29,
@@ -42,8 +42,8 @@
   "near_miss": {
    "rows": 9,
    "rule_confirmed": 9,
-   "predicted_event": 1,
-   "right": 8
+   "predicted_event": 0,
+   "right": 9
   },
   "old_news": {
    "rows": 8,
@@ -70,37 +70,14 @@
    "right": 6
   }
  },
- "false_confirms": [
-  {
-   "id": "h-us-near_miss-2025-02-03",
-   "kind": "near_miss",
-   "label": "none",
-   "predicted": "tariff",
-   "headline": "Trump pauses Mexico tariffs for one month after agreement on border troops",
-   "seen_on": "2025-02-03",
-   "publishers": [
-    "cnbc.com",
-    "cnn.com",
-    "npr.org"
-   ],
-   "primary_source": null,
-   "judge": {
-    "type": "tariff",
-    "cause": "tariff_pause",
-    "event_date": "2025-02-03",
-    "region": "us",
-    "reason": "President Trump announced a one-month pause on planned U.S. tariffs against imports from Mexico and Canada."
-   },
-   "note": "Trump paused the planned 25% Mexico/Canada tariffs for 30 days on 3 Feb 2025 before they took effect: a pause, nothing imposed on these countries. Hard because the text recounts the tariff order of 1 Feb. NPR time is the page \"Originally published February 3, 2025 11:32 AM ET\"."
-  }
- ],
+ "false_confirms": [],
  "missed": [],
- "cost_usd": 0.327,
+ "cost_usd": 0.3373,
  "calls": {
   "judge:classify_story": 63,
   "jev:jev_pick": 63
  },
- "judge_ms_median": 2050,
- "judge_ms_p90": 3351,
- "jev_ms_median": 488
+ "judge_ms_median": 2188,
+ "judge_ms_p90": 3681,
+ "jev_ms_median": 446
 }

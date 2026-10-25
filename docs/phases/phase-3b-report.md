@@ -182,6 +182,8 @@ Runs 1 and 2 were on the tuning set, and run 2 came after a criteria edit made a
 
 Jev was at least 0.7 confident on 22 held-out messages and right on all 22. Its one miss was "normal 59% matlab kya, yeh number kahan se?" (a why question), which it picked as explain-this. Decision: `use_jev_for_intent = false`. The rule set before the run was that Jev stays on only while its held-out accuracy is at least the cheap model's, and 23/24 is below 24/24. The cost is about 0.85 s more latency per message. The switch is in `config.toml`, and a test proves Jev is never asked while it is off.
 
+**Phase 3D, 2026-10-25: Jev is back on.** The rule above compared Jev alone with the cheap model. The path users actually get is the production path: Jev when it is at least 0.7 sure, otherwise the cheap model. That path scored 24 of 24 on the held-out set, the same as the cheap model alone. Jev's median latency was 380 ms against 1,230 ms for the cheap model, and Jev was confident enough to decide 22 of the 24, so the path is about 3 times faster on most messages. The rule now compares the production path with the cheap model, and `use_jev_for_intent = true`. The cheap model still decides whenever Jev is unsure, errors or misses its 4 s deadline. `tests/test_chat.py` covers the unsure pick, Jev being down, Jev being off and the shipped config.
+
 ## Round 2
 
 Review round 1 found 12 gaps, and the coordinator's live Telegram run found 5 more. Every one is fixed, each in its own commit with a test that fails without the fix.
