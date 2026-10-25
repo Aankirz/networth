@@ -345,3 +345,7 @@
 
 ## 2026-10-25 — Cite the rebased plan hash
 - docs/phases/phase-5-report.md: the plan commit was rewritten by the pre-push rebase; the report now cites both hashes and the unchanged file blob.
+||||||| parent of 52cb417 (fix: quote a short headline that holds the asked term in the memory line)
+
+## 2026-10-25 — Memory line quotes a title that holds the term
+- networth/memory.py: the brief's memory line quotes the shortest confirmed story or article title that contains the asked term (at most 140 characters), not the story's own title, so the reader sees the term in the headline.

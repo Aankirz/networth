@@ -83,3 +83,17 @@ def test_a_pasted_document_or_a_link_is_not_remembered_as_a_question(chat: Chat)
     chat.say("what is OFS? https://example.com/ipo")
     chat.say("Read this: " + "the OFS portion is large. " * 10)
     assert chat.store.recent_asked_terms(USER, "2000-01-01") == []
+
+
+def test_the_line_quotes_a_title_that_holds_the_term(chat: Chat) -> None:
+    chat.say("what is OFS?")
+    seen = dt.datetime.fromisoformat(NOW) - dt.timedelta(days=3)
+    url = "https://www.livemint.com/orbit-solar-ofs"
+    db = WatcherStore.open(chat.services.watcher_db)
+    db.add_articles([Article(url, "livemint.com", "livemint.com", "Orbit Solar IPO has an OFS", "",
+                             seen, "q", seen)])  # fmt: skip
+    db.assign([NewStory("s-orbit", "Orbit Solar opens its issue", seen)], {"s-orbit": [url]})
+    db.put_decisions({"s-orbit": Confirmed(("livemint.com",), None)}, seen)
+    db.close()
+    chat.say("/brief")
+    assert "It comes up in this month's news: Orbit Solar IPO has an OFS." in chat.bot.last
