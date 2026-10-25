@@ -57,14 +57,14 @@ def test_a_term_in_this_months_news_comes_back_in_the_brief(chat: Chat) -> None:
     chat.say("what is OFS?")
     news(chat, ORBIT)
     chat.say("/brief")
-    assert chat.bot.last.endswith(LINE)
+    assert LINE in chat.bot.last
 
 
 def test_the_line_comes_back_once(chat: Chat) -> None:
     chat.say("what is OFS?")
     news(chat, ORBIT)
     chat.say("/brief")
-    assert chat.bot.last.endswith(LINE)
+    assert LINE in chat.bot.last
     chat.store.release_brief(USER, "2026-10-25")
     chat.say("/brief")
     assert LINE not in chat.bot.last

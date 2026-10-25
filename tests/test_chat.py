@@ -287,26 +287,47 @@ def test_a_huge_page_is_read_only_up_to_the_byte_cap(monkeypatch) -> None:
     assert len(served) * 65_536 < explain.MAX_PAGE_BYTES + 2 * 65_536
 
 
-def test_brief_is_sent_once_a_day_and_a_repeat_resends_it(tmp_path: Path, cfg) -> None:
+def written(monkeypatch) -> list[str]:
+    """Each time a brief is composed afresh, its user id; a resend from storage adds nothing."""
+    from networth.bot import briefs
+
+    calls: list[str] = []
+    real = briefs.compose_reply
+
+    def counted(profile, *args):
+        calls.append(profile.user_id)
+        return real(profile, *args)
+
+    monkeypatch.setattr(briefs, "compose_reply", counted)
+    return calls
+
+
+def test_brief_is_sent_once_a_day_and_a_repeat_resends_it(tmp_path: Path, cfg,
+                                                          monkeypatch) -> None:  # fmt: skip
     models = FakeChatModels()
     chat = talk(tmp_path, cfg, models)
+    composed = written(monkeypatch)
     chat.say("/brief")
     first = chat.bot.sent[-1]
     chat.say("/brief")
     assert chat.bot.sent[-1][1] == first[1]
-    assert first[1].startswith("Investing day, Oct 25. ₹1,00,000 ready.")
-    assert len(models.tasks) == 2, "one draft and one rewrite, then the stored text is reused"
+    assert chat.bot.messages[-1] == chat.bot.messages[-2], "the stored message, title and all"
+    assert first[1].startswith("Morning. Here's your brief for this month.")
+    assert len(composed) == 1, "the second /brief is the stored message"
+    assert models.tasks == [], "code writes the brief; no model rewords it"
 
 
-def test_a_repeat_brief_is_written_afresh_after_a_newer_news_check(tmp_path: Path, cfg) -> None:
-    models = FakeChatModels()
-    chat = talk(tmp_path, cfg, models)
+def test_a_repeat_brief_is_written_afresh_after_a_newer_news_check(
+    tmp_path: Path, cfg, monkeypatch
+) -> None:
+    chat = talk(tmp_path, cfg, FakeChatModels())
+    composed = written(monkeypatch)
     chat.say("/brief")
     chat.say("/brief")
-    assert len(models.tasks) == 2, "no news check since, so the stored brief is resent"
+    assert len(composed) == 1, "no news check since, so the stored brief is resent"
     weekend_watcher(chat.services.watcher_db, dt.datetime.now(dt.UTC) + dt.timedelta(minutes=1))
     chat.say("/brief")
-    assert len(models.tasks) == 4, "a newer news check, so the brief is written again"
+    assert len(composed) == 2, "a newer news check, so the brief is written again"
 
 
 def test_brief_buttons_keep_or_change_the_plan(tmp_path: Path, cfg) -> None:
@@ -609,24 +630,23 @@ def switch_lang(chat: Chat, lang: str) -> None:
         chat.tap(data)
 
 
-def test_a_language_change_reaches_the_same_day_brief(tmp_path, cfg) -> None:
+def test_a_language_change_reaches_the_same_day_brief(tmp_path, cfg, monkeypatch) -> None:
     from networth.bot import briefs
 
-    models = FakeChatModels()
-    chat = talk(tmp_path, cfg, models)
+    chat = talk(tmp_path, cfg, FakeChatModels())
+    composed = written(monkeypatch)
     chat.say("/start")
     switch_lang(chat, "hinglish")
     chat.say("/brief")
-    assert "in Hinglish" in models.tasks[-1]
+    assert chat.bot.last.startswith("Good morning. Yeh raha is mahine ka aapka brief.")
     chat.say("/start")
     switch_lang(chat, "en")
-    asked = len(models.tasks)
     chat.say("/brief")
-    assert len(models.tasks) > asked and "in English" in models.tasks[-1]
+    assert chat.bot.last.startswith("Morning.") and len(composed) == 2
     chat.say("/brief")
-    assert len(models.tasks) == asked + 2, "unchanged since, so the stored brief is resent"
+    assert len(composed) == 2, "unchanged since, so the stored brief is resent"
     sent = len(chat.bot.sent)
-    today = briefs.local_today(chat.profile, dt.datetime.fromisoformat(NOW))
-    assert not briefs.send_brief(chat.store, chat.bot, chat.profile, chat.services, today,
+    local = briefs.local_now(chat.profile, dt.datetime.fromisoformat(NOW))
+    assert not briefs.send_brief(chat.store, chat.bot, chat.profile, chat.services, local,
                                  proactive=True)  # fmt: skip
     assert len(chat.bot.sent) == sent, "the scheduled run still sends one brief a day"

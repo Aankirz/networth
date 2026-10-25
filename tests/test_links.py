@@ -73,7 +73,7 @@ def test_the_user_page_shows_the_plan_and_the_last_brief(chat: Chat, client) -> 
     response = client.get(page_path(chat.store))
     assert response.status_code == 200
     assert "Balanced. 20% safety, 70% core, 10% growth" in response.text
-    assert "Investing day," in response.text
+    assert "Your plan: Balanced, the one you chose." in response.text
     assert "Research, not advice" in response.text
     assert response.headers["x-robots-tag"] == "noindex"
 

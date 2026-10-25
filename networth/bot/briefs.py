@@ -1,14 +1,15 @@
-"""Investing-day briefs: compose, word, guard, send, once per user per day.
+"""Investing-day briefs: compose, check, send, once per user per day.
 
-    send_brief(store, bot, profile, services, today)   # /brief, or one user's scheduled brief
+    send_brief(store, bot, profile, services, local)   # /brief, or one user's scheduled brief
     run_daily(store, bot, services, now)               # every user whose investing day is today
 
-The brief row is claimed before anything is sent, so a schedule that fires twice never sends
-a second brief the same day. The claim is per user, not per channel, so a person who gets
-briefs by email gets one a day across Telegram and email. A compose or send that fails
-releases the claim, so the next try sends it. Asking /brief again that day resends the stored
-message without another model call, unless a news check has finished since it was written; then
-the brief is written afresh.
+The brief is written by code in the user's language (networth.brief); no model rewords it.
+The plain render still passes guard.check before it goes, logged as "template". The brief row
+is claimed before anything is sent, so a schedule that fires twice never sends a second brief
+the same day. The claim is per user, not per channel, so a person who gets briefs by email
+gets one a day across Telegram and email. A compose or send that fails releases the claim, so
+the next try sends it. Asking /brief again that day resends the stored message, unless a news
+check has finished since it was written or the profile changed; then it is written afresh.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import logging
+from dataclasses import replace
 from typing import Final
 from zoneinfo import ZoneInfo
 
@@ -24,29 +26,21 @@ from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
 from networth.bot import message
+from networth.bot.message import say
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot
 
 log = logging.getLogger("networth.bot")
 
-LANGUAGES: Final = {
-    "en": "English",
-    "hi": "Hindi in Devanagari script",
-    "hinglish": "Hinglish: Hindi in Roman script, with English for money terms",
+NOT_SET_UP: Final = {
+    "en": "Let's finish setting you up first. Type /start and it takes a minute.",
+    "hi": "पहले आपका सेटअप पूरा कर लेते हैं। /start लिखने पर बस एक मिनट लगेगा।",
+    "hinglish": "Pehle aapka setup poora kar lete hain. /start likhne par bas ek minute lagega.",
 }
-BRIEF_TASK: Final = """Reword this investing-day brief for a beginner, in {language}. Keep
-every line, every number exactly as written, each emoji mark and the line order. Keep "Weak
-signal" where it appears, translated. You may smooth the wording; add no number, opinion,
-prediction or suggestion of what to do. Return only the message text."""
-NOT_SET_UP: Final = "Let's finish setting up first. Type /start."
 BRIEF_INPUTS: Final = ("lang", "goal", "horizon_years", "drop_comfort", "monthly_amount",
                        "currency", "invest_day", "markets", "exclude", "tz")  # fmt: skip
 INPUTS_KEY_CHARS: Final = 16
-
-
-def language(profile: Profile) -> str:
-    return LANGUAGES.get(profile.lang or "en", LANGUAGES["en"])
 
 
 def callback(profile: Profile, store: Store, services: Services,
@@ -57,28 +51,26 @@ def callback(profile: Profile, store: Store, services: Services,
                                 services.cfg.product.memory_days)  # fmt: skip
 
 
-def compose_reply(profile: Profile, store: Store, services: Services, today: dt.date) -> tuple:
-    """(reply, used, term): the guarded brief, which version went out, and the asked term its
-    memory line brought back, if it has one."""
+def compose_reply(profile: Profile, store: Store, services: Services,
+                  local: dt.datetime) -> tuple[Reply, memory.Callback | None]:  # fmt: skip
+    """(reply, back): the brief in the user's language, and the memory line it brought back,
+    if it has one."""
+    today = local.date()
     events = brief.month_events(services.watcher_db, today)
-    draft = brief.compose(events, profile, store.get_plan(profile.user_id), services.rates_db,
-                          today)  # fmt: skip
+    plan = store.get_plan(profile.user_id)
     back = callback(profile, store, services, today)
-    extra = f"\n\n{back.line}" if back else ""
-    template, source = draft.text() + extra, draft.source() + extra
-    models = services.models
-    if models is None:
-        out = guard.Guarded(template, "template", ())
-    else:
-        task = BRIEF_TASK.format(language=language(profile))
-        out = guard.guarded(lambda fb: models.write(task, template, fb), source, template,
-                            services.guard_log, "brief")  # fmt: skip
+    draft = brief.compose(events, profile, plan, services.rates_db, local, memory=back)
+    if draft.events:
+        draft = replace(draft, range=brief.plan_range_for(plan, profile))
+    lang = profile.lang or "en"
+    out = draft.message(lang)
+    text = message.plain(out)
+    guard.log_verdict(services.guard_log, "brief", "template", guard.check(text, text))
     page = None
     if services.public_url and services.link_secret:
         page = links.page_url(services.public_url, store.new_link_token(profile.user_id),
                               services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
-    reply = Reply(out.text, brief.buttons(draft, services.public_url, page))
-    return reply, out.used, back.term if back else None
+    return Reply(out, brief.buttons(draft, lang, services.public_url, page)), back
 
 
 def inputs_key(profile: Profile, store: Store) -> str:
@@ -89,17 +81,17 @@ def inputs_key(profile: Profile, store: Store) -> str:
     return hashlib.sha256(repr(used).encode()).hexdigest()[:INPUTS_KEY_CHARS]
 
 
-def local_today(profile: Profile, now: dt.datetime) -> dt.date:
-    return now.astimezone(ZoneInfo(profile.tz)).date()
+def local_now(profile: Profile, now: dt.datetime) -> dt.datetime:
+    return now.astimezone(ZoneInfo(profile.tz))
 
 
 def send_brief(
-    store: Store, bot: Bot, profile: Profile, services: Services, today: dt.date,
+    store: Store, bot: Bot, profile: Profile, services: Services, local: dt.datetime,
     *, proactive: bool = False,
 ) -> bool:  # fmt: skip
     if profile.step is not Step.DONE:
-        return send(store, bot, profile, Reply(NOT_SET_UP))
-    day = today.isoformat()
+        return send(store, bot, profile, Reply(say(NOT_SET_UP, profile.lang)))
+    day = local.date().isoformat()
     if not store.claim_brief(profile.user_id, day):
         if proactive:
             return False
@@ -113,15 +105,15 @@ def send_brief(
         ):
             return send(store, bot, profile, Reply(message.from_stored(last[1])))
     try:
-        reply, used, term = compose_reply(profile, store, services, today)
+        reply, back = compose_reply(profile, store, services, local)
         sent = send(store, bot, profile, reply, proactive=proactive, mail=services.mail)
     except Exception:
         store.release_brief(profile.user_id, day)
         raise
-    store.save_brief(profile.user_id, day, message.to_json(reply.message), used,
+    store.save_brief(profile.user_id, day, message.to_json(reply.message), "template",
                      inputs_key(profile, store))  # fmt: skip
-    if term:
-        store.mark_terms_used(profile.user_id, [term])
+    if back:
+        store.mark_terms_used(profile.user_id, [back.term])
     return sent
 
 
@@ -130,11 +122,11 @@ def run_daily(store: Store, bot: Bot, services: Services, now: dt.datetime) -> i
     own time zone. Returns how many went out."""
     sent = 0
     for p in store.profiles():
-        today = local_today(p, now)
-        if p.step is not Step.DONE or p.status is not Status.ACTIVE or p.invest_day != today.day:
+        local = local_now(p, now)
+        if p.step is not Step.DONE or p.status is not Status.ACTIVE or p.invest_day != local.day:
             continue
         try:
-            sent += send_brief(store, bot, p, services, today, proactive=True)
+            sent += send_brief(store, bot, p, services, local, proactive=True)
         except Exception:
             log.exception("brief for %s failed", p.user_id)
     return sent

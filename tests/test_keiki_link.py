@@ -159,9 +159,13 @@ def test_a_linked_user_on_email_gets_one_brief_a_day_and_none_on_telegram(tmp_pa
     assert run_daily(chat.store, chat.bot, chat.services, morning) == 0, "a rerun sends nothing"
     assert len(chat.bot.sent) == telegram, "nothing proactive went to Telegram"
     queued = chat.store.pending_mail(ADDRESS)
-    assert len(queued) == 1 and queued[0].text.startswith("Investing day, Oct 25.")
+    assert len(queued) == 1 and queued[0].text.startswith(
+        "Morning. It's your investing day, and ₹1,00,000 is ready."
+    )
     keiki.say("", now=NOW)
-    assert keiki.last.startswith("Investing day, Oct 25."), "the notice turn delivers it"
+    assert keiki.last.startswith("Morning. It's your investing day, and ₹1,00,000 is ready."), (
+        "the notice turn delivers it"
+    )
 
 
 def test_link_waits_until_setup_is_done(tmp_path: Path, services: Services) -> None:

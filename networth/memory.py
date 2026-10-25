@@ -3,6 +3,7 @@ uses it.
 
     terms = asked_terms("what is OFS?")                                    # ["OFS"]
     back = callback_line(store, profile, watcher_db, today, days=60)       # Callback or None
+    back.line("hinglish")                                                  # the brief's line
 
 TERMS comes from the Concept column of knowledge/glossary.md, so a term counts only if the
 glossary teaches it. The line names a confirmed story title first seen in the last NEWS_DAYS,
@@ -19,6 +20,7 @@ from typing import Final
 
 from networth import guard
 from networth.app.store import Profile, Store
+from networth.bot.message import say
 from networth.config import REPO
 from networth.watcher.store import Confirmed
 from networth.watcher.store import Store as WatcherStore
@@ -33,10 +35,21 @@ ACRONYM: Final = re.compile(r"\(([^()\s,]+)\)")
 ALTERNATIVES: Final = re.compile(r"\s+/\s+|\s+vs\.?\s+|\s*,\s*")
 
 
+EARLIER: Final = {
+    "en": "Earlier you asked what {term} means. It comes up in this month's news: {title}.",
+    "hi": "आपने पहले पूछा था कि {term} का मतलब क्या है। यह इस महीने की ख़बर में आया है: {title}।",
+    "hinglish": "Aapne pehle poochha tha ki {term} ka matlab kya hai. Yeh is mahine ki news mein "
+    "aaya hai: {title}.",
+}
+
+
 @dataclass(frozen=True)
 class Callback:
     term: str
-    line: str
+    title: str
+
+    def line(self, lang: str | None) -> str:
+        return say(EARLIER, lang).format(term=self.term, title=self.title.rstrip("."))
 
 
 def concepts(markdown: str) -> list[str]:
@@ -122,8 +135,7 @@ def callback_line(store: Store, profile: Profile, watcher_db: Path, today: dt.da
         title = min(holding, key=len) if holding else None
         if title is None:
             continue
-        line = (f"Earlier you asked what {term} means. It comes up in this month's news: "
-                f"{title.rstrip('.')}.")  # fmt: skip
-        if guard.check(line, line).ok:
-            return Callback(term, line)
+        back = Callback(term, title)
+        if all(guard.check(back.line(lang), back.line(lang)).ok for lang in EARLIER):
+            return back
     return None
