@@ -33,7 +33,7 @@ No rating, sector, alert or `/r` page carries "Research, not advice." or any oth
 | 4 | One alert per story, with the cap, quiet hours and `/alerts off` tested | Met in tests | `tests/test_notify.py`: 10 tests. Not seen live, for the same reason as item 3 |
 | 5 | `/r/<slug>` opens without sign-in and shows the rating and its sources | Met locally | `tests/test_ratings_web.py`. A local render on live sources answered 200 for `/r/hdfcbank`, `/r/sectors` and `/r/sector-it` |
 | 6 | Every number traces to a source and a time | Met | `test_no_driver_lacks_a_source_and_a_time` runs over a share, a fund, an IPO, a US share and a fund found by name |
-| 7 | `make check` exits 0 | Met | Exit 0 on `9182e92`: 1337 passed, 13 skipped |
+| 7 | `make check` exits 0 | Met | Exit 0 after the review fixes: 1340 passed, 13 skipped |
 
 ## The five ratings (done-when 1)
 
@@ -41,28 +41,28 @@ Run on this machine, which has no `data/watcher.sqlite`, so news tone shows as m
 
 ```
 rate('SWIGGY') -> Swiggy Limited (stock, INR)
-View: Neutral, score 52/100, confidence medium. Rated 2026-10-25T16:43:33+00:00.
+View: Neutral, score 52/100, confidence medium. Rated 2026-10-25T16:56:35+00:00.
 Outlook: Over the next 12 months we see Swiggy as Neutral, helped by valuation against sector peers and balance sheet, held back by price momentum, with medium confidence (2 inputs missing).
-- Growth (flat): Revenue +36% year on year (latest quarter); still loss-making, margin -13%. Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS, 2026-10-25T16:43:35+00:00
-- Valuation against sector peers (up): P/B 2.8 against a peer median of 36.3 (ETERNAL, NYKAA). Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS, 2026-10-25T16:43:35+00:00
-- Balance sheet (up): Debt is 0.15x equity. Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS, 2026-10-25T16:43:35+00:00
+- Growth (flat): Revenue +51.7% in the year to 2026-03-31; still loss-making, margin -13%. Source: Yahoo Finance annual statements, https://finance.yahoo.com/quote/SWIGGY.NS/financials, 2026-03-31
+- Valuation against sector peers (up): P/S 1.7 against a peer median P/S of 6.2 (ETERNAL 3.8, NYKAA 8.6). Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS, 2026-10-25T16:56:37+00:00
+- Balance sheet (up): Debt is 0.15x equity. Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS, 2026-10-25T16:56:37+00:00
 - Price momentum (down): -29% against the Nifty 50 over 12 months (last month left out); -37% from its 200-day average. Source: Yahoo Finance, https://finance.yahoo.com/quote/SWIGGY.NS/history, 2026-10-23
 - Missing: News tone: the watcher's confirmed stories were not available.
 - Missing: Sector trend: no NSE sector index matches this company.
 Track: Ratings like this beat the Nifty 6 times in 10 since 2015 (829 of 1435 tested stock months). Every tested stock beat it 6 times in 10, so the edge is 0 points. That is too small to lean on.
 
 rate('HDFCBANK') -> HDFC Bank Limited (stock, INR)
-View: Neutral, score 56/100, confidence high. Rated 2026-10-25T16:43:36+00:00.
-Outlook: Over the next 12 months we see HDFC Bank as Neutral, helped by growth, held back by price momentum, with high confidence (1 input missing).
-- Growth (up): Revenue +81% and profit +21% year on year (latest quarter). Source: Yahoo Finance, https://finance.yahoo.com/quote/HDFCBANK.NS, 2026-10-25T16:43:37+00:00
-- Valuation against sector peers (flat): P/E 15.1 against a peer median of 14.9 (ICICIBANK, KOTAKBANK, AXISBANK, SBIN). Source: Yahoo Finance, https://finance.yahoo.com/quote/HDFCBANK.NS, 2026-10-25T16:43:37+00:00
+View: Weak, score 44/100, confidence high. Rated 2026-10-25T16:56:38+00:00.
+Outlook: Over the next 12 months we see HDFC Bank as Weak, held back by price momentum, with high confidence (1 input missing).
+- Growth (flat): Revenue +5.2% and profit +4.6% in the year to 2026-03-31. Source: Yahoo Finance annual statements, https://finance.yahoo.com/quote/HDFCBANK.NS/financials, 2026-03-31
+- Valuation against sector peers (flat): P/E 15.1 against a peer median P/E of 14.9 (ICICIBANK 17.1, KOTAKBANK 21.1, AXISBANK 12.7, SBIN 10.3). Source: Yahoo Finance, https://finance.yahoo.com/quote/HDFCBANK.NS, 2026-10-25T16:56:39+00:00
 - Price momentum (down): -16% against the Nifty 50 over 12 months (last month left out); -12% from its 200-day average. Source: Yahoo Finance, https://finance.yahoo.com/quote/HDFCBANK.NS/history, 2026-10-23
 - Sector trend (flat): Nifty Bank -4.1% over 3 months against the Nifty 50's -5.3%. Source: Yahoo Finance, https://finance.yahoo.com/quote/%5ENSEBANK/history, 2026-10-23
 - Missing: News tone: the watcher's confirmed stories were not available.
-Track: Ratings like this beat the Nifty 6 times in 10 since 2015 (829 of 1435 tested stock months). Every tested stock beat it 6 times in 10, so the edge is 0 points. That is too small to lean on.
+Track: Ratings like this beat the Nifty 6 times in 10 since 2015 (586 of 1046 tested stock months). Every tested stock beat it 6 times in 10, so the edge is -2 points. That is too small to lean on.
 
 rate('MF120716') -> UTI Nifty 50 Index Fund - Direct Plan - Growth (fund, INR)
-View: Positive, score 62/100, confidence medium. Rated 2026-10-25T16:43:39+00:00.
+View: Positive, score 62/100, confidence medium. Rated 2026-10-25T16:56:42+00:00.
 Outlook: Over the next 12 months we see UTI Nifty 50 Index Fund as Positive, helped by consistency, with medium confidence (2 inputs missing).
 - Returns against the benchmark (flat): +6.4% a year over 3 years against the Nifty 50 at +5.4%. Source: mfapi.in (AMFI NAVs), https://api.mfapi.in/mf/120716, 2026-10-23
 - Consistency (up): Beat the Nifty 50 in 10 of the last 12 months. Source: mfapi.in (AMFI NAVs), https://api.mfapi.in/mf/120716, 2026-10-23
@@ -72,7 +72,7 @@ Outlook: Over the next 12 months we see UTI Nifty 50 Index Fund as Positive, hel
 Track: Ratings like this beat the Nifty 9 times in 10 since 2015 (529 of 613 tested fund months). Every tested fund beat it 8 times in 10, so the edge is +5 points. That is too small to lean on.
 
 rate('MF118778') -> Nippon India Small Cap Fund - Direct Plan - Growth Option (fund, INR)
-View: Positive, score 60/100, confidence medium. Rated 2026-10-25T16:43:40+00:00.
+View: Positive, score 60/100, confidence medium. Rated 2026-10-25T16:56:42+00:00.
 Outlook: Over the next 12 months we see Nippon India Small Cap Fund as Positive, helped by consistency, with medium confidence (2 inputs missing).
 - Returns against the benchmark (flat): +12.6% a year over 3 years against the Nifty Smallcap 250 at +11.2%. Source: mfapi.in (AMFI NAVs), https://api.mfapi.in/mf/118778, 2026-10-23
 - Consistency (up): Beat the Nifty Smallcap 250 in 8 of the last 12 months. Source: mfapi.in (AMFI NAVs), https://api.mfapi.in/mf/118778, 2026-10-23
@@ -82,7 +82,7 @@ Outlook: Over the next 12 months we see Nippon India Small Cap Fund as Positive,
 Track: Ratings like this beat the Nifty 9 times in 10 since 2015 (529 of 613 tested fund months). Every tested fund beat it 8 times in 10, so the edge is +5 points. That is too small to lean on.
 
 rate('SFCTECH') -> SFC Environmental Technologies Limited (ipo, INR)
-View: Positive, score 73/100, confidence high. Rated 2026-10-25T16:43:40+00:00.
+View: Positive, score 73/100, confidence high. Rated 2026-10-25T16:56:43+00:00.
 Outlook: Over the next 12 months we see SFC Environmental Technologies as Positive, helped by valuation against listed peers and financials from the RHP, with high confidence (1 input missing).
 - Valuation against listed peers (up): P/E 20.0 at the top of the Rs.313 to Rs.330 band against a listed-peer average of 101.4 (range 31.3 to 220.8). Source: Red Herring Prospectus, pages 184 and 185; price band from NSE, https://nsearchives.nseindia.com/content/ipo/RHP_SFCTECH.zip, 2026-10-25
 - Financials from the RHP (up): Revenue +10.6% a year from FY2024 to FY2026, profit margin 19.9% in FY2026, net debt 0.05x equity. Source: Red Herring Prospectus, page 184, https://nsearchives.nseindia.com/content/ipo/RHP_SFCTECH.zip, 2026-10-25
@@ -166,6 +166,11 @@ Locally there is no watcher database, so no stories show. With one, each sector 
 | News | The Networth watcher's confirmed stories (`data/watcher.sqlite`) | none |
 
 Yahoo tickers checked live: `^NSEBANK`, `^CNXIT`, `^CNXPHARMA`, `^CNXAUTO`, `^CNXFMCG`, `^CNXMETAL`, `^CNXENERGY`, `^CNXREALTY`, `^CNXPSE` (PSU), `^NSEMDCP50` (Midcap), `NIFTYSMLCAP250.NS` (Smallcap). `^CNXMIDCAP`, `^CNXSMCAP` and `^CRSMID` have no data on Yahoo.
+
+## Review round 1 fixes
+
+1. **Valuation compares like with like.** Swiggy's old line, "P/B 2.8 against a peer median of 36.3", was a P/B median, but of two peers, one an outlier (Eternal 9.1, Nykaa 63.6). A share that earns is now valued on P/E, a loss-maker on P/S, and only then on P/B. Every peer is compared on the same measure, a peer without it is left out, and each peer's value is printed. Swiggy now reads "P/S 1.7 against a peer median P/S of 6.2 (ETERNAL 3.8, NYKAA 8.6)". Tests: `test_a_loss_maker_is_valued_on_sales_against_its_peers_sales_never_another_measure` and `test_a_peer_without_the_measure_is_left_out_not_swapped_for_another`.
+2. **HDFC Bank's +81% was a bad field.** Yahoo's `revenueGrowth` said +80.8% on 2026-10-25, but Yahoo's own annual statements show revenue going from ₹2,37,151 crore (FY25) to ₹2,49,562 crore (FY26), which is +5.2%, with profit +4.6%. Its quarterly statements stop at June 2025, so the field couldn't be checked against them. Growth is now read from the annual statements, with the fiscal year in the words ("in the year to 2026-03-31") and the statements page as the source. With the bad field gone, HDFC Bank's rating fell from Neutral 56 to Weak 44. Test: `test_growth_comes_from_the_annual_statements_with_their_year`.
 
 ## Decisions
 

@@ -129,3 +129,49 @@ def test_money_follows_the_currency_as_13a_writes_it(amount, currency, words) ->
 def test_an_ipo_writes_its_issue_in_crore_not_a_long_rupee_number() -> None:
     fresh = next(d for d in rated("SFCTECH").drivers if d.key == "fresh")
     assert fresh.value.startswith("₹150 crore fresh against about ₹517.53 crore")
+
+
+def valuation_of(r) -> str:
+    return next(d.value for d in r.drivers if d.key == "valuation")
+
+
+def test_a_loss_maker_is_valued_on_sales_against_its_peers_sales_never_another_measure() -> None:
+    own = info(
+        "SWIGGY",
+        name="Swiggy Limited",
+        industry="Internet Retail",
+        pe=None,
+        ps=1.7,
+        pb=2.8,
+        margin=-0.13,
+    )
+    peers = {"ETERNAL.NS": info("ETERNAL", pe=598.0, ps=4.0, pb=9.0),
+             "NYKAA.NS": info("NYKAA", pe=367.0, ps=8.0, pb=63.6),
+             "SWIGGY.NS": own}  # fmt: skip
+    value = valuation_of(rated("SWIGGY", FakeSources(stocks=peers)))
+    assert value == "P/S 1.7 against a peer median P/S of 6.0 (ETERNAL 4.0, NYKAA 8.0)"
+
+
+def test_a_peer_without_the_measure_is_left_out_not_swapped_for_another() -> None:
+    peers = {"HDFCBANK.NS": info("HDFCBANK", name="HDFC Bank Limited", pe=15.0),
+             "ICICIBANK.NS": info("ICICIBANK", pe=17.0), "SBIN.NS": info("SBIN", pe=11.0),
+             "AXISBANK.NS": info("AXISBANK", pe=None, ps=3.0, pb=1.6)}  # fmt: skip
+    value = valuation_of(rated("HDFCBANK", FakeSources(stocks=peers)))
+    assert value == "P/E 15.0 against a peer median P/E of 14.0 (ICICIBANK 17.0, SBIN 11.0)"
+
+
+def test_growth_comes_from_the_annual_statements_with_their_year() -> None:
+    from networth.ratings.sources import annual_growth
+
+    # HDFC Bank's statements on 2026-10-25, in crore. Yahoo's quarterly revenueGrowth said +81%.
+    stmt = pd.DataFrame({pd.Timestamp("2026-03-31"): [249562, 70479],
+                         pd.Timestamp("2025-03-31"): [237151, 67351]},
+                        index=["Total Revenue", "Net Income"])  # fmt: skip
+    growth, end = annual_growth(stmt, "Total Revenue")
+    assert end == "2026-03-31" and round(growth, 3) == 0.052
+    assert annual_growth(stmt, "Gross Profit") == (None, None)
+    loss_base = pd.DataFrame(
+        {pd.Timestamp("2026-03-31"): [10.0], pd.Timestamp("2025-03-31"): [-5.0]},
+        index=["Net Income"],
+    )
+    assert annual_growth(loss_base, "Net Income")[0] is None, "no growth rate off a loss"

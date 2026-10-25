@@ -135,19 +135,29 @@ def news_scored(src: Sources, words: Sequence[str], now: dt.datetime, weight: fl
     return score.news_driver([(s.title, s.type) for s in found], stories.source, weight)
 
 
+MEASURES: Final = (("P/E", "pe"), ("P/S", "ps"), ("P/B", "pb"))
+
+
+def measure_for(info: StockInfo) -> tuple[str, str] | None:
+    """P/E when it earns, else P/S (a loss-maker still has sales), else P/B."""
+    return next(
+        ((name, field) for name, field in MEASURES if (getattr(info, field) or 0) > 0), None
+    )
+
+
 def peer_multiples(
     info: StockInfo, src: Sources
 ) -> tuple[str, list[tuple[str, float]], float | None]:
-    """(measure, [(peer, multiple)], own multiple): P/E, or P/B when it has no earnings."""
+    """(measure, [(peer, the same measure)], own value). A peer without that measure is left
+    out rather than compared on a different one."""
+    picked = measure_for(info)
+    if picked is None:
+        return "P/E", [], None
+    name, field = picked
     peers = [p for p in PEERS.get(info.industry or "", ()) if p != info.ticker]
-    got = [(p, src.stock(p)) for p in peers]
-    use_pe = info.pe is not None and info.pe > 0
-    vals = [(i.symbol, i.pe if use_pe else i.pb) for _, i in got if i is not None]
-    return (
-        "P/E" if use_pe else "P/B",
-        [(n, v) for n, v in vals if v],
-        info.pe if use_pe else info.pb,
-    )
+    got = [src.stock(p) for p in peers]
+    vals = [(i.symbol, getattr(i, field)) for i in got if i is not None]
+    return name, [(n, v) for n, v in vals if v and v > 0], getattr(info, field)
 
 
 def sector_of(info: StockInfo) -> tuple[str, str] | None:
@@ -168,7 +178,12 @@ def rate_stock(info: StockInfo, src: Sources, now: dt.datetime) -> Rated:
     sector_closes = src.closes(sector[0]) if sector else None
     scored: list[Scored] = [
         score.growth_driver(
-            info.revenue_growth, info.earnings_growth, info.margin, info.source, w["growth"]
+            info.revenue_growth,
+            info.earnings_growth,
+            info.margin,
+            info.growth_source or info.source,
+            w["growth"],
+            info.growth_source.as_of if info.growth_source else None,
         ),
         score.valuation_driver(mine, peers, measure, info.source, w["valuation"]),
         score.debt_driver(

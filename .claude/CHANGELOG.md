@@ -628,3 +628,7 @@
 
 ## 2026-10-25 — Phase 13C report
 - docs/phases/phase-13c-report.md: what was built, the done-when table (3 not met: not deployed by owner order), the five live ratings, the backtest and what it says, sources, decisions, gaps, OWNER NEEDED. Local commit only.
+
+## 2026-10-25 — Phase 13C review round 1
+- Valuation compares like with like: P/E, else P/S for a loss-maker, else P/B; peers without that measure are left out and each peer's value is shown.
+- Growth comes from Yahoo's annual statements (latest fiscal year against the one before) instead of the quarterly revenueGrowth field, which showed HDFC Bank at +81% against +5.2% in its statements. Report updated with the new live ratings. make check exit 0. Local commit only.

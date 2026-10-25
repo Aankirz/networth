@@ -58,11 +58,26 @@ class StockInfo:
     pe: float | None  # trailing
     pb: float | None
     debt_to_equity: float | None  # Yahoo's figure is a percent: 14.8 means 0.148x
-    revenue_growth: float | None  # year on year, latest quarter, as a fraction
-    earnings_growth: float | None
+    revenue_growth: float | None  # the latest fiscal year over the one before, a fraction
+    earnings_growth: float | None  # the same for net income; None when the base was a loss
     margin: float | None  # profit margin, a fraction
     is_fund: bool  # an ETF listed as a share
     source: Source
+    ps: float | None = None  # price to trailing 12-month sales
+    growth_source: Source | None = None  # the annual statements the growth came from
+
+
+def annual_growth(stmt: pd.DataFrame | None, row: str) -> tuple[float | None, str | None]:
+    """(latest fiscal year over the year before, the latest year's end date). Yahoo's own
+    revenueGrowth is a quarterly field that can be wrong (HDFC Bank showed +81% on 2026-10-25
+    while its annual statements showed +5.2%), so growth is read from the statements."""
+    if stmt is None or stmt.empty or row not in stmt.index:
+        return None, None
+    s = stmt.loc[row].dropna().sort_index(ascending=False)
+    if len(s) < 2:
+        return None, None
+    end = s.index[0].date().isoformat()
+    return (float(s.iloc[0] / s.iloc[1] - 1) if s.iloc[1] > 0 else None), end
 
 
 @dataclass(frozen=True)
@@ -139,16 +154,26 @@ class LiveSources:
     def stock(self, ticker: str) -> StockInfo | None:
         import yfinance as yf
 
-        def fetch() -> dict:
+        def fetch() -> tuple[dict, pd.DataFrame | None]:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")  # yfinance trips pandas deprecation warnings
-                return yf.Ticker(ticker).info or {}
+                tk = yf.Ticker(ticker)
+                info = tk.info or {}
+                stmt = tk.income_stmt if info.get("quoteType") == "EQUITY" else None
+                return info, stmt
 
-        info = call_with_deadline(fetch, DEADLINE_S, "Yahoo info") or {}
+        info, stmt = call_with_deadline(fetch, DEADLINE_S, "Yahoo info")
         name = info.get("longName") or info.get("shortName")
         currency = info.get("currency")
         if not name or currency not in ("INR", "USD"):
             return None
+        revenue, year_end = annual_growth(stmt, "Total Revenue")
+        earnings, _ = annual_growth(stmt, "Net Income")
+        statements = Source(
+            "Yahoo Finance annual statements",
+            YAHOO_QUOTE.format(symbol=ticker) + "/financials",
+            year_end or _now(),
+        )
         is_fund = info.get("quoteType") in ("ETF", "MUTUALFUND") or (
             info.get("industry") is None and re.search(r"\b(ETF|BeES)\b", name, re.I) is not None
         )
@@ -162,11 +187,13 @@ class LiveSources:
             _num(info.get("trailingPE")),
             _num(info.get("priceToBook")),
             _num(info.get("debtToEquity")),
-            _num(info.get("revenueGrowth")),
-            _num(info.get("earningsGrowth")),
+            revenue,
+            earnings,
             _num(info.get("profitMargins")),
             is_fund,
             Source("Yahoo Finance", YAHOO_QUOTE.format(symbol=ticker), _now()),
+            _num(info.get("priceToSalesTrailing12Months")),
+            statements if year_end else None,
         )
 
     def closes(self, ticker: str, period: str = "15y") -> Closes | None:

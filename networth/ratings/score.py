@@ -151,17 +151,23 @@ def consistency_driver(
 
 
 def growth_driver(
-    revenue: float | None, earnings: float | None, margin: float | None, src: Source, weight: float
+    revenue: float | None,
+    earnings: float | None,
+    margin: float | None,
+    src: Source,
+    weight: float,
+    year_end: str | None = None,
 ) -> Scored:
     have = [g for g in (revenue, earnings) if g is not None]
     if not have:
         return Missing("growth", "Growth: no revenue or profit trend in the data.")
     parts = [
-        f"revenue {pct(revenue)}" if revenue is not None else "",
-        f"profit {pct(earnings)}" if earnings is not None else "",
+        f"revenue {pct(revenue, 1)}" if revenue is not None else "",
+        f"profit {pct(earnings, 1)}" if earnings is not None else "",
     ]
     score = clip(45 + 125 * statistics.fmean(have))
-    words = " and ".join(p for p in parts if p) + " year on year (latest quarter)"
+    when = f"in the year to {year_end}" if year_end else "year on year"
+    words = " and ".join(p for p in parts if p) + f" {when}"
     if margin is not None and margin < 0:
         score = min(score, 55.0)
         words += f"; still loss-making, margin {pct(margin)}"
@@ -176,12 +182,13 @@ def ratio_score(r: float) -> float:
 def valuation_driver(
     own: float | None, peers: Sequence[tuple[str, float]], measure: str, src: Source, weight: float
 ) -> Scored:
-    usable = [v for _, v in peers if v > 0]
+    """own and every peer's value are the same measure: P/E, P/S or P/B, never mixed."""
+    usable = [(n, v) for n, v in peers if v > 0]
     if own is None or own <= 0 or len(usable) < 2:
         return Missing("valuation", "Valuation against peers: no peer set or no multiple.")
-    median = statistics.median(usable)
-    named = ", ".join(n for n, v in peers if v > 0)
-    value = f"{measure} {own:.1f} against a peer median of {median:.1f} ({named})"
+    median = statistics.median(v for _, v in usable)
+    named = ", ".join(f"{n} {v:.1f}" for n, v in usable)
+    value = f"{measure} {own:.1f} against a peer median {measure} of {median:.1f} ({named})"
     return Driver(
         "valuation", "Valuation against sector peers", value, ratio_score(own / median), weight, src
     )
