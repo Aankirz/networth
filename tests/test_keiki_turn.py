@@ -4,6 +4,7 @@ pipeline as Telegram (setup, commands, chat through the guard). Fake Keiki, fake
 from __future__ import annotations
 
 import datetime as dt
+import json
 import time
 from dataclasses import replace
 from pathlib import Path
@@ -20,6 +21,7 @@ from networth.chat import Intent
 from networth.keiki.mail import NOTICE, Mail
 from networth.keiki.turn import Harness, run_turn
 from networth.keiki.wire import parse
+from networth.net import CallRecord, append_record
 from tests.keiki_fakes import (
     ADDRESS,
     AGENT,
@@ -200,3 +202,57 @@ def test_an_arrival_is_acknowledged_and_runs_nothing(tmp_path: Path) -> None:
 def test_without_keiki_configured_the_endpoint_answers_503(tmp_path: Path) -> None:
     app = TestClient(create_app(Store(tmp_path), FakeBot(), "s"))
     assert push(app, turn_payload("hi")).status_code == 503
+
+
+class CostedModels(FakeChatModels):
+    """Logs each write to the call log as a paid call, like the real models do."""
+
+    def __init__(self, call_log: Path, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        self.call_log = call_log
+
+    def write(self, task: str, facts: str, feedback: str | None = None) -> str:
+        stamp = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
+        append_record(self.call_log, CallRecord(stamp, "write", "writer", "m", 1, 0, 1, 0.002,
+                                                True, ""))  # fmt: skip
+        return super().write(task, facts, feedback)
+
+
+def turn_log(keiki: Keiki) -> list[dict]:
+    lines = keiki.services.turn_log.read_text(encoding="utf-8").splitlines()
+    return [json.loads(line) for line in lines]
+
+
+def test_each_turn_logs_its_ids_intent_guard_and_cost_but_no_text(tmp_path: Path, cfg) -> None:
+    data = tmp_path / "data"
+    planted = "The RBI raised its repo rate to 6.25%, reported by rbi.org.in."
+    models = CostedModels(data / "llm_calls.jsonl", intent=Intent.WHAT_HAPPENED_TODAY.value,
+                          writes=[planted, planted])  # fmt: skip
+    keiki = Keiki(tmp_path, Services(data, None, models, None, cfg))
+    profile = set_up(keiki)
+    weekend_watcher(keiki.services.watcher_db, dt.datetime.now(dt.UTC) - dt.timedelta(hours=1))
+    hour_ago = (dt.datetime.now(dt.UTC) - dt.timedelta(hours=1)).isoformat(timespec="seconds")
+    append_record(data / "llm_calls.jsonl", CallRecord(hour_ago, "write", "writer", "m", 1, 0,
+                                                       1, 5.0, True, ""))  # fmt: skip
+    turn = parse(turn_payload("What happened today?", traceId="tr_9", heldBack=True))
+    assert turn is not None
+    run_turn(turn, keiki.store, keiki.services, keiki.client, now_iso())
+    (row,) = turn_log(keiki)
+    assert {k: v for k, v in row.items() if k != "ts"} == {
+        "turn_id": "t1", "trace_id": "tr_9", "user_id": profile.user_id, "channel": "agentmail",
+        "kind": "chat", "intent": "what_happened_today", "guard": "template",
+        "cost_usd": 0.004, "held_back": True, "outcome": "completed",
+    }  # fmt: skip
+    raw = keiki.services.turn_log.read_text(encoding="utf-8")
+    assert ADDRESS not in raw and "What happened" not in raw
+
+
+def test_a_command_turn_logs_no_intent_and_a_failed_turn_logs_its_outcome(tmp_path) -> None:
+    keiki = Keiki(tmp_path)
+    set_up(keiki)
+    keiki.say("/help")
+    keiki.client.fail_send = True
+    keiki.say("/help")
+    first, second = turn_log(keiki)
+    assert (first["kind"], first["intent"], first["outcome"]) == ("command", None, "completed")
+    assert second["outcome"] == "failed"

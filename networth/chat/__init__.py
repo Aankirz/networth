@@ -2,6 +2,7 @@
 
     intent = classify(text, is_forward, services)
     reply = respond(store, profile, text, is_forward, services, now)
+    reply, intent, used = respond_traced(store, profile, text, is_forward, services, now)
 
 The pick is a typed Jev Choice when config says Jev measured at least as accurate as the cheap
 model (evals/intent_accuracy.py), and Jev answered above its confidence floor in time. In every
@@ -23,7 +24,7 @@ from networth.app.store import Profile, Store
 from networth.bot import watches
 from networth.bot.onboarding import Reply
 from networth.chat import explain, jev, tip, today
-from networth.chat.answer import Answer, deliver
+from networth.chat.answer import Answer, Used, deliver, deliver_traced
 
 
 class Intent(StrEnum):
@@ -146,11 +147,20 @@ def respond(
     store: Store, profile: Profile, text: str, is_forward: bool, services: Services,
     now: dt.datetime,
 ) -> Reply:  # fmt: skip
+    return respond_traced(store, profile, text, is_forward, services, now)[0]
+
+
+def respond_traced(
+    store: Store, profile: Profile, text: str, is_forward: bool, services: Services,
+    now: dt.datetime,
+) -> tuple[Reply, Intent, Used]:  # fmt: skip
+    """The reply, the intent that answered, and which words went out."""
     intent = classify(text, is_forward, services)
     if intent is Intent.EXPLAIN_THIS and not URL.search(text) and len(text) <= MAX_TERM_QUESTION:
         store.add_asked_terms(profile.user_id, memory.asked_terms(text), now.isoformat())
     answer = HANDLERS[intent](store, profile, text, services, now)
-    return deliver(answer, reply_lang(text, profile), services)
+    reply, used = deliver_traced(answer, reply_lang(text, profile), services)
+    return reply, intent, used
 
 
 def respond_image(profile: Profile, image: bytes, services: Services) -> Reply:

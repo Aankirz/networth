@@ -32,6 +32,7 @@ log = logging.getLogger("networth.app")
 WATCHER_DB: Final = "watcher.sqlite"
 CALL_LOG: Final = "llm_calls.jsonl"
 GUARD_LOG: Final = "guard.jsonl"
+TURN_LOG: Final = "keiki_turns.jsonl"
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,10 @@ class Services:
     @property
     def guard_log(self) -> Path:
         return self.data_dir / GUARD_LOG
+
+    @property
+    def turn_log(self) -> Path:
+        return self.data_dir / TURN_LOG
 
     def last_news_check(self) -> dt.datetime | None:
         """When the newest watcher cycle finished, if one ever ran."""

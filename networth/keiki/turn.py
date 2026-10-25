@@ -8,15 +8,22 @@ turn, so commands, onboarding and chat answers (intent, handler, guard) run unch
 contact we have never seen gets an email-native profile and the short setup in onboard.py.
 A /link code from Telegram, sent by email, points the contact at that Telegram user instead,
 even when the contact already had an email-native profile.
+
+Every turn appends one line to data/keiki_turns.jsonl: the turn and trace ids, who, which kind
+of turn, the chat intent and guard verdict, the model cost, and the outcome. Never the text,
+the address or a token. Cost is the sum of llm_calls.jsonl records written during the turn.
 """
 
 from __future__ import annotations
 
+import datetime as dt
+import json
 import logging
 import re
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass, replace
+from pathlib import Path
 from typing import Final, Literal
 
 from networth.app.services import Services
@@ -30,6 +37,7 @@ from networth.keiki.mail import NOTICE
 from networth.keiki.render import plain
 from networth.keiki.verify import Keys
 from networth.keiki.wire import KeikiTurn, strip_quoted
+from networth.net import read_records
 
 log = logging.getLogger("networth.keiki")
 
@@ -95,6 +103,8 @@ class KeikiTurnBot:
 class Handled:
     kind: Kind
     user_id: str | None = None
+    intent: str | None = None  # set when a chat answer ran
+    guard: str | None = None  # which words went out: model, rewrite, template or fixed
 
 
 def inbound_text(turn: KeikiTurn) -> str:
@@ -170,7 +180,7 @@ def handle(turn: KeikiTurn, store: Store, services: Services, client: TurnClient
     handled = route(io, turn.conversation_id, text)
     for job in io.later:
         job()
-    return handled
+    return replace(handled, intent=io.trace.get("intent"), guard=io.trace.get("guard"))
 
 
 def _fail(client: TurnClient, exc: Exception) -> None:
@@ -180,15 +190,44 @@ def _fail(client: TurnClient, exc: Exception) -> None:
         log.warning("keiki complete failed: %s", type(again).__name__)
 
 
+def cost_between(call_log: Path, start: dt.datetime, end: dt.datetime) -> float:
+    """The cost of every model and search call logged from start (to the second) to end."""
+    since = start.replace(microsecond=0)
+    total = sum(r.cost_usd for r in read_records(call_log)
+                if since <= dt.datetime.fromisoformat(r.ts) <= end)  # fmt: skip
+    return round(total, 6)
+
+
+def record_turn(services: Services, turn: KeikiTurn, handled: Handled | None, outcome: str,
+                start: dt.datetime, end: dt.datetime) -> None:  # fmt: skip
+    row = {
+        "ts": end.isoformat(timespec="seconds"), "turn_id": turn.turn_id,
+        "trace_id": turn.trace_id, "user_id": handled.user_id if handled else None,
+        "channel": turn.channel, "kind": handled.kind if handled else None,
+        "intent": handled.intent if handled else None,
+        "guard": handled.guard if handled else None,
+        "cost_usd": cost_between(services.call_log, start, end), "held_back": turn.held_back,
+        "outcome": outcome,
+    }  # fmt: skip
+    services.turn_log.parent.mkdir(parents=True, exist_ok=True)
+    with services.turn_log.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+
+
 def run_turn(turn: KeikiTurn, store: Store, services: Services, client: TurnClient,
              now: str) -> str:  # fmt: skip
     """'completed' or 'failed'. A failure is logged and reported to Keiki, never raised."""
     with TURN_LOCK:
+        start, handled, outcome = dt.datetime.now(dt.UTC), None, "completed"
         try:
-            handle(turn, store, services, client, now)
+            handled = handle(turn, store, services, client, now)
             client.complete("completed")
         except Exception as exc:  # noqa: BLE001 - a background turn has no caller to raise to
             log.exception("keiki turn %s failed", turn.turn_id)
             _fail(client, exc)
-            return "failed"
-        return "completed"
+            outcome = "failed"
+        try:
+            record_turn(services, turn, handled, outcome, start, dt.datetime.now(dt.UTC))
+        except Exception:  # noqa: BLE001 - a lost log line never fails the turn
+            log.exception("keiki turn %s not logged", turn.turn_id)
+        return outcome
