@@ -1,20 +1,25 @@
-"""What happened today, why the brief said what it said, the user's plan, and the scope line.
+"""What happened today, why the brief said what it said, the user's plan and its range, and the
+scope line.
 Each returns an Answer built only from stored facts."""
 
 from __future__ import annotations
 
 import datetime as dt
+import logging
 from typing import Final
 from zoneinfo import ZoneInfo
 
-from networth import brief
+from networth import brief, sim
 from networth.app.services import Services
 from networth.app.store import INDIA_TZ, Profile, Store
 from networth.bot.onboarding import summary
 from networth.chat.answer import Answer
+from networth.sim.data import MissingSeries
 from networth.watcher.store import Confirmed
 from networth.watcher.store import Store as WatcherStore
 from networth.web import names
+
+log = logging.getLogger("networth.chat")
 
 DAY: Final = dt.timedelta(hours=24)
 STALE_CHECK: Final = dt.timedelta(hours=1)
@@ -34,6 +39,25 @@ NO_LEAD: Final = (
     'nothing to explain. Ask me "what happened today?" for the latest.'
 )
 NO_PLAN: Final = "You haven't picked a plan yet. Type /start to finish setting up."
+NOT_A_JUDGE: Final = {
+    "en": "I can't tell you whether a plan is right for you. Here's what you saved.",
+    "hi": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है या नहीं। आपने यह सेव किया है।",
+    "hinglish": "Main nahin bata sakta ki koi plan aapke liye sahi hai ya nahin. Aapne yeh "
+    "save kiya hai.",
+}
+RANGE_NOT_READY: Final = {
+    "en": "The range isn't available right now. Please try again later.",
+    "hi": "रेंज अभी उपलब्ध नहीं है। थोड़ी देर बाद फिर से पूछ सकते हैं।",
+    "hinglish": "Range abhi available nahin hai. Thodi der baad phir se pooch sakte hain.",
+}
+NO_RANGE: Final = {
+    "en": "The range covers rupee plans only for now, and it needs your saved plan, monthly "
+    "amount and time horizon. What you saved is in /plan.",
+    "hi": "रेंज अभी सिर्फ़ रुपये वाले प्लान के लिए है, और इसके लिए आपका सेव किया प्लान, हर महीने "
+    "की रकम और समय ज़रूरी हैं। आपने जो सेव किया है वह /plan में है।",
+    "hinglish": "Range abhi sirf rupee plans ke liye hai, aur iske liye aapka saved plan, har "
+    "mahine ki rakam aur time horizon zaroori hain. Aapne jo save kiya hai woh /plan mein hai.",
+}
 
 
 def what_happened(services: Services, now: dt.datetime, tz: str = INDIA_TZ) -> Answer:
@@ -128,12 +152,31 @@ def why(store: Store, profile: Profile, services: Services, today: dt.date,
     return Answer(text, text, WHY_TASK, kind="why")
 
 
-def plan(store: Store, profile: Profile) -> Answer:
+def plan(store: Store, profile: Profile, text: str, services: Services, today: dt.date) -> Answer:
+    """The saved plan after the fixed line saying a plan is not judged here. A question naming
+    an event type confirmed this month also gets that type's history line."""
     saved = store.get_plan(profile.user_id)
     if saved is None:
         return Answer(NO_PLAN, NO_PLAN)
-    text = summary(profile, saved).removesuffix("Looks right?") + "Type /plan to change it."
-    return Answer(text, text)
+    saved_text = summary(profile, saved).removeprefix("Here's what I have.\n\n")
+    text_out = saved_text.removesuffix("Looks right?") + "Type /plan to change it."
+    month = {e.type for e in brief.month_events(services.watcher_db, today)}
+    type = named_type(text, services) if month else None
+    if type in month:
+        history = type_history(type, profile, services)
+        text_out = f"{text_out}\n\n{history.template}" if history else text_out
+    return Answer(text_out, text_out, lead=NOT_A_JUDGE)
+
+
+def plan_range(store: Store, profile: Profile, lang: str) -> Answer:
+    """The user's own plan replayed over past months, in fixed sentences: no model rewords it."""
+    lang = lang if lang in NO_RANGE else "en"
+    try:
+        text = sim.plan_range_message(profile.user_id, store, lang) or NO_RANGE[lang]
+    except MissingSeries:
+        log.exception("no plan range table")
+        text = RANGE_NOT_READY[lang]
+    return Answer(text, text, written=True, kind="range")
 
 
 def scope() -> Answer:

@@ -33,6 +33,7 @@ class Intent(StrEnum):
     TIP_CHECK = "tip_check"
     EXPLAIN_THIS = "explain_this"
     PLAN_QUESTION = "plan_question"
+    PLAN_RANGE = "plan_range"
     WATCH = "watch"
     OTHER = "other"
 
@@ -51,7 +52,11 @@ CRITERIA: Final[dict[str, str]] = {
     ),
     Intent.PLAN_QUESTION: (
         "asks about their own saved plan, split, amount, investing day, what they left out, "
-        "or other settings"
+        "or other settings; not what the plan could grow to or how far it could fall"
+    ),
+    Intent.PLAN_RANGE: (
+        "asks what their own plan could grow to or end up as, or how far or how badly it "
+        'could fall, such as "what could my plan become" or "how bad can a fall get"'
     ),
     Intent.WATCH: (
         "asks to be told when something happens, or to watch or track a topic, event or company"
@@ -73,6 +78,10 @@ PHRASES: Final = (
     (("watch", "tell me if", "tell me when", "let me know when", "alert me"), Intent.WATCH),
     (("what happened", "aaj market", "news today", "kya hua"), Intent.WHAT_HAPPENED_TODAY),
     (("why",), Intent.WHY),
+    (
+        ("could my plan", "plan become", "how bad can a fall", "how far can my plan", "my range"),
+        Intent.PLAN_RANGE,
+    ),
     (("my plan", "my amount", "investing day"), Intent.PLAN_QUESTION),
 )
 
@@ -137,7 +146,12 @@ HANDLERS: Final[dict[Intent, Handler]] = {
     Intent.EXPLAIN_THIS: lambda store, p, text, s, now: (
         explain.explain_link(m.group(0)) if (m := URL.search(text)) else explain.explain_text(text)
     ),
-    Intent.PLAN_QUESTION: lambda store, p, text, s, now: today.plan(store, p),
+    Intent.PLAN_QUESTION: lambda store, p, text, s, now: today.plan(
+        store, p, text, s, now.astimezone(ZoneInfo(p.tz)).date()
+    ),
+    Intent.PLAN_RANGE: lambda store, p, text, s, now: today.plan_range(
+        store, p, reply_lang(text, p)
+    ),
     Intent.WATCH: lambda store, p, text, s, now: watch_answer(store, p, text, s, now),
     Intent.OTHER: lambda store, p, text, s, now: today.scope(),
 }

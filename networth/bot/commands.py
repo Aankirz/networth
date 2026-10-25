@@ -56,6 +56,7 @@ HELP: Final = (
     "Send an IPO page, a link or a screenshot and I'll explain it\n\n"
     "/brief this month's brief\n"
     "/plan see or change your plan\n"
+    "/range what your plan could become, replayed over past months\n"
     "/pause pause briefs and alerts\n"
     "/resume turn them back on\n"
     "/stop stop all messages\n"
@@ -270,6 +271,8 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
     turn.bot.answer_callback(tap.callback_id)
     if tap.data == f"{brief.CALLBACK_PREFIX}:plan":
         cmd_plan(turn, profile, "")
+    elif tap.data == f"{brief.CALLBACK_PREFIX}:range":
+        cmd_range(turn, profile, "")
     elif tap.data == f"{brief.CALLBACK_PREFIX}:ok":
         turn.send(profile, Reply(PLAN_KEPT))
 
@@ -377,6 +380,23 @@ def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
     turn.later.append(job)
 
 
+def cmd_range(turn: Turn, profile: Profile, args: str) -> None:
+    """Fixed sentences, so no model and no hourly claim; the replay runs after the lock."""
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(FINISH_FIRST))
+        return
+
+    def job() -> None:
+        try:
+            reply = chat.today.plan_range(turn.store, profile, profile.lang or "en").template
+        except Exception:
+            log.exception("range for %s failed", profile.user_id)
+            reply = TRY_AGAIN
+        turn.send(profile, Reply(reply))
+
+    turn.later.append(job)
+
+
 def cmd_help(turn: Turn, profile: Profile, args: str) -> None:
     turn.send(profile, Reply(HELP))
 
@@ -440,6 +460,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/start": cmd_start,
     "/brief": cmd_brief,
     "/plan": cmd_plan,
+    "/range": cmd_range,
     "/pause": cmd_pause,
     "/resume": cmd_resume,
     "/stop": cmd_stop,

@@ -272,8 +272,9 @@ def plan_range_lines(r: PlanRange, lang: Lang) -> list[str]:
     return [lines[k].format(**values) for k in keys]
 
 
-def plan_range_message(user_id: str, store: Store) -> str | None:
-    """The bot's /range reply in the user's language. None with no plan, or not in rupees."""
+def plan_range_message(user_id: str, store: Store, lang: str | None = None) -> str | None:
+    """The bot's /range reply in `lang`, else the user's language. None with no plan, or not
+    in rupees."""
     profile, plan = store.get_profile(user_id), store.get_plan(user_id)
     if profile is None or plan is None or profile.monthly_amount is None:
         return None
@@ -283,5 +284,5 @@ def plan_range_message(user_id: str, store: Store) -> str | None:
         r = plan_range(plan, profile)
     except NotRupees:
         return None
-    lang = profile.lang if profile.lang in LINES else "en"
+    lang = next(x for x in (lang, profile.lang, "en") if x in LINES)
     return "\n".join(plan_range_lines(r, lang))

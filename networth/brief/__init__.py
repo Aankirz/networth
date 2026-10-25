@@ -177,8 +177,8 @@ def compose(
 
 
 def buttons(draft: Draft, public_url: str | None, page_url: str | None = None) -> Keyboard:
-    """Invest as planned and Change my plan call back; the scoreboard, Why? and the user's own
-    page open pages."""
+    """Invest as planned, Change my plan and My range call back; the scoreboard, Why? and the
+    user's own page open pages."""
     first = (Button("Invest as planned", f"{CALLBACK_PREFIX}:ok"),
              Button("Change my plan", f"{CALLBACK_PREFIX}:plan"))  # fmt: skip
     rows: list[tuple[Button, ...]] = [first]
@@ -186,6 +186,6 @@ def buttons(draft: Draft, public_url: str | None, page_url: str | None = None) -
         lead = draft.lead
         rows.append((Button("Show the scoreboard", "", f"{public_url}/scoreboard/{lead.type}"),
                      Button("Why?", "", f"{public_url}/why/{lead.type}/{lead.asset}")))  # fmt: skip
-    if page_url:
-        rows.append((Button("My page", "", page_url),))
+    mine = (Button("My page", "", page_url),) if page_url else ()
+    rows.append((*mine, Button("My range", f"{CALLBACK_PREFIX}:range")))
     return tuple(rows)
