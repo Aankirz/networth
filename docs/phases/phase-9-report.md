@@ -169,9 +169,13 @@ The test `test_should_i_never_asks_the_writer_for_steps_to_decide` fails without
 - `/erase` was a scope add from the coordinator. It calls the entry points of `networth/holdings` and doesn't edit them.
 - Commit 328d320 failed `ruff format` on its own, on a Python block in the design doc. c0e1267 fixed it. Every commit since was made only on a `make check` exit of 0.
 
-## Pending
+## The live menu check
 
-- **The live menu check.** It is parked by the coordinator during the Maritime outage. Every deploy fails with `fc-manager 404 for /vms/{vm_id}/stop-boot`, the agent is in `error`, and the Telegram webhook gets 503. When the server is back, run the read-only check through `maritime exec`. It prints `getWebhookInfo` and `getChatMenuButton` for each Telegram profile, never the token. Then fix by what Telegram returns.
+I ran it after Maritime came back, read-only through `maritime exec`, with the token never printed.
+- `getChatMenuButton` for the owner's chat returns `web_app` "My page". The owner's `/dashboard` at 12:58 UTC set it, so the server side works.
+- A chat that never finished `/dashboard` stays `default`, as designed.
+- The button the coordinator didn't see is a Telegram client display issue. Telegram Web caches a bot chat's info, and the mobile app should show the button.
+- The menu opens the Maritime `/u` page, because `NETWORTH_SITE_URL` is not set yet (step 1 below).
 
 ## OWNER NEEDED
 

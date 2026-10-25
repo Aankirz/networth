@@ -505,3 +505,6 @@
 - chat.build: a plain "What is my plan?" skips the last-answer context, which broke the SHOW_PLAN match after any live exchange (live 13:37 UTC). Test through respond_traced with no fake classifier.
 - ERASE_ASK drops "any broker link" in 3 languages (SnapTrade dropped).
 - Live menu check: owner chat has web_app "My page" set since /dashboard 12:58 UTC; no code fix.
+
+## 2026-10-25 — report: live menu check result
+- Replaced the Pending section with the live getChatMenuButton result.
