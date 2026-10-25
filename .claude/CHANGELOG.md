@@ -661,3 +661,6 @@
 ## 2026-10-25 — feat: the market strip at the top of the chat
 - site/components/market-strip.tsx: server-drawn index tiles (level, change in --up/--down with an arrow, pencil sparkline) plus one source chip, streamed under the shell header with a skeleton while loading and a plain line when the route is missing; never a made-up number. Fetched by getMarket() from the proposed per-scope /api/{demo|u/{token}|web}/market route (shape in site/lib/market.ts, tiles already in the user's order, so US profiles lead with S&P 500, Nasdaq, Dow). Phones keep it on the empty chat only.
 - site/lib/contract.ts now copies contract block 1 with the 13A market cards (answer.tsx answers them in words for now); SourceChip shows 13A's preformatted as_of whole. Mock API serves market fixtures; e2e/market-strip.spec.ts; charts and a2ui specs no longer assume the chart is in view or count Next's link prefetches.
+
+## 2026-10-25 — feat: the market strip on real Yahoo closes, with a source on every tile
+- Rebased the local 13B commits onto 13A's 4be1140 (networth.market). site/e2e/record_market.py records market-in/us.json from real Yahoo data through networth.market (13A has no strip route or card builder yet). Each tile now carries its own source and opens it; the tile shows its close date, the strip names its sources. MarketStrip is {tiles} with per-tile source.

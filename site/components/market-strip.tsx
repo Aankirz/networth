@@ -1,6 +1,5 @@
 import { ArrowDown, ArrowRight, ArrowUp } from "lucide-react";
 
-import { SourceChip } from "@/components/cards/source-chip";
 import { getMarket, type Scope } from "@/lib/api";
 import type { Direction } from "@/lib/contract";
 import type { MarketTile } from "@/lib/market";
@@ -22,6 +21,7 @@ const TONE: Record<Direction, { color: string; Icon: typeof ArrowUp }> = {
 
 const ROW = "flex snap-x gap-2 overflow-x-auto [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:overflow-visible";
 const TILE = "grid min-w-[9.5rem] shrink-0 snap-start gap-1 rounded-xl border border-line bg-raised px-3 py-2.5 sm:min-w-0";
+const LINK = "transition-[border-color,transform] duration-150 hover:border-line-strong active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2";
 
 function seedOf(text: string): number {
   return [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
@@ -48,14 +48,18 @@ function Spark({ tile }: { tile: MarketTile }) {
 function Tile({ tile }: { tile: MarketTile }) {
   const { color, Icon } = TONE[tile.direction];
   return (
-    <li className={TILE} data-tile={tile.symbol}>
-      <p className="truncate text-xs text-ink-2">{tile.name}</p>
-      <p className="figure text-base font-semibold text-ink tabular-nums">{tile.level}</p>
-      <p className="flex items-center gap-1 text-xs tabular-nums" style={{ color }}>
-        <Icon aria-hidden="true" className="size-3 shrink-0" />
-        {tile.change} ({tile.change_pct})
-      </p>
-      <Spark tile={tile} />
+    <li className="contents" data-tile={tile.symbol}>
+      {/* The whole tile opens the source's page for that index. */}
+      <a href={tile.source.url} rel="noopener" target="_blank" className={`${TILE} ${LINK} text-inherit no-underline`}>
+        <span className="truncate text-xs text-ink-2">{tile.name}</span>
+        <span className="figure text-base font-semibold text-ink tabular-nums">{tile.level}</span>
+        <span className="flex items-center gap-1 text-xs tabular-nums" style={{ color }} data-change="">
+          <Icon aria-hidden="true" className="size-3 shrink-0" />
+          {tile.change} ({tile.change_pct})
+        </span>
+        <Spark tile={tile} />
+        <span className="truncate text-[0.6875rem] text-ink-3">{tile.source.as_of}</span>
+      </a>
     </li>
   );
 }
@@ -71,6 +75,7 @@ export function MarketStripLoading() {
             <span className="h-5 w-24 animate-pulse rounded bg-[var(--bubble)]" />
             <span className="h-3 w-20 animate-pulse rounded bg-[var(--bubble)]" />
             <span className="h-7" />
+            <span className="h-3 w-20 animate-pulse rounded bg-[var(--bubble)]" />
           </li>
         ))}
       </ul>
@@ -83,13 +88,14 @@ export async function MarketStrip({ scope }: { scope: Scope }) {
   if (!result.ok) {
     return <p data-strip="missing" className="text-xs text-ink-3">Index prices aren&apos;t available right now.</p>;
   }
-  const { tiles, source } = result.data;
+  const { tiles } = result.data;
+  const sources = [...new Set(tiles.map((t) => t.source.name))].join(", ");
   return (
-    <section data-strip="ready" aria-label="Markets" className="grid gap-1.5">
+    <section data-strip="ready" aria-label="Markets" className="grid gap-1">
       <ul className={ROW}>
         {tiles.map((t) => <Tile key={t.symbol} tile={t} />)}
       </ul>
-      <div className="justify-self-end"><SourceChip source={source} /></div>
+      <p className="text-right text-[0.6875rem] text-ink-3">Prices from {sources}</p>
     </section>
   );
 }

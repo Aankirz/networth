@@ -21,19 +21,22 @@ test("the demo opens with the server's index tiles, each with its change and a p
     await expect(tile).toContainText(t.level);
     await expect(tile).toContainText(`${t.change} (${t.change_pct})`);
     await expect(tile.locator("[data-spark] path").first()).toBeAttached();
+    await expect(tile.locator("a")).toHaveAttribute("href", t.source.url);
+    await expect(tile).toContainText(t.source.as_of);
   }
-  await expect(strip.locator(`a[href="${IN.source.url}"]`)).toContainText(IN.source.name);
+  await expect(strip).toContainText(`Prices from ${IN.tiles[0].source.name}`);
 });
 
-test("a fall is drawn in the down colour and a rise in the up colour", async ({ page }) => {
+test("a fall is drawn in the down colour, apart from any rise", async ({ page }) => {
   await page.goto("/demo");
   const strip = page.locator("[data-strip=ready]");
   const fell = IN.tiles.find((t) => t.direction === "down")!;
-  const rose = IN.tiles.find((t) => t.direction === "up")!;
+  // The recorded day may have no rise at all; a fall is always checked.
+  const rose = IN.tiles.find((t) => t.direction === "up");
   const colourOf = (symbol: string) =>
-    strip.locator(`[data-tile="${symbol}"] p`).nth(2).evaluate((el) => getComputedStyle(el).color);
-  const [down, up] = await Promise.all([colourOf(fell.symbol), colourOf(rose.symbol)]);
-  expect(down).not.toEqual(up);
+    strip.locator(`[data-tile="${symbol}"] [data-change]`).evaluate((el) => getComputedStyle(el).color);
+  const down = await colourOf(fell.symbol);
+  if (rose) expect(await colourOf(rose.symbol)).not.toEqual(down);
   const want = await page.evaluate(() => {
     const probe = document.createElement("i");
     probe.style.color = "var(--down)";
@@ -46,7 +49,7 @@ test("a fall is drawn in the down colour and a rise in the up colour", async ({ 
 test("a US profile sees the tiles in the server's order, S&P 500 first", async ({ context, page }) => {
   await signInAs(context, "linked-us-ana", "Ana");
   await page.goto("/dashboard");
-  const names = page.locator("[data-strip=ready] [data-tile] p:first-child");
+  const names = page.locator("[data-strip=ready] [data-tile] a > span:first-child");
   await expect(names).toHaveText(US.tiles.map((t) => t.name));
 });
 
