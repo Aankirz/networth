@@ -5,7 +5,7 @@
 It sends nothing to a stopped user, and nothing proactive (briefs, alerts, watches) to a paused
 one. A proactive message for a user who chose email is queued for Keiki instead of sent on the
 bot; replies always go back on the bot that carried the question (Telegram, or a Keiki turn).
-Every sent text is logged as an outgoing message.
+Every sent message is logged, as its plain text, as an outgoing message.
 """
 
 from __future__ import annotations
@@ -27,6 +27,6 @@ def send(
         if mail is None or not mail.queue(profile, reply):
             return False
     else:
-        bot.send_message(profile.chat_id, reply.text, reply.buttons)
+        bot.send_message(profile.chat_id, reply.message, reply.buttons)
     store.log_message(profile.user_id, "out", reply.text)
     return True

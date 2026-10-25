@@ -4,11 +4,11 @@ same plain text.
 
     harness.start(lambda: run_turn(turn, store, services, harness.client(url, token), now))
 
-The reply goes through KeikiTurnBot, a Bot whose send_message posts our exact text to the
-turn, so commands, onboarding and chat answers (intent, handler, guard) run unchanged. A
-contact we have never seen gets an email-native profile and the short setup in onboard.py.
-A /link code from Telegram, sent by email, points the contact at that Telegram user instead,
-even when the contact already had an email-native profile.
+The reply goes through KeikiTurnBot, a Bot whose send_message posts the plain render of our
+message to the turn, so commands, onboarding and chat answers (intent, handler, guard) run
+unchanged. A contact we have never seen gets an email-native profile and the short setup in
+onboard.py. A /link code from Telegram, sent by email, points the contact at that Telegram
+user instead, even when the contact already had an email-native profile.
 
 Every turn appends one line to data/keiki_turns.jsonl: the turn and trace ids, the hashed user
 id, the channel type, which kind of turn, the chat intent and guard verdict, the model cost,
@@ -32,6 +32,8 @@ from networth import chat
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Status, Step, Store, new_email_profile
 from networth.bot import commands
+from networth.bot.message import Message
+from networth.bot.message import plain as plain_text
 from networth.bot.onboarding import Outcome, Reply
 from networth.bot.telegram import Keyboard
 from networth.keiki import onboard
@@ -84,9 +86,9 @@ class KeikiTurnBot:
         self._turn_id = turn_id
         self._sent = 0
 
-    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict:
+    def send_message(self, chat_id: int, message: Message, buttons: Keyboard = ()) -> dict:
         self._sent += 1
-        self._client.send(plain(text, buttons), f"{self._turn_id}:{self._sent}")
+        self._client.send(plain(plain_text(message), buttons), f"{self._turn_id}:{self._sent}")
         return {"message_id": self._sent}
 
     def answer_callback(self, callback_id: str, text: str | None = None) -> None:
