@@ -1,38 +1,52 @@
 import { expect, test } from "@playwright/test";
 
 const BOT = "https://t.me/networth_professor_bot";
+const HEADLINE = "Market news, checked against history.";
+const overflow = (page: import("@playwright/test").Page) =>
+  page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - document.documentElement.clientWidth);
 
 test("the hero says what it is and both actions work", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("A calm friend for your monthly investing.");
-  const hero = page.getByRole("region", { name: "A calm friend for your monthly investing." });
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(HEADLINE);
+  const hero = page.getByRole("region", { name: HEADLINE });
+  await expect(hero.getByText("Built for the Keiki x Maritime hackathon")).toBeVisible();
   await expect(hero.getByRole("link", { name: "Message the bot" })).toHaveAttribute("href", BOT);
   await hero.getByRole("link", { name: "Try the demo" }).click();
   await expect(page).toHaveURL(/\/demo$/);
   await expect(page.getByRole("heading", { name: "What would you like to know about your money?" })).toBeVisible();
 });
 
-test("a question typed on the landing page is asked in the demo", async ({ page }) => {
+test("the hero is centred in its column", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const field = page.getByLabel("Ask the sample profile a question");
-  await field.fill("What happened today?");
-  await field.press("Enter");
-  await expect(page.locator("article[data-card='news']")).toBeVisible();
-  await expect(page).toHaveURL(/\/demo$/);
-  await page.reload();
-  await expect(page.locator("article[data-card='news']")).toHaveCount(0);
+  const box = (await page.getByRole("heading", { level: 1 }).boundingBox())!;
+  expect(Math.abs(box.x + box.width / 2 - 720)).toBeLessThan(4);
 });
 
-test("a starter on the landing page opens the demo with its answer", async ({ page }) => {
+test("the chat mock plays the IPO thread in order and ends on the Hinglish answer", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("list", { name: "Or start with" }).getByRole("link", { name: "What could my plan become?" }).click();
-  await expect(page.locator("article[data-card='plan_range']")).toBeVisible();
+  const chat = page.getByRole("group", { name: "A Telegram chat with the Networth bot about the LIC IPO" });
+  await chat.scrollIntoViewIfNeeded();
+  const last = chat.locator("[data-at]").last();
+  await expect(last).toHaveAttribute("data-off", "");
+  await expect(last).not.toHaveAttribute("data-off", "", { timeout: 20_000 });
+  await expect(last).toContainText("RHP sabse pehle dekhne wala document hai.");
 });
 
-test("the track record shows the server's own negative result", async ({ page }) => {
+test("under reduced motion every mock shows its whole exchange at once", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
-  const record = page.getByRole("region", { name: "We tested ourselves. It came back negative." });
-  await expect(record.getByText("From 2010 to 2021", { exact: false })).toBeVisible();
+  await page.locator("#email").scrollIntoViewIfNeeded();
+  await expect(page.locator(".mock [data-at][data-off]")).toHaveCount(0);
+  await expect(page.locator("#chat").getByText("The RHP comes first.", { exact: false })).toBeVisible();
+});
+
+test("the brief mock is the server's brief for the sample profile", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const brief = page.getByRole("group", { name: "The monthly brief for the sample profile" });
+  await expect(brief).toContainText("Morning. It's your investing day, and ₹1,00,000 is ready.");
+  await expect(brief).toContainText("Yours is built to sit through a fall of up to 20%.");
 });
 
 test("the sample chart is drawn from the demo data", async ({ page }) => {
@@ -43,6 +57,11 @@ test("the sample chart is drawn from the demo data", async ({ page }) => {
   await expect(sample.locator(".sr-only table")).toHaveCount(1);
 });
 
+test("the letter carries our negative result", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("region", { name: "Why we built this" })).toContainText("the counts did no better than chance");
+});
+
 test("the FAQ opens one answer at a time", async ({ page }) => {
   await page.goto("/");
   const faq = page.locator("#faq");
@@ -51,10 +70,9 @@ test("the FAQ opens one answer at a time", async ({ page }) => {
   await expect(faq.locator("details[open]")).toHaveCount(1);
 });
 
-test("the footer line shows once and a phone has no sideways scroll", async ({ page }) => {
+test("the footer says research, not advice, and a phone has no sideways scroll", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto("/");
-  await expect(page.getByText("Research, not advice.", { exact: true })).toHaveCount(1);
-  const overflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - document.documentElement.clientWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  await expect(page.getByRole("contentinfo").getByText("Research, not advice.", { exact: true })).toBeVisible();
+  expect(await overflow(page)).toBeLessThanOrEqual(0);
 });

@@ -11,7 +11,7 @@ import { withoutFooter } from "@/lib/words";
 // Every live piece on the landing page is the sample profile, read from the server once per
 // request. When the server is asleep the piece says so instead of drawing anything of its own.
 
-const demoBoard = cache(async (): Promise<Dashboard | null> => {
+export const demoBoard = cache(async (): Promise<Dashboard | null> => {
   const result = await getDashboard({ kind: "demo" });
   return result.ok ? result.data : null;
 });

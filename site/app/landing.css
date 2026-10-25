@@ -1,0 +1,170 @@
+/* The landing page's own motion and surfaces. Opacity and transform for entrances, a stroke
+   offset for the pencil drawing, and every move dropped under reduced motion. */
+
+:root {
+  --chat: oklch(16.4% 0.006 255);
+  --bubble: oklch(30% 0.03 96 / 0.55);
+  --glow: oklch(88% 0.13 96 / 0.09);
+  --grid: oklch(100% 0 0 / 0.045);
+}
+:root[data-theme="light"] {
+  --chat: oklch(95.6% 0.004 95);
+  --bubble: oklch(91% 0.06 96);
+  --glow: oklch(89% 0.14 96 / 0.28);
+  --grid: oklch(20% 0.01 255 / 0.06);
+}
+
+@layer components {
+  .hero-field {
+    position: relative;
+    isolation: isolate;
+  }
+  .hero-field::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image:
+      radial-gradient(48rem 26rem at 50% 38%, var(--glow), transparent 70%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 100% 100%, 56px 56px, 56px 56px;
+    background-position: center, center top, center top;
+    mask-image: radial-gradient(70% 60% at 50% 40%, black 30%, transparent 80%);
+  }
+
+  /* Hero: the line draws once, then the brief's line arrives beside the fall. */
+  .hero-ink {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: pencil-draw 1.1s var(--ease-out) 0.2s forwards;
+  }
+  .hero-line {
+    animation-duration: 2.2s;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.25, 1);
+    animation-delay: 0.45s;
+  }
+  .hero-line-2 {
+    animation-delay: 0.75s;
+  }
+  .hero-dot {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: dot-in 500ms var(--ease-out) 2.2s forwards;
+  }
+  .hero-halo {
+    animation: dot-in 500ms var(--ease-out) 2.3s forwards, halo 3.2s ease-in-out 2.8s infinite;
+  }
+  .hero-bubble {
+    opacity: 0;
+    animation: rise 600ms var(--ease-out) 2.5s forwards;
+  }
+
+  /* Blocks below the fold rise in as they arrive, a beat apart. */
+  .rise {
+    transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 90ms);
+  }
+  [data-armed]:not([data-inview]) .rise {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  /* Hand-drawn icons draw stroke by stroke. */
+  .step-icon .ink {
+    stroke-dasharray: 1;
+    transition: stroke-dashoffset 700ms var(--ease-out);
+    transition-delay: calc(200ms + var(--i, 0) * 120ms);
+  }
+  [data-armed]:not([data-inview]) .step-icon .ink {
+    stroke-dashoffset: 1;
+  }
+
+  /* Mocks: messages arrive in turn, and the header says typing while the bot writes. */
+  .mock [data-at] {
+    transition: opacity 360ms var(--ease-out), transform 360ms var(--ease-out);
+  }
+  .mock [data-at][data-off] {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .mock-typing,
+  .mock-typing-line {
+    display: none;
+  }
+  .mock[data-typing] .mock-typing {
+    display: inline;
+  }
+  .mock[data-typing] .mock-idle {
+    display: none;
+  }
+  .mock[data-typing] .mock-typing-line {
+    display: block;
+  }
+
+  .faq-a {
+    animation: rise 320ms var(--ease-out);
+  }
+
+  @keyframes pencil-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes dot-in {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes halo {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.35);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-ink,
+    .hero-dot,
+    .hero-halo,
+    .hero-bubble,
+    .faq-a {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    .rise,
+    .step-icon .ink,
+    .mock [data-at] {
+      transition: none;
+    }
+    [data-armed]:not([data-inview]) .rise {
+      opacity: 1;
+      transform: none;
+    }
+    [data-armed]:not([data-inview]) .step-icon .ink {
+      stroke-dashoffset: 0;
+    }
+  }
+}

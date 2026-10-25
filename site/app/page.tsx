@@ -1,212 +1,249 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
-import { ArrowRight, Mail, MonitorSmartphone, Send } from "lucide-react";
+import { ArrowRight, Send } from "lucide-react";
 
-import { LandingAsk } from "@/components/landing/ask";
-import { LiveHistory, LiveNews, LivePlan, LiveRange, LiveTrackRecord } from "@/components/landing/live";
+import "./landing.css";
+import { HeroSketch } from "@/components/landing/hero-sketch";
+import { InView } from "@/components/landing/in-view";
+import { LiveRange } from "@/components/landing/live";
+import { BriefMock, ChatMock, DashboardMock, EmailMock } from "@/components/landing/mocks";
+import { StepIcon } from "@/components/landing/step-icons";
 import { Mark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BOT_URL } from "@/lib/chat";
 
 export const metadata: Metadata = {
-  title: "Networth · a calm friend for your monthly investing",
-  description: "Networth reads the market news, checks it against what happened in the past, and turns up on the day you invest. On Telegram, by email and on the web. Research, not advice.",
+  title: "Networth · market news, checked against history",
+  description: "Networth reads the market news, keeps only what's confirmed, and shows what history counted on the day you invest. On Telegram, by email and on the web. Research, not advice.",
 };
 
-const STEPS: { title: string; body: string; live: ReactNode }[] = [
-  {
-    title: "Tell it your plan",
-    body: "Send /start to the bot. It asks how much you put in each month, the day you invest and the fall you can sit through.",
-    live: <LivePlan />,
-  },
-  {
-    title: "It reads the news for you",
-    body: "Each weekday it reads the market news and keeps only what a primary source or several publishers confirm, each with who reported it.",
-    live: <LiveNews />,
-  },
-  {
-    title: "On your day, a short brief",
-    body: "When you invest, it tells you what happened and what history counted the last times something like it happened.",
-    live: <LiveHistory />,
-  },
-];
-
-const CHANNELS = [
-  { icon: Send, name: "Telegram", body: "Your brief, your questions, and a second look at any tip someone forwards you." },
-  { icon: Mail, name: "Email", body: "Send /sendto email and the brief comes to your inbox. Reply with a question and the answer comes back by email." },
-  { icon: MonitorSmartphone, name: "The web", body: "A private dashboard behind your own link, with the chat one click away. /dashboard in the bot opens it." },
-];
+const STEPS = [
+  { icon: "plane", title: "Tell it your plan", body: "Send /start to the bot. It asks what you put in each month, the day you invest, and the fall you can sit through." },
+  { icon: "news", title: "It reads the news", body: "Each weekday it keeps only the stories a primary source or several publishers confirm, with who reported each one." },
+  { icon: "day", title: "On your day, a brief", body: "When you invest, it tells you what happened and what history counted the last times something like it happened." },
+] as const;
 
 const NEVER = [
   "It never tells you what to pick, or when to get in or out.",
   "It never rates a fund or a share, and never gives a tip of its own.",
   "It never talks about trading on borrowed money or in derivatives.",
-  "It never colours a count to make it feel like a signal. A count is shown as a count.",
+  "It never colours a count to make it look like a signal.",
   "It never places an order or moves your money.",
 ];
 
 const FAQ: { q: string; a: ReactNode }[] = [
   { q: "Is this financial advice?", a: "No. It is research: what the news says and what history counted, in plain words. What you do is your choice." },
-  { q: "Do I need an account?", a: <>No. <Link href="/demo">The demo</Link> opens a sample profile. To set up your own, send /start to the bot.</> },
-  { q: "What does “what history counted” mean?", a: "For an event like an RBI rate hike, it counts how often an asset beat the Nifty 50 in the past cases, and puts that next to its normal rate. Few cases are called out as too few." },
+  { q: "Do I need an account?", a: <>No. <Link href="/demo" className="underline">The demo</Link> opens a sample profile. To set up your own, send /start to the bot.</> },
+  { q: "What does “what history counted” mean?", a: "For an event like an RBI rate hike, it counts how often an asset beat the Nifty 50 in the past cases, and puts that next to its normal rate. Too few cases are called out as too few." },
   { q: "Can it see my money?", a: "Only what you tell it: your plan, and your holdings if you choose to share them. It never places an order." },
-  { q: "Which languages does it speak?", a: "English, Hindi and Hinglish. You can change the language for any single answer." },
+  { q: "Which languages does it speak?", a: "English, Hindi and Hinglish. You can switch for any single answer." },
   { q: "Is my dashboard link private?", a: "Anyone with the link can open it, so keep it to yourself. /erase in the bot deletes everything about you after one confirm tap." },
 ];
-
-function Section({ id, title, kicker, children }: { id: string; title: string; kicker?: string; children: ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-20 border-t border-line py-16 sm:py-20">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6">
-        <header className="grid max-w-2xl gap-3">
-          {kicker && <p className="text-sm text-ink-3">{kicker}</p>}
-          <h2 id={`${id}-title`} className="text-2xl font-semibold tracking-tight sm:text-[2.25rem] sm:leading-tight">{title}</h2>
-        </header>
-        {children}
-      </div>
-    </section>
-  );
-}
 
 function Live({ children, height }: { children: ReactNode; height: string }) {
   return <Suspense fallback={<div className={height} aria-hidden="true" />}>{children}</Suspense>;
 }
 
+/** One big statement, a grey line that finishes it, then the product doing what it says. */
+function Feature({ id, title, more, children, className = "py-20 sm:py-28" }: { id: string; title: string; more: string; children: ReactNode; className?: string }) {
+  return (
+    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-16 px-4 ${className}`}>
+      <InView className="mx-auto grid max-w-5xl gap-12 text-center sm:gap-16">
+        <header className="rise mx-auto grid max-w-[720px] gap-2">
+          <h2 id={`${id}-title`} className="text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] text-balance sm:text-[3rem]">{title}</h2>
+          <p className="text-[1.25rem] leading-snug tracking-[-0.01em] text-balance text-ink-3 sm:text-[1.75rem]">{more}</p>
+        </header>
+        <div className="rise min-w-0" style={{ ["--i" as string]: 1 }}>{children}</div>
+      </InView>
+    </section>
+  );
+}
+
+function Nav() {
+  return (
+    <header className="sticky top-0 z-30 border-b border-line bg-[color-mix(in_oklch,var(--bg)_86%,transparent)] backdrop-blur-md">
+      <nav aria-label="Main" className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
+        <Link href="/" className="flex items-center gap-2 text-sm font-semibold no-underline">
+          <Mark className="size-5" /> Networth
+        </Link>
+        <ul className="mx-auto flex items-center gap-6 text-sm text-ink-2 max-md:hidden">
+          <li><a href="#how" className="no-underline hover:text-ink">How it works</a></li>
+          <li><a href="#why" className="no-underline hover:text-ink">Why we built it</a></li>
+          <li><a href="#faq" className="no-underline hover:text-ink">FAQ</a></li>
+        </ul>
+        <div className="flex items-center gap-2 max-md:ml-auto">
+          <ThemeToggle compact />
+          <Link href="/demo" className="btn btn-primary no-underline">Try the demo</Link>
+        </div>
+      </nav>
+    </header>
+  );
+}
+
+function Hero() {
+  return (
+    <section aria-labelledby="hero-title" className="hero-field overflow-hidden px-4 pt-16 pb-24 text-center sm:pt-24 sm:pb-32">
+      <div className="mx-auto grid max-w-[720px] justify-items-center gap-6">
+        <p className="rounded-full border border-line bg-raised px-3.5 py-1 text-xs text-ink-2">Built for the Keiki x Maritime hackathon</p>
+        <h1 id="hero-title" className="text-[2.6rem] leading-[1.02] font-semibold tracking-[-0.045em] text-balance sm:text-[4.5rem]">
+          Market news, checked against history.
+        </h1>
+        <p className="max-w-[46ch] text-lg text-balance text-ink-2 sm:text-xl">
+          Networth reads the news, keeps only what&apos;s confirmed, and shows what history counted on the day you invest.
+        </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          <Link href="/demo" className="btn btn-primary h-11 px-5 text-base no-underline">
+            Try the demo <ArrowRight aria-hidden="true" />
+          </Link>
+          <a href={BOT_URL} rel="noopener" target="_blank" className="btn h-11 px-5 text-base no-underline">
+            <Send aria-hidden="true" /> Message the bot
+          </a>
+        </div>
+        <p className="text-sm text-ink-3">On Telegram, by email and on the web. No sign-up for the demo.</p>
+      </div>
+      <div className="mt-16 sm:mt-20">
+        <HeroSketch />
+      </div>
+    </section>
+  );
+}
+
+function How() {
+  return (
+    <section id="how" aria-labelledby="how-title" className="scroll-mt-16 border-t border-line px-4 py-24 sm:py-28">
+      <div className="mx-auto grid max-w-5xl gap-14 text-center">
+        <h2 id="how-title" className="mx-auto max-w-[720px] text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] text-balance sm:text-[3rem]">
+          Three steps. Then it comes to you.
+        </h2>
+        <InView as="ol" className="grid gap-12 sm:grid-cols-3 sm:gap-8">
+          {STEPS.map((step, i) => (
+            <li key={step.title} className="rise grid justify-items-center gap-3" style={{ ["--i" as string]: i }}>
+              <StepIcon name={step.icon} />
+              <h3 className="text-lg font-semibold">{step.title}</h3>
+              <p className="max-w-[32ch] text-ink-2">{step.body}</p>
+            </li>
+          ))}
+        </InView>
+      </div>
+    </section>
+  );
+}
+
+function Letter() {
+  return (
+    <section id="why" aria-labelledby="why-title" className="scroll-mt-16 border-t border-line px-4 py-28 sm:py-36">
+      <InView className="mx-auto grid max-w-[640px] gap-6 text-[1.0625rem] leading-relaxed text-ink">
+        <h2 id="why-title" className="rise text-center text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[2.5rem]">Why we built this</h2>
+        <p className="rise mt-4" style={{ ["--i" as string]: 1 }}>
+          Most money news is loud. A headline moves, and it feels like you should do something. We built Networth for the person who puts a fixed amount in every month and wants to stay calm while they do it.
+        </p>
+        <p className="rise" style={{ ["--i" as string]: 2 }}>
+          Each weekday it reads the market news and keeps only the stories that are confirmed. When one of them is the kind of event that has happened before, it counts what happened after the past cases and puts that next to the normal rate.
+        </p>
+        <p className="rise" style={{ ["--i" as string]: 3 }}>
+          We also tested ourselves. We checked whether a count far from its normal rate said anything about the cases that came next. Out of sample, the counts did no better than chance. So we show them as history, never as a signal.
+        </p>
+        <p className="rise" style={{ ["--i" as string]: 4 }}>
+          That is the whole idea. Read the news, see the history, keep your plan. What you do with it is your choice.
+        </p>
+        <p className="rise text-ink-2" style={{ ["--i" as string]: 5 }}>The Networth team</p>
+      </InView>
+    </section>
+  );
+}
+
+function Never() {
+  return (
+    <section id="never" aria-labelledby="never-title" className="scroll-mt-16 border-t border-line px-4 py-24 sm:py-28">
+      <InView className="mx-auto grid max-w-[640px] gap-10 text-center">
+        <h2 id="never-title" className="rise text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[2.5rem]">The line we never cross</h2>
+        <ul className="grid gap-4 text-lg">
+          {NEVER.map((line, i) => (
+            <li key={line} className="rise text-balance" style={{ ["--i" as string]: i + 1 }}>{line}</li>
+          ))}
+        </ul>
+      </InView>
+    </section>
+  );
+}
+
+function Faq() {
+  return (
+    <section id="faq" aria-labelledby="faq-title" className="scroll-mt-16 border-t border-line px-4 py-24 sm:py-32">
+      <div className="mx-auto grid max-w-[680px] gap-10">
+        <h2 id="faq-title" className="text-center text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] sm:text-[2.5rem]">Before you start</h2>
+        <div className="grid divide-y divide-line border-y border-line">
+          {FAQ.map(({ q, a }) => (
+            <details key={q} name="faq" className="group">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 font-medium transition-colors hover:text-ink-2">
+                {q}
+                <span aria-hidden="true" className="figure text-lg text-ink-3 transition-transform duration-200 group-open:rotate-45">+</span>
+              </summary>
+              <p className="faq-a max-w-[60ch] pb-6 text-ink-2">{a}</p>
+            </details>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Footer() {
+  return (
+    <footer className="border-t border-line px-4">
+      <div className="mx-auto grid max-w-5xl justify-items-center gap-4 py-14 text-center text-sm text-ink-3">
+        <span className="flex items-center gap-2 text-ink-2"><Mark className="size-4" /> Networth</span>
+        <span className="text-base text-ink">Research, not advice.</span>
+        <span className="flex gap-6">
+          <Link href="/demo" className="no-underline hover:text-ink">Demo</Link>
+          <a href={BOT_URL} rel="noopener" target="_blank" className="no-underline hover:text-ink">Telegram bot</a>
+        </span>
+      </div>
+    </footer>
+  );
+}
+
 export default function Landing() {
   return (
     <>
-      <header className="sticky top-0 z-30 border-b border-line bg-[color-mix(in_oklch,var(--bg)_88%,transparent)] backdrop-blur">
-        <nav aria-label="Main" className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 text-sm font-semibold no-underline">
-            <Mark className="size-5" /> Networth
-          </Link>
-          <ul className="flex items-center gap-5 text-sm text-ink-2 max-md:hidden">
-            <li><a href="#how" className="no-underline hover:text-ink">How it works</a></li>
-            <li><a href="#record" className="no-underline hover:text-ink">Track record</a></li>
-            <li><a href="#faq" className="no-underline hover:text-ink">FAQ</a></li>
-          </ul>
-          <div className="ml-auto flex items-center gap-2">
-            <ThemeToggle compact />
-            <Link href="/demo" className="btn btn-primary no-underline">Try the demo</Link>
-          </div>
-        </nav>
-      </header>
-
+      <Nav />
       <main>
-        <section aria-labelledby="hero-title" className="mx-auto grid max-w-6xl gap-10 px-4 pt-16 pb-16 sm:px-6 sm:pt-24 sm:pb-24">
-          <h1 id="hero-title" className="max-w-[20ch] text-[2.5rem] leading-[1.05] font-semibold tracking-tight sm:text-[4rem] lg:text-[4.75rem]">
-            A calm friend for your monthly investing.
-          </h1>
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-16">
-            <div className="grid content-start gap-6">
-              <p className="max-w-[48ch] text-lg text-ink-2">
-                Networth reads the market news, checks it against what happened in the past, and turns up on the day you invest. On Telegram, by email and on the web.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/demo" className="btn btn-primary h-11 px-5 text-base no-underline">
-                  Try the demo <ArrowRight aria-hidden="true" />
-                </Link>
-                <a href={BOT_URL} rel="noopener" target="_blank" className="btn h-11 px-5 text-base no-underline">
-                  <Send aria-hidden="true" /> Message the bot
-                </a>
-              </div>
-            </div>
-            <LandingAsk />
-          </div>
-        </section>
-
-        <Section id="how" kicker="How it works" title="Three steps, then it comes to you">
-          <ol className="grid gap-16">
-            {STEPS.map((step, i) => (
-              <li key={step.title} className="grid gap-6 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12">
-                <div className="grid content-start gap-3">
-                  <p className="figure text-sm text-ink-3">{`0${i + 1}`}</p>
-                  <h3 className="text-xl font-semibold">{step.title}</h3>
-                  <p className="max-w-[44ch] text-ink-2">{step.body}</p>
-                </div>
-                <div className="min-w-0 rounded-xl border border-line p-5 sm:p-6">
-                  <Live height="min-h-40">{step.live}</Live>
-                </div>
-              </li>
-            ))}
-          </ol>
-        </Section>
-
-        <Section id="channels" kicker="Where it lives" title="Wherever you already read">
-          <ul className="grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
-            {CHANNELS.map(({ icon: Icon, name, body }) => (
-              <li key={name} className="grid content-start gap-3 bg-bg p-6">
-                <Icon aria-hidden="true" className="size-5 text-ink-2" />
-                <h3 className="font-semibold">{name}</h3>
-                <p className="text-ink-2">{body}</p>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section id="never" kicker="The line we never cross" title="What it will never do">
-          <ul className="grid max-w-3xl gap-4">
-            {NEVER.map((line) => (
-              <li key={line} className="flex gap-3 text-lg">
-                <span aria-hidden="true" className="mt-[0.7em] h-px w-4 shrink-0 bg-ink-3" />
-                <span>{line}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section id="record" kicker="Track record" title="We tested ourselves. It came back negative.">
-          <div className="grid gap-8 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] md:gap-12">
-            <p className="max-w-[44ch] text-ink-2">
-              We checked whether a count well above its normal rate said anything about the cases that came next. On years we held back, it did no better than chance. So Networth shows the counts as history, never as a signal.
-            </p>
-            <Live height="min-h-32">
-              <LiveTrackRecord />
+        <Hero />
+        <How />
+        <Feature id="chat" title="Ask it anything about money." more="It explains in English, Hindi or Hinglish, and it never picks for you." className="border-t border-line py-24 sm:py-32">
+          <ChatMock />
+        </Feature>
+        <Feature id="brief" title="One short brief, on your day." more="The month's news, your plan, and what history counted.">
+          <Live height="min-h-[30rem]">
+            <BriefMock />
+          </Live>
+        </Feature>
+        <Feature id="sample" title="History, drawn in pencil." more="The sample profile's plan, replayed over real past months." className="py-20 sm:py-32">
+          <div className="mx-auto max-w-3xl rounded-[20px] border border-line p-5 text-left sm:p-8">
+            <Live height="min-h-[34rem]">
+              <LiveRange />
             </Live>
           </div>
-        </Section>
-
-        <Section id="sample" kicker="Drawn live from the sample profile" title="What a plan could become">
-          <div className="grid gap-6">
-            <div className="min-w-0 max-w-3xl rounded-xl border border-line p-5 sm:p-6">
-              <Live height="min-h-[34rem]">
-                <LiveRange />
-              </Live>
-            </div>
-            <p>
-              <Link href="/demo" className="inline-flex items-center gap-1.5 underline">
-                Ask the sample profile your own question <ArrowRight aria-hidden="true" className="size-4" />
-              </Link>
-            </p>
-          </div>
-        </Section>
-
-        <Section id="faq" kicker="Questions" title="Before you start">
-          <div className="grid max-w-3xl divide-y divide-line border-y border-line">
-            {FAQ.map(({ q, a }) => (
-              <details key={q} name="faq" className="group py-1">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium">
-                  {q}
-                  <span aria-hidden="true" className="figure text-ink-3 transition-transform group-open:rotate-45">+</span>
-                </summary>
-                <p className="max-w-[60ch] pb-5 text-ink-2">{a}</p>
-              </details>
-            ))}
-          </div>
-        </Section>
+        </Feature>
+        <Feature id="email" title="Prefer email? Reply to it." more="Ask a question back and the answer comes by email.">
+          <EmailMock />
+        </Feature>
+        <Feature id="dashboard" title="Your own page, one link away." more="/dashboard in the bot opens everything on one sheet." className="py-24 sm:py-36">
+          <Live height="min-h-[28rem]">
+            <DashboardMock />
+          </Live>
+          <p className="mt-10">
+            <Link href="/demo" className="btn btn-primary h-11 px-5 text-base no-underline">
+              Open the sample profile <ArrowRight aria-hidden="true" />
+            </Link>
+          </p>
+        </Feature>
+        <Letter />
+        <Never />
+        <Faq />
       </main>
-
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-10 text-sm text-ink-3 sm:px-6">
-          <span className="flex items-center gap-2 text-ink-2"><Mark className="size-4" /> Networth</span>
-          <span>Research, not advice.</span>
-          <span className="ml-auto flex gap-5">
-            <Link href="/demo" className="no-underline hover:text-ink">Demo</Link>
-            <a href={BOT_URL} rel="noopener" target="_blank" className="no-underline hover:text-ink">Telegram bot</a>
-          </span>
-        </div>
-      </footer>
+      <Footer />
     </>
   );
 }
