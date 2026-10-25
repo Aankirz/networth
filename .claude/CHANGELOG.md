@@ -600,3 +600,6 @@
 
 ## 2026-10-25 — Phase 13A: Get my brief now
 - Setup done (Telegram), /plan and the dashboard reply carry a "Get my brief now" button (br:now); email setup says "Reply /brief now". briefs.brief_now builds the brief with the /brief builder but never claims or saves the day, so the scheduled brief still goes out. Web /plan matches Telegram. tests/test_brief_now.py.
+
+## 2026-10-25 — Phase 13A: market data module
+- networth/market.py: quotes (last close, day change, 52-week range), multi-year history, returns, worst falls, index and name lookup (NSE first for rupee readers) from Yahoo Finance via yfinance, no key. tests/test_market.py with a fake source.
