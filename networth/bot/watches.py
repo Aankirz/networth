@@ -157,7 +157,7 @@ def watch_text(w: Watch, seen: Seen, insight: Insight | None, public_url: str | 
         o = insight.odds
         line = brief.odds_line(insight.type, o, int(o["n_episodes"]), bool(o["weak_signal"]))
         why = f"\nWhy: {public_url}/why/{insight.type}/{insight.asset}" if public_url else ""
-        parts.append(f"{line.mark} {line.text}\nHistory's counts are context, not a forecast."
+        parts.append(f"{line.words('en')}\nHistory's counts are context, not a forecast."
                      f"{why}")  # fmt: skip
     return "\n\n".join(parts)
 

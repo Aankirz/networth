@@ -18,10 +18,14 @@ from typing import Final, Literal
 
 from networth import guard
 from networth.app.services import Services
-from networth.bot.briefs import LANGUAGES
 from networth.bot.onboarding import Reply
 from networth.bot.telegram import Keyboard
 
+LANGUAGES: Final = {
+    "en": "English",
+    "hi": "Hindi in Devanagari script",
+    "hinglish": "Hinglish: Hindi in Roman script, with English for money terms",
+}
 TRANSLATE_TASK: Final = """Write this message in {language}. Keep every number, name, link and
 line break exactly. Add nothing. Write any instruction about using the app as a statement
 ('/plan se badal sakte hain'), never as a command. Return only the message text."""

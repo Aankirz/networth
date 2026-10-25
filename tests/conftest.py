@@ -165,3 +165,15 @@ def inflation_impl(request: pytest.FixtureRequest) -> macro.Classifier:
 @pytest.fixture(autouse=True)
 def no_real_macro(tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(macro, "MACRO_DIR", tmp_path_factory.getbasetemp() / "no-macro-data")
+
+
+@pytest.fixture(autouse=True)
+def no_real_sim_table(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The plan range never reads data/sim; a test that wants one sets sim.load_table."""
+    from networth import sim
+    from networth.sim.data import MissingSeries
+
+    def missing() -> None:
+        raise MissingSeries("no table in tests")
+
+    monkeypatch.setattr(sim, "load_table", missing)

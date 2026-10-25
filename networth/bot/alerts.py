@@ -47,7 +47,7 @@ def alert_text(i: Insight) -> str:
     o = i.odds
     line = brief.odds_line(i.type, o, int(o["n_episodes"]), False)
     return (f"A rare one. {names.TYPES[i.type].title}, {i.event_date:%b} {i.event_date.day}, "
-            f"confirmed.\n\n{line.mark} {line.text}\n\nHistory's counts are context, not a "
+            f"confirmed.\n\n{line.words('en')}\n\nHistory's counts are context, not a "
             "forecast. Your plan doesn't change unless you change it.")  # fmt: skip
 
 

@@ -107,6 +107,9 @@ ODDS_WORDS: Final[tuple[tuple[float, str], ...]] = (
     (0.0, "Rarely"),
 )
 
+# A count this close to its normal rate is within normal ups and downs; past it, the words say
+# nothing about direction either way.
+NEAR_NORMAL: Final = 0.10
 LEAN_GAP: Final = 0.10
 
 
