@@ -585,3 +585,6 @@
 
 ## 2026-10-25 — Phase 13A: no footer, no disclaimers
 - Owner order: FOOTER blanked, every "Research, not advice", "your call", "I will not say yes or no" and "your choice" line removed from chat, bot, keiki, web templates and holdings copy; tests now assert none; DISCLAIMER regex strips any a model adds.
+
+## 2026-10-25 — Phase 13A: Hindi/Hinglish buy-sell routing
+- No-model phrase rules send "kya bechna chahiye", बेच, खरीद, kharid to the holdings plan-gap path; tests.

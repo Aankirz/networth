@@ -289,3 +289,21 @@ def test_a_dollar_list_keeps_every_line_in_its_place(chat: Chat) -> None:
     assert nh.LINES["en"]["not_rupees"] in lines
     assert m.title == lines[0] and m.detail == tuple(lines[len(lines) - len(m.detail) - 1 : -1])
     assert all(line in plain(m) for line in lines[:-1])
+
+
+@pytest.mark.parametrize(("question", "lang"), [
+    ("kya bechna chahiye", "hinglish"), ("मुझे क्या बेचना चाहिए?", "hi"),
+    ("Kaunsa fund kharidna chahiye?", "hinglish"),
+])  # fmt: skip
+def test_a_hindi_or_hinglish_sell_question_without_models_gets_the_plan_gap(
+    tmp_path, question: str, lang: str
+) -> None:
+    """P9: with no model the phrase rules must send these to the holdings path, not explain."""
+    chat = talk(tmp_path, lang=lang)
+    confirm(chat)
+    chat.services = dataclasses.replace(chat.services, models=None)
+    chat.say(question)
+    text = plain(last(chat))
+    assert text.startswith(words.NOT_A_PICK[lang])
+    report = nh.report_for(USER, chat.store, table=TABLE)
+    assert all(line in text for line in flow.comparison_lines(report, "Balanced", lang))

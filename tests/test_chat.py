@@ -14,7 +14,7 @@ from networth import config
 from networth.app.services import Services
 from networth.app.store import Profile
 from networth.bot.message import DISCLAIMER
-from networth.chat import Intent, explain, jev, reply_lang
+from networth.chat import Intent, _by_phrase, explain, jev, reply_lang
 from networth.chat.talk import HELLO
 from networth.chat.today import TYPE_QUESTION
 from networth.config import Query
@@ -691,3 +691,14 @@ def test_what_is_my_plan_shows_the_plan_through_the_live_route(tmp_path, cfg, be
         chat.say(before)
     chat.say("What is my plan?")
     assert chat.bot.last.startswith(SHOW_PLAN["What is my plan?"]), chat.bot.last
+
+
+@pytest.mark.parametrize("question", [
+    "kya bechna chahiye", "Mujhe kaunsa share bechu?", "kya kharidna chahiye",
+    "मुझे क्या बेचना चाहिए?", "कौन सा शेयर खरीदूँ?",
+])  # fmt: skip
+def test_a_hindi_or_hinglish_buy_or_sell_question_routes_to_holdings_without_models(
+    question: str,
+) -> None:
+    """P9: with no model, "kya bechna chahiye" reached the explainer, not the plan gap path."""
+    assert _by_phrase(question, False) is Intent.HOLDINGS
