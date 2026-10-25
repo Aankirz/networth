@@ -109,7 +109,7 @@ class Stories:
 
 class Sources(Protocol):
     def stock(self, ticker: str) -> StockInfo | None: ...
-    def closes(self, ticker: str) -> Closes | None: ...
+    def closes(self, ticker: str, period: str = "15y") -> Closes | None: ...
     def fund_search(self, query: str) -> list[tuple[int, str]]: ...
     def fund_navs(self, code: int) -> tuple[str, Closes] | None: ...
     def ipos(self) -> list[IpoListing]: ...
@@ -169,13 +169,13 @@ class LiveSources:
             Source("Yahoo Finance", YAHOO_QUOTE.format(symbol=ticker), _now()),
         )
 
-    def closes(self, ticker: str) -> Closes | None:
+    def closes(self, ticker: str, period: str = "15y") -> Closes | None:
         import yfinance as yf
 
         def fetch() -> pd.Series | None:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                hist = yf.Ticker(ticker).history(period="15y", auto_adjust=True)
+                hist = yf.Ticker(ticker).history(period=period, auto_adjust=True)
             if hist is None or hist.empty or "Close" not in hist:
                 return None
             s = hist["Close"].dropna()

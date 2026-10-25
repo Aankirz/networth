@@ -83,7 +83,7 @@ class FakeSources:
     def stock(self, ticker: str) -> StockInfo | None:
         return self.stocks.get(ticker)
 
-    def closes(self, ticker: str) -> Closes | None:
+    def closes(self, ticker: str, period: str = "15y") -> Closes | None:
         return Closes(walk(0.08 + 0.01 * (len(ticker) % 5), len(ticker)), src(f"Yahoo:{ticker}"))
 
     def fund_search(self, query: str) -> list[tuple[int, str]]:
