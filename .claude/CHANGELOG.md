@@ -414,3 +414,6 @@
 - An event type mid-sentence is lower-case ("bank stress", not "Bank stress"); RBI and US keep their capitals.
 - Stress months say "shocks like this have happened before" once; the plan line right after it carries "you have a plan", so the brief no longer says it twice.
 - Every /why/ link in a message escapes the asset ("%5ENSEBANK") through one names.why_path helper.
+
+## 2026-10-25 — docs: phase 3E words eval rerun
+- `uv run python -m evals --live words` after 3E: 85 of 86 pass (was 78), no advice or score 86 (was 81), right language 85 (was 83), $0.35. summary.json, words.json, words_raw.json and the phase 5 report's words section regenerate from it.

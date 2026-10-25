@@ -118,14 +118,14 @@
  },
  "no_advice": {
   "messages": 86,
-  "passed": 78,
-  "pass_rate": 0.907,
-  "advice_or_score_free": 81
+  "passed": 85,
+  "pass_rate": 0.9884,
+  "advice_or_score_free": 86
  },
  "number_trace": {
   "messages": 20,
   "numbers": 198,
   "trace_rate": 1.0
  },
- "spend_usd": 2.4163
+ "spend_usd": 1.5446
 }
