@@ -102,9 +102,9 @@ use_jev_for_intent = true
 jev_min_confidence = 0.7
 jev_deadline_s = 4
 # A rare alert needs at least 8 independent past episodes (PRODUCT.md) and a gap of 15 points
-# between the hit rate and the normal-period rate. The pages call 10 points a lean; 15 is
-# half again as wide, so an alert fires only where the scoreboard would already show a clear
-# green or red and the count is not a weak signal. At most 2 a month per user (PRODUCT.md).
+# between the hit rate and the normal-period rate. The pages call a gap under 10 points within
+# normal ups and downs; 15 is half again as wide, so an alert fires only well outside that and
+# when the count is not a weak signal. At most 2 a month per user (PRODUCT.md).
 alert_min_episodes = 8
 alert_min_gap = 0.15
 alert_max_per_month = 2

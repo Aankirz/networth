@@ -4,7 +4,6 @@ branch on a type, an asset or a market themselves."""
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import Final
 
 from networth.engine.model import EraName, EventType
@@ -97,40 +96,9 @@ HORIZONS: Final[dict[int, Horizon]] = {
     63: Horizon("over the next 63 trading days, about three months", "three months"),
 }
 
-# Ordered high to low; the first lower bound a hit rate reaches gives the words.
-ODDS_WORDS: Final[tuple[tuple[float, str], ...]] = (
-    (0.90, "Almost always"),
-    (0.70, "Usually"),
-    (0.56, "More often than not"),
-    (0.45, "A coin flip"),
-    (0.30, "Less often than not"),
-    (0.0, "Rarely"),
-)
-
 # A count this close to its normal rate is within normal ups and downs; past it, the words say
 # nothing about direction either way.
 NEAR_NORMAL: Final = 0.10
-LEAN_GAP: Final = 0.10
-
-
-class LeanKind(StrEnum):
-    UP = "leans-up"
-    DOWN = "leans-down"
-    NONE = "no-pattern"
-
-
-@dataclass(frozen=True)
-class Lean:
-    kind: LeanKind
-    mark: str  # the text marker beside a row, so colour is never the only signal
-
-
-LEANS: Final[dict[str, Lean]] = {
-    "up": Lean(LeanKind.UP, "History leans toward"),
-    "down": Lean(LeanKind.DOWN, "History leans against"),
-    "none": Lean(LeanKind.NONE, "No clear pattern"),
-    "weak": Lean(LeanKind.NONE, "Weak signal"),
-}
 
 # Display-only rewording of real headlines whose wording this site never uses.
 HEADLINE_REWORDS: Final[tuple[tuple[str, str], ...]] = (("agrees to buy", "agrees to take over"),)
@@ -165,23 +133,6 @@ def benchmark_name(benchmark: str) -> str:
 
 def horizon(days: int) -> Horizon:
     return HORIZONS.get(days, Horizon(f"over the next {days} trading days", "stretch"))
-
-
-def odds_words(hit_rate: float, n_episodes: int, weak_signal: bool) -> str:
-    if weak_signal:
-        return f"Weak signal, only {n_episodes} past cases"
-    return next(words for bound, words in ODDS_WORDS if hit_rate >= bound)
-
-
-def lean(hit_rate: float, baseline: float, weak_signal: bool) -> Lean:
-    if weak_signal:
-        return LEANS["weak"]
-    gap = hit_rate - baseline
-    if gap >= LEAN_GAP:
-        return LEANS["up"]
-    if gap <= -LEAN_GAP:
-        return LEANS["down"]
-    return LEANS["none"]
 
 
 def reword_headline(headline: str) -> str:

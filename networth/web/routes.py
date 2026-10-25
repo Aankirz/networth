@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 import functools
+import json
 import math
 import sqlite3
 from pathlib import Path
@@ -36,11 +37,12 @@ from networth.bot.onboarding import (
     ordinal,
     plan_line,
 )
+from networth.config import REPO
 from networth.engine import odds as engine
 from networth.engine.model import CURRENCY, EventType, RatesDB
 from networth.sim.data import MissingSeries, Table, load_table
 from networth.web import holdings_view, names, plan_view, views
-from networth.web.fmt import western_grouping
+from networth.web.fmt import percent, western_grouping
 
 HERE: Final = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=HERE / "templates")
@@ -52,6 +54,7 @@ MAX_AMOUNT: Final = 1e12
 CURRENCIES: Final = frozenset(CURRENCY.values())
 LANDING_TYPE: Final = "rbi_hike"
 TRACK_RECORD_LIMIT: Final = 500
+EVAL_SUMMARY: Final = REPO / "evals" / "results" / "summary.json"
 DEMO_AMOUNT: Final = 150_000
 DEMO_YEARS: Final = 15
 DEMO_FALL: Final = 20
@@ -188,6 +191,34 @@ def scoreboard(request: Request, type: str, db: DB) -> HTMLResponse:
     return _page(request, "scoreboard.html", v=v, types=names.TYPES)
 
 
+def _tested(block: dict, period: str) -> str:
+    """One out-of-sample result in plain words, from the eval summary's counts that sat well
+    above their normal rate."""
+    r = block["leans"]["toward"]
+    return (
+        f"{period}, {r['statements']} counts sat well above their normal rate. On the cases "
+        f"that came after, the rate was {percent(r['later_rate'])}, against a normal "
+        f"{percent(r['baseline'])}."
+    )
+
+
+def _own_test(path: Path) -> list[str] | None:
+    """Our own negative result, read from the eval summary at request time. None when the file
+    is missing or does not read, so the page leaves the section out."""
+    try:
+        summary = json.loads(path.read_text())
+        walk = summary["calibration"]["walk_forward"]
+        first = dt.date.fromisoformat(walk["cutoffs"][0]).year
+        end = dt.date.fromisoformat(walk["end"]).year
+        return [
+            _tested(walk, f"From {first} to {end - 1}"),
+            _tested(summary["vault"], f"From {end} on, years we held back until the method "
+                    "was fixed"),
+        ]  # fmt: skip
+    except (OSError, ValueError, KeyError, IndexError, TypeError):
+        return None
+
+
 @router.get("/track-record", response_class=HTMLResponse)
 def track_record(request: Request, db: DB) -> HTMLResponse:
     conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
@@ -203,7 +234,8 @@ def track_record(request: Request, db: DB) -> HTMLResponse:
             rows = cur.fetchall()
     finally:
         conn.close()
-    return _page(request, "track_record.html", columns=columns, rows=rows, count=len(rows))
+    return _page(request, "track_record.html", columns=columns, rows=rows, count=len(rows),
+                 tested=_own_test(EVAL_SUMMARY))  # fmt: skip
 
 
 STATS_QUERIES: Final[tuple[tuple[str, str], ...]] = (

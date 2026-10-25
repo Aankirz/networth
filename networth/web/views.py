@@ -7,6 +7,7 @@ arithmetic is the what-if strip's geometry, which places shapes and is never pri
 from __future__ import annotations
 
 from collections.abc import Sequence
+from enum import StrEnum
 from typing import Final
 
 from networth.engine.odds import CompareJSON, OddsJSON, PositionRangeJSON
@@ -46,42 +47,56 @@ def _episode_row(e: dict, measure: str) -> dict:
     }
 
 
+class Band(StrEnum):
+    """Where a count sits against its normal rate. OUTSIDE says nothing about direction."""
+
+    WEAK = "weak"
+    NEAR = "near"
+    OUTSIDE = "outside"
+
+
+NEAR_WORDS: Final = "within normal ups and downs"
+BAND_CHANGES: Final[dict[Band, str]] = {
+    Band.WEAK: "Only {n} past cases. A few more could move this count a lot, so it is too few "
+    "to call a pattern.",
+    Band.NEAR: f"The count is {NEAR_WORDS}, so a couple of new cases could tip it either way.",
+    Band.OUTSIDE: "Each new case that goes the other way narrows the gap to a normal period. "
+    "A run of them would erase it.",
+}
+
+
+def _band(hit_rate: float, baseline: float, weak_signal: bool) -> Band:
+    if weak_signal:
+        return Band.WEAK
+    return Band.NEAR if abs(hit_rate - baseline) < names.NEAR_NORMAL else Band.OUTSIDE
+
+
+def _normal_words(baseline: float, near: bool) -> str:
+    """'normal 51%', or 'normal 51%, within normal ups and downs' for a near count."""
+    return f"normal {percent(baseline)}" + (f", {NEAR_WORDS}" if near else "")
+
+
 def _era_row(era: dict, name: str, type_plural: str) -> dict:
+    near = _band(era["hit_rate"], era["baseline"], era["weak_signal"]) is Band.NEAR
     return {
         "name": names.ERA_WORDS.get(era["era"], era["era"]),
         "sentence": (
             f"{name} {_claim(era['measure'], era['benchmark'])} in {era['n_hits']} of "
-            f"{era['n_episodes']} {type_plural}; normal {percent(era['baseline'])}."
+            f"{era['n_episodes']} {type_plural}; {_normal_words(era['baseline'], near)}."
         ),
         "shared": era["n_shared_with_primary"],
         "series": era["series"],
         "weak_signal": era["weak_signal"],
-        "lean": names.lean(era["hit_rate"], era["baseline"], era["weak_signal"]),
     }
 
 
-def _changes(o: OddsJSON, lean: names.Lean, type_plural: str) -> list[str]:
+def _changes(o: OddsJSON, band: Band, type_plural: str) -> list[str]:
     """Qualitative sentences on what would move this view, each tied to an engine flag."""
-    out = []
-    if o["weak_signal"]:
-        out.append(
-            f"Only {o['n_episodes']} past cases. A few more could move this count a lot, "
-            "so treat it as a hint, not a pattern."
-        )
-    elif lean.kind is names.LeanKind.NONE:
-        out.append(
-            "The count sits close to a normal period, so a couple of new cases could tip it "
-            "either way."
-        )
-    else:
-        out.append(
-            "Each new case that goes the other way narrows the gap to a normal period. "
-            "A run of them would erase it."
-        )
+    out = [BAND_CHANGES[band].format(n=o["n_episodes"])]
     if o["eras_disagree"]:
         out.append(
-            "Older data points the other way. If new cases start to look like the older "
-            "ones, this view weakens."
+            "Older data gives a different count. If new cases start to look like the older "
+            "ones, this count could change."
         )
     out.append(
         f"A different cause behind the next one. These counts mix every cause of "
@@ -93,7 +108,7 @@ def _changes(o: OddsJSON, lean: names.Lean, type_plural: str) -> list[str]:
 def why_view(o: OddsJSON) -> dict:
     t = names.TYPES[o["type"]]
     h = names.horizon(o["horizon_days"])
-    lean = names.lean(o["hit_rate"], o["baseline"], o["weak_signal"])
+    band = _band(o["hit_rate"], o["baseline"], o["weak_signal"])
     name = names.asset_name(o["asset"])
     return {
         "type": o["type"],
@@ -105,11 +120,10 @@ def why_view(o: OddsJSON) -> dict:
             f"{o['n_episodes']} {t.plural}."
         ),
         "normal": f"In a normal {h.period}, {percent(o['baseline'])}.",
-        "odds_words": names.odds_words(o["hit_rate"], o["n_episodes"], o["weak_signal"]),
-        "n_hits": o["n_hits"],
+        "count": f"{o['n_hits']} of {o['n_episodes']} past cases.",
         "n_episodes": o["n_episodes"],
         "weak_signal": o["weak_signal"],
-        "lean": lean,
+        "near_normal": band is Band.NEAR,
         "horizon": h.words,
         "benchmark": names.benchmark_name(o["benchmark"]),
         "measure": o["measure"],
@@ -120,7 +134,7 @@ def why_view(o: OddsJSON) -> dict:
         "other_eras": [_era_row(e, name, t.plural) for e in o["other_eras"]],
         "eras_disagree": o["eras_disagree"],
         "includes_vault": o["includes_vault"],
-        "changes": _changes(o, lean, t.plural),
+        "changes": _changes(o, band, t.plural),
     }
 
 
@@ -207,15 +221,14 @@ def scoreboard_group_view(c: CompareJSON) -> dict:
     t = names.TYPES[c["type"]]
     rows = []
     for a in c["assets"]:
-        lean = names.lean(a["hit_rate"], a["baseline"], c["weak_signal"])
+        near = _band(a["hit_rate"], a["baseline"], c["weak_signal"]) is Band.NEAR
         rows.append(
             {
                 "asset": a["asset"],
                 "name": names.asset_name(a["asset"]),
-                "lean": lean,
                 "text": (
                     f"{_claim(a['measure'], a['benchmark'])} in {a['n_hits']} of "
-                    f"{c['n_episodes']} shared {t.plural}; normal {percent(a['baseline'])}"
+                    f"{c['n_episodes']} shared {t.plural}; {_normal_words(a['baseline'], near)}"
                 ),
             }
         )

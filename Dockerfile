@@ -18,6 +18,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY networth ./networth
 COPY knowledge ./knowledge
+COPY evals/results/summary.json ./evals/results/summary.json
 RUN uv sync --frozen --no-dev
 
 ENV DATA_DIR=/data \

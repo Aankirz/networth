@@ -10,11 +10,20 @@ from evals import walkforward as wf
 
 def scored(hit_rate: float, baseline: float, hits: list[bool], n: int = 10) -> wf.Scored:
     weak = n < 8
-    lean = wf.names.lean(hit_rate, baseline, weak).kind.value
+    lean = wf.lean_kind(hit_rate, baseline, weak)
     s = wf.Statement("rbi_hike", "^NSEBANK", "since_2007", "2016-01-01", n,
                      round(hit_rate * n), hit_rate, baseline, weak, lean)  # fmt: skip
     outs = tuple(wf.Outcome(f"e{i}", "2017-01-01", h) for i, h in enumerate(hits))
     return wf.Scored(s, outs)
+
+
+@pytest.mark.parametrize(("hit_rate", "baseline", "weak", "kind"), [
+    (0.7, 0.5, False, "leans-up"), (0.3, 0.5, False, "leans-down"),
+    (0.55, 0.5, False, "no-pattern"), (0.9, 0.5, True, "no-pattern"),
+])  # fmt: skip
+def test_stated_kinds_keep_the_strings_the_stored_results_use(hit_rate, baseline, weak,
+                                                              kind) -> None:  # fmt: skip
+    assert wf.lean_kind(hit_rate, baseline, weak) == kind
 
 
 def test_an_up_lean_holds_only_when_later_hits_beat_the_baseline() -> None:

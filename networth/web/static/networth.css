@@ -1,5 +1,5 @@
 /* Networth: a printed research note. Ink on ledger paper, a serif for the verdict,
-   tabular figures for every count. Green, grey and red mean lean, nothing else. */
+   tabular figures for every count. No colour stands for a direction. */
 
 :root {
   --paper: #f1f3ef;
@@ -7,11 +7,7 @@
   --muted: #4b5761;
   --rule: #c3cbc7;
   --link: #1f4e79;
-  --up: #17623a;
-  --down: #9e2424;
   --flat: #525c67;
-  --up-wash: #e0ede4;
-  --down-wash: #f6e2e0;
   --flat-wash: #e4e8ea;
   --band: #d3e0d8;
   --dot: #1f4e79;
@@ -43,11 +39,7 @@
     --muted: #a9b3b6;
     --rule: #36434c;
     --link: #9cc7ee;
-    --up: #79d29b;
-    --down: #f39a93;
     --flat: #b4bdc4;
-    --up-wash: #183429;
-    --down-wash: #3b2120;
     --flat-wash: #222c33;
     --band: #1f3a2e;
     --dot: #9cc7ee;
@@ -61,11 +53,7 @@
   --muted: #a9b3b6;
   --rule: #36434c;
   --link: #9cc7ee;
-  --up: #79d29b;
-  --down: #f39a93;
   --flat: #b4bdc4;
-  --up-wash: #183429;
-  --down-wash: #3b2120;
   --flat-wash: #222c33;
   --band: #1f3a2e;
   --dot: #9cc7ee;
@@ -206,37 +194,12 @@ h2 {
   color: var(--muted);
 }
 
-/* Lean: the only place colour carries meaning, always beside a text mark. */
-.lean {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.25rem 0.6rem;
+.count {
   padding: var(--space-1) 0.75rem;
-  border-left: 4px solid var(--lean, var(--flat));
-  background: var(--lean-wash, var(--flat-wash));
+  border-left: 4px solid var(--flat);
+  background: var(--flat-wash);
   margin: 0 0 var(--space-2);
-}
-
-.lean--leans-up {
-  --lean: var(--up);
-  --lean-wash: var(--up-wash);
-}
-
-.lean--leans-down {
-  --lean: var(--down);
-  --lean-wash: var(--down-wash);
-}
-
-.lean--no-pattern {
-  --lean: var(--flat);
-  --lean-wash: var(--flat-wash);
-}
-
-.lean__mark {
-  font-weight: 600;
-  color: var(--lean, var(--flat));
-  white-space: nowrap;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .callout {
@@ -408,7 +371,7 @@ h2 {
 
 .eras li {
   padding: 0.75rem 0 0.75rem 0.75rem;
-  border-left: 4px solid var(--lean, var(--flat));
+  border-left: 4px solid var(--flat);
   margin-bottom: var(--space-1);
 }
 
@@ -417,7 +380,7 @@ h2 {
   border-top: 1px solid var(--rule);
 }
 
-/* Scoreboard: fixed order, no ranks, each row stamped with its lean in words. */
+/* Scoreboard: fixed order, no ranks, each row a plain count beside its normal rate. */
 .board__group {
   margin-bottom: var(--space-3);
 }
@@ -434,8 +397,8 @@ h2 {
   gap: 0.15rem;
   padding: 0.75rem;
   margin-bottom: 0.35rem;
-  border-left: 4px solid var(--lean);
-  background: var(--lean-wash);
+  border-left: 4px solid var(--flat);
+  background: var(--flat-wash);
 }
 
 .board__row a {
