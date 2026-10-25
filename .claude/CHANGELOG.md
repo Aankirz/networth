@@ -458,3 +458,6 @@
 
 ## 2026-10-25 — fix: phase 8 site polish after the taste gate and screenshots
 - Section dividers became spacing; ledger row rules kept as the design idea. The pencil filter now uses a fixed region so the vertical "what you put in" line draws. Holdings mix bars got fixed-size labels and a bucket legend. Primitives name their transition properties. Screenshots refreshed.
+
+## 2026-10-25 — docs: phase 8 report
+- Added docs/phases/phase-8-report.md: contract, design direction, what each inspiration gave, the owner steps for the Vercel preview and the Maritime deploy, the production deploy command, known gaps and deviations.
