@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
 import threading
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
@@ -23,6 +24,8 @@ from typing import Final
 import httpx2
 
 IPV4_ANY: Final = "0.0.0.0"
+
+log = logging.getLogger("networth.net")
 
 
 class DeadlineExceeded(TimeoutError):
@@ -98,10 +101,23 @@ def append_record(log_path: Path, record: CallRecord) -> None:
 
 
 def read_records(log_path: Path) -> list[CallRecord]:
+    """Every whole record. A VM stopped mid-append leaves NUL padding or a torn line; one bad
+    line must not take down every reader, so NULs are stripped and a line that still fails to
+    parse is skipped and counted in the log."""
     if not log_path.exists():
         return []
-    lines = log_path.read_text(encoding="utf-8").splitlines()
-    return [CallRecord(**json.loads(line)) for line in lines if line.strip()]
+    lines = log_path.read_text(encoding="utf-8", errors="replace").splitlines()
+    records, torn = [], 0
+    for line in (x.replace("\0", "").strip() for x in lines):
+        if not line:
+            continue
+        try:
+            records.append(CallRecord(**json.loads(line)))
+        except (ValueError, TypeError):
+            torn += 1
+    if torn:
+        log.warning("%s: skipped %d unreadable line(s)", log_path.name, torn)
+    return records
 
 
 def _now() -> str:

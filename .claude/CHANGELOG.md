@@ -508,3 +508,6 @@
 
 ## 2026-10-25 — report: live menu check result
 - Replaced the Pending section with the live getChatMenuButton result.
+
+## 2026-10-25 — web chat 500: torn call log line
+- Live /api/demo/chat 500: line 76 of /data/llm_calls.jsonl is 403 NUL bytes (VM stopped mid-append during the Maritime outage); run_turn -> cost_between -> net.read_records raised JSONDecodeError on every web turn. read_records now strips NULs and skips unparseable lines with a warning. Tests: demo chat 200 with a torn log, read_records keeps whole records.

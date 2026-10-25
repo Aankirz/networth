@@ -298,3 +298,27 @@ def test_a_holdings_question_carries_the_askers_own_holdings(tmp_path: Path, cfg
     turn = w.ask(USER, "how are my holdings doing").json()
     assert turn["intent"] == "holdings" and turn["card"]["type"] == "holdings"
     assert turn["card"]["count"] == len(fixture_holdings().items)
+
+
+def torn_call_log(path: Path) -> None:
+    """The live 500: the VM stopped mid-append and left a line of NUL bytes in the call log."""
+    good = json.dumps({"ts": "2026-10-25T10:00:00+00:00", "call": "write", "role": "writer",
+                       "model": "m", "input_tokens": 1, "cached_tokens": 0, "output_tokens": 1,
+                       "cost_usd": 0.001, "ok": True, "error": ""})  # fmt: skip
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(f"{good}\n{chr(0) * 403}\n{chr(0) * 8}{good}\nnot json\n", encoding="utf-8")
+
+
+def test_the_demo_chat_answers_what_happened_today_with_a_torn_call_log(world: World) -> None:
+    torn_call_log(world.services.call_log)
+    reply = world.client.post("/api/demo/chat", json={"text": "What happened today?"})
+    assert reply.status_code == 200, reply.text
+    assert reply.json()["text"]
+
+
+def test_a_torn_call_log_keeps_every_whole_record(tmp_path: Path) -> None:
+    from networth import net
+
+    path = tmp_path / "llm_calls.jsonl"
+    torn_call_log(path)
+    assert [r.cost_usd for r in net.read_records(path)] == [0.001, 0.001]
