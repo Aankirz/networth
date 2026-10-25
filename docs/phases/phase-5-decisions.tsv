@@ -1,0 +1,4 @@
+ts	phase	decision	why	evidence	result
+2026-10-25T06:33:55Z	frame	Picked figure-it-out under poteto-mode and fanned out 3 curators for news labels first	the web research is the slowest step and labels must exist before the judge runs	evals/news/LABELLING.md	open
+2026-10-25T06:33:56Z	frame	Spend baseline taken before any phase-5 call: 334 rows, 0.7741 USD in data/llm_calls.jsonl	the 15 USD cap counts only this phase's calls	data/llm_calls.jsonl row 334	open
+2026-10-25T06:35:59Z	harness	Rebuild base rates at any cutoff by composing the engine's public build steps	build() only takes the vault cut; reimplementing the math would not be the engine	evals/walkforward.py build_before; rebuild at 2022-01-01 equals data/base_rates_pre2022.sqlite on 274 of 274 universe rows	VERIFIED

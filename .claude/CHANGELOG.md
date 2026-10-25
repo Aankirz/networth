@@ -325,3 +325,7 @@
 
 ## 2026-10-25 — Deploy doc: Keiki
 - docs/deploy.md gains the Keiki section: resource ids, how to recreate them in a safe order, the KEIKI_* env var names, how turns are trusted, and how to rotate the HMAC secret and the API key.
+||||||| parent of 72ac779 (docs: fix the phase 5 eval plan before any result, with the walk-forward and vault runners)
+
+## 2026-10-25 — Phase 5 plan and walk-forward harness
+- docs/phases/phase-5-plan.md fixes every eval choice before any result; evals/walkforward.py rebuilds base rates at a cutoff from the engine's public build steps; evals/vault.py scores the vault once; evals/news/LABELLING.md sets the news label rules; tests/test_evals.py covers the scoring rules.
