@@ -258,7 +258,7 @@ def excess_driver(
 ) -> Scored:
     if own is None or other is None:
         return Missing(key, f"{label}: under {years} years of history.")
-    value = f"{pct(own, 1)} a year over {years} years against {other_name}'s {pct(other, 1)}"
+    value = f"{pct(own, 1)} a year over {years} years against {other_name} at {pct(other, 1)}"
     return Driver(key, label, value, clip(50 + 300 * (own - other)), weight, src)
 
 

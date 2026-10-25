@@ -622,3 +622,6 @@
 
 ## 2026-10-25 — Phase 13C: money as 13A writes it
 - networth/ratings/model.money mirrors 13A's moneyShort (site/lib/money.ts): ₹2.91 lakh, ₹1.2 crore, $12,400, $1.2M. Ratings and news alerts write amounts only through it. make check exit 0. Local commit only.
+
+## 2026-10-25 — Phase 13C: fund comparison wording
+- networth/ratings/score.py: "against the Nifty 50 at +5.4%" instead of "the Nifty 50's" / "peers's". make check exit 0. Local commit only.
