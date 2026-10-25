@@ -281,6 +281,23 @@ def test_a_slack_dm_runs_the_same_pipeline_and_threads_share_one_profile(tmp_pat
     assert "*" not in keiki.last and "<" not in keiki.last, "plain text, as for email"
 
 
+def test_two_email_threads_from_one_sender_are_one_user(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("Hello")
+    keiki.say("Saving for a house")
+    first, second = turn_log(keiki)
+    assert first["user_id"] == second["user_id"]
+    assert (first["kind"], second["kind"]) == ("welcome", "onboarding")
+
+
+def test_a_first_email_that_is_a_command_gets_the_setup_not_a_chat_answer(tmp_path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("/brief")
+    assert keiki.client.texts == [keiki.last] and keiki.last.startswith("Hi, I'm Networth.")
+    (row,) = turn_log(keiki)
+    assert (row["kind"], row["intent"]) == ("welcome", None)
+
+
 def test_a_first_email_that_only_greets_gets_just_the_setup(tmp_path: Path) -> None:
     keiki = Keiki(tmp_path)
     keiki.say("Hello")

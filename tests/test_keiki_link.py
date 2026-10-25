@@ -17,7 +17,7 @@ from networth.bot.briefs import run_daily
 from networth.keiki.mail import Mail
 from networth.keiki.turn import LINKED
 from tests.keiki_fakes import ADDRESS, FakeApi
-from tests.test_keiki_turn import Keiki
+from tests.test_keiki_turn import Keiki, turn_log
 from tests.test_onboarding import NOW, USER, Chat, onboard
 from tests.watcher_fakes import FAKE_ENV
 
@@ -45,6 +45,15 @@ def link_code(chat: Chat) -> str:
     found = re.search(r"Your code is (\d{6})\.", chat.bot.last)
     assert found, chat.bot.last
     return found.group(1)
+
+
+def test_brief_by_email_in_a_new_thread_is_a_command_for_the_linked_user(tmp_path, chat) -> None:
+    keiki = Keiki(tmp_path, chat.services)
+    keiki.say(link_code(chat), now=NOW)
+    keiki.say("/brief\n\nSent from my iPhone", now=NOW)
+    linked, brief = turn_log(keiki)
+    assert (linked["kind"], linked["user_id"]) == ("link", USER)
+    assert (brief["kind"], brief["user_id"], brief["intent"]) == ("command", USER, None)
 
 
 def test_link_gives_a_code_the_inbox_and_how_long_it_lasts(chat: Chat) -> None:
