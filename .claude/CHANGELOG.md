@@ -644,3 +644,6 @@
 
 ## 2026-10-25 — Rebased the sell view onto 13A
 - Rebased onto 13A local work; kept 13A's Hindi/Hinglish sell phrases in chat routing (they cover mine) and pointed 13A's sell test at the per-holding view.
+
+## 2026-10-25 — Holdings use the shared money() formatter
+- Holdings replies, the action plan and the sell view write amounts with networth.money.money(); deleted summary.short_money and its test; added a big-USD test ($234K) across every holdings reply.

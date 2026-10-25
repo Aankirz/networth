@@ -70,7 +70,7 @@ from networth.bot.telegram import Button, Keyboard
 from networth.holdings.action import ActionPlan, Trim, action_plan
 from networth.holdings.model import BUCKETS, Bucket, Holdings, Kind, from_json
 from networth.holdings.report import HoldingsReport, Row
-from networth.holdings.summary import short_money
+from networth.money import money
 from networth.ratings import Driver, Rating, View, rate
 
 log = logging.getLogger("networth.bot")
@@ -102,7 +102,7 @@ class Words:
 
     def money(self, n: int, about: bool = True) -> str:
         n = round(n, -2) if about and abs(n) >= 10 * ROUND_TO else n
-        return short_money(n, self.plan.currency, self.lang)
+        return money(abs(n), self.plan.currency, self.lang)
 
     def bucket(self, b: Bucket) -> str:
         usd = b is Bucket.SAFETY and self.plan.currency == "USD"

@@ -65,7 +65,8 @@ from networth.chat.answer import Answer
 from networth.holdings import lines as hl
 from networth.holdings.lines import holdings_lines, lang_of
 from networth.holdings.model import BUCKETS, Bucket, Holdings
-from networth.holdings.summary import Summary, short_money, summarize
+from networth.holdings.summary import Summary, summarize
+from networth.money import money
 
 log = logging.getLogger("networth.bot")
 
@@ -127,21 +128,21 @@ def _pending(store: Store, profile: Profile) -> Holdings | None:
 
 
 def _title(s: Summary, lang: str) -> str:
-    value = short_money(s.value, s.currency, lang)
+    value = money(s.value, s.currency, lang)
     if s.count == 1:
         return _say(GOT_ONE, lang, value=value)
     return _say(GOT_IT, lang, count=s.count, value=value)
 
 
 def _gain(s: Summary, lang: str) -> str:
-    invested = short_money(s.invested, s.currency, lang)
+    invested = money(s.invested, s.currency, lang)
     if s.gain is None:
         names = ", ".join(i.name for i in s.items if i.value is None)
         return "\n".join((_say(PUT_IN, lang, invested=invested), _say(NO_PRICE, lang, names=names)))
     if not s.gain_pct:
         return _say(EVEN, lang, invested=invested)
     words = UP if s.gain > 0 else DOWN
-    return _say(words, lang, invested=invested, gain=short_money(s.gain, s.currency, lang),
+    return _say(words, lang, invested=invested, gain=money(abs(s.gain), s.currency, lang),
                 pct=abs(s.gain_pct))  # fmt: skip
 
 
@@ -153,7 +154,7 @@ def _rows(s: Summary, lang: str) -> str:
             continue
         share = say(UNDER_ONE, lang) if x.share == 0 else f"{x.share}%"
         rows.append(_say(ROW_FIRST if i == 0 else ROW, lang, name=x.name,
-                         value=short_money(x.value, s.currency, lang), share=share))  # fmt: skip
+                         value=money(x.value, s.currency, lang), share=share))  # fmt: skip
     return "\n".join(rows)
 
 

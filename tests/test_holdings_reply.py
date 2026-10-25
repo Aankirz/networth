@@ -18,7 +18,7 @@ from networth.bot import holdings_words as words
 from networth.bot.message import plain
 from networth.holdings.action import action_plan
 from networth.holdings.model import Bucket, Kind, bucket_for, from_json
-from networth.holdings.summary import short_money, summarize
+from networth.holdings.summary import summarize
 from networth.llm import WireHoldings
 from networth.ratings import View
 from tests.test_bot_holdings import (  # noqa: F401  fixed_table is an autouse fixture
@@ -243,11 +243,6 @@ def test_a_us_user_sees_dollars_and_voo_never_rupees(tmp_path) -> None:
     assert "₹" not in text and "lakh" not in text and "Nifty" not in text and "gilt" not in text
 
 
-def test_big_dollar_amounts_are_said_in_millions() -> None:
-    assert short_money(1_234_567, "USD") == "$1.2M" and short_money(12_400, "USD") == "$12,400"
-    assert short_money(12_000_000, "INR") == "₹1.2 crore"
-
-
 def test_somethings_wrong_fixes_a_holding_through_buttons_and_plain_words(tmp_path) -> None:
     chat = owner(tmp_path)
     photo(chat)
@@ -396,3 +391,19 @@ def test_the_same_screenshot_twice_adds_nothing_and_says_nothing_about_it(tmp_pa
     photo(chat)
     assert len(stored(chat).items) == 4
     assert not any(b.startswith("This screenshot added") for b in last(chat).body)
+
+
+def test_a_big_us_list_is_said_in_thousands_of_dollars_everywhere(tmp_path) -> None:
+    big = {**US, "rows": [{**r, **{k: r[k] * 20 for k in ("units", "invested", "current_value")}}
+                          for r in US["rows"]]}  # fmt: skip
+    chat = owner(tmp_path, WireHoldings.model_validate(big))
+    chat.store.save_profile(dataclasses.replace(chat.profile, currency="USD", monthly_amount=500))
+    photo(chat)
+    assert last(chat).title == "Got it. 2 holdings, worth $234K today."
+    replies = [plain(last(chat))]
+    for step in ("hd:ok", "hd:rebal", "hd:newmoney", "hd:now"):
+        chat.tap(step)
+        replies.append(plain(last(chat)))
+    chat.say("What should I sell?")
+    replies.append(plain(last(chat)))
+    assert all("$" in t and "₹" not in t and "lakh" not in t for t in replies), replies

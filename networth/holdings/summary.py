@@ -1,8 +1,6 @@
-"""What a list of holdings adds up to, and how a confirmed one sits next to the saved plan.
-Pure; no IO.
+"""What a list of holdings adds up to. Pure; no IO.
 
-    s = summarize(holdings)        # value, invested, gain, each holding's rupees and share
-    short_money(291000, "INR", "en")   # "₹2.91 lakh"
+    s = summarize(holdings)        # value, invested, gain, each holding's value and share
 
 Every number comes from the stored list: units times the screenshot's price, units times the
 average cost. A holding the screenshot shows no price for has no value here, never a guess.
@@ -11,21 +9,9 @@ average cost. A holding the screenshot shows no price for has no value here, nev
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
 
 from networth.holdings.model import Holding, Holdings, Kind
 from networth.holdings.returns import invested
-from networth.sim import rupees
-from networth.web.fmt import western_grouping
-
-LAKH: Final = 100_000
-CRORE: Final = 10_000_000
-MILLION: Final = 1_000_000
-BIG_WORDS: Final = {
-    "en": ("lakh", "crore"),
-    "hi": ("लाख", "करोड़"),
-    "hinglish": ("lakh", "crore"),
-}
 
 
 @dataclass(frozen=True)
@@ -82,19 +68,3 @@ def summarize(h: Holdings) -> Summary:
     pct = round(100 * gain / cost) if gain is not None and cost > 0 else None
     return Summary(h.currency, len(items), ordered, total, cost, gain, pct, unpriced,
                    sum(x.kind is Kind.STOCK for x in h.items), h.listed, h.more_below)  # fmt: skip
-
-
-def short_money(n: int, currency: str, lang: str = "en") -> str:
-    """₹2.91 lakh, ₹1.2 crore or ₹68,640, as a person says it; $12,345 or $1.2M for dollars."""
-    n = abs(n)
-    if currency != "INR":
-        return (
-            f"${f'{n / MILLION:.1f}'.rstrip('0').rstrip('.')}M"
-            if n >= MILLION
-            else (f"${western_grouping(n)}")
-        )
-    lakh, crore = BIG_WORDS.get(lang, BIG_WORDS["en"])
-    for size, word in ((CRORE, crore), (LAKH, lakh)):
-        if n >= size:
-            return f"₹{f'{n / size:.2f}'.rstrip('0').rstrip('.')} {word}"
-    return rupees(n)

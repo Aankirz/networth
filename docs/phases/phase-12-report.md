@@ -113,7 +113,7 @@ Path B:
 
 ### Open
 
-- **The shared money formatter.** 13A's `money()` is only in TypeScript (`site/lib/money.ts`) so far. Holdings use `summary.short_money` in the user's currency until a Python version lands.
+- **The shared money formatter.** Holdings now write every short amount with 13A's Python `money()` (`networth/money.py`); `summary.short_money` is gone.
 - **"What should I sell?"** It should give a clear view per holding with `rate()`. That is not done yet.
 - **The guard.** It still bans "sell" and "buy", so the action plan says "trim" and "put into". 13A owns the guard change.
 - **Chat explainer disclaimer.** The chat explainer (not a holdings file) still carried "faisla aapka hai … advice nahin" when last checked. Commit 323158a may have removed it.
