@@ -1,0 +1,202 @@
+"""Keiki turns end to end: the signed endpoint, replay safety, and a turn running the same
+pipeline as Telegram (setup, commands, chat through the guard). Fake Keiki, fake models."""
+
+from __future__ import annotations
+
+import datetime as dt
+import time
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
+from fastapi.testclient import TestClient
+
+from networth import config
+from networth.app.main import create_app
+from networth.app.services import Services
+from networth.app.store import Channel, Profile, Step, Store, new_email_profile, now_iso
+from networth.bot.onboarding import Reply
+from networth.chat import Intent
+from networth.keiki.mail import NOTICE, Mail
+from networth.keiki.turn import Harness, run_turn
+from networth.keiki.wire import parse
+from tests.keiki_fakes import (
+    ADDRESS,
+    AGENT,
+    FakeApi,
+    FakeTurnClient,
+    body,
+    ed25519_headers,
+    fake_keys,
+    turn_payload,
+)
+from tests.test_chat import FakeChatModels, weekend_watcher
+from tests.test_onboarding import FakeBot
+from tests.watcher_fakes import FAKE_ENV
+
+
+@pytest.fixture
+def cfg() -> config.Config:
+    return config.load_config(env_path=Path("/nonexistent"), environ=FAKE_ENV)
+
+
+class Keiki:
+    """One email contact talking to Networth through Keiki."""
+
+    def __init__(self, tmp_path: Path, services: Services | None = None) -> None:
+        self.store = Store(tmp_path / "data")
+        self.services = services or Services(tmp_path / "data")
+        self.client = FakeTurnClient()
+        self._turns = 0
+
+    def say(self, *texts: str, address: str = ADDRESS) -> str:
+        self._turns += 1
+        turn = parse(turn_payload(*texts, turn_id=f"t{self._turns}", address=address))
+        assert turn is not None
+        return run_turn(turn, self.store, self.services, self.client, now_iso())
+
+    @property
+    def last(self) -> str:
+        return self.client.texts[-1]
+
+    def profile(self, address: str = ADDRESS) -> Profile:
+        user_id = self.store.contact_user(address)
+        profile = self.store.get_profile(user_id) if user_id else None
+        assert profile is not None, "the contact has a profile"
+        return profile
+
+
+def set_up(keiki: Keiki) -> Profile:
+    profile = replace(new_email_profile(ADDRESS, now_iso()), step=Step.DONE, goal="growth",
+                      monthly_amount=50_000, currency="INR", invest_day=1, lang="en")  # fmt: skip
+    keiki.store.save_profile(profile)
+    keiki.store.bind_contact(ADDRESS, profile.user_id)
+    return profile
+
+
+def test_a_new_contact_is_set_up_by_email_in_four_answers(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("Hello")
+    assert keiki.last.startswith("Hi, I'm Networth.")
+    assert keiki.last.endswith("Reply with one of: A house, Retirement, Education, Just growing it")
+    for answer in ("retirement", "1 lakh", "5", "English"):
+        keiki.say(answer)
+    p = keiki.profile()
+    assert (p.channel, p.chat_id, p.deliver_to, p.step) == ("email", 0, Channel.EMAIL, Step.DONE)
+    assert (p.goal, p.monthly_amount, p.invest_day, p.lang) == ("retirement", 100_000, 5, "en")
+    assert keiki.last.startswith("You're set. I'll write on the 5th of each month")
+    assert ADDRESS not in p.user_id, "the address never becomes a user id in logs"
+
+
+def test_a_bad_answer_by_email_gets_a_retry_and_the_same_question(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    keiki.say("Hello")
+    keiki.say("house")
+    keiki.say("lots")
+    assert keiki.profile().step is Step.AMOUNT
+    assert keiki.last.startswith("I didn't catch that amount.")
+
+
+def test_start_by_email_restarts_the_short_setup(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    set_up(keiki)
+    keiki.say("/start")
+    assert keiki.profile().step is Step.GOAL
+    assert keiki.last.startswith("Hi, I'm Networth.")
+
+
+def test_a_command_by_email_runs_like_on_telegram(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    set_up(keiki)
+    keiki.say("/help")
+    assert keiki.last.startswith("Here's what I can do.")
+    assert keiki.client.completed == [("completed", None)]
+
+
+def test_a_chat_turn_runs_the_guard_and_blocks_a_planted_number(tmp_path: Path, cfg) -> None:
+    planted = "The RBI raised its repo rate to 6.25%, reported by rbi.org.in."
+    models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value, writes=[planted, planted])
+    keiki = Keiki(tmp_path, Services(tmp_path / "data", None, models, None, cfg))
+    set_up(keiki)
+    weekend_watcher(keiki.services.watcher_db, dt.datetime.now(dt.UTC) - dt.timedelta(hours=1))
+    keiki.say("What happened today?")
+    assert keiki.last.startswith("Confirmed in the last 24 hours:")
+    assert "RBI raises repo rate to 5.50%" in keiki.last
+    assert not any("6.25" in text for text in keiki.client.texts)
+    assert len(models.tasks) == 2, "one draft and one rewrite, both blocked"
+
+
+def test_quoted_mail_is_not_read_as_part_of_the_question(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    set_up(keiki)
+    keiki.say("/help\n\nOn Fri, Oct 24, Networth wrote:\n> Investing day")
+    assert keiki.last.startswith("Here's what I can do.")
+
+
+def test_a_notice_turn_sends_queued_mail_and_nothing_else(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    profile = set_up(keiki)
+    mail = Mail(keiki.store, FakeApi())
+    keiki.services = replace(keiki.services, mail=mail)
+    mail.queue(profile, Reply("Investing day, Nov 1."))
+    keiki.say(NOTICE)
+    assert keiki.client.sent == [("Investing day, Nov 1.", "outbox:1")]
+    assert keiki.client.completed == [("completed", None)]
+
+
+def test_a_failed_turn_is_reported_to_keiki_as_failed(tmp_path: Path) -> None:
+    keiki = Keiki(tmp_path)
+    set_up(keiki)
+    keiki.client.fail_send = True
+    assert keiki.say("/help") == "failed"
+    assert keiki.client.completed == [("failed", "ConnectionError")]
+
+
+def endpoint(tmp_path: Path, client: FakeTurnClient, agent: str = AGENT) -> TestClient:
+    store = Store(tmp_path / "data")
+    keiki = Harness(agent, fake_keys(), None, client=lambda url, token: client,
+                    start=lambda work: work())  # fmt: skip
+    return TestClient(create_app(store, FakeBot(), "s", None, Services(tmp_path / "data"), keiki))
+
+
+def push(app: TestClient, payload: dict, *, t: int | None = None, signed: bool = True):
+    raw = body(payload)
+    headers = ed25519_headers(raw, t=t or int(time.time())) if signed else {}
+    return app.post("/keiki/turn", content=raw, headers=headers)
+
+
+def test_an_unsigned_or_stale_turn_gets_401_and_runs_nothing(tmp_path: Path) -> None:
+    client = FakeTurnClient()
+    app = endpoint(tmp_path, client)
+    unsigned = push(app, turn_payload("/help"), signed=False)
+    stale = push(app, turn_payload("/help"), t=int(time.time()) - 600)
+    assert (unsigned.status_code, unsigned.json()) == (401, {"error": "unsigned"})
+    assert (stale.status_code, stale.json()) == (401, {"error": "stale"})
+    assert client.sent == [] and client.completed == []
+
+
+def test_a_turn_for_another_agent_gets_401(tmp_path: Path) -> None:
+    response = push(endpoint(tmp_path, FakeTurnClient(), agent="our-agent"), turn_payload("hi"))
+    assert (response.status_code, response.json()) == (401, {"error": "unknown_agent"})
+
+
+def test_a_replayed_turn_is_answered_once(tmp_path: Path) -> None:
+    client = FakeTurnClient()
+    app = endpoint(tmp_path, client)
+    first, again = push(app, turn_payload("Hello")), push(app, turn_payload("Hello"))
+    assert first.status_code == 202
+    assert (again.status_code, again.json()) == (200, {"ok": True, "duplicate": True})
+    assert client.completed == [("completed", None)]
+    assert len(client.sent) == 1
+
+
+def test_an_arrival_is_acknowledged_and_runs_nothing(tmp_path: Path) -> None:
+    client = FakeTurnClient()
+    response = push(endpoint(tmp_path, client), {"type": "keiki.turn.arrival", "agentId": AGENT})
+    assert response.status_code == 202
+    assert client.completed == []
+
+
+def test_without_keiki_configured_the_endpoint_answers_503(tmp_path: Path) -> None:
+    app = TestClient(create_app(Store(tmp_path), FakeBot(), "s"))
+    assert push(app, turn_payload("hi")).status_code == 503

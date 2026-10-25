@@ -304,3 +304,6 @@
 
 ## 2026-10-25 — Keiki wire, clients and email outbox
 - networth/keiki/wire.py parses pushed turns into frozen KeikiTurn/Other and strips quoted mail; client.py answers a turn (messages, complete) and sends notices; render.py turns buttons into plain email lines; mail.py queues proactive email in a new outbox table and flushes it on the contact's next turn. Store gains contacts and outbox; Settings reads KEIKI_API_KEY, KEIKI_AGENT_ID, KEIKI_SIGNING_SECRET, KEIKI_EMAIL; Services gains mail and keiki_email (Phase 3C unit 1).
+
+## 2026-10-25 — Answer Keiki turns
+- POST /keiki/turn verifies the signature and agent id (401 otherwise, 503 when Keiki is not configured), claims the turn id (a replay answers 200 and runs nothing) and runs the turn in the background. networth/keiki/turn.py flushes queued mail, finds the contact's profile or creates an email-native one (user id is a hash, so logs never carry the address), runs the short email setup (networth/keiki/onboard.py) or the same command and chat path as Telegram through KeikiTurnBot, then completes the turn. commands.on_profile_text is the shared text path; profiles gain deliver_to (Phase 3C unit 2).
