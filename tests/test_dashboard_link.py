@@ -186,10 +186,23 @@ def test_the_command_list_is_valid_and_names_dashboard() -> None:
     assert all(1 <= len(c["description"]) <= 256 for c in params["commands"])
 
 
+UNLISTED = {"/link_broker"}  # SnapTrade is dropped; a typed /link_broker still gets a kind line
+
+
 def test_every_listed_command_is_one_the_bot_answers() -> None:
     from networth.bot.commands import COMMANDS
 
-    assert {f"/{name}" for name, _ in COMMAND_LIST} == set(COMMANDS)
+    assert {f"/{name}" for name, _ in COMMAND_LIST} == set(COMMANDS) - UNLISTED
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "hinglish"])
+def test_link_broker_is_neither_listed_nor_in_help(lang: str) -> None:
+    from networth.bot.commands import COMMANDS, help_message
+    from networth.bot.message import plain
+
+    assert "link_broker" not in dict(COMMAND_LIST)
+    assert "/link_broker" not in plain(help_message(lang))
+    assert "/link_broker" in COMMANDS, "a typed /link_broker is still answered"
 
 
 def test_the_server_sends_the_command_list_on_start(tmp_path: Path) -> None:

@@ -109,8 +109,7 @@ HELP_COMMANDS: Final = {
     "/sendto email or /sendto telegram, where briefs and alerts go\n"
     "/watch something, to hear once when a confirmed story about it appears\n"
     "/watches see or stop your watches\n/unwatch 1 stop a watch by its number\n"
-    "/holdings what you hold, read from a screenshot you send\n"
-    "/link_broker link a US broker, read-only",
+    "/holdings what you hold, read from a screenshot you send",
     "hi": "/brief इस महीने का ब्रीफ़\n/plan अपना प्लान देखना या बदलना\n"
     "/dashboard एक टैप में आपका अपना पेज\n"
     "/range पुराने महीनों को दोहराकर, आपका प्लान कहाँ तक पहुँच सकता है\n"
@@ -120,8 +119,7 @@ HELP_COMMANDS: Final = {
     "/sendto email या /sendto telegram, ब्रीफ़ और अलर्ट किस जगह आते हैं\n"
     "/watch किसी चीज़ पर, उसकी पुष्ट ख़बर आने पर एक बार सुनने के लिए\n"
     "/watches अपनी वॉच देखना या बंद करना\n/unwatch 1 नंबर से कोई वॉच बंद करना\n"
-    "/holdings आपके पास क्या है, आपके भेजे स्क्रीनशॉट से\n"
-    "/link_broker US ब्रोकर लिंक करना, सिर्फ़ पढ़ने के लिए",
+    "/holdings आपके पास क्या है, आपके भेजे स्क्रीनशॉट से",
     "hinglish": "/brief is mahine ka brief\n/plan apna plan dekhna ya badalna\n"
     "/dashboard ek tap mein aapka apna page\n"
     "/range purane mahinon ko dohraakar, aapka plan kahan tak pahunch sakta hai\n"
@@ -133,8 +131,7 @@ HELP_COMMANDS: Final = {
     "/sendto email ya /sendto telegram, briefs aur alerts kis jagah aate hain\n"
     "/watch kisi cheez par, uski confirmed story aane par ek baar sunne ke liye\n"
     "/watches apni watches dekhna ya band karna\n/unwatch 1 number se koi watch band karna\n"
-    "/holdings aapke paas kya hai, aapke bheje screenshot se\n"
-    "/link_broker US broker link karna, read-only",
+    "/holdings aapke paas kya hai, aapke bheje screenshot se",
 }
 UNKNOWN_COMMAND: Final = {
     "en": "I don't know that one yet. /help shows everything I can do.",
@@ -252,7 +249,6 @@ COMMAND_LIST: Final = (
     ("watches", "See or stop your watches"),
     ("unwatch", "Stop a watch by its number"),
     ("link", "A code to use Networth by email too"),
-    ("link_broker", "Link a US broker, read-only"),
     ("sendto", "Where briefs and alerts go: email or telegram"),
     ("pause", "Pause briefs and alerts"),
     ("resume", "Turn briefs and alerts back on"),

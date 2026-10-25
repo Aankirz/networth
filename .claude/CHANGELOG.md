@@ -494,3 +494,6 @@
 
 ## 2026-10-25 — a plain ask shows the saved plan
 - today.plan: "What is my plan?" (en/hi/hinglish, SHOW_PLAN rule) reads back the saved plan; judging questions keep NOT_A_JUDGE. Finding 3 test now asks a judging question. Tests in tests/test_chat.py.
+
+## 2026-10-25 — /link_broker out of help and the command list
+- Owner dropped SnapTrade: removed /link_broker from HELP_COMMANDS (en/hi/hinglish) and COMMAND_LIST; the typed command and snaptrade calls stay. Tests updated.
