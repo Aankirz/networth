@@ -28,6 +28,7 @@ from typing import Final, Literal
 
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Status, Step, Store, new_email_profile
+from networth import chat
 from networth.bot import commands
 from networth.bot.onboarding import Outcome, Reply
 from networth.bot.telegram import Keyboard
@@ -46,6 +47,8 @@ Kind = Literal["chat", "command", "onboarding", "link", "notice"]
 # the call log by time window, and that is only exact while no other turn overlaps.
 TURN_LOCK: Final = threading.Lock()
 LINK_CODE: Final = re.compile(r"(?<!\d)\d{6}(?!\d)")
+# Only a short message is read as a /link code, so a number inside a question never redeems one.
+LINK_MESSAGE_MAX: Final = 40
 LINKED: Final = (
     "Linked. Your plan, language and what you left out now apply here too. Briefs and alerts "
     "stay on Telegram until you reply /sendto email."
@@ -119,11 +122,29 @@ def send_outcome(turn: commands.Turn, outcome: Outcome) -> Profile:
 
 
 def welcome(turn: commands.Turn, address: str, text: str) -> Handled:
+    """A first email: answer it when it asks something (a greeting gets no answer), then start
+    the short setup, so "What happened today?" from a stranger is answered, not deferred."""
     profile = turn.save(new_email_profile(address, turn.now))
     turn.store.bind_contact(address, profile.user_id)
     turn.store.log_message(profile.user_id, "in", text)
-    send_outcome(turn, onboard.start(profile))
+    cfg = turn.services.cfg
+    if cfg is None or turn.store.claim_answer(profile.user_id, turn.clock,
+                                              cfg.product.chat_max_per_hour):  # fmt: skip
+        turn.later.append(lambda: first_answer(turn, profile, text))
+    turn.later.append(lambda: send_outcome(turn, onboard.start(profile)))
     return Handled("onboarding", profile.user_id)
+
+
+def first_answer(turn: commands.Turn, profile: Profile, text: str) -> None:
+    try:
+        reply, intent, used = chat.respond_traced(turn.store, profile, text, False,
+                                                  turn.services, turn.clock)  # fmt: skip
+    except Exception:
+        log.exception("first answer for %s failed", profile.user_id)
+        return
+    if intent is not chat.Intent.OTHER:
+        turn.trace.update(intent=intent.value, guard=used)
+        turn.send(profile, reply)
 
 
 def email_setup(turn: commands.Turn, profile: Profile, text: str) -> bool:
@@ -142,7 +163,7 @@ def email_setup(turn: commands.Turn, profile: Profile, text: str) -> bool:
 
 def link(turn: commands.Turn, address: str, text: str) -> Handled | None:
     """Bind the contact to the user whose /link code the text carries, if it carries one."""
-    code = LINK_CODE.search(text)
+    code = LINK_CODE.search(text) if len(text) <= LINK_MESSAGE_MAX else None
     user_id = turn.store.redeem_link_code(code.group(), turn.clock) if code else None
     profile = turn.store.get_profile(user_id) if user_id else None
     if profile is None:
