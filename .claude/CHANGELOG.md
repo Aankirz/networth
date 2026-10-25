@@ -625,3 +625,6 @@
 
 ## 2026-10-25 — Phase 13C: fund comparison wording
 - networth/ratings/score.py: "against the Nifty 50 at +5.4%" instead of "the Nifty 50's" / "peers's". make check exit 0. Local commit only.
+
+## 2026-10-25 — Phase 13C report
+- docs/phases/phase-13c-report.md: what was built, the done-when table (3 not met: not deployed by owner order), the five live ratings, the backtest and what it says, sources, decisions, gaps, OWNER NEEDED. Local commit only.
