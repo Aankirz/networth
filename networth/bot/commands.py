@@ -294,8 +294,11 @@ def cmd_plan(turn: Turn, profile: Profile) -> None:
         turn.send(profile, Reply(f"{FINISH_FIRST}\n\n{ask.text}", ask.buttons))
         return
     profile = turn.save(replace(profile, step=Step.PLAN))
-    page = links.page_url(turn.services.public_url, profile.link_token,
-                          turn.services.link_secret, turn.clock)  # fmt: skip
+    page = None
+    if turn.services.public_url and turn.services.link_secret:
+        profile = replace(profile, link_token=turn.store.new_link_token(profile.user_id))
+        page = links.page_url(turn.services.public_url, profile.link_token,
+                              turn.services.link_secret, turn.clock)  # fmt: skip
     mine = f"\n\nYour page, with your plan and latest brief: {page}" if page else ""
     turn.send(profile, Reply(f"Your plan: {plan_line(plan)}.{mine}"))
     turn.send(profile, ask_for(profile, plan))

@@ -163,6 +163,9 @@ def migrate(conn: sqlite3.Connection) -> None:
     )
 
 
+KEPT_ON_SAVE: Final = ("user_id", "link_token")
+
+
 def _profile_row(p: Profile) -> dict[str, object]:
     row: dict[str, object] = {f.name: getattr(p, f.name) for f in fields(p)}
     row["alerts_on"] = int(p.alerts_on)
@@ -215,7 +218,18 @@ class Store:
         return _profile_from(row) if row else None
 
     def save_profile(self, profile: Profile) -> None:
-        self._upsert("profiles", _profile_row(profile))
+        """Insert, or update every column but link_token, which only new_link_token changes,
+        so a turn holding an older copy of the profile never revives a retired link."""
+        row = _profile_row(profile)
+        names = ", ".join(f'"{n}"' for n in row)
+        marks = ", ".join("?" for _ in row)
+        updates = ", ".join(f'"{n}" = excluded."{n}"' for n in row if n not in KEPT_ON_SAVE)
+        with self._connect() as conn:
+            conn.execute(
+                f"INSERT INTO profiles ({names}) VALUES ({marks}) "
+                f"ON CONFLICT(user_id) DO UPDATE SET {updates}",
+                tuple(row.values()),
+            )
 
     def get_plan(self, user_id: str) -> Plan | None:
         with self._connect() as conn:
@@ -250,6 +264,13 @@ class Store:
         with self._connect() as conn:
             rows = conn.execute("SELECT * FROM profiles ORDER BY user_id").fetchall()
         return [_profile_from(r) for r in rows]
+
+    def new_link_token(self, user_id: str) -> str:
+        """A fresh page token for this user. Every link signed with the old one stops working."""
+        token = secrets.token_urlsafe(LINK_TOKEN_BYTES)
+        with self._connect() as conn:
+            conn.execute("UPDATE profiles SET link_token = ? WHERE user_id = ?", (token, user_id))
+        return token
 
     def profile_by_token(self, link_token: str) -> Profile | None:
         with self._connect() as conn:

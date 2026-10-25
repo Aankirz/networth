@@ -258,3 +258,6 @@
 
 ## 2026-10-25 — Explain-this streams a capped page
 - page_text streams the body and stops at MAX_PAGE_BYTES instead of downloading it all (round 2 item 10).
+
+## 2026-10-25 — A fresh page link retires older ones
+- /plan and the brief issue a new link_token each time (Store.new_link_token), so earlier /u/ links 404; save_profile no longer overwrites link_token, so a stale profile copy cannot revive a retired link (round 2 item 11).

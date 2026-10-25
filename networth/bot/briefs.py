@@ -55,8 +55,10 @@ def compose_reply(profile: Profile, store: Store, services: Services, today: dt.
         task = BRIEF_TASK.format(language=language(profile))
         out = guard.guarded(lambda fb: models.write(task, template, fb), draft.source(),
                             template, services.guard_log, "brief")  # fmt: skip
-    page = links.page_url(services.public_url, profile.link_token, services.link_secret,
-                          dt.datetime.now(dt.UTC))  # fmt: skip
+    page = None
+    if services.public_url and services.link_secret:
+        page = links.page_url(services.public_url, store.new_link_token(profile.user_id),
+                              services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
     return Reply(out.text, brief.buttons(draft, services.public_url, page)), out.used
 
 

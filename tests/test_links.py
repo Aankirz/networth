@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime as dt
 import html
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -13,7 +14,7 @@ from fastapi.testclient import TestClient
 from networth.app import links
 from networth.app.services import Services
 from networth.app.settings import Settings
-from networth.app.store import Store
+from networth.app.store import Step, Store
 from networth.web.routes import router, settings
 from tests.test_onboarding import USER, Chat, onboard
 
@@ -90,6 +91,21 @@ def test_plan_command_hands_out_a_working_link(chat: Chat, client) -> None:
     url = reply.rsplit(" ", 1)[-1]
     assert url.startswith("https://nw.example/u/")
     assert client.get(url.removeprefix("https://nw.example")).status_code == 200
+
+
+def plan_link(chat: Chat) -> str:
+    chat.say("/plan")
+    reply = next(t for t in reversed(chat.bot.texts) if t.startswith("Your plan:"))
+    return reply.rsplit(" ", 1)[-1].removeprefix("https://nw.example")
+
+
+def test_a_fresh_link_retires_every_older_one(chat: Chat, client) -> None:
+    old = plan_link(chat)
+    chat.store.save_profile(replace(chat.profile, step=Step.DONE))  # leave plan editing
+    new = plan_link(chat)
+    assert new != old
+    assert client.get(old).status_code == 404
+    assert client.get(new).status_code == 200
 
 
 @pytest.mark.parametrize("token", ["abc.².sig", "abc.1999999999.sïg", "äbc.1999999999.sig"])
