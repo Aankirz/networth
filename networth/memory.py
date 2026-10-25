@@ -73,6 +73,8 @@ def pattern(term: str) -> re.Pattern[str]:
     return re.compile(rf"(?<!\w){re.escape(term.casefold())}(?!\w)")
 
 
+# A brief line stays readable: a headline longer than this is never quoted.
+MAX_TITLE: Final = 140
 TERMS: Final = load_terms()
 PATTERNS: Final = tuple((term, pattern(term)) for term in TERMS)
 
@@ -110,8 +112,14 @@ def callback_line(store: Store, profile: Profile, watcher_db: Path, today: dt.da
     stories = month_titles(watcher_db, today) if terms else []
     for term in terms:
         p = pattern(term)
-        title = next((t for t, every in stories if any(p.search(x.casefold()) for x in every)),
-                     None)  # fmt: skip
+        # Quote the shortest title that holds the term, so the reader sees the connection.
+        holding = [
+            x
+            for _, every in stories
+            for x in every
+            if len(x) <= MAX_TITLE and p.search(x.casefold())
+        ]
+        title = min(holding, key=len) if holding else None
         if title is None:
             continue
         line = (f"Earlier you asked what {term} means. It comes up in this month's news: "
