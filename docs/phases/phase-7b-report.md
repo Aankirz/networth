@@ -195,7 +195,6 @@ stop - stop all messages
 
 ## OWNER NEEDED
 
-- `OWNER NEEDED: push access - git push to https://github.com/Aankirz/networth returns 403 for ankit-kiran-7. Grant that account write access, or push from an account that has it: cd ~/Desktop/networth-7b && git pull --rebase && git push origin main`
 - `OWNER NEEDED: deploy Phase 7B - npx maritime deploy networth --source github --repo https://github.com/Aankirz/networth --branch main --wait --json, then wake it with curl https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea/health`
 - `OWNER NEEDED: BotFather - send /setcommands to @BotFather, pick the bot, paste the command list above`
 - `OWNER NEEDED: decide whether a sector index ETF (Bank BeES) is growth or core - networth/holdings/model.py BUCKET_RULES, owned by holdings`
