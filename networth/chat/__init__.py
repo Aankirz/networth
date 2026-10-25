@@ -17,6 +17,7 @@ from enum import StrEnum
 from typing import Final
 from zoneinfo import ZoneInfo
 
+from networth import memory
 from networth.app.services import Services
 from networth.app.store import Profile, Store
 from networth.bot import watches
@@ -60,6 +61,7 @@ QUESTION: Final = "Which of these does the user's message to a market-news assis
 STATE: Final = "{kind} to a market-news assistant: {text!r}"
 URL: Final = re.compile(r"https?://\S+")
 LONG_TEXT: Final = 400
+MAX_TERM_QUESTION: Final = 200  # a longer explain-this is a pasted document, not a question
 DEVANAGARI: Final = re.compile(r"[ऀ-ॿ]")
 HINGLISH_WORDS: Final = frozenset(
     "kya hai hain hua aaj mein ka ki ko kaise kyun kyon batao samjhao yeh ye nahi kuch "
@@ -145,6 +147,8 @@ def respond(
     now: dt.datetime,
 ) -> Reply:  # fmt: skip
     intent = classify(text, is_forward, services)
+    if intent is Intent.EXPLAIN_THIS and not URL.search(text) and len(text) <= MAX_TERM_QUESTION:
+        store.add_asked_terms(profile.user_id, memory.asked_terms(text), now.isoformat())
     answer = HANDLERS[intent](store, profile, text, services, now)
     return deliver(answer, reply_lang(text, profile), services)
 

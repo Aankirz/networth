@@ -18,7 +18,7 @@ import logging
 from typing import Final
 from zoneinfo import ZoneInfo
 
-from networth import brief, guard
+from networth import brief, guard, memory
 from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
@@ -44,24 +44,36 @@ def language(profile: Profile) -> str:
     return LANGUAGES.get(profile.lang or "en", LANGUAGES["en"])
 
 
+def callback(profile: Profile, store: Store, services: Services,
+             today: dt.date) -> memory.Callback | None:  # fmt: skip
+    if services.cfg is None:
+        return None
+    return memory.callback_line(store, profile, services.watcher_db, today,
+                                services.cfg.product.memory_days)  # fmt: skip
+
+
 def compose_reply(profile: Profile, store: Store, services: Services, today: dt.date) -> tuple:
-    """(reply, used): the guarded brief and which version went out."""
+    """(reply, used, term): the guarded brief, which version went out, and the asked term its
+    memory line brought back, if it has one."""
     events = brief.month_events(services.watcher_db, today)
     draft = brief.compose(events, profile, store.get_plan(profile.user_id), services.rates_db,
                           today)  # fmt: skip
-    template = draft.text()
+    back = callback(profile, store, services, today)
+    extra = f"\n\n{back.line}" if back else ""
+    template, source = draft.text() + extra, draft.source() + extra
     models = services.models
     if models is None:
         out = guard.Guarded(template, "template", ())
     else:
         task = BRIEF_TASK.format(language=language(profile))
-        out = guard.guarded(lambda fb: models.write(task, template, fb), draft.source(),
-                            template, services.guard_log, "brief")  # fmt: skip
+        out = guard.guarded(lambda fb: models.write(task, template, fb), source, template,
+                            services.guard_log, "brief")  # fmt: skip
     page = None
     if services.public_url and services.link_secret:
         page = links.page_url(services.public_url, store.new_link_token(profile.user_id),
                               services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
-    return Reply(out.text, brief.buttons(draft, services.public_url, page)), out.used
+    reply = Reply(out.text, brief.buttons(draft, services.public_url, page))
+    return reply, out.used, back.term if back else None
 
 
 def local_today(profile: Profile, now: dt.datetime) -> dt.date:
@@ -87,12 +99,14 @@ def send_brief(
         ):
             return send(store, bot, profile, Reply(last[1]))
     try:
-        reply, used = compose_reply(profile, store, services, today)
+        reply, used, term = compose_reply(profile, store, services, today)
         sent = send(store, bot, profile, reply, proactive=proactive, mail=services.mail)
     except Exception:
         store.release_brief(profile.user_id, day)
         raise
     store.save_brief(profile.user_id, day, reply.text, used)
+    if term:
+        store.mark_terms_used(profile.user_id, [term])
     return sent
 
 
