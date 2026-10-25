@@ -359,3 +359,6 @@
 
 ## 2026-10-25 — Phase 3D: findings 1 to 3, Jev on, /range
 - networth/chat/answer.py: translations and rewrites are told to write app instructions as statements (finding 1); a translation whose template already fails the guard skips the model (finding 2); Answer gains lead (a fixed first line per language) and written. networth/chat/today.py: plan replies open with the fixed line in English, Hindi and Hinglish, plus the history line for an event type confirmed this month (finding 3); plan_range answer. networth/chat/__init__.py: plan_range intent. networth/bot/commands.py: /range and the My range tap. networth/brief: My range button. networth/sim: plan_range_message takes a language. config.toml: use_jev_for_intent = true.
+
+## 2026-10-25 — Same-day /brief follows profile edits
+- networth/bot/briefs.py: the stored brief row keeps a key of the profile and plan fields it was written from (briefs.inputs, networth/app/store.py); a same-day /brief resends the stored text only while the key matches. The once-a-day proactive claim is unchanged. Test in tests/test_chat.py.

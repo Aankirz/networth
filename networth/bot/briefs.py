@@ -14,6 +14,7 @@ the brief is written afresh.
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import logging
 from typing import Final
 from zoneinfo import ZoneInfo
@@ -38,6 +39,9 @@ every line, every number exactly as written, each emoji mark and the line order.
 signal" where it appears, translated. You may smooth the wording; add no number, opinion,
 prediction or suggestion of what to do. Return only the message text."""
 NOT_SET_UP: Final = "Let's finish setting up first. Type /start."
+BRIEF_INPUTS: Final = ("lang", "goal", "horizon_years", "drop_comfort", "monthly_amount",
+                       "currency", "invest_day", "markets", "exclude", "tz")  # fmt: skip
+INPUTS_KEY_CHARS: Final = 16
 
 
 def language(profile: Profile) -> str:
@@ -76,6 +80,14 @@ def compose_reply(profile: Profile, store: Store, services: Services, today: dt.
     return reply, out.used, back.term if back else None
 
 
+def inputs_key(profile: Profile, store: Store) -> str:
+    """What a brief is written from, so an edit to any of it makes the next /brief fresh."""
+    plan = store.get_plan(profile.user_id)
+    used = [getattr(profile, f) for f in BRIEF_INPUTS]
+    used += [plan.name, sorted(plan.targets_pct.items()), plan.max_drop_ok] if plan else [None]
+    return hashlib.sha256(repr(used).encode()).hexdigest()[:INPUTS_KEY_CHARS]
+
+
 def local_today(profile: Profile, now: dt.datetime) -> dt.date:
     return now.astimezone(ZoneInfo(profile.tz)).date()
 
@@ -95,6 +107,7 @@ def send_brief(
         if (
             last
             and last[0] == day
+            and store.brief_inputs(profile.user_id, day) == inputs_key(profile, store)
             and not (checked and checked > dt.datetime.fromisoformat(last[2]))
         ):
             return send(store, bot, profile, Reply(last[1]))
@@ -104,7 +117,7 @@ def send_brief(
     except Exception:
         store.release_brief(profile.user_id, day)
         raise
-    store.save_brief(profile.user_id, day, reply.text, used)
+    store.save_brief(profile.user_id, day, reply.text, used, inputs_key(profile, store))
     if term:
         store.mark_terms_used(profile.user_id, [term])
     return sent
