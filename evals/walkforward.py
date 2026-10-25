@@ -9,8 +9,9 @@ before the cutoff. build_before() composes the engine's public build steps (pars
 PriceBook.load(as_of), merge_episodes, rows_for_panel, write_db) the way backtest.build() does,
 because build() takes only the vault cut, not any cutoff. Regime rows are skipped. Outcomes are
 episodes in a later table, on the statement's own era, so a later table that adds an older
-proxy era never changes the series being scored. The lean words come from networth.web.names,
-the rule every page and brief uses.
+proxy era never changes the series being scored. The lean rule below is the one the pages used
+until phase 5 showed it did not hold out of sample; it stays here only so the stored results can
+be rescored and read.
 """
 
 from __future__ import annotations
@@ -33,6 +34,22 @@ from networth.web import names
 CUTOFFS: Final = tuple(dt.date(y, 1, 1) for y in (2010, 2013, 2016, 2019))
 WALK_END: Final = dt.date(2022, 1, 1)  # the vault starts here; walk-forward never reads it
 BUCKETS: Final = ((0.5, 0.6, "50-60%"), (0.6, 0.7, "60-70%"), (0.7, 1.01, "70%+"))
+LEAN_GAP: Final = 0.10
+LEAN_UP: Final = "leans-up"
+LEAN_DOWN: Final = "leans-down"
+NO_PATTERN: Final = "no-pattern"
+
+
+def lean_kind(hit_rate: float, baseline: float, weak: bool) -> str:
+    """The stated lean: a gap of LEAN_GAP or more from the baseline, unless the signal is weak."""
+    if weak:
+        return NO_PATTERN
+    gap = hit_rate - baseline
+    if gap >= LEAN_GAP:
+        return LEAN_UP
+    if gap <= -LEAN_GAP:
+        return LEAN_DOWN
+    return NO_PATTERN
 
 
 @dataclass(frozen=True)
@@ -48,7 +65,7 @@ class Statement:
     hit_rate: float
     baseline: float
     weak: bool
-    lean: str  # names.LeanKind value
+    lean: str  # a lean_kind() value
 
 
 @dataclass(frozen=True)
@@ -115,7 +132,7 @@ def statement(type: str, asset: str, cutoff: dt.date, db: Path, era: str | None 
     except (odds.NoBaseRate, ValueError):
         return None
     weak = o["n_episodes"] < WEAK_SIGNAL_MIN_EPISODES
-    lean = names.lean(o["hit_rate"], o["baseline"], weak).kind.value
+    lean = lean_kind(o["hit_rate"], o["baseline"], weak)
     return Statement(type, asset, o["era"], cutoff.isoformat(), o["n_episodes"], o["n_hits"],
                      o["hit_rate"], o["baseline"], weak, lean)  # fmt: skip
 
@@ -177,14 +194,14 @@ def held(sc: Scored) -> bool | None:
     """Did the later episodes land on the stated side of the baseline? None when no lean was
     stated or nothing happened later."""
     s = sc.statement
-    if s.lean == names.LeanKind.NONE.value or not sc.n:
+    if s.lean == NO_PATTERN or not sc.n:
         return None
     rate = sc.hits / sc.n
-    return rate > s.baseline if s.lean == names.LeanKind.UP.value else rate < s.baseline
+    return rate > s.baseline if s.lean == LEAN_UP else rate < s.baseline
 
 
-LEAN_GROUPS: Final = (("leans-up", "History leans toward"), ("leans-down", "History leans against"),
-                      ("no-pattern", "No clear pattern"), ("weak", "Weak signal"))  # fmt: skip
+LEAN_GROUPS: Final = ((LEAN_UP, "History leans toward"), (LEAN_DOWN, "History leans against"),
+                      (NO_PATTERN, "No clear pattern"), ("weak", "Weak signal"))  # fmt: skip
 
 
 def _in_group(s: Statement, kind: str) -> bool:
@@ -204,7 +221,7 @@ def by_lean(scored: Sequence[Scored]) -> list[dict]:
         group = [sc for sc in scored if _in_group(sc.statement, kind)]
         n, hits = sum(sc.n for sc in group), sum(sc.hits for sc in group)
         verdicts = [h for sc in group if (h := held(sc)) is not None]
-        leaning = kind in ("leans-up", "leans-down")
+        leaning = kind in (LEAN_UP, LEAN_DOWN)
         out.append({"lean": label, "statements": len(group), "episodes": n, "later_hits": hits,
                     "later_rate": round(hits / n, 4) if n else None,
                     "stated_rate": _weighted(group, lambda s: s.hit_rate),

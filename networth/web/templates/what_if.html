@@ -5,7 +5,7 @@
   <h1 class="verdict">On {{ v.amount }} in {{ v.asset_name }}, a typical {{ v.period }} after {{ v.type_plural }} ranged from {{ v.p10 }} to {{ v.p90 }}.</h1>
   <p class="normal">History, not a forecast. An illustration of {{ v.n_episodes }} {{ v.type_plural }}, {{ v.horizon }}.</p>
   {% if v.weak_signal %}
-  <p class="callout callout--weak">Weak signal, only {{ v.n_episodes }} past cases.</p>
+  <p class="callout callout--weak">Only {{ v.n_episodes }} past cases, too few to call a pattern.</p>
   {% endif %}
 
   <dl class="range">
