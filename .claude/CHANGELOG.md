@@ -588,3 +588,6 @@
 
 ## 2026-10-25 — Phase 13A: Hindi/Hinglish buy-sell routing
 - No-model phrase rules send "kya bechna chahiye", बेच, खरीद, kharid to the holdings plan-gap path; tests.
+
+## 2026-10-25 — Phase 13A: shared money() formatter
+- networth/money.py: money(amount, currency, lang) in lakh/crore for INR, K/M/B for USD, code + grouping otherwise; tests.
