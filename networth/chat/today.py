@@ -5,10 +5,11 @@ from __future__ import annotations
 
 import datetime as dt
 from typing import Final
+from zoneinfo import ZoneInfo
 
 from networth import brief
 from networth.app.services import Services
-from networth.app.store import Profile, Store
+from networth.app.store import INDIA_TZ, Profile, Store
 from networth.bot.onboarding import summary
 from networth.chat.answer import Answer
 from networth.watcher.store import Confirmed
@@ -16,6 +17,8 @@ from networth.watcher.store import Store as WatcherStore
 from networth.web import names
 
 DAY: Final = dt.timedelta(hours=24)
+STALE_CHECK: Final = dt.timedelta(hours=1)
+NOT_READ: Final = "I haven't read today's news yet. Ask me again in a little while."
 MAX_STORIES: Final = 5
 TODAY_TASK: Final = "Tell a beginner, in a short chat message, what news was confirmed today."
 WHY_TASK: Final = (
@@ -33,13 +36,17 @@ NO_LEAD: Final = (
 NO_PLAN: Final = "You haven't picked a plan yet. Type /start to finish setting up."
 
 
-def what_happened(services: Services, now: dt.datetime) -> Answer:
+def what_happened(services: Services, now: dt.datetime, tz: str = INDIA_TZ) -> Answer:
+    """Confirmed stories pulled in the 24 hours before the last news check. With no check in
+    the last hour (nights, weekends), the reply says when that check was."""
     db = services.watcher_db
     if not db.exists():
-        return Answer("I haven't read today's news yet. Ask me again in a little while.", "")
+        return Answer(NOT_READ, NOT_READ)
     store = WatcherStore.open(db)
     try:
-        fresh = {s.id for s in store.stories_pulled_since(now - DAY)}
+        cycle = store.latest_cycle()
+        anchor = min(now, cycle.finished_at) if cycle else now
+        fresh = {s.id for s in store.stories_pulled_since(anchor - DAY)}
         decided = [d for d in store.decisions() if d.story.id in fresh]
     finally:
         store.close()
@@ -49,14 +56,56 @@ def what_happened(services: Services, now: dt.datetime) -> Answer:
              for d in confirmed[:MAX_STORIES]]  # fmt: skip
     rest = (f"\n\nI also saw {unconfirmed} report{'s' if unconfirmed != 1 else ''} I could not "
             "confirm, so they are left out.") if unconfirmed else ""  # fmt: skip
+    when = "the last 24 hours"
+    if now - anchor > STALE_CHECK:
+        local = anchor.astimezone(ZoneInfo(tz))
+        when = f"the 24 hours before my last news check ({local:%b} {local.day}, {local:%H:%M})"
     if not lines:
-        text = f"Nothing was confirmed in the last 24 hours.{rest}"
+        text = f"Nothing was confirmed in {when}.{rest}"
     else:
-        text = "Confirmed in the last 24 hours:\n" + "\n".join(lines) + rest
+        text = f"Confirmed in {when}:\n" + "\n".join(lines) + rest
     return Answer(text, text, TODAY_TASK, kind="today")
 
 
-def why(store: Store, profile: Profile, services: Services, today: dt.date) -> Answer:
+TYPE_QUESTION: Final = "Which market event type, if any, does this question name?"
+NO_TYPE: Final = "none"
+MIN_WORDS_FOR_TYPE: Final = 3  # "why?" and "why that?" ask about the brief, not a type
+TYPE_TASK: Final = "Explain to a beginner, in a short chat message, what history shows here."
+
+
+def named_type(text: str, services: Services) -> str | None:
+    models = services.models
+    if models is None or len(text.split()) < MIN_WORDS_FOR_TYPE:
+        return None
+    choices = {t: f"{n.title} ({n.plural})" for t, n in names.TYPES.items()}
+    try:
+        picked = models.pick(TYPE_QUESTION, {**choices, NO_TYPE: "no event type"}, text)
+    except Exception:  # noqa: BLE001 - no pick means the brief answers instead
+        return None
+    return picked if picked in names.TYPES else None
+
+
+def type_history(type: str, profile: Profile, services: Services) -> Answer | None:
+    """Where history leans after an event type, from odds(), with or without news this month."""
+    assets = services.cfg.triggers.assets_by_type.get(type, ()) if services.cfg else ()
+    line = brief.history(type, profile, assets, services.rates_db)
+    if line is None:
+        return None
+    link = (f"\nEvery past episode: {services.public_url}/why/{line.type}/{line.asset}"
+            if services.public_url else "")  # fmt: skip
+    text = (
+        f"What history shows after {names.TYPES[type].plural.removeprefix('past ')}:\n"
+        f"{line.mark} {line.text}\nThat is a count of what happened, not a forecast.{link}"
+    )
+    return Answer(text, text, TYPE_TASK, kind="why")
+
+
+def why(store: Store, profile: Profile, services: Services, today: dt.date,
+        text: str = "") -> Answer:  # fmt: skip
+    type = named_type(text, services)
+    answer = type_history(type, profile, services) if type else None
+    if answer is not None:
+        return answer
     events = brief.month_events(services.watcher_db, today)
     draft = brief.compose(events, profile, store.get_plan(profile.user_id), services.rates_db,
                           today)  # fmt: skip

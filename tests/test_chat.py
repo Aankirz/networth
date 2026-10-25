@@ -14,6 +14,7 @@ from networth import config
 from networth.app.services import Services
 from networth.app.store import Profile
 from networth.chat import Intent, explain, jev, reply_lang
+from networth.chat.today import TYPE_QUESTION
 from networth.config import Query
 from networth.llm import (
     AllowedCauses,
@@ -24,6 +25,7 @@ from networth.llm import (
     StoryForJudge,
 )
 from tests.test_onboarding import CHAT, NOW, Chat, onboard
+from tests.test_web import web_db  # noqa: F401, F811 - the engine fixture
 from tests.watcher_fakes import FAKE_ENV
 
 IPO_TEXT = (
@@ -43,6 +45,7 @@ class FakeChatModels:
     def __init__(self, intent: str | None = None, writes: Sequence[str] = (),
                  same: set[str] | None = None, image_text: str = IPO_TEXT) -> None:  # fmt: skip
         self.intent = intent
+        self.event_type = "none"
         self.writes = list(writes)
         self.same = same or set()
         self.image_text = image_text
@@ -51,6 +54,8 @@ class FakeChatModels:
         self.images: list[bytes] = []
 
     def pick(self, question: str, choices: Mapping[str, str], text: str) -> str | None:
+        if question == TYPE_QUESTION:
+            return self.event_type
         self.picks.append(text)
         return self.intent
 
@@ -102,7 +107,7 @@ def talk(tmp_path: Path, cfg: config.Config | None, models: FakeChatModels | Non
 ROUTED = {
     Intent.WHAT_HAPPENED_TODAY: "I haven't read today's news yet.",
     Intent.WHY: "Nothing in this month's news matched an event",
-    Intent.TIP_CHECK: "I searched the news from the last 7 days and found no publisher",
+    Intent.TIP_CHECK: "Not confirmed. I searched the news from the last 7 days",
     Intent.EXPLAIN_THIS: "I couldn't write a plain-words version",
     Intent.PLAN_QUESTION: "Here's what I have.",
     Intent.OTHER: "I can tell you what happened today",
@@ -166,8 +171,10 @@ def tip_chat(tmp_path: Path, cfg, results: list[dict], same: set[str]) -> Chat:
 def test_a_tip_reported_by_one_publisher_is_not_confirmed(tmp_path: Path, cfg) -> None:
     chat = tip_chat(tmp_path, cfg, [result("https://www.livemint.com/a")], {"a0"})
     chat.say("Bank X merging with Bank Y, buy now", forward_date=1)
-    assert chat.bot.last.startswith("Only livemint.com reported this in the last 7 days.")
-    assert "not confirmed" in chat.bot.last
+    assert chat.bot.last.startswith(
+        "Not confirmed. Only livemint.com reported this in the last 7 days."
+    )
+    assert chat.bot.last.endswith('also uses hype: "buy now". Real news rarely needs it.')
 
 
 def test_a_tip_reported_by_enough_publishers_in_the_window_is_reported(tmp_path, cfg) -> None:
@@ -176,7 +183,7 @@ def test_a_tip_reported_by_enough_publishers_in_the_window_is_reported(tmp_path,
     chat = tip_chat(tmp_path, cfg, found, {"a0", "a1", "a2"})
     chat.say("Bank X merging with Bank Y", forward_date=1)
     assert chat.bot.last.startswith(
-        "This is reported. livemint.com, moneycontrol.com, thehindu.com reported it."
+        "Confirmed. livemint.com, moneycontrol.com, thehindu.com reported it."
     )
 
 
@@ -185,7 +192,8 @@ def test_articles_that_do_not_report_the_claim_do_not_count(tmp_path: Path, cfg)
              result("https://www.moneycontrol.com/c", 5)]  # fmt: skip
     chat = tip_chat(tmp_path, cfg, found, set())
     chat.say("Bank X merging with Bank Y", forward_date=1)
-    assert "found no publisher reporting this" in chat.bot.last
+    assert chat.bot.last.startswith("Not confirmed.")
+    assert "no publisher is reporting this" in chat.bot.last
 
 
 def explain_chat(tmp_path: Path, cfg, writes: Sequence[str]) -> tuple[Chat, FakeChatModels]:
@@ -264,3 +272,59 @@ def test_jev_is_not_asked_when_config_turns_it_off(tmp_path, cfg, monkeypatch) -
     chat = talk(tmp_path, cfg, FakeChatModels(Intent.OTHER.value))
     chat.say("hi there")
     assert asked == [] and chat.bot.last.startswith(ROUTED[Intent.OTHER])
+
+
+def weekend_watcher(db: Path, checked: dt.datetime) -> None:
+    from networth.watcher.store import Article, Confirmed, Cycle, NewStory
+    from networth.watcher.store import Store as WatcherStore
+
+    store = WatcherStore.open(db)
+    url = "https://www.rbi.org.in/press/1"
+    store.add_articles([Article(url, "rbi.org.in", "rbi.org.in", "RBI raises repo rate to 5.50%",
+                                "", checked, "q", checked)])  # fmt: skip
+    store.assign([NewStory("s1", "RBI raises repo rate to 5.50%", checked)], {"s1": [url]})
+    store.put_decisions({"s1": Confirmed(("rbi.org.in",), "rbi.org.in")}, checked)
+    store.add_cycle(Cycle(checked, checked, {}, 0.0, ()))
+    store.close()
+
+
+def test_today_falls_back_to_the_last_news_check_and_says_when(tmp_path: Path, cfg) -> None:
+    chat = talk(tmp_path, cfg, FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value))
+    checked = dt.datetime.fromisoformat(NOW) - dt.timedelta(hours=30)
+    weekend_watcher(chat.services.watcher_db, checked)
+    chat.say("what happened today?")
+    assert chat.bot.last.startswith(
+        "Confirmed in the 24 hours before my last news check (Oct 24, 05:30):"
+    )
+    assert "RBI raises repo rate to 5.50%. Reported by rbi.org.in." in chat.bot.last
+
+
+def test_a_why_question_naming_an_event_type_answers_from_the_engine(
+    tmp_path: Path,
+    cfg,
+    web_db: Path,  # noqa: F811
+) -> None:
+    from networth.engine import odds
+
+    models = FakeChatModels(Intent.WHY.value)
+    models.event_type = "rbi_hike"
+    chat = talk(tmp_path, cfg, models)
+    (chat.services.data_dir / "base_rates.sqlite").write_bytes(web_db.read_bytes())
+    chat.say("Why do banks move after an RBI rate hike?")
+    o = odds.odds("rbi_hike", "^NSEBANK", db=web_db)
+    assert chat.bot.last.startswith("What history shows after RBI rate hikes:")
+    assert f"in {o['n_hits']} of {o['n_episodes']} past RBI rate hikes" in chat.bot.last
+    assert chat.bot.last.endswith("https://nw.example/why/rbi_hike/^NSEBANK")
+
+
+def test_a_hyped_fake_tip_leads_with_the_verdict_and_quotes_the_hype(tmp_path, cfg) -> None:
+    from networth.chat.tip import hype
+
+    tip = "200 bps cut tomorrow, banks will double, buy HDFC Bank now, sure shot"
+    assert hype(tip) == ["will double", "buy HDFC Bank now", "sure shot"]
+    models = FakeChatModels(Intent.TIP_CHECK.value)
+    chat = talk(tmp_path, cfg, models, FakeSearch([]))
+    chat.say(tip, forward_date=1)
+    assert chat.bot.last.startswith("Not confirmed.")
+    assert '"will double", "buy HDFC Bank now", "sure shot"' in chat.bot.last
+    assert models.tasks == [], "quoted hype goes out as code wrote it"

@@ -116,6 +116,21 @@ def odds_line(
     return Line(MARKS[lean.kind], text, type, row["asset"])
 
 
+def history(type: str, profile: Profile, assets: Sequence[str], rates_db: Path) -> Line | None:
+    """The odds() line for the first asset with history in the user's markets, home market
+    first, or None."""
+    home = HOME_MARKET.get(profile.currency or "INR", "in")
+    mine = sorted((a for a in assets if _in_markets(a, profile.markets)),
+                  key=lambda a: not _in_markets(a, [home]))  # fmt: skip
+    for asset in mine:
+        try:
+            row = engine.odds(type, asset, db=rates_db)
+        except (engine.NoBaseRate, ValueError):
+            continue
+        return odds_line(type, row, row["n_episodes"], row["weak_signal"])
+    return None
+
+
 def scoreboard(event: Event, markets: Sequence[str], rates_db: Path) -> list[Line]:
     """The event's own Insight rows in the user's markets, then the first sector group of each
     of those markets, in names.SCOREBOARD_GROUPS order, up to MAX_LINES. No ranking."""

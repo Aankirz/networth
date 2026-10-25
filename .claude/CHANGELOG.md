@@ -231,3 +231,6 @@
 
 ## 2026-10-25 — Guard hardening and no long dashes
 - guard.py: numbers glued to Rs/INR and fullwidth digits, number words, NFKC and zero-width stripping, spaced-out letters, should/recommend, Devanagari चाहिए करें कीजिए, Hinglish imperatives, score and rank banned. llm.write tells the writer not to use long dashes and replaces any that come through. Review round 2 items 1, 2, 16.
+
+## 2026-10-25 — Chat answers from the last news check and the engine; tip verdict first
+- today.py falls back to the last news check and says when; a why question naming an event type answers from brief.history; tip replies lead with Confirmed or Not confirmed and quote hype phrases (round 2 items 13, 14, 15).

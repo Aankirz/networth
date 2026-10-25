@@ -112,9 +112,9 @@ def classify(text: str, is_forward: bool, services: Services) -> Intent:
 
 Handler = Callable[[Store, Profile, str, Services, dt.datetime], Answer]
 HANDLERS: Final[dict[Intent, Handler]] = {
-    Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now: today.what_happened(s, now),
+    Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now: today.what_happened(s, now, p.tz),
     Intent.WHY: lambda store, p, text, s, now: today.why(
-        store, p, s, now.astimezone(ZoneInfo(p.tz)).date()
+        store, p, s, now.astimezone(ZoneInfo(p.tz)).date(), text
     ),
     Intent.TIP_CHECK: lambda store, p, text, s, now: tip.check_tip(text, p, s, now),
     Intent.EXPLAIN_THIS: lambda store, p, text, s, now: (
