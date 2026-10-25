@@ -654,3 +654,6 @@
 
 ## 2026-10-25 — feat: the 13C rating card with a gated lab page
 - site/components/cards/rating.tsx (score dial, view, outlook, drivers with effect and source chips, missing data, track record pill) and source-chip.tsx; /lab/rating renders the HDFC and AAPL fixtures (made by the real rate() on test fakes) only when NETWORTH_LAB=1, set in the Playwright config; e2e/rating.spec.ts.
+
+## 2026-10-25 — feat: the 13C sector board card with a gated lab page
+- site/components/cards/sectors.tsx: heat strip tinted from the server move strings, Day/Week/Month toggle with no request, tap a sector for its confirmed stories and source chip, biggest-mover insight pill; /lab/sectors (NETWORTH_LAB=1 only) renders the sectors.json fixture from the real board() on test fakes; e2e/sectors.spec.ts.

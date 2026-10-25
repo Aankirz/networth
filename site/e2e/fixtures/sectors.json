@@ -1,0 +1,191 @@
+{
+  "type": "sectors",
+  "as_of": "2026-10-23",
+  "rows": [
+    {
+      "key": "bank",
+      "name": "Bank",
+      "day": "+0.1%",
+      "week": "+5.8%",
+      "month": "+7.1%",
+      "direction": "up",
+      "stories": [
+        {
+          "title": "Banks lead as credit growth picks up",
+          "day": "2026-10-20",
+          "publishers": [
+            "reuters.com",
+            "mint.com"
+          ]
+        }
+      ],
+      "source": {
+        "name": "Yahoo:^NSEBANK",
+        "url": "https://example.test/Yahoo:^NSEBANK",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-bank"
+    },
+    {
+      "key": "it",
+      "name": "IT",
+      "day": "-0.4%",
+      "week": "+4.7%",
+      "month": "+11.3%",
+      "direction": "down",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXIT",
+        "url": "https://example.test/Yahoo:^CNXIT",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-it"
+    },
+    {
+      "key": "pharma",
+      "name": "Pharma",
+      "day": "+0.1%",
+      "week": "+0.6%",
+      "month": "-0.2%",
+      "direction": "flat",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXPHARMA",
+        "url": "https://example.test/Yahoo:^CNXPHARMA",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-pharma"
+    },
+    {
+      "key": "auto",
+      "name": "Auto",
+      "day": "+0.1%",
+      "week": "+5.8%",
+      "month": "+7.1%",
+      "direction": "up",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXAUTO",
+        "url": "https://example.test/Yahoo:^CNXAUTO",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-auto"
+    },
+    {
+      "key": "fmcg",
+      "name": "FMCG",
+      "day": "+0.1%",
+      "week": "+5.8%",
+      "month": "+7.1%",
+      "direction": "up",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXFMCG",
+        "url": "https://example.test/Yahoo:^CNXFMCG",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-fmcg"
+    },
+    {
+      "key": "metal",
+      "name": "Metal",
+      "day": "+1.4%",
+      "week": "+3.2%",
+      "month": "+18.0%",
+      "direction": "up",
+      "stories": [
+        {
+          "title": "Steel prices jump on tariff",
+          "day": "2026-10-20",
+          "publishers": [
+            "reuters.com",
+            "mint.com"
+          ]
+        }
+      ],
+      "source": {
+        "name": "Yahoo:^CNXMETAL",
+        "url": "https://example.test/Yahoo:^CNXMETAL",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-metal"
+    },
+    {
+      "key": "energy",
+      "name": "Energy",
+      "day": "+0.1%",
+      "week": "+0.6%",
+      "month": "-0.2%",
+      "direction": "flat",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXENERGY",
+        "url": "https://example.test/Yahoo:^CNXENERGY",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-energy"
+    },
+    {
+      "key": "realty",
+      "name": "Realty",
+      "day": "+0.1%",
+      "week": "+0.6%",
+      "month": "-0.2%",
+      "direction": "flat",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXREALTY",
+        "url": "https://example.test/Yahoo:^CNXREALTY",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-realty"
+    },
+    {
+      "key": "psu",
+      "name": "PSU",
+      "day": "-1.4%",
+      "week": "+0.9%",
+      "month": "-2.2%",
+      "direction": "down",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^CNXPSE",
+        "url": "https://example.test/Yahoo:^CNXPSE",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-psu"
+    },
+    {
+      "key": "midcap",
+      "name": "Midcap",
+      "day": "+0.1%",
+      "week": "+0.6%",
+      "month": "-0.2%",
+      "direction": "flat",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:^NSEMDCP50",
+        "url": "https://example.test/Yahoo:^NSEMDCP50",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-midcap"
+    },
+    {
+      "key": "smallcap",
+      "name": "Smallcap",
+      "day": "+1.5%",
+      "week": "+2.3%",
+      "month": "+7.6%",
+      "direction": "up",
+      "stories": [],
+      "source": {
+        "name": "Yahoo:NIFTYSMLCAP250.NS",
+        "url": "https://example.test/Yahoo:NIFTYSMLCAP250.NS",
+        "as_of": "2026-10-23"
+      },
+      "url": "https://networth-eight-pied.vercel.app/r/sector-smallcap"
+    }
+  ],
+  "note": null,
+  "currency": "INR"
+}
