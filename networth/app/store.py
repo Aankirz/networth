@@ -283,6 +283,9 @@ def migrate(conn: sqlite3.Connection) -> None:
 
 
 KEPT_ON_SAVE: Final = ("user_id", "link_token")
+# Every table with a user_id column holds something about that user, so /erase reads the schema
+# instead of a list that a new table could be left out of.
+USER_TABLES: Final = tuple(table for table, columns in COLUMNS.items() if "user_id" in columns)
 FORGOTTEN_ON_STOP: Final = ("holdings", "snaptrade_users", "turns")
 
 
@@ -741,6 +744,18 @@ class Store:
                 (user_id, since, limit),
             ).fetchall()
         return [ChatTurn(r["role"], r["text"], r["intent"], r["at"]) for r in reversed(rows)]
+
+    def erase_user(self, user_id: str) -> None:
+        """Every row about this user, in one transaction: each USER_TABLES table, and the
+        link-code misses made by the email contacts bound to them."""
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM link_misses WHERE address IN "
+                "(SELECT address FROM contacts WHERE user_id = ?)",
+                (user_id,),
+            )
+            for table in USER_TABLES:
+                conn.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
 
     def _upsert(self, table: str, row: Mapping[str, object]) -> None:
         names = ", ".join(f'"{n}"' for n in row)

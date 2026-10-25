@@ -482,3 +482,6 @@
 
 ## 2026-10-25 — fix: the web demo answers each message on its own
 - Coordinator review of slice 1: every demo visitor is web:demo, so a shared window handed one visitor's words to the next. talk.window and talk.remember now skip SHARED_USERS ({"web:demo"}); test_two_demo_visitors_never_see_each_other.
+
+## 2026-10-25 — Phase 9 slice 3: /erase
+- /erase asks with a confirm button, forgets SnapTrade first (aborts on failure), deletes every user_id table plus link_misses, resets the menu, replies in en/hi/hinglish. Added tests/test_erase.py (25 tests).

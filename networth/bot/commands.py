@@ -46,7 +46,7 @@ from networth.bot.onboarding import (
 )
 from networth.bot.onboarding import prompt as ask_for
 from networth.bot.outbox import send
-from networth.bot.telegram import Bot, MenuBot, TelegramError
+from networth.bot.telegram import Bot, Button, Keyboard, MenuBot, TelegramError
 from networth.chat import dashboard
 from networth.chat.answer import deliver
 from networth.chat.today import YOUR_PAGE
@@ -104,6 +104,7 @@ HELP_COMMANDS: Final = {
     "/dashboard one tap to your own page\n"
     "/range what your plan could become, replayed over past months\n"
     "/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n"
+    "/erase delete everything I have about you\n"
     "/start set up again or see your answers\n/link a code to use me by email too\n"
     "/sendto email or /sendto telegram, where briefs and alerts go\n"
     "/watch something, to hear once when a confirmed story about it appears\n"
@@ -114,6 +115,7 @@ HELP_COMMANDS: Final = {
     "/dashboard एक टैप में आपका अपना पेज\n"
     "/range पुराने महीनों को दोहराकर, आपका प्लान कहाँ तक पहुँच सकता है\n"
     "/pause ब्रीफ़ और अलर्ट रोकना\n/resume उन्हें फिर से चालू करना\n/stop सारे मैसेज बंद करना\n"
+    "/erase आपके बारे में मेरे पास जो कुछ है, सब मिटाना\n"
     "/start फिर से सेटअप, या अपने जवाब देखना\n/link ईमेल पर भी इस्तेमाल के लिए कोड\n"
     "/sendto email या /sendto telegram, ब्रीफ़ और अलर्ट किस जगह आते हैं\n"
     "/watch किसी चीज़ पर, उसकी पुष्ट ख़बर आने पर एक बार सुनने के लिए\n"
@@ -124,7 +126,9 @@ HELP_COMMANDS: Final = {
     "/dashboard ek tap mein aapka apna page\n"
     "/range purane mahinon ko dohraakar, aapka plan kahan tak pahunch sakta hai\n"
     "/pause briefs aur alerts rokna\n/resume unhe phir se chalu karna\n"
-    "/stop saare messages band karna\n/start phir se setup, ya apne jawab dekhna\n"
+    "/stop saare messages band karna\n"
+    "/erase aapke baare mein mere paas jo kuch hai, sab mitana\n"
+    "/start phir se setup, ya apne jawab dekhna\n"
     "/link email par bhi use karne ke liye code\n"
     "/sendto email ya /sendto telegram, briefs aur alerts kis jagah aate hain\n"
     "/watch kisi cheez par, uski confirmed story aane par ek baar sunne ke liye\n"
@@ -212,6 +216,31 @@ UNREACHABLE: Final = {
         "aayenge.",
     },
 }
+ERASE_PREFIX: Final = "er"
+ERASE_ASK: Final = {
+    "en": "This deletes everything I have about you: your setup answers, plan, chats, watches, "
+    "holdings and any broker link. It can't be undone. /stop only pauses messages and keeps "
+    "your setup.",
+    "hi": "इससे आपके बारे में मेरे पास जो कुछ है, सब मिट जाएगा: सेटअप के जवाब, प्लान, बातचीत, वॉच, "
+    "होल्डिंग्स और कोई भी ब्रोकर लिंक। यह वापस नहीं होगा। /stop सिर्फ़ मैसेज रोकता है और सेटअप रखता है।",
+    "hinglish": "Isse aapke baare mein mere paas jo kuch hai, sab mit jayega: setup ke jawab, "
+    "plan, chats, watches, holdings aur koi bhi broker link. Yeh wapas nahin hoga. /stop sirf "
+    "messages rokta hai aur setup rakhta hai.",
+}
+ERASE_YES: Final = {"en": "Delete everything", "hi": "सब मिटाना है", "hinglish": "Sab mitana hai"}
+ERASE_NO: Final = {"en": "Keep it", "hi": "रहने दें", "hinglish": "Rehne do"}
+ERASED: Final = {
+    "en": "Done. Everything I had about you is deleted. If you ever want to start again, /start "
+    "is here.",
+    "hi": "हो गया। आपके बारे में मेरे पास जो कुछ था, सब मिट गया। फिर से शुरू करना हो तो /start है।",
+    "hinglish": "Ho gaya. Aapke baare mein mere paas jo kuch tha, sab mit gaya. Phir se shuru "
+    "karna ho toh /start hai.",
+}
+ERASE_KEPT: Final = {
+    "en": "Nothing was deleted. Everything stays as it was.",
+    "hi": "कुछ नहीं मिटा। सब कुछ पहले जैसा है।",
+    "hinglish": "Kuch nahin mita. Sab kuch pehle jaisa hai.",
+}
 # The BotFather command list, also sent with setMyCommands when the server starts.
 COMMAND_LIST: Final = (
     ("brief", "This month's brief"),
@@ -228,6 +257,7 @@ COMMAND_LIST: Final = (
     ("pause", "Pause briefs and alerts"),
     ("resume", "Turn briefs and alerts back on"),
     ("stop", "Stop all messages"),
+    ("erase", "Delete everything Networth has about you"),
     ("start", "Set up again or see your answers"),
     ("help", "Everything Networth can do"),
 )
@@ -478,6 +508,13 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
 def on_tap(turn: Turn, tap: Tap) -> None:
     profile = profile_for(turn, tap.chat_id)
     turn.store.log_message(profile.user_id, "in", tap.data)
+    if tap.data.startswith(f"{ERASE_PREFIX}:"):
+        turn.bot.answer_callback(tap.callback_id)
+        if tap.data == f"{ERASE_PREFIX}:yes":
+            erase(turn, profile)
+        else:
+            tell(turn, profile, ERASE_KEPT)
+        return
     if profile.status is not Status.STOPPED and tap.data.startswith(watches.STOP_PREFIX):
         turn.bot.answer_callback(tap.callback_id)
         turn.send(profile, Reply(watches.stop_tapped(turn.store, profile, tap.data)))
@@ -618,6 +655,38 @@ def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
     set_menu(turn, profile, on=False)
 
 
+def tell(turn: Turn, profile: Profile, words: dict[str, str], buttons: Keyboard = ()) -> None:
+    """Straight to the bot, not through outbox.send: a stopped user may still erase, and
+    nothing about the exchange is logged to a user who is being forgotten."""
+    turn.bot.send_message(profile.chat_id, Message(body=(say(words, profile.lang),)), buttons)
+
+
+def erase(turn: Turn, profile: Profile) -> None:
+    """The broker link at SnapTrade first: if that fails nothing is deleted, so the remote
+    user is never orphaned. Then the menu, then every row."""
+    try:
+        snaptrade.forget_snaptrade(profile.user_id, turn.store, client=turn.services.snaptrade)
+    except Exception as exc:  # noqa: BLE001 - nothing is deleted, the user can try again
+        log.warning("snaptrade forget for %s failed: %s", profile.user_id, type(exc).__name__)
+        tell(turn, profile, TRY_AGAIN)
+        return
+    set_menu(turn, profile, on=False)
+    turn.store.erase_user(profile.user_id)
+    tell(turn, profile, ERASED)
+
+
+def cmd_erase(turn: Turn, profile: Profile, args: str) -> None:
+    """A confirm button on Telegram; "/erase yes" is the typed confirm, as email has no
+    buttons."""
+    if args.strip().lower() in ("yes", "confirm"):
+        erase(turn, profile)
+        return
+    lang = profile.lang
+    buttons = ((Button(say(ERASE_YES, lang), f"{ERASE_PREFIX}:yes"),
+                Button(say(ERASE_NO, lang), f"{ERASE_PREFIX}:no")),)  # fmt: skip
+    tell(turn, profile, ERASE_ASK, buttons)
+
+
 def cmd_dashboard(turn: Turn, profile: Profile, args: str) -> None:
     """One button to the user's own page, and the chat menu set to open it too."""
     if profile.step is not Step.DONE:
@@ -745,6 +814,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/pause": cmd_pause,
     "/resume": cmd_resume,
     "/stop": cmd_stop,
+    "/erase": cmd_erase,
     "/help": cmd_help,
     "/link": cmd_link,
     "/sendto": cmd_sendto,
@@ -763,7 +833,7 @@ def command_name(text: str) -> str:
 
 def run_command(turn: Turn, profile: Profile, text: str) -> None:
     name = command_name(text)
-    if profile.status is Status.STOPPED and name != "/start":
+    if profile.status is Status.STOPPED and name not in ("/start", "/erase"):
         return
     parts = text.split(maxsplit=1)
     COMMANDS.get(name, cmd_unknown)(turn, profile, parts[1] if len(parts) > 1 else "")
