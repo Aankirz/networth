@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useReducer, useRef, useTransition } from "react";
+import { useEffect, useId, useReducer, useRef, useTransition, type Ref } from "react";
 import { ArrowUp, Check, Copy } from "lucide-react";
 
 import { ask } from "@/app/actions";
@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ApiError, ChatTurn, Lang } from "@/lib/contract";
 
 const MAX_TEXT = 4096;
+const FAILED = "Networth didn't answer just now. Check your connection and ask again.";
 const STARTERS: { text: string; forwarded?: boolean }[] = [
   { text: "What happened today?" },
   { text: "Explain OFS in plain words" },
@@ -118,15 +119,15 @@ function Failure({ error }: { error: ApiError | null }) {
   }
   return (
     <p className="rounded-lg bg-sheet p-4" role="alert">
-      Networth didn&apos;t answer just now. Check your connection and ask again.
+      {FAILED}
     </p>
   );
 }
 
-function EntryView({ entry }: { entry: Entry }) {
+function EntryView({ entry, ref }: { entry: Entry; ref?: Ref<HTMLLIElement> }) {
   const { outcome } = entry;
   return (
-    <li className="arrive group grid gap-3">
+    <li ref={ref} data-entry={entry.id} className="arrive group grid scroll-mt-2 gap-3">
       <div className="grid justify-items-end gap-1">
         {entry.forwarded && <span className="text-note text-graphite">Forwarded to me</span>}
         <p className="max-w-[85%] whitespace-pre-line rounded-lg bg-paper px-3 py-2">{entry.question}</p>
@@ -145,6 +146,15 @@ function EntryView({ entry }: { entry: Entry }) {
   );
 }
 
+/** What a screen reader hears for the newest turn: the server's plain text, never the whole card. */
+function announcement(entry: Entry | undefined): string {
+  if (!entry) return "";
+  const { outcome } = entry;
+  if (outcome.kind === "waiting") return "Checking";
+  if (outcome.kind === "answer") return outcome.turn.text;
+  return outcome.error ? outcome.error.message.body.map((b) => (b.kind === "text" ? b.text : b.label)).join("") : FAILED;
+}
+
 export interface ChatProps {
   token: string | null;
   lang: Lang;
@@ -155,6 +165,17 @@ export function Chat({ token, lang }: ChatProps) {
   const [pending, startTransition] = useTransition();
   const nextId = useRef(1);
   const ids = { field: useId(), forwarded: useId(), lang: useId() };
+  const newest = useRef<HTMLLIElement>(null);
+  const last = state.entries.at(-1);
+
+  // The newest turn's top comes into view when it is asked and again when its answer lands, so a
+  // long card is read from its start rather than its end.
+  const newestStage = last ? `${last.id}:${last.outcome.kind}` : "";
+  useEffect(() => {
+    if (!newestStage) return;
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    newest.current?.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+  }, [newestStage]);
 
   const send = (text: string, forwarded: boolean) => {
     const question = text.trim();
@@ -177,11 +198,14 @@ export function Chat({ token, lang }: ChatProps) {
         <p className="text-note text-graphite">Anything you would send the Networth bot on Telegram. The answer is the same.</p>
       </header>
 
-      <ol aria-live="polite" aria-relevant="additions text" className="grid flex-1 content-start gap-6 overflow-y-auto overscroll-contain">
+      <ol aria-label="Conversation" className="grid flex-1 content-start gap-6 overflow-y-auto overscroll-contain">
         {state.entries.map((entry) => (
-          <EntryView key={entry.id} entry={entry} />
+          <EntryView key={entry.id} entry={entry} ref={entry === last ? newest : undefined} />
         ))}
       </ol>
+      <p role="status" aria-live="polite" className="sr-only" data-testid="chat-status">
+        {announcement(last)}
+      </p>
 
       {state.entries.length === 0 && (
         <ul className="flex flex-wrap gap-2" aria-label="Questions to start with">

@@ -20,3 +20,18 @@ test("an unknown link is the friendly not-found page", async ({ page }) => {
   expect(response?.status()).toBe(404);
   await expect(page.getByText("This link has expired or isn't right.")).toBeVisible();
 });
+
+test("each new turn scrolls into view and is announced", async ({ page }) => {
+  await page.goto("/demo");
+  await page.getByRole("button", { name: "What could my plan become?" }).click();
+  await expect(page.locator("article[data-card='plan_range']")).toBeVisible();
+
+  const field = page.getByLabel("Your question");
+  await field.fill("What happened today?");
+  await field.press("Enter");
+
+  const news = page.locator("article[data-card='news']");
+  await expect(news).toBeInViewport();
+  await expect(page.getByTestId("chat-status")).toContainText("Confirmed in the 24 hours");
+  await expect(page.locator("article[data-card='plan_range']")).not.toBeInViewport({ ratio: 1 });
+});

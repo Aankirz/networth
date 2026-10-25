@@ -461,3 +461,6 @@
 
 ## 2026-10-25 — docs: phase 8 report
 - Added docs/phases/phase-8-report.md: contract, design direction, what each inspiration gave, the owner steps for the Vercel preview and the Maritime deploy, the production deploy command, known gaps and deviations.
+
+## 2026-10-25 — fix: phase 8 chat follows the newest turn
+- The chat panel now scrolls the newest question into view when it is asked and again when its answer lands, and a status region reads the answer's plain text to screen readers instead of the whole card. Playwright covers it. Added site/vercel.json (pins Next.js) and site/.vercelignore (keeps .env* and build output out of uploads).
