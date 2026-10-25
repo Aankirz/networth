@@ -380,3 +380,14 @@
 ## 2026-10-25 — Phase 3C: one user per email sender, commands in a first email
 - Live, each email thread had its own Keiki conversationId, so one sender became three users. The contact is now the channel's userId (lowercased); Slack stays team plus user. Fixtures give each email its own thread.
 - A first message that is a slash command gets the setup, not a chat answer. The report's turn table is filled with the three live turns.
+||||||| parent of 3204ff1 (docs: phase 7 brief, report and page screenshots)
+
+## 2026-10-25 — Phase 7 holdings report, entry points and page
+- Added networth/holdings/{returns,prices,report,lines,__init__}.py, networth/web/holdings_view.py, templates/holdings.html, the GET /u/{token}/holdings route, holdings CSS and tests/test_holdings.py (49 tests).
+
+## 2026-10-25 — Phase 7: holdings (lead)
+- Added networth/holdings/model.py (Holding, Holdings, bucket table) and reader.py (vision read, validated at the boundary), and OpenAIModels.read_holdings in networth/llm.py.
+- Added holdings and snaptrade_users tables to networth/app/store.py; saving a stopped profile deletes both, so /stop deletes holdings.
+- Reviewed and integrated the delegates' report, web page and SnapTrade client; re-exported snaptrade_link from networth.holdings.
+- Added evals/holdings_words.py (30 adversarial messages); the answer task now declines "how much / what to change" without restating the plan gap; live run 30/30 for advice, $0.288.
+- Added tests/fixtures/holdings/groww_fake.png (made-up screen) with its recorded vision output, tests/test_holdings_words.py, docs/phases/phase-7-report.md and phase-7-shots/.
