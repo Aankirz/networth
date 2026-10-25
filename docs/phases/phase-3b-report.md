@@ -19,7 +19,7 @@ Deploy URL: https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea
 | Jev eval | `evals/intent_accuracy.py` | 36 labelled English, Hindi and Hinglish messages through both pickers. |
 | Bot wiring | `networth/bot/commands.py` | `/brief`, the brief buttons (`br:ok` acknowledges, `br:plan` opens plan editing), free text to chat, photos to explain-this. Slow answers run after the update lock is released, so one tip check never holds up another user's setup. |
 
-Tests: 378 pass with no network (`make check`). New files are `tests/test_guard.py` (22), `tests/test_chat.py`, `tests/test_links.py`, `tests/test_alerts.py` and `tests/test_schedule.py`.
+Tests: 426 pass with no network (`make check`), 378 in round 1 and 48 added in round 2. New files are `tests/test_guard.py` (22), `tests/test_chat.py`, `tests/test_links.py`, `tests/test_alerts.py` and `tests/test_schedule.py`.
 
 ## Sample messages
 
@@ -164,13 +164,91 @@ The writer is almost all of a plain chat turn and over half of a tip check, beca
 | 2 | Jev | 36/36 | 100% | 422 ms | 546 ms |
 | 2 | cheap model | 36/36 | 100% | 1,082 ms | 1,749 ms |
 
-Both pickers missed the same two messages in run 1: "did I leave out crypto?" (plan question, picked other) and a forwarded IPO page (explain-this, picked tip check). Each was a gap in the criteria text, not in either model. Run 2 names exclusions under plan questions and forwarded documents under explain-this. Run 2 is in-sample, so it overstates accuracy on new messages. In run 1, all 34 Jev picks above the 0.7 floor were right. Decision: `use_jev_for_intent = true`. Accuracy is equal, latency is about 2.5x lower, and the cheap model still answers whenever Jev is unsure, slow or down.
+Both pickers missed the same two messages in run 1: "did I leave out crypto?" (plan question, picked other) and a forwarded IPO page (explain-this, picked tip check). Each was a gap in the criteria text, not in either model. Run 2 names exclusions under plan questions and forwarded documents under explain-this. Run 2 is in-sample, so it overstates accuracy on new messages. In run 1, all 34 Jev picks above the 0.7 floor were right. Round 1 decision: `use_jev_for_intent = true`. Accuracy was equal, latency about 2.5x lower, and the cheap model still answered whenever Jev was unsure, slow or down. The held-out run below reversed it.
+
+### Held-out run and the decision to turn Jev off
+
+Runs 1 and 2 were on the tuning set, and run 2 came after a criteria edit made against it. So on 2026-10-25 I wrote 24 new messages in `evals/intent_heldout.py` (English, Hindi and Hinglish, every intent) before any run on them. `uv run python -m evals.intent_accuracy heldout` ran them with the production 4 s Jev deadline. Results are in `evals/intent_results_heldout.json`.
+
+| Set | Picker | Correct | Median latency | Max latency |
+| --- | --- | --- | --- | --- |
+| tuning, run 1 | Jev | 34/36 | 386 ms | 885 ms |
+| tuning, run 1 | cheap model | 34/36 | 1,135 ms | 1,536 ms |
+| tuning, run 2 (in-sample) | Jev | 36/36 | 422 ms | 546 ms |
+| tuning, run 2 (in-sample) | cheap model | 36/36 | 1,082 ms | 1,749 ms |
+| held-out | Jev | 23/24 | 379.5 ms | 1,094 ms |
+| held-out | cheap model | 24/24 | 1,230 ms | 2,734 ms |
+| held-out | production path (Jev when at least 0.7 sure, else the model) | 24/24 | | |
+
+Jev was at least 0.7 confident on 22 held-out messages and right on all 22. Its one miss was "normal 59% matlab kya, yeh number kahan se?" (a why question), which it picked as explain-this. Decision: `use_jev_for_intent = false`. The rule set before the run was that Jev stays on only while its held-out accuracy is at least the cheap model's, and 23/24 is below 24/24. The cost is about 0.85 s more latency per message. The switch is in `config.toml`, and a test proves Jev is never asked while it is off.
+
+## Round 2
+
+Review round 1 found 12 gaps, and the coordinator's live Telegram run found 5 more. Every one is fixed, each in its own commit with a test that fails without the fix.
+
+| # | Gap | Fix |
+| --- | --- | --- |
+| 1, 2 | Guard bypasses: digits glued to text, number words, zero-width and spaced letters, Hinglish and Devanagari imperatives | See the guard's new rules below. Live bypass samples are kept in `tests/fixtures/guard_live.json`. |
+| 3 | The glossary taught advice ("Lambe time tak ruko", "Girawat mein ghabrao mat") | Rows reworded as description, teaching patterns 1 and 12 removed. A test runs every glossary cell through the guard. |
+| 4 | `/chat` trusts `source: "scheduled"` | Maritime sends no secret with a scheduled prompt. Its trigger docs say "No auth header is needed; treat the URL itself as the secret". So the watcher refuses any run outside its own cron window (Mon to Fri, 09:00 to 15:59 Kolkata). The "a forged call costs nothing" claim is replaced with the real bound, at most about one extra paid cycle an hour during market hours. |
+| 5 | No per-user cap on paid chat | `product.chat_max_per_hour = 20`. A claim in `networth.sqlite` covers a rolling hour. Past the cap the user gets a polite note and no model is called. |
+| 6 | `/u/` with `²` or a non-ASCII signature gave a 500 | Non-ASCII tokens are a 404. |
+| 7 | A brief whose compose or send failed stayed claimed | The claim is released, so the next run sends it. |
+| 8 | Alerts lost if the VM stopped between the cycle and the alerts, and a failed send burned the alert | Alerts read every insight decided in the last `event_max_age_days`, and the per-event claim stops repeats. A failed send releases its claim. |
+| 10 | Explain-this read the whole page before cutting it | The body is streamed, and reading stops at 2 MB. |
+| 11 | Older `/u/` links stayed valid for 30 days | Each `/plan` link and each brief issues a new page token, so older links 404. Saving a profile no longer writes `link_token`, so a turn holding an old copy can't bring a retired link back. |
+| 12 | This report | Held-out table above, this section, decision-log rows. |
+| 13 | The deployed product had no news | `scripts/push_data.sh watcher.sqlite` pushes the watcher database the way rates are pushed. Documented in `docs/deploy.md` under "News on /data". "What happened today?" now answers from the last news check when today's has not run, and says when that check was. |
+| 14 | "Why do banks move after an RBI rate hike?" was refused | A why question that names an event type answers from `odds()` with the history line and the `/why/...` link, even with no event this month. |
+| 15 | The tip verdict was soft | Replies lead with "Not confirmed." or "Confirmed.", then the reason. Hype phrases are quoted exactly as sent ("sure shot", "will double", "buy HDFC Bank now"). A hyped tip skips the writer, because the quotes hold words the guard rejects in any draft. |
+| 16 | Long dashes in model replies | The writer is told not to use them, and `undash()` replaces any that come through before the guard. Digit ranges keep their en dash. |
+| 17 | Watcher trigger timezone | See the trigger listing below. |
+
+### News on the VM (item 13)
+
+On 2026-10-25 at 06:17 UTC, `/data` on the agent had no `watcher.sqlite`. I ran one local cycle (`uv run python -m networth.watcher.run --once`, 75 s, $0.1505, 37 confirmed and 61 rejected stories, 5 insights) and pushed it with `scripts/push_data.sh watcher.sqlite`. The script checked the copy by sha256 (`a3a72c5a...`). On the VM, the database reads back with the latest cycle at `2026-10-25T06:19:12+00:00`, 37 confirmed decisions and 5 insights. This month's events with engine rows include the Oct 23 tariff move.
+
+The coordinator's earlier live `/brief` today had already stored the empty brief, and a repeat `/brief` resent stored text. A repeat `/brief` now writes the brief again when a news check finished after the stored one, so today's next `/brief` picks up the pushed news. Each news check costs at most one writer call per user who asks.
+
+### Watcher trigger timezone (item 17)
+
+`npx --no-install maritime agents triggers list eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea --json` on 2026-10-25:
+
+```json
+{
+  "meta": { "source": "live" },
+  "results": [
+    { "id": "27488ee9-b1f1-4d5a-92a8-34d321d189ec", "type": "cron",
+      "config": { "source": "byo_sync", "sync_id": "byo:brief", "schedule": "0 8 * * *",
+                  "label": "brief", "tz": "Asia/Kolkata", "extra": { "prompt": "RUN_BRIEF" } },
+      "enabled": true },
+    { "id": "83f1c0b7-7abd-4a69-b0fc-69d2a4f2bb66", "type": "cron",
+      "config": { "source": "byo_sync", "sync_id": "byo:watcher", "schedule": "*/30 9-15 * * 1-5",
+                  "label": "watcher", "tz": "Asia/Kolkata", "extra": { "prompt": "RUN_WATCHER" } },
+      "enabled": true }
+  ]
+}
+```
+
+Both triggers are Asia/Kolkata. (The `agentId` field is dropped from each entry above for width.)
+
+### The guard's new rules (items 1 and 2)
+
+- A number glued to letters is still read ("Rs5000", "Rs.5000", "INR5000"). A digit run that continues another number is not read again.
+- Number words count as numbers: "fifteen", "twenty-two", "half", "twice", "double", "triple", "hundred", aadha, dugna, आधा. "One" is exempt, because it is mostly not a count ("one thing", "no one").
+- Text is NFKC-normalised, and zero-width characters are removed. Spaced-out letters ("s u r e  s h o t") are joined before the banned-word check.
+- New banned words: score, rank.
+- New advice forms: should, recommend, chahiye, the daal / nikal / ruko families, "...ao mat", karo, kar do / kar lo / kar dein, dein, lein, polite "-iye" imperatives (but not words ending in "liye"), "-ein" imperatives (but not "mein" or common plural nouns), and चाहिए, करें, कीजिए.
 
 ## Alert threshold
 
 `alert_min_episodes = 8` is PRODUCT.md's floor for a non-weak row. `alert_min_gap = 0.15`: the scoreboard's lean words start at a 10-point gap, and the alert asks for half again as wide, so an alert fires only where the scoreboard would already show a clear lean. On the live engine, 6 of 9 bank-stress episodes against a 59% normal rate is a 7.7-point gap and would not alert. A row at 10 of 12 against 55% (a 28-point gap) would, which is the case `tests/test_alerts.py` sends.
 
 ## OWNER NEEDED
+
+Round 2: OWNER NEEDED: redeploy Phase 3B round 2 - `npx maritime deploy networth --source github --repo https://github.com/Aankirz/networth --branch main --wait --json`. Then the coordinator checks a live `/brief` (it should show this month's lines with engine numbers) and "What happened today?" (it should answer from the pushed confirmed stories). `watcher.sqlite` is already on `/data` and survives the redeploy.
+
+Round 1 (done, deployment 65ab6449):
 
 1. OWNER NEEDED: deploy Phase 3B - run `npx maritime deploy networth --source github --repo https://github.com/Aankirz/networth --branch main --wait --json`. The auto-mode permission check refused it for me, and deploys are a step I pause on. All env vars are already set, and the engine sqlite is already on `/data`.
 2. OWNER NEEDED: after the deploy, confirm the schedules registered - run `curl -s https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea/health`, wait a minute, then `npx maritime agents triggers list eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea --json`. Expect `watcher` and `brief`. It returned `[]` before the deploy, as expected.
@@ -180,7 +258,7 @@ Both pickers missed the same two messages in run 1: "did I leave out crypto?" (p
 
 | # | Item | Status |
 | --- | --- | --- |
-| 1 | `make check` from a clean clone | 378 pass |
+| 1 | `make check` from a clean clone | 426 pass |
 | 2 | Server on Maritime, `/health` and `/why/rbi_hike/^NSEBANK` | `/health` 200 now. `/why` needs the deploy (item 1 above). The 500 cause is fixed in code (6cf727b) and the sqlite is on `/data`. |
 | 3 | Webhook, onboarding and a real brief live | needs the deploy. `/brief` is the command. |
 | 4 | Guard tests | done, `tests/test_guard.py` |
@@ -199,7 +277,8 @@ Both pickers missed the same two messages in run 1: "did I leave out crypto?" (p
 - **Keiki (stretch).** Not wired. `KEIKI_API_KEY` authenticates. `GET https://onkeiki.com/api/v1/developer/agents` returns `200 {"agents":[]}`, so no Keiki agent or channel exists to set `harness: "external"` on. Wiring it needs a new outward-facing Keiki channel, a `/keiki/turn` endpoint that verifies `Keiki-Signature-Ed25519` against Keiki's JWKS (no Ed25519 library is installed), and the turn API calls `/messages` and `/complete`. That is past the time box. The external-harness doc is https://onkeiki.com/docs/external-harness.md.
 - **Link fetch and DNS rebinding.** `explain.page_text` resolves the host and checks the addresses are global, then httpx resolves again. A rebinding attacker could slip between the two. That is marked in code with the upgrade path (pin the checked address in the transport).
 - **Jev cost.** The gateway reports no price, so Jev calls log $0.
-- **Watcher wakes cost money when forged.** `/chat` is public. The 25-minute gap and the job lock cap a forged-wake flood at one watcher cycle per 25 minutes, around the clock, against the schedule's two an hour in market hours.
+- **Forged watcher wakes still cost a little.** Maritime sends no secret with scheduled prompts. The watcher runs only Mon to Fri, 09:00 to 15:59 Kolkata, and never within 25 minutes of the last cycle. A forger can add at most about one paid cycle (about $0.10 to $0.15) an hour, in market hours only.
+- **Link rotation and the brief thread.** `save_profile` no longer writes `link_token`, so no turn can bring a retired link back. Two links issued at the same moment, by `/plan` and the scheduled brief, leave only the later one working.
 
 ## Deviations
 

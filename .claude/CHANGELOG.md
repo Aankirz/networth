@@ -267,3 +267,6 @@
 
 ## 2026-10-25 — Push watcher data to the VM
 - scripts/push_data.sh copies any data/*.sqlite onto /data in checksummed 80 KB chunks; push_rates.sh wraps it; deploy.md documents seeding news after a deploy (round 2 item 13).
+
+## 2026-10-25 — Phase 3B round 2 report
+- Report: held-out Jev table and decision, round 2 fixes table, VM news seeding, watcher trigger listing (Asia/Kolkata), guard rules, test count 426; decision-log rows (round 2 items 12, 17).
