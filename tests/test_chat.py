@@ -573,3 +573,31 @@ def test_the_brief_has_a_my_range_button_next_to_my_page(tmp_path, cfg, sim_tabl
     assert ["My page", "My range"] in rows
     chat.tap("br:range")
     assert chat.bot.last.startswith(RANGE_STARTS["en"])
+
+
+def switch_lang(chat: Chat, lang: str) -> None:
+    for data in ("ob:confirm:fix", "ob:confirm:lang", f"ob:lang:{lang}", "ob:confirm:ok"):
+        chat.tap(data)
+
+
+def test_a_language_change_reaches_the_same_day_brief(tmp_path, cfg) -> None:
+    from networth.bot import briefs
+
+    models = FakeChatModels()
+    chat = talk(tmp_path, cfg, models)
+    chat.say("/start")
+    switch_lang(chat, "hinglish")
+    chat.say("/brief")
+    assert "in Hinglish" in models.tasks[-1]
+    chat.say("/start")
+    switch_lang(chat, "en")
+    asked = len(models.tasks)
+    chat.say("/brief")
+    assert len(models.tasks) > asked and "in English" in models.tasks[-1]
+    chat.say("/brief")
+    assert len(models.tasks) == asked + 2, "unchanged since, so the stored brief is resent"
+    sent = len(chat.bot.sent)
+    today = briefs.local_today(chat.profile, dt.datetime.fromisoformat(NOW))
+    assert not briefs.send_brief(chat.store, chat.bot, chat.profile, chat.services, today,
+                                 proactive=True)  # fmt: skip
+    assert len(chat.bot.sent) == sent, "the scheduled run still sends one brief a day"

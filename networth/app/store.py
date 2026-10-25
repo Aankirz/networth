@@ -199,6 +199,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
     "briefs": {
         "user_id": "TEXT NOT NULL", "day": "TEXT NOT NULL", "text": "TEXT NOT NULL DEFAULT ''",
         "used": "TEXT NOT NULL DEFAULT ''", "sent_at": "TEXT NOT NULL",
+        "inputs": "TEXT NOT NULL DEFAULT ''",
     },
     "answers": {"user_id": "TEXT NOT NULL", "at": "TEXT NOT NULL"},
     "alerts": {
@@ -397,12 +398,21 @@ class Store:
         with self._connect() as conn:
             conn.execute("DELETE FROM briefs WHERE user_id = ? AND day = ?", (user_id, day))
 
-    def save_brief(self, user_id: str, day: str, text: str, used: str) -> None:
+    def save_brief(self, user_id: str, day: str, text: str, used: str, inputs: str = "") -> None:
+        """inputs keys the profile and plan the brief was written from."""
         with self._connect() as conn:
             conn.execute(
-                "UPDATE briefs SET text = ?, used = ?, sent_at = ? WHERE user_id = ? AND day = ?",
-                (text, used, now_iso(), user_id, day),
+                "UPDATE briefs SET text = ?, used = ?, sent_at = ?, inputs = ? "
+                "WHERE user_id = ? AND day = ?",
+                (text, used, now_iso(), inputs, user_id, day),
             )
+
+    def brief_inputs(self, user_id: str, day: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT inputs FROM briefs WHERE user_id = ? AND day = ?", (user_id, day)
+            ).fetchone()
+        return row["inputs"] if row else None
 
     def last_brief(self, user_id: str) -> tuple[str, str, str] | None:
         """(day, text, sent_at) of the newest brief that was written, if any."""
