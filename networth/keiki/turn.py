@@ -126,14 +126,16 @@ def send_outcome(turn: commands.Turn, outcome: Outcome) -> Profile:
 
 
 def welcome(turn: commands.Turn, address: str, text: str) -> Handled:
-    """A first email: answer it when it asks something (a greeting gets no answer), then start
-    the short setup, so "What happened today?" from a stranger is answered, not deferred."""
+    """A first email: answer it when it asks something (a greeting or a command gets no
+    answer), then start the short setup, so "What happened today?" from a stranger is answered,
+    not deferred."""
     profile = turn.save(new_email_profile(address, turn.now))
     turn.store.bind_contact(address, profile.user_id)
     turn.store.log_message(profile.user_id, "in", text)
     cfg = turn.services.cfg
-    if cfg is None or turn.store.claim_answer(profile.user_id, turn.clock,
-                                              cfg.product.chat_max_per_hour):  # fmt: skip
+    asks = not text.startswith("/")  # a command needs a finished setup, as on Telegram
+    limit = cfg.product.chat_max_per_hour if cfg else None
+    if asks and (limit is None or turn.store.claim_answer(profile.user_id, turn.clock, limit)):
         turn.later.append(lambda: first_answer(turn, profile, text))
     turn.later.append(lambda: send_outcome(turn, onboard.start(profile)))
     return Handled("welcome", profile.user_id)

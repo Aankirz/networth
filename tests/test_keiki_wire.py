@@ -34,7 +34,7 @@ def test_a_turn_payload_parses_into_its_fields_without_silent_messages() -> None
     payload = turn_payload("What happened today?", traceId="tr_1", heldBack=True)
     payload["messages"].append({"text": "typing...", "silent": True})
     turn = parse(payload)
-    assert turn == KeikiTurn("t1", "agent-test", ADDRESS, ADDRESS, "agentmail",
+    assert turn == KeikiTurn("t1", "agent-test", "t1.thread@agentmail.to", ADDRESS, "agentmail",
                              ("What happened today?",), True, False, TURN_URL,
                              "tr_1")  # fmt: skip
 
@@ -42,6 +42,14 @@ def test_a_turn_payload_parses_into_its_fields_without_silent_messages() -> None
 def test_a_turn_without_a_trace_id_uses_the_turn_id_as_keiki_does() -> None:
     turn = parse(turn_payload("hi", turn_id="3084530f"))
     assert turn is not None and turn.trace_id == "3084530f"
+
+
+def test_an_email_sender_is_one_contact_across_threads_whatever_the_case() -> None:
+    first = parse(turn_payload("hi", turn_id="a"))
+    second = parse(turn_payload("hi", turn_id="b", address=ADDRESS.upper()))
+    assert first is not None and second is not None
+    assert first.conversation_id != second.conversation_id
+    assert first.contact == second.contact == ADDRESS
 
 
 def test_a_slack_author_is_one_contact_across_threads() -> None:

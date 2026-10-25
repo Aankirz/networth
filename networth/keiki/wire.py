@@ -9,9 +9,10 @@ Keiki sends.
 
 `channel` arrives as an object that also carries the sender and the inbound text, so only its
 type is kept: the object's `channel` key on the live email turn, `type` as a fallback. The
-contact is who wrote: the conversation for email (the sender's address), and the author for
-Slack, where each thread is its own conversation. Keiki's trace id for a turn is the turn id
-(seen on the first live email turn), so trace_id falls back to it.
+contact is who wrote, the channel's `userId`: the sender's address for email (lowercased), and
+slack:<team>:<user> for Slack. Keiki's conversation is per thread on both (each new email
+thread got a new conversationId live), so it is never the contact. Keiki's trace id for a turn
+is the turn id (seen on the first live email turn), so trace_id falls back to it.
 
 https://onkeiki.com/docs/external-harness.md
 """
@@ -40,7 +41,7 @@ _first_payload = threading.Event()
 class KeikiTurn:
     turn_id: str
     agent_id: str
-    conversation_id: str  # Keiki's conversation: the sender for email, a thread for Slack
+    conversation_id: str  # Keiki's conversation: one thread, on email and on Slack
     contact: str  # who wrote, the key for contacts: the sender, or slack:<team>:<user>
     channel: str  # agentmail, slack, ...
     texts: tuple[str, ...]
@@ -79,9 +80,12 @@ def _channel(payload: Mapping[str, object]) -> tuple[str, Mapping[str, object]]:
 
 def _contact(conversation_id: str, kind: str, fields: Mapping[str, object]) -> str:
     team, user = fields.get("teamId"), fields.get("userId") or fields.get("requesterUserId")
-    if kind == SLACK and isinstance(team, str) and isinstance(user, str) and team and user:
-        return f"{SLACK_CONTACT_PREFIX}{team}:{user}"
-    return conversation_id
+    if not isinstance(user, str) or not user.strip():
+        return conversation_id
+    if kind == SLACK:
+        return f"{SLACK_CONTACT_PREFIX}{team}:{user}" if isinstance(team, str) and team else (
+            conversation_id)  # fmt: skip
+    return user.strip().lower()
 
 
 def parse(payload: object) -> KeikiTurn | Other | None:
