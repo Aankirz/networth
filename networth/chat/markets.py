@@ -31,6 +31,7 @@ from networth.money import MINUS, indian_grouping, money
 MAX_POINTS: Final = 260  # about a year of trading days; longer series are thinned evenly
 DEFAULT_YEARS: Final = 5
 RATING_DEADLINE_S: Final = 3.0
+INDEX_DEADLINE_S: Final = 3.0  # all of today's index quotes together
 SEARCH_DEADLINE_S: Final = 2.0  # the name lookup; past it the answer goes out without a number
 NEAR_LOW: Final = 0.10  # within 10% of the 52-week low
 NEAR_HIGH: Final = 0.05
@@ -97,7 +98,7 @@ def _found(text: str, currency: str | None) -> tuple[Found, ...]:
     return market.resolve(text, currency)
 
 
-SEARCHES: Final = cf.ThreadPoolExecutor(max_workers=4, thread_name_prefix="market-search")
+SEARCHES: Final = cf.ThreadPoolExecutor(max_workers=8, thread_name_prefix="market-search")
 
 
 def found_in_time(text: str, currency: str | None) -> tuple[Found, ...] | None:
@@ -277,6 +278,42 @@ def compare_card(hs: Sequence[History], years: int) -> dict:
         "series": [series(h.name, "rebased to 100", h.closes) for h in span],
         "columns": [h.name for h in span], "rows": rows,
         "source": source(hs[0].symbol, f"daily closes to {day_words(end.date())}"),
+    }  # fmt: skip
+
+
+def index_quotes(currency: str | None) -> list[Quote]:
+    """The reader's home indices (the S&P 500, Nasdaq and Dow for a dollar reader; Nifty 50,
+    Sensex and the rest for a rupee reader) that answer inside INDEX_DEADLINE_S, in order."""
+    symbols = market.HOME_INDICES["us" if currency == "USD" else "in"]
+    futures = [SEARCHES.submit(market.quote, s) for s in symbols]
+    done, _ = cf.wait(futures, timeout=INDEX_DEADLINE_S)
+    quotes = []
+    for f in futures:
+        if f in done and f.exception() is None and (q := f.result()) is not None:
+            quotes.append(q)
+    return quotes
+
+
+def index_tile(q: Quote) -> dict:
+    return {
+        "symbol": q.symbol, "name": q.name, "level": unit_price(q.price, q.currency, True),
+        "change": unit_price(q.change, q.currency, True), "change_pct": pct(q.change_pct),
+        "direction": direction(q.change),
+    }  # fmt: skip
+
+
+def index_line(q: Quote) -> str:
+    return f"• {q.name} {unit_price(q.price, q.currency, True)} ({pct(q.change_pct)})"
+
+
+def market_today_card(quotes: Sequence[Quote], reasons: Sequence[tuple[str, Sequence[str]]]
+                      ) -> dict:  # fmt: skip
+    day = max(q.day for q in quotes)
+    return {
+        "type": "market_today", "day": day_words(day),
+        "tiles": [index_tile(q) for q in quotes],
+        "reasons": [{"text": t, "publishers": list(who)} for t, who in reasons],
+        "source": source(quotes[0].symbol, close_of(day)),
     }  # fmt: skip
 
 

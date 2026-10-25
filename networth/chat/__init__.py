@@ -228,7 +228,7 @@ def local_date(p: Profile, now: dt.datetime) -> dt.date:
 Handler = Callable[[Store, Profile, str, Services, dt.datetime, str], Answer]
 HANDLERS: Final[dict[Intent, Handler]] = {
     Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now, lang: today.what_happened(
-        s, now, p.tz
+        s, now, p.tz, p.currency
     ),
     Intent.WHY: lambda store, p, text, s, now, lang: today.why(
         store, p, s, local_date(p, now), text, lang

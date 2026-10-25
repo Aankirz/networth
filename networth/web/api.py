@@ -76,8 +76,6 @@ from networth.engine import odds as engine
 from networth.keiki.turn import TURN_LOCK, cost_between
 from networth.money import money
 from networth.sim.data import Table
-from networth.watcher.store import Confirmed
-from networth.watcher.store import Store as WatcherStore
 from networth.web import holdings_view, plan_view, routes, session
 from networth.web.fmt import percent, western_grouping
 from networth.web.names import TYPES, asset_name, why_path
@@ -327,27 +325,17 @@ def holdings_card(store: Store, profile: Profile, table: Table | None) -> dict |
 
 
 def today_stories(services: Services, now: dt.datetime, lang: str | None = None) -> list[dict]:
-    """The confirmed stories today.what_happened words: pulled in the 24 hours before the last
-    news check, in the same order. Each carries the day the story was first seen."""
-    if not services.watcher_db.exists():
-        return []
-    ws = WatcherStore.open(services.watcher_db)
-    try:
-        cycle = ws.latest_cycle()
-        anchor = min(now, cycle.finished_at) if cycle else now
-        fresh = {s.id for s in ws.stories_pulled_since(anchor - chat.today.DAY)}
-        decided = [d for d in ws.decisions() if d.story.id in fresh]
-    finally:
-        ws.close()
+    """The confirmed stories today.what_happened words, in the same order. Each carries the day
+    the story was first seen."""
+    confirmed, _ = chat.today.confirmed_today(services, now)
     return [
         {
             "title": d.story.title.rstrip("."),
             "day": day_words(d.story.first_seen.date(), lang),
             "publishers": list(d.verdict.publishers),
         }
-        for d in decided
-        if isinstance(d.verdict, Confirmed)
-    ][: chat.today.MAX_STORIES]
+        for d in confirmed
+    ]
 
 
 WHY_LINK: Final = re.compile(r"/why/([a-z_]+)/([^/?#]+)$")

@@ -671,3 +671,8 @@
 
 ## 2026-10-25 — feat: the history card with a 1Y/3Y/5Y/10Y range switch
 - site/components/cards/price-history.tsx renders price_history: the server's return for the years asked, a range switch that cuts the closes in the browser (a shorter span shows the change between the first and last close on the line, and says so), the worst falls shaded on the line and listed with their recovery, a worst-fall-in-this-stretch insight and the source chip. Tested against the recorded 10-year Nifty 50 answer.
+||||||| parent of 04c6d79 (feat: what happened today leads with the home index moves, then up to 4 confirmed stories)
+||||||| parent of 960dab7 (feat: what happened today leads with the home index moves, then up to 4 confirmed stories)
+
+## 2026-10-25 — what happened today leads with the index moves
+- networth/chat/today.py: the reader's home indices (Nifty 50, Sensex and the rest, or the S&P 500, Nasdaq and Dow for USD) lead, then up to 4 confirmed stories first seen in the window; the could-not-confirm count is gone; a market_today card goes with it. api today_stories shares the same query. Tests in tests/test_markets.py.

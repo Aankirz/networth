@@ -17,10 +17,10 @@ from networth.app.store import INDIA_TZ, Plan, Profile, Store
 from networth.bot.message import LANGS, Link, say
 from networth.bot.onboarding import plan_line
 from networth.brief.lines import Line, day_words
-from networth.chat import talk
+from networth.chat import markets, talk
 from networth.chat.answer import Answer
 from networth.sim.data import MissingSeries
-from networth.watcher.store import Confirmed
+from networth.watcher.store import Confirmed, Decision
 from networth.watcher.store import Store as WatcherStore
 from networth.web import names
 
@@ -28,7 +28,7 @@ log = logging.getLogger("networth.chat")
 
 DAY: Final = dt.timedelta(hours=24)
 STALE_CHECK: Final = dt.timedelta(hours=1)
-MAX_STORIES: Final = 5
+MAX_STORIES: Final = 4
 TODAY_TASK: Final = "Tell a beginner, in a short chat message, what news was confirmed today."
 WHY_TASK: Final = (
     "Explain to a beginner, in a short chat message, where the brief's line came from."
@@ -63,15 +63,15 @@ STORY: Final = {
     "hi": "• {title}। रिपोर्ट करने वाले: {who}।",
     "hinglish": "• {title}. Report karne wale: {who}.",
 }
-LEFT_OUT_ONE: Final = {
-    "en": "I also saw 1 other report I could not confirm, so it is left out.",
-    "hi": "1 और रिपोर्ट दिखी जिसकी पुष्टि नहीं हो सकी, इसलिए वह यहाँ नहीं है।",
-    "hinglish": "1 aur report dikhi jo confirm nahin ho saki, isliye woh yahan nahin hai.",
+MARKETS_AT: Final = {
+    "en": "Markets at the close on {day}:",
+    "hi": "{day} को बाज़ार बंद होने पर:",
+    "hinglish": "{day} ko market close par:",
 }
-LEFT_OUT: Final = {
-    "en": "I also saw {n} other reports I could not confirm, so they are left out.",
-    "hi": "{n} और रिपोर्टें दिखीं जिनकी पुष्टि नहीं हो सकी, इसलिए वे यहाँ नहीं हैं।",
-    "hinglish": "{n} aur reports dikhi jo confirm nahin ho saki, isliye woh yahan nahin hain.",
+INDEX_SOURCE: Final = {
+    "en": "Index levels: Yahoo Finance, close of {day}.",
+    "hi": "इंडेक्स: Yahoo Finance, {day} का बंद।",
+    "hinglish": "Index levels: Yahoo Finance, {day} ka close.",
 }
 HISTORY_HEAD: Final = {
     "en": "Here's what history counted after news like this:",
@@ -159,13 +159,12 @@ def by_lang(write: Callable[[str], str]) -> dict[str, str]:
     return {lang: write(lang) for lang in LANGS}
 
 
-def what_happened(services: Services, now: dt.datetime, tz: str = INDIA_TZ) -> Answer:
-    """Confirmed stories pulled in the 24 hours before the last news check. With no check in
-    the last hour (nights, weekends), the reply says when that check was."""
-    db = services.watcher_db
-    if not db.exists():
-        return Answer.fixed(NOT_READ)
-    store = WatcherStore.open(db)
+def confirmed_today(services: Services, now: dt.datetime) -> tuple[list[Decision], dt.datetime]:
+    """Up to MAX_STORIES confirmed stories first seen and pulled in the 24 hours before the last
+    news check (an older story pulled again is stale), and that check's time."""
+    if not services.watcher_db.exists():
+        return [], now
+    store = WatcherStore.open(services.watcher_db)
     try:
         cycle = store.latest_cycle()
         anchor = min(now, cycle.finished_at) if cycle else now
@@ -173,28 +172,44 @@ def what_happened(services: Services, now: dt.datetime, tz: str = INDIA_TZ) -> A
         decided = [d for d in store.decisions() if d.story.id in fresh]
     finally:
         store.close()
-    confirmed = [d for d in decided if isinstance(d.verdict, Confirmed)]
-    unconfirmed = len(decided) - len(confirmed)
+    kept = [d for d in decided
+            if isinstance(d.verdict, Confirmed) and d.story.first_seen >= anchor - DAY]  # fmt: skip
+    return kept[:MAX_STORIES], anchor
+
+
+def what_happened(services: Services, now: dt.datetime, tz: str = INDIA_TZ,
+                  currency: str | None = "INR") -> Answer:  # fmt: skip
+    """The reader's home indices at the last close, then the confirmed stories pulled in the 24
+    hours before the last news check. With no check in the last hour (nights, weekends), the
+    reply says when that check was. Stories that could not be confirmed are not mentioned."""
+    quotes = markets.index_quotes(currency)
+    if not services.watcher_db.exists() and not quotes:
+        return Answer.fixed(NOT_READ)
+    confirmed, anchor = confirmed_today(services, now)
     local = anchor.astimezone(ZoneInfo(tz))
     stale = now - anchor > STALE_CHECK
+    close = markets.day_words(max(q.day for q in quotes)) if quotes else ""
 
     def write(lang: str) -> str:
         when = say(LAST_DAY, lang)
         if stale:
             when = say(BEFORE_CHECK, lang).format(
                 when=f"{day_words(local.date(), lang)}, {local:%H:%M}")  # fmt: skip
-        left = say(LEFT_OUT_ONE if unconfirmed == 1 else LEFT_OUT, lang).format(n=unconfirmed)
-        rest = f"\n\n{left}" if unconfirmed else ""
-        if not confirmed:
-            return say(NOTHING_CONFIRMED, lang).format(when=when) + rest
-        lines = [say(STORY, lang).format(title=d.story.title.rstrip("."),
-                                         who=", ".join(d.verdict.publishers))
-                 for d in confirmed[:MAX_STORIES]]  # fmt: skip
-        head = say(CONFIRMED_IN, lang).format(when=when)
-        return "\n".join([head, *lines]) + rest
+        news = [say(STORY, lang).format(title=d.story.title.rstrip("."),
+                                        who=", ".join(d.verdict.publishers))
+                for d in confirmed]  # fmt: skip
+        stories = ("\n".join([say(CONFIRMED_IN, lang).format(when=when), *news]) if news
+                   else say(NOTHING_CONFIRMED, lang).format(when=when))  # fmt: skip
+        if not quotes:
+            return stories
+        tiles = "\n".join([say(MARKETS_AT, lang).format(day=close),
+                           *(markets.index_line(q) for q in quotes)])  # fmt: skip
+        return "\n\n".join([tiles, stories, say(INDEX_SOURCE, lang).format(day=close)])
 
+    reasons = [(d.story.title.rstrip("."), d.verdict.publishers) for d in confirmed]
+    card = markets.market_today_card(quotes, reasons) if quotes else None
     words = by_lang(write)
-    return Answer(words["en"], words["en"], TODAY_TASK, kind="today", words=words)
+    return Answer(words["en"], words["en"], TODAY_TASK, kind="today", words=words, card=card)
 
 
 TYPE_QUESTION: Final = "Which market event type, if any, does this question name?"

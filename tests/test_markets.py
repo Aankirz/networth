@@ -3,7 +3,9 @@ its answer, leads with the number asked for, says its source and date, and carri
 
 from __future__ import annotations
 
+import datetime as dt
 import time
+from dataclasses import replace
 from pathlib import Path
 
 import pandas as pd
@@ -11,10 +13,10 @@ import pytest
 
 from networth import market
 from networth.app.services import Services
-from networth.chat import markets
-from tests.test_chat import cfg  # noqa: F401 - the config fixture
+from networth.chat import markets, today
+from tests.test_chat import cfg, weekend_watcher  # noqa: F401 - cfg is the config fixture
 from tests.test_market import SWIGGY, TESLA, FakeSource
-from tests.test_onboarding import Chat, onboard
+from tests.test_onboarding import NOW, Chat, onboard
 
 DAYS = pd.bdate_range(end="2026-10-23", periods=5 * 261)
 SWIGGY_CLOSES = pd.Series([430.0] * (len(DAYS) - 2) + [211.4, 176.0], index=DAYS)
@@ -26,7 +28,15 @@ INFO = {
     "^NSEI": {"currency": "INR", "exchange": "NSI"},
     "^BSESN": {"currency": "INR", "exchange": "BSE"},
 }
-CLOSES = {"SWIGGY.NS": SWIGGY_CLOSES, "TSLA": TESLA_CLOSES, "^NSEI": NIFTY, "^BSESN": NIFTY * 3}
+CLOSES = {
+    "SWIGGY.NS": SWIGGY_CLOSES,
+    "TSLA": TESLA_CLOSES,
+    "^NSEI": NIFTY,
+    "^BSESN": NIFTY * 3,
+    "^GSPC": NIFTY / 3,
+    "^IXIC": NIFTY,
+    "^DJI": NIFTY * 3,
+}
 
 
 class Yahoo(FakeSource):
@@ -151,3 +161,51 @@ def test_a_slow_name_search_answers_in_time_without_a_number(chat: Chat, monkeyp
 def test_a_slow_search_never_takes_a_question_that_names_nothing(monkeypatch) -> None:
     monkeypatch.setattr(markets, "found_in_time", lambda text, currency: None)
     assert markets.route("should i buy now?", "INR") is None
+
+
+def test_today_leads_with_the_home_indices_then_confirmed_news(chat: Chat) -> None:
+    weekend_watcher(chat.services.watcher_db, dt.datetime.fromisoformat(NOW))
+    chat.say("what happened today?")
+    tiles, news, source = chat.bot.last.split("\n\n")
+    assert tiles.startswith("Markets at the close on 23 Oct 2026:\n• Nifty 50 ")
+    assert "• Sensex " in tiles and "S&P 500" not in tiles
+    assert news.startswith("Confirmed in the last 24 hours:")
+    assert source == "Index levels: Yahoo Finance, close of 23 Oct 2026."
+
+
+def test_a_dollar_reader_gets_the_s_and_p_nasdaq_and_dow(chat: Chat) -> None:
+    chat.store.save_profile(replace(chat.profile, currency="USD"))
+    chat.say("what happened today?")
+    names = [line.split(" ")[1] for line in chat.bot.last.splitlines() if line.startswith("•")]
+    assert names[:3] == ["S&P", "Nasdaq", "Dow"]
+
+
+def test_reports_that_were_not_confirmed_are_never_mentioned(chat: Chat) -> None:
+    from networth.watcher.store import NewStory, Rejected
+    from networth.watcher.store import Store as WatcherStore
+
+    now = dt.datetime.fromisoformat(NOW)
+    weekend_watcher(chat.services.watcher_db, now)
+    store = WatcherStore.open(chat.services.watcher_db)
+    store.assign([NewStory("s2", "Bank X to merge with Bank Y", now)], {"s2": []})
+    store.put_decisions({"s2": Rejected("one blog", ("blog.example",))}, now)
+    store.close()
+    chat.say("what happened today?")
+    assert "Bank X" not in chat.bot.last
+    assert "could not confirm" not in chat.bot.last and "other report" not in chat.bot.last
+
+
+def test_today_carries_a_market_today_card_with_a_source(chat: Chat) -> None:
+    answer = today.what_happened(chat.services, dt.datetime.fromisoformat(NOW), currency="INR")
+    assert answer.card is not None and answer.card["type"] == "market_today"
+    assert [t["name"] for t in answer.card["tiles"]] == ["Nifty 50", "Sensex"]
+    assert set(answer.card["tiles"][0]) == {"symbol", "name", "level", "change", "change_pct",
+                                            "direction"}  # fmt: skip
+    assert answer.card["source"]["as_of"] == "close of 23 Oct 2026"
+
+
+def test_with_no_index_data_today_is_the_news_alone(chat: Chat, monkeypatch) -> None:
+    monkeypatch.setattr(markets, "index_quotes", lambda currency: [])
+    weekend_watcher(chat.services.watcher_db, dt.datetime.fromisoformat(NOW))
+    chat.say("what happened today?")
+    assert chat.bot.last.startswith("Confirmed in the last 24 hours:")
