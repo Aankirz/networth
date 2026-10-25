@@ -335,3 +335,7 @@
 
 ## 2026-10-25 — Phase 5 news labels
 - evals/news/labels.jsonl: 63 real stories (29 events of a type, 34 rumours, near misses, old news, opinion and previews), India, US and global, written by three curators and checked URL by URL (evals/news/label_check.jsonl), committed before the judge runs.
+
+## 2026-10-25 — Phase 5 results, findings and report
+- evals/results/: cached news, words (rerun after the fixture crash), trace and the one vault run; evals/words.py test user goal fixed to `growth`; evals/report.py adds the by-cutoff table.
+- docs/phases/phase-5-findings.md: 5 product changes with failing examples and file:line, none applied. docs/phases/phase-5-report.md: method, results, gaps, deviations, plan hash and spend ($1.22 of $15).

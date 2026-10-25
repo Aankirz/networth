@@ -1,0 +1,1449 @@
+{
+ "run_at": "2026-10-25T07:06:28+00:00",
+ "event_max_age_days": 7,
+ "rows": [
+  {
+   "id": "in-rbi_hike-2022-05-04",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "PTI",
+    "bbc.com",
+    "business-standard.com",
+    "indiatoday.in"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "rbi_hike",
+    "cause": "inflation",
+    "event_date": "2022-05-04",
+    "region": "in",
+    "reason": "The Reserve Bank of India raised its repo rate by 40 basis points to 4.40% to contain elevated inflation."
+   },
+   "judge_ms": 3114,
+   "jev": {
+    "name": "rbi_hike",
+    "confidence": 1.0,
+    "latency_ms": 954
+   }
+  },
+  {
+   "id": "in-rbi_hike-2023-02-08",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indianexpress.com",
+    "indiatoday.in",
+    "thehindubusinessline.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "rbi_hike",
+    "cause": "inflation",
+    "event_date": "2023-02-08",
+    "region": "in",
+    "reason": "The RBI raised the repo rate by 25 basis points to 6.5% to contain inflation."
+   },
+   "judge_ms": 1944,
+   "jev": {
+    "name": "rbi_hike",
+    "confidence": 1.0,
+    "latency_ms": 432
+   }
+  },
+  {
+   "id": "in-rbi_cut-2020-03-27",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indiatimes.com",
+    "ndtvprofit.com",
+    "pib.gov.in"
+   ],
+   "primary_source": "pib.gov.in",
+   "reject_reason": null,
+   "judge": {
+    "type": "rbi_cut",
+    "cause": "pandemic",
+    "event_date": "2020-03-27",
+    "region": "in",
+    "reason": "The RBI cut its repo rate by 75 basis points to 4.4% on March 27, 2020, to mitigate the economic impact of the COVID-19 pandemic."
+   },
+   "judge_ms": 2266,
+   "jev": {
+    "name": "rbi_cut",
+    "confidence": 1.0,
+    "latency_ms": 524
+   }
+  },
+  {
+   "id": "in-rbi_cut-2025-06-06",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indianexpress.com",
+    "indiatimes.com",
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "rbi_cut",
+    "cause": "growth_support",
+    "event_date": "2025-06-06",
+    "region": "in",
+    "reason": "The RBI announced a 50-basis-point repo rate cut to 5.5% on June 6, 2025, front-loading monetary support as inflation softened and policymakers sought to boost growth."
+   },
+   "judge_ms": 2611,
+   "jev": {
+    "name": "rbi_cut",
+    "confidence": 1.0,
+    "latency_ms": 479
+   }
+  },
+  {
+   "id": "in-union_budget-2024-07-23",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "ndtv.com",
+    "pib.gov.in"
+   ],
+   "primary_source": "pib.gov.in",
+   "reject_reason": null,
+   "judge": {
+    "type": "union_budget",
+    "cause": "fiscal",
+    "event_date": "2024-07-23",
+    "region": "in",
+    "reason": "Finance Minister Nirmala Sitharaman presented India's Union Budget 2024-25 in Parliament on July 23, 2024."
+   },
+   "judge_ms": 1875,
+   "jev": {
+    "name": "union_budget",
+    "confidence": 1.0,
+    "latency_ms": 572
+   }
+  },
+  {
+   "id": "in-union_budget-2023-02-01",
+   "parsed_articles": 1,
+   "confirmed": true,
+   "publishers": [
+    "pib.gov.in"
+   ],
+   "primary_source": "pib.gov.in",
+   "reject_reason": null,
+   "judge": {
+    "type": "union_budget",
+    "cause": "fiscal",
+    "event_date": "2023-02-01",
+    "region": "in",
+    "reason": "India announced the Union Budget for fiscal year 2023-24 on 2023-02-01."
+   },
+   "judge_ms": 1985,
+   "jev": {
+    "name": "union_budget",
+    "confidence": 0.9,
+    "latency_ms": 482
+   }
+  },
+  {
+   "id": "in-inr_shock-2022-07-19",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "AFP",
+    "fortuneindia.com",
+    "indiatimes.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "inr_shock",
+    "cause": "capital_outflow",
+    "event_date": "2022-07-19",
+    "region": "in",
+    "reason": "The Indian rupee breached 80 per US dollar for the first time amid intensified foreign capital outflows."
+   },
+   "judge_ms": 1792,
+   "jev": {
+    "name": "inr_shock",
+    "confidence": 1.0,
+    "latency_ms": 446
+   }
+  },
+  {
+   "id": "in-inr_shock-2025-12-03",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "firstpost.com",
+    "indiatimes.com",
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "inr_shock",
+    "cause": "capital_outflow",
+    "event_date": "2025-12-03",
+    "region": "in",
+    "reason": "The Indian rupee crossed 90 per US dollar for the first time and hit a record low amid weak foreign capital flows."
+   },
+   "judge_ms": 5713,
+   "jev": {
+    "name": "inr_shock",
+    "confidence": 1.0,
+    "latency_ms": 553
+   }
+  },
+  {
+   "id": "in-bank_stress-2020-03-05",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "business-standard.com",
+    "indianexpress.com",
+    "indiatimes.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "bank_stress",
+    "cause": "fund_freeze",
+    "event_date": "2020-03-05",
+    "region": "in",
+    "reason": "The RBI imposed a moratorium on Yes Bank, capped depositor withdrawals at Rs 50,000, and superseded its board after the bank’s financial position deteriorated."
+   },
+   "judge_ms": 3068,
+   "jev": {
+    "name": "bank_stress",
+    "confidence": 1.0,
+    "latency_ms": 491
+   }
+  },
+  {
+   "id": "in-bank_stress-2020-11-17",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indianexpress.com",
+    "moneycontrol.com",
+    "ndtvprofit.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "bank_stress",
+    "cause": "fund_freeze",
+    "event_date": "2020-11-17",
+    "region": "in",
+    "reason": "India imposed a 30-day moratorium on Lakshmi Vilas Bank and capped depositor withdrawals at ₹25,000 after its financial condition deteriorated."
+   },
+   "judge_ms": 3565,
+   "jev": {
+    "name": "bank_stress",
+    "confidence": 1.0,
+    "latency_ms": 496
+   }
+  },
+  {
+   "id": "in-election-2024-06-04",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "aljazeera.com",
+    "ndtv.com",
+    "thehindu.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "election",
+    "cause": "general_election",
+    "event_date": "2024-06-04",
+    "region": "in",
+    "reason": "India's 2024 Lok Sabha general election results were declared on June 4, with the BJP emerging as the largest party but falling short of a majority."
+   },
+   "judge_ms": 2340,
+   "jev": {
+    "name": "election",
+    "confidence": 0.97,
+    "latency_ms": 541
+   }
+  },
+  {
+   "id": "in-military_conflict-2019-02-26",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "bbc.com",
+    "cnbc.com",
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "military_conflict",
+    "cause": "airstrike",
+    "event_date": "2019-02-26",
+    "region": "in",
+    "reason": "Indian fighter jets carried out airstrikes on a Jaish-e-Mohammed training camp in Balakot, Pakistan, on February 26, 2019."
+   },
+   "judge_ms": 2000,
+   "jev": {
+    "name": "military_conflict",
+    "confidence": 1.0,
+    "latency_ms": 573
+   }
+  },
+  {
+   "id": "in-military_conflict-2025-05-07",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "aljazeera.com",
+    "bbc.com",
+    "indianexpress.com",
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "military_conflict",
+    "cause": "missile_strike",
+    "event_date": "2025-05-07",
+    "region": "global",
+    "reason": "India launched missile strikes against nine sites in Pakistan and Pakistan-administered Kashmir in the early hours of May 7, sharply escalating conflict between the nuclear-armed neighbors."
+   },
+   "judge_ms": 2958,
+   "jev": {
+    "name": "military_conflict",
+    "confidence": 1.0,
+    "latency_ms": 408
+   }
+  },
+  {
+   "id": "in-near_miss-2023-04-06",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "boomlive.in",
+    "livemint.com",
+    "rediff.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The RBI kept its repo rate unchanged at 6.5%, which is neither an RBI hike nor an RBI cut under the allowed event types."
+   },
+   "judge_ms": 1956,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 389
+   }
+  },
+  {
+   "id": "in-near_miss-2024-02-08",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indiatimes.com",
+    "ndtv.com",
+    "thehindu.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The RBI kept its repo rate unchanged, which is neither an RBI rate hike nor an RBI rate cut under the allowed event types."
+   },
+   "judge_ms": 1956,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 500
+   }
+  },
+  {
+   "id": "in-near_miss-2025-08-06",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "business-standard.com",
+    "indianexpress.com",
+    "livemint.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The RBI held the repo rate unchanged at 5.5%, which is neither an RBI hike nor an RBI cut and therefore does not match an allowed event type."
+   },
+   "judge_ms": 1962,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 491
+   }
+  },
+  {
+   "id": "in-rumour-2019-09-25",
+   "parsed_articles": 2,
+   "confirmed": false,
+   "publishers": [
+    "indiatimes.com",
+    "thehindu.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 2 publishers in 24h (need 3), no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports the RBI denying false rumors of bank closures, not an actual bank failure, rescue, fund freeze, or systemic backstop."
+   },
+   "judge_ms": 1850,
+   "jev": {
+    "name": "none",
+    "confidence": 0.64,
+    "latency_ms": 855
+   }
+  },
+  {
+   "id": "in-rumour-2026-01-02",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "ommcomnews.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story is a government rebuttal of a false claim about RBI withdrawing Rs 500 notes, not a report of any allowed market event actually occurring."
+   },
+   "judge_ms": 1925,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 403
+   }
+  },
+  {
+   "id": "in-old_news-2020-02-26",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "indiatimes.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports a commemorative flight marking the anniversary of the Balakot airstrikes, not a new military conflict or strike."
+   },
+   "judge_ms": 3437,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 502
+   }
+  },
+  {
+   "id": "in-old_news-2020-09-24",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "bbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "bank_stress",
+    "cause": "bank_failure",
+    "event_date": "2019-09-24",
+    "region": "in",
+    "reason": "India's PMC Bank failed in September 2019, cutting nearly one million depositors off from their savings."
+   },
+   "judge_ms": 4216,
+   "jev": {
+    "name": "none",
+    "confidence": 0.83,
+    "latency_ms": 473
+   }
+  },
+  {
+   "id": "in-old_news-2026-05-10",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "aljazeera.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story is retrospective anniversary commentary about the India-Pakistan aerial conflict last year, not a report of a new conflict event occurring."
+   },
+   "judge_ms": 3941,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 416
+   }
+  },
+  {
+   "id": "in-opinion-2022-05-05",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "thehindu.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "rbi_hike",
+    "cause": "inflation",
+    "event_date": "2022-05-04",
+    "region": "in",
+    "reason": "The RBI announced an off-cycle increase in benchmark interest rates on May 4, 2022, to address inflation."
+   },
+   "judge_ms": 1681,
+   "jev": {
+    "name": "rbi_hike",
+    "confidence": 1.0,
+    "latency_ms": 384
+   }
+  },
+  {
+   "id": "in-opinion-2025-12-29",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "indianexpress.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story is commentary on RBI rupee management and does not report a qualifying market event occurring."
+   },
+   "judge_ms": 2111,
+   "jev": {
+    "name": "inr_shock",
+    "confidence": 0.89,
+    "latency_ms": 402
+   }
+  },
+  {
+   "id": "in-preview-2022-12-04",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "livemint.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only previews an expected RBI policy decision on 7 December and does not report an actual rate change."
+   },
+   "judge_ms": 2118,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 416
+   }
+  },
+  {
+   "id": "in-preview-2023-01-17",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only previews expected announcements for India’s Union Budget 2023, which had not yet been presented."
+   },
+   "judge_ms": 2784,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 367
+   }
+  },
+  {
+   "id": "us-fed_hike-2022-03-16",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "fed_hike",
+    "cause": "inflation",
+    "event_date": "2022-03-16",
+    "region": "us",
+    "reason": "The Federal Reserve approved a 0.25 percentage-point interest-rate increase on March 16, 2022, as inflation remained elevated."
+   },
+   "judge_ms": 2493,
+   "jev": {
+    "name": "fed_hike",
+    "confidence": 1.0,
+    "latency_ms": 421
+   }
+  },
+  {
+   "id": "us-fed_hike-2022-06-15",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "fed_hike",
+    "cause": "inflation",
+    "event_date": "2022-06-15",
+    "region": "us",
+    "reason": "The Federal Reserve raised its benchmark interest rate by 0.75 percentage point on June 15, 2022, as inflation remained elevated."
+   },
+   "judge_ms": 1861,
+   "jev": {
+    "name": "fed_hike",
+    "confidence": 1.0,
+    "latency_ms": 523
+   }
+  },
+  {
+   "id": "us-fed_cut-2020-03-15",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "fed_cut",
+    "cause": "pandemic",
+    "event_date": "2020-03-15",
+    "region": "us",
+    "reason": "The Federal Reserve announced an emergency interest-rate cut to zero on March 15, 2020, in response to the coronavirus pandemic's economic disruption."
+   },
+   "judge_ms": 2197,
+   "jev": {
+    "name": "fed_cut",
+    "confidence": 1.0,
+    "latency_ms": 519
+   }
+  },
+  {
+   "id": "us-fed_cut-2024-09-18",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "fed_cut",
+    "cause": "labor_market_softening",
+    "event_date": "2024-09-18",
+    "region": "us",
+    "reason": "The Federal Reserve cut its key interest rate by 50 basis points as job gains slowed, unemployment rose, and the labor market weakened."
+   },
+   "judge_ms": 2042,
+   "jev": {
+    "name": "fed_cut",
+    "confidence": 1.0,
+    "latency_ms": 416
+   }
+  },
+  {
+   "id": "us-tariff-2018-06-15",
+   "parsed_articles": 1,
+   "confirmed": true,
+   "publishers": [
+    "ustr.gov"
+   ],
+   "primary_source": "ustr.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "tariff",
+    "cause": "china_tariff",
+    "event_date": "2018-06-15",
+    "region": "us",
+    "reason": "The USTR announced on June 15, 2018, that specified Chinese imports would be subject to additional U.S. tariffs."
+   },
+   "judge_ms": 2012,
+   "jev": {
+    "name": "tariff",
+    "confidence": 0.98,
+    "latency_ms": 513
+   }
+  },
+  {
+   "id": "us-tariff-2025-04-02",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "whitehouse.gov"
+   ],
+   "primary_source": "whitehouse.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "tariff",
+    "cause": "reciprocal_tariff",
+    "event_date": "2025-04-02",
+    "region": "us",
+    "reason": "President Trump announced and imposed reciprocal U.S. tariffs on imports from more than 180 countries and territories on April 2, 2025."
+   },
+   "judge_ms": 1862,
+   "jev": {
+    "name": "tariff",
+    "confidence": 0.99,
+    "latency_ms": 502
+   }
+  },
+  {
+   "id": "us-bank_stress-2023-03-10",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "bbc.com",
+    "cnbc.com",
+    "nbcnews.com",
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "bank_stress",
+    "cause": "bank_failure",
+    "event_date": "2023-03-10",
+    "region": "us",
+    "reason": "U.S. regulators closed Silicon Valley Bank and took control of its deposits on March 10, 2023, marking a major bank failure."
+   },
+   "judge_ms": 1777,
+   "jev": {
+    "name": "bank_stress",
+    "confidence": 1.0,
+    "latency_ms": 386
+   }
+  },
+  {
+   "id": "us-bank_stress-2023-05-01",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "AP",
+    "cnbc.com",
+    "nbcnews.com",
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "bank_stress",
+    "cause": "bank_failure",
+    "event_date": "2023-05-01",
+    "region": "us",
+    "reason": "U.S. regulators seized First Republic Bank on May 1, 2023, after its failure, and sold its deposits and most assets to JPMorgan Chase."
+   },
+   "judge_ms": 1938,
+   "jev": {
+    "name": "bank_stress",
+    "confidence": 1.0,
+    "latency_ms": 499
+   }
+  },
+  {
+   "id": "gl-oil_supply-2019-09-14",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "aljazeera.com",
+    "bbc.com",
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "oil_supply",
+    "cause": "attack",
+    "event_date": "2019-09-14",
+    "region": "global",
+    "reason": "Drone attacks on Saudi Aramco facilities disrupted 5.7 million barrels per day of production, about 5% of global oil supply."
+   },
+   "judge_ms": 3080,
+   "jev": {
+    "name": "oil_supply",
+    "confidence": 0.96,
+    "latency_ms": 472
+   }
+  },
+  {
+   "id": "gl-oil_supply-2022-10-05",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "aljazeera.com",
+    "cnbc.com",
+    "nbcnews.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "oil_supply",
+    "cause": "opec_cut",
+    "event_date": "2022-10-05",
+    "region": "global",
+    "reason": "OPEC+ announced on October 5, 2022, that it would cut oil production by 2 million barrels per day."
+   },
+   "judge_ms": 1906,
+   "jev": {
+    "name": "oil_supply",
+    "confidence": 0.93,
+    "latency_ms": 469
+   }
+  },
+  {
+   "id": "us-election-2024-11-06",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "npr.org",
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "election",
+    "cause": "presidential_election",
+    "event_date": "2024-11-06",
+    "region": "us",
+    "reason": "Donald Trump was declared the winner of the 2024 U.S. presidential election on November 6, 2024."
+   },
+   "judge_ms": 2007,
+   "jev": {
+    "name": "election",
+    "confidence": 1.0,
+    "latency_ms": 473
+   }
+  },
+  {
+   "id": "gl-military_conflict-2022-02-24",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "aljazeera.com",
+    "bbc.co.uk",
+    "cnbc.com",
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "military_conflict",
+    "cause": "invasion",
+    "event_date": "2022-02-24",
+    "region": "global",
+    "reason": "Russia launched a full-scale land, air, and sea invasion of Ukraine on February 24, 2022, a conflict with global market impact."
+   },
+   "judge_ms": 2056,
+   "jev": {
+    "name": "military_conflict",
+    "confidence": 1.0,
+    "latency_ms": 441
+   }
+  },
+  {
+   "id": "gl-military_conflict-2025-06-21",
+   "parsed_articles": 4,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "npr.org",
+    "theguardian.com",
+    "un.org"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "military_conflict",
+    "cause": "airstrike",
+    "event_date": "2025-06-21",
+    "region": "global",
+    "reason": "The United States bombed three Iranian nuclear sites on June 21, 2025, directly escalating the regional war."
+   },
+   "judge_ms": 2182,
+   "jev": {
+    "name": "military_conflict",
+    "confidence": 0.99,
+    "latency_ms": 457
+   }
+  },
+  {
+   "id": "gl-pandemic-2020-03-11",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "who.int"
+   ],
+   "primary_source": "who.int",
+   "reject_reason": null,
+   "judge": {
+    "type": "pandemic",
+    "cause": "covid19",
+    "event_date": "2020-03-11",
+    "region": "global",
+    "reason": "The World Health Organization declared the global COVID-19 outbreak a pandemic on March 11, 2020."
+   },
+   "judge_ms": 1902,
+   "jev": {
+    "name": "pandemic",
+    "confidence": 1.0,
+    "latency_ms": 490
+   }
+  },
+  {
+   "id": "us-near_miss-2023-06-14",
+   "parsed_articles": 2,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The Federal Reserve left interest rates unchanged; projected future hikes are expectations, not an actual fed_hike event."
+   },
+   "judge_ms": 2050,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 568
+   }
+  },
+  {
+   "id": "gl-near_miss-2022-12-04",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "AP",
+    "aljazeera.com",
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "OPEC+ decided to maintain its existing production targets, so it announced neither a new output cut nor a hike."
+   },
+   "judge_ms": 3034,
+   "jev": {
+    "name": "none",
+    "confidence": 0.89,
+    "latency_ms": 521
+   }
+  },
+  {
+   "id": "us-near_miss-2019-05-30",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "AP",
+    "nbcnews.com",
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The U.S. announced a tariff on Mexican imports over immigration, but none of the allowed tariff causes covers this action."
+   },
+   "judge_ms": 3351,
+   "jev": {
+    "name": "none",
+    "confidence": 0.61,
+    "latency_ms": 514
+   }
+  },
+  {
+   "id": "gl-rumour-2022-11-21",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "marketwatch.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports discussions about a possible OPEC+ output increase, not an announced or implemented oil-supply decision."
+   },
+   "judge_ms": 1743,
+   "jev": {
+    "name": "none",
+    "confidence": 0.9,
+    "latency_ms": 393
+   }
+  },
+  {
+   "id": "us-rumour-2025-07-16",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cbsnews.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports that President Trump discussed potentially firing Federal Reserve Chair Jerome Powell, but no qualifying market event or confirmed decision occurred."
+   },
+   "judge_ms": 2044,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 606
+   }
+  },
+  {
+   "id": "us-old_news-2023-03-16",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "fed_hike",
+    "cause": "inflation",
+    "event_date": "2022-03-16",
+    "region": "us",
+    "reason": "The article states that the Federal Open Market Committee enacted its first interest-rate increase on March 16, 2022, amid elevated inflation."
+   },
+   "judge_ms": 1861,
+   "jev": {
+    "name": "none",
+    "confidence": 0.88,
+    "latency_ms": 440
+   }
+  },
+  {
+   "id": "gl-old_news-2025-02-28",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "npr.org"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story is an anniversary reflection and request for personal experiences, not a report of a new pandemic event occurring."
+   },
+   "judge_ms": 1891,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 366
+   }
+  },
+  {
+   "id": "us-opinion-2025-04-05",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "tariff",
+    "cause": "reciprocal_tariff",
+    "event_date": "2025-04-03",
+    "region": "us",
+    "reason": "The story reports that President Trump announced sweeping reciprocal tariffs in the United States on Thursday."
+   },
+   "judge_ms": 3842,
+   "jev": {
+    "name": "tariff",
+    "confidence": 0.98,
+    "latency_ms": 578
+   }
+  },
+  {
+   "id": "us-opinion-2022-09-23",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "theguardian.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "fed_hike",
+    "cause": "inflation",
+    "event_date": "2022-09-21",
+    "region": "us",
+    "reason": "The Federal Reserve raised interest rates by 0.75 percentage point on September 21, 2022, to fight inflation."
+   },
+   "judge_ms": 2355,
+   "jev": {
+    "name": "fed_hike",
+    "confidence": 0.99,
+    "latency_ms": 476
+   }
+  },
+  {
+   "id": "us-preview-2022-03-15",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only previews an expected Federal Reserve rate hike and does not report that a hike has occurred."
+   },
+   "judge_ms": 2487,
+   "jev": {
+    "name": "none",
+    "confidence": 0.91,
+    "latency_ms": 587
+   }
+  },
+  {
+   "id": "us-preview-2025-09-15",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only previews an expected Federal Reserve rate cut and does not report that a cut has occurred."
+   },
+   "judge_ms": 1921,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 566
+   }
+  },
+  {
+   "id": "h-in-rbi_cut-2025-02-07",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indianexpress.com",
+    "indiatimes.com",
+    "newindianexpress.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "rbi_cut",
+    "cause": "growth_support",
+    "event_date": "2025-02-07",
+    "region": "in",
+    "reason": "The RBI cut the repo rate by 25 basis points to 6.25% to support a slowing Indian economy."
+   },
+   "judge_ms": 2394,
+   "jev": {
+    "name": "rbi_cut",
+    "confidence": 1.0,
+    "latency_ms": 535
+   }
+  },
+  {
+   "id": "h-in-union_budget-2026-02-01",
+   "parsed_articles": 1,
+   "confirmed": true,
+   "publishers": [
+    "pib.gov.in"
+   ],
+   "primary_source": "pib.gov.in",
+   "reject_reason": null,
+   "judge": {
+    "type": "union_budget",
+    "cause": "fiscal",
+    "event_date": "2026-02-01",
+    "region": "in",
+    "reason": "India's finance minister tabled the Union Budget 2026-27 in Parliament on February 1, 2026."
+   },
+   "judge_ms": 1736,
+   "jev": {
+    "name": "union_budget",
+    "confidence": 1.0,
+    "latency_ms": 392
+   }
+  },
+  {
+   "id": "h-in-near_miss-2024-12-06",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "indianexpress.com",
+    "ing.com",
+    "livemint.com"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The RBI cut the cash reserve ratio to boost liquidity but left its policy repo rate unchanged, so this does not qualify as an RBI rate cut."
+   },
+   "judge_ms": 2058,
+   "jev": {
+    "name": "rbi_cut",
+    "confidence": 0.47,
+    "latency_ms": 535
+   }
+  },
+  {
+   "id": "h-us-near_miss-2025-01-29",
+   "parsed_articles": 1,
+   "confirmed": true,
+   "publishers": [
+    "federalreserve.gov"
+   ],
+   "primary_source": "federalreserve.gov",
+   "reject_reason": null,
+   "judge": {
+    "type": "none",
+    "reason": "The FOMC statement describes economic conditions but does not report a qualifying interest-rate hike, cut, or other listed event."
+   },
+   "judge_ms": 2586,
+   "jev": {
+    "name": "none",
+    "confidence": 0.99,
+    "latency_ms": 488
+   }
+  },
+  {
+   "id": "h-us-near_miss-2025-02-03",
+   "parsed_articles": 3,
+   "confirmed": true,
+   "publishers": [
+    "cnbc.com",
+    "cnn.com",
+    "npr.org"
+   ],
+   "primary_source": null,
+   "reject_reason": null,
+   "judge": {
+    "type": "tariff",
+    "cause": "tariff_pause",
+    "event_date": "2025-02-03",
+    "region": "us",
+    "reason": "President Trump announced a one-month pause on planned U.S. tariffs against imports from Mexico and Canada."
+   },
+   "judge_ms": 1843,
+   "jev": {
+    "name": "none",
+    "confidence": 0.96,
+    "latency_ms": 579
+   }
+  },
+  {
+   "id": "h-us-rumour-2025-04-07",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "AP"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports only a false rumor about a possible tariff pause and its denial, not an actual tariff decision or pause."
+   },
+   "judge_ms": 2069,
+   "jev": {
+    "name": "none",
+    "confidence": 0.95,
+    "latency_ms": 465
+   }
+  },
+  {
+   "id": "h-in-rumour-2025-04-18",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "ndtv.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "India's Finance Ministry denied considering a GST on UPI transactions, which is not an event covered by the allowed market-event types."
+   },
+   "judge_ms": 1992,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 401
+   }
+  },
+  {
+   "id": "h-in-old_news-2024-11-08",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "indiatimes.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story is anniversary commentary criticizing India's 2016 demonetisation, not a report of a current event covered by the allowed types."
+   },
+   "judge_ms": 2069,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 493
+   }
+  },
+  {
+   "id": "h-us-old_news-2024-03-11",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "rooseveltinstitute.org"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "bank_stress",
+    "cause": "bank_failure",
+    "event_date": "2023-03-10",
+    "region": "us",
+    "reason": "The article identifies Silicon Valley Bank's collapse on March 10, 2023, although it is framed around the first anniversary of that event."
+   },
+   "judge_ms": 2043,
+   "jev": {
+    "name": "none",
+    "confidence": 0.98,
+    "latency_ms": 486
+   }
+  },
+  {
+   "id": "h-us-old_news-2026-04-02",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cfr.org"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "tariff",
+    "cause": "reciprocal_tariff",
+    "event_date": "2025-04-02",
+    "region": "us",
+    "reason": "The article states that President Trump announced sweeping reciprocal tariffs on every U.S. trading partner on April 2, 2025."
+   },
+   "judge_ms": 2104,
+   "jev": {
+    "name": "none",
+    "confidence": 0.96,
+    "latency_ms": 533
+   }
+  },
+  {
+   "id": "h-us-preview-2024-09-13",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "cnbc.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only previews an expected Federal Reserve rate cut and does not report that a cut has occurred."
+   },
+   "judge_ms": 1515,
+   "jev": {
+    "name": "none",
+    "confidence": 0.97,
+    "latency_ms": 403
+   }
+  },
+  {
+   "id": "h-in-preview-2026-02-04",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "indiatimes.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story only reports expectations that the RBI will hold rates unchanged at its February 6 meeting, not a confirmed policy decision or rate change."
+   },
+   "judge_ms": 1792,
+   "jev": {
+    "name": "none",
+    "confidence": 1.0,
+    "latency_ms": 565
+   }
+  },
+  {
+   "id": "h-in-opinion-2025-12-01",
+   "parsed_articles": 1,
+   "confirmed": false,
+   "publishers": [
+    "indianexpress.com"
+   ],
+   "primary_source": null,
+   "reject_reason": "rejected: 1 publisher, no primary source",
+   "judge": {
+    "type": "none",
+    "reason": "The story reports the rupee weakening to 89.46 per dollar but does not attribute the move to a confirmed capital-outflow shock or another allowed event."
+   },
+   "judge_ms": 3741,
+   "jev": {
+    "name": "inr_shock",
+    "confidence": 0.99,
+    "latency_ms": 397
+   }
+  }
+ ],
+ "cost_usd": 0.327,
+ "calls": {
+  "judge:classify_story": 63,
+  "jev:jev_pick": 63
+ }
+}
