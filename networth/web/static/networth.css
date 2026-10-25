@@ -9,8 +9,6 @@
   --link: #1f4e79;
   --flat: #525c67;
   --flat-wash: #e4e8ea;
-  --band: #d3e0d8;
-  --dot: #1f4e79;
   --focus: #1f4e79;
 
   --serif: "Newsreader", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
@@ -41,8 +39,6 @@
     --link: #9cc7ee;
     --flat: #b4bdc4;
     --flat-wash: #222c33;
-    --band: #1f3a2e;
-    --dot: #9cc7ee;
     --focus: #9cc7ee;
   }
 }
@@ -55,8 +51,6 @@
   --link: #9cc7ee;
   --flat: #b4bdc4;
   --flat-wash: #222c33;
-  --band: #1f3a2e;
-  --dot: #9cc7ee;
   --focus: #9cc7ee;
 }
 
@@ -455,52 +449,6 @@ h2 {
   }
 }
 
-.strip {
-  margin: var(--space-3) 0;
-}
-
-.strip svg {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.strip__band {
-  fill: var(--band);
-}
-
-.strip__axis {
-  stroke: var(--ink);
-  stroke-width: 2;
-}
-
-.strip__zero {
-  stroke: var(--muted);
-  stroke-width: 2;
-  stroke-dasharray: 4 4;
-}
-
-.strip__median {
-  stroke: var(--ink);
-  stroke-width: 3;
-}
-
-.strip__dot {
-  fill: var(--dot);
-  fill-opacity: 0.8;
-}
-
-.strip__label {
-  fill: var(--muted);
-  font: 600 22px var(--sans);
-}
-
-.strip figcaption {
-  color: var(--muted);
-  font-size: var(--text-small);
-  margin-top: var(--space-1);
-}
-
 .amount {
   display: grid;
   grid-template-columns: 1fr;
@@ -675,58 +623,6 @@ h2 {
 
 .range--quiet dd {
   font-size: 1.5rem;
-}
-
-.range-bar {
-  margin: var(--space-3) 0;
-}
-
-.range-bar svg {
-  display: block;
-  width: 100%;
-  max-width: 480px;
-  height: auto;
-}
-
-.range-bar__band--1 {
-  fill: var(--dot);
-  fill-opacity: 0.35;
-}
-
-.range-bar__band--2 {
-  fill: var(--band);
-}
-
-.range-bar__median {
-  stroke: var(--ink);
-  stroke-width: 4;
-}
-
-.range-bar__axis {
-  stroke: var(--ink);
-  stroke-width: 2;
-}
-
-.range-bar__invested {
-  stroke: var(--muted);
-  stroke-width: 2;
-  stroke-dasharray: 5 4;
-}
-
-.range-bar__name,
-.range-bar__label {
-  fill: var(--muted);
-  font: 600 18px var(--sans);
-}
-
-.range-bar__name {
-  fill: var(--ink);
-}
-
-.range-bar figcaption {
-  color: var(--muted);
-  font-size: var(--text-small);
-  margin-top: var(--space-1);
 }
 
 .plan-form__split {

@@ -1,0 +1,24 @@
+{#- Chart parts shared by the SVG charts. Colours come from the s-<series> classes in
+    charts.css, so a mark, its tooltip and its legend swatch always match. -#}
+
+{% macro mark(series, label, rows, tip_x, tip_y) -%}
+<g class="chart-mark s-{{ series }}" tabindex="0" role="img" aria-label="{{ label }}: {% for name, value in rows %}{% if name %}{{ name }} {% endif %}{{ value }}{{ '.' if loop.last else ', ' }}{% endfor %}">
+  {{ caller() }}
+  <foreignObject class="chart-tip" x="0" y="{{ tip_y }}" width="100%" height="120" aria-hidden="true">
+    <div class="chart-tip__lane" style="--x: {{ tip_x }}">
+      <div class="chart-tip__box">
+        <p class="chart-tip__label">{{ label }}</p>
+        {% for name, value in rows %}
+        <p class="chart-tip__row"><span class="chart-tip__dot"></span>{% if name %}<span class="chart-tip__name">{{ name }}</span>{% endif %}<span class="chart-tip__value">{{ value }}</span></p>
+        {% endfor %}
+      </div>
+    </div>
+  </foreignObject>
+</g>
+{%- endmacro %}
+
+{% macro legend(items) -%}
+<ul class="chart-legend">
+  {% for series, name in items %}<li class="s-{{ series }}"><span class="chart-legend__swatch"></span>{{ name }}</li>{% endfor %}
+</ul>
+{%- endmacro %}

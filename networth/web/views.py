@@ -14,10 +14,15 @@ from networth.engine.odds import CompareJSON, OddsJSON, PositionRangeJSON
 from networth.web import names
 from networth.web.fmt import money, percent, signed_percent
 
-STRIP_WIDTH: Final = 640
-STRIP_PAD: Final = 24
-DOT_R: Final = 7
-STRIP_BASE: Final = 40
+DOT_R: Final = 6
+DOT_GAP: Final = 2
+STRIP_LABEL_ROOM: Final = 26
+TIP_GAP: Final = 8
+# x is a percent of the strip's width, so dots only stay apart if they stack as if the strip
+# were as narrow as it gets: a 320px phone less the page gutters.
+NARROWEST_PX: Final = 288
+STACK_PCT: Final = 2 * DOT_R / NARROWEST_PX * 100
+EDGE_PCT: Final = 10
 
 
 def _claim(measure: str, benchmark: str) -> str:
@@ -143,44 +148,53 @@ def _stack_levels(xs: Sequence[float]) -> list[int]:
     placed: list[tuple[float, int]] = []
     levels = []
     for x in xs:
-        taken = {lvl for px, lvl in placed if abs(px - x) < 2 * DOT_R}
+        taken = {lvl for px, lvl in placed if abs(px - x) < STACK_PCT}
         level = next(i for i in range(len(placed) + 1) if i not in taken)
         placed.append((x, level))
         levels.append(level)
     return levels
 
 
+def _text_anchor(x: float) -> str:
+    """Keeps a label centred on its x without running off either edge."""
+    if x < EDGE_PCT:
+        return "start"
+    return "end" if x > 100 - EDGE_PCT else "middle"
+
+
 def strip_geometry(amount: float, episodes: Sequence[dict], rng: PositionRangeJSON) -> dict:
-    """Shapes for the what-if strip in SVG units, in money space so the band is the engine's
-    own p10..p90 values. Each dot sits at one episode's raw return applied to the amount."""
+    """Shapes for the what-if strip, in money space so the band is the engine's own p10..p90
+    values. Each dot sits at one episode's raw return applied to the amount. x is a percent
+    of the strip's width and y is in pixels, so dots and text keep their size."""
     moneys = [amount * e["raw_return"] for e in episodes]
     lo = min([*moneys, rng["p10"], 0.0])
     hi = max([*moneys, rng["p90"], 0.0])
     span = (hi - lo) or 1.0
-    usable = STRIP_WIDTH - 2 * STRIP_PAD
 
     def x(v: float) -> float:
-        return round(STRIP_PAD + (v - lo) / span * usable, 1)
+        return round((v - lo) / span * 100, 2)
 
     xs = [x(v) for v in moneys]
     levels = _stack_levels(xs)
     top = max(levels, default=0)
-    height = STRIP_BASE + (top + 1) * (2 * DOT_R + 2) + 8
-    base_y = height - STRIP_BASE
+    base_y = (top + 1) * (2 * DOT_R + DOT_GAP) + DOT_GAP
+    zero_x = x(0.0)
     return {
-        "width": STRIP_WIDTH,
-        "height": height,
+        "height": base_y + STRIP_LABEL_ROOM,
         "base_y": base_y,
+        "tip_y": base_y + TIP_GAP,
         "band_x": x(rng["p10"]),
-        "band_w": round(x(rng["p90"]) - x(rng["p10"]), 1),
+        "band_w": round(x(rng["p90"]) - x(rng["p10"]), 2),
         "median_x": x(rng["median"]),
-        "zero_x": x(0.0),
+        "zero_x": zero_x,
+        "zero_anchor": _text_anchor(zero_x),
         "r": DOT_R,
         "dots": [
             {
                 "cx": cx,
-                "cy": round(base_y - DOT_R - 2 - lvl * (2 * DOT_R + 2), 1),
-                "label": f"{e['date']}: {signed_percent(e['raw_return'])}",
+                "cy": base_y - DOT_R - DOT_GAP - lvl * (2 * DOT_R + DOT_GAP),
+                "date": e["date"],
+                "value": signed_percent(e["raw_return"]),
             }
             for cx, lvl, e in zip(xs, levels, episodes, strict=True)
         ],

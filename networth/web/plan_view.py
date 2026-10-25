@@ -18,12 +18,14 @@ NO_TABLE: Final = (
     "uv run python -m networth.sim.data"
 )
 
-BAR_WIDTH: Final = 400
-BAR_PAD: Final = 24
-BAR_H: Final = 18
-ROW_GAP: Final = 74
-FIRST_ROW_Y: Final = 44
+BAR_H: Final = 20
+ROW_GAP: Final = 64
+FIRST_ROW_Y: Final = 28
+GRID_GAP: Final = 12
+TIP_GAP: Final = 8
 INVESTED_LABEL: Final = "what you put in"
+INVESTED_NAME: Final = "What you put in"
+CASE_NAMES: Final = ("Bad case", "Middle case", "Good case")
 
 
 def _range(p10: int, median: int, p90: int) -> dict:
@@ -31,41 +33,44 @@ def _range(p10: int, median: int, p90: int) -> dict:
 
 
 def bar_geometry(r: PlanRange) -> dict:
-    """Shapes in SVG units on one rupee scale from zero, so the two bars and the invested
-    line can be read against each other."""
+    """Shapes on one rupee scale from zero, so the two bars and the invested line can be read
+    against each other. x is a percent of the chart's width and y is in pixels, so text and
+    corners keep their size at every screen width."""
     hi = max(r.nominal_p90, r.real_p90, r.invested) or 1
-    usable = BAR_WIDTH - 2 * BAR_PAD
 
     def x(v: int) -> float:
-        return round(BAR_PAD + v / hi * usable, 1)
+        return round(v / hi * 100, 2)
 
     rows = []
-    for i, (name, p10, median, p90) in enumerate((
-        ("Before inflation", r.nominal_p10, r.nominal_median, r.nominal_p90),
-        ("After inflation", r.real_p10, r.real_median, r.real_p90),
+    for i, (series, name, p10, median, p90) in enumerate((
+        ("before", "Before inflation", r.nominal_p10, r.nominal_median, r.nominal_p90),
+        ("after", "After inflation", r.real_p10, r.real_median, r.real_p90),
     )):  # fmt: skip
         y = FIRST_ROW_Y + i * ROW_GAP
         rows.append({
-            "name": name, "label_y": y - 12, "y": y, "h": BAR_H,
-            "x": x(p10), "w": round(x(p90) - x(p10), 1), "median_x": x(median),
+            "series": series, "name": name, "label_y": y - 8, "y": y, "h": BAR_H,
+            "x": x(p10), "w": round(x(p90) - x(p10), 2), "median_x": x(median),
+            "grid_y": y + BAR_H + GRID_GAP,
+            "cases": list(zip(CASE_NAMES, _range(p10, median, p90).values(), strict=True)),
         })  # fmt: skip
-    base_y = rows[-1]["y"] + BAR_H + 16
+    base_y = rows[-1]["grid_y"]
     invested_x = x(r.invested)
-    left_half = invested_x < BAR_WIDTH / 2
+    left_half = invested_x < 50
     return {
-        "width": BAR_WIDTH,
-        "height": base_y + 34,
+        "height": base_y + 22,
         "base_y": base_y,
+        "tip_y": base_y + TIP_GAP,
         "rows": rows,
-        "zero_x": BAR_PAD,
         "invested_x": invested_x,
-        "invested_label_x": round(invested_x + (6 if left_half else -6), 1),
+        "invested_dx": 6 if left_half else -6,
         "invested_anchor": "start" if left_half else "end",
         "invested_label": INVESTED_LABEL,
         # Row names sit on the side away from the invested line so it never crosses them.
-        "name_x": BAR_WIDTH - BAR_PAD if left_half else BAR_PAD,
+        "name_x": 100 if left_half else 0,
         "name_anchor": "end" if left_half else "start",
         "zero_label": rupees(0),
+        "invested_name": INVESTED_NAME,
+        "legend": [*((row["series"], row["name"]) for row in rows), ("invested", INVESTED_NAME)],
     }
 
 

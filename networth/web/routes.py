@@ -128,6 +128,11 @@ def stylesheet() -> FileResponse:
     return FileResponse(HERE / "static" / "networth.css", media_type="text/css")
 
 
+@router.get("/static/charts.css", include_in_schema=False)
+def chart_stylesheet() -> FileResponse:
+    return FileResponse(HERE / "static" / "charts.css", media_type="text/css")
+
+
 @router.get("/", response_class=HTMLResponse)
 def landing(request: Request, db: DB) -> HTMLResponse:
     groups = _scoreboard_groups(db, LANDING_TYPE)
