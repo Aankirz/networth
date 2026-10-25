@@ -609,3 +609,6 @@
 
 ## 2026-10-25 — cap the market name search at 2 seconds
 - networth/chat/markets.py: found_in_time runs the Yahoo name lookup with a 2s deadline; past it the reply says Yahoo Finance did not answer in time and gives no number. Tests in tests/test_markets.py.
+
+## 2026-10-25 — Phase 13C: /sectors on Telegram
+- networth/bot/sectors_cmd.py: /sectors sends the sector board with its confirmed stories and names sectors with no prices; registered in commands.py and the command menu. tests/test_bot_sectors.py. make check exit 0. Committed locally, not pushed (owner order).

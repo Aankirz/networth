@@ -49,6 +49,7 @@ from networth.bot.onboarding import (
 )
 from networth.bot.onboarding import prompt as ask_for
 from networth.bot.outbox import send
+from networth.bot.sectors_cmd import cmd_sectors
 from networth.bot.telegram import Bot, Button, Keyboard, MenuBot, TelegramError
 from networth.chat import dashboard
 from networth.chat.answer import deliver
@@ -260,6 +261,7 @@ COMMAND_LIST: Final = (
     ("dashboard", "One tap to your own page"),
     ("range", "What your plan could become, replayed over past months"),
     ("holdings", "What you hold, read from a screenshot"),
+    ("sectors", "Today's sector moves and the news behind them"),
     ("watch", "Hear once when a confirmed story about something appears"),
     ("watches", "See or stop your watches"),
     ("unwatch", "Stop a watch by its number"),
@@ -864,6 +866,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/unwatch": cmd_unwatch,
     "/holdings": cmd_holdings,
     "/link_broker": cmd_link_broker,
+    "/sectors": cmd_sectors,
 }
 
 
