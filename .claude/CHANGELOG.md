@@ -545,3 +545,8 @@
 
 ## 2026-10-25 — hermetic keiki what-happened tests
 - tests/test_keiki_turn.py: the planted-number test runs on a fixed clock with the news check 30 min old; the turn-log test plants its check 30 min back. Both raced the whole-second now_iso() against a check exactly 1h old.
+
+## 2026-10-25 — Phase 11: Google sign-in on the web app
+- site/: Auth.js v5 with Google only (auth.ts, app/api/auth); /dashboard (sign in, the /weblink step, the user's own workspace), /privacy, an account button and menu in the landing header (Dashboard, Sign out, Forget me), and a footer Privacy link; server code signs a 60 s HMAC token for the API (lib/session.ts); CSP form-action allows accounts.google.com.
+- networth/: /weblink in the bot (the /link code store); web_logins table keyed by Google subject (erased by /erase); /api/web/{me,link,forget,dashboard,chat,command} behind networth/web/session.py token checks; NETWORTH_WEB_SECRET setting.
+- tests/test_web_api_auth.py, site/e2e/account*.spec.ts: 401s, code refusals, isolation, memory, forget and erase; docs/phases/phase-11-report.md and phase-11-shots/; contract doc gains the web routes and codes.
