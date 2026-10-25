@@ -467,3 +467,6 @@
 
 ## 2026-10-25 — docs: phase 8 report records the Vercel project and previews
 - Noted that the project's first deploy (dcfke2r2b) went to production without --prod and shows the error page because NETWORTH_API_URL is Preview only; recorded the live preview URL, preview protection and the production steps.
+
+## 2026-10-25 — fix: /u links no longer retire each other
+- networth-7b: page links sign the stored link token instead of minting one per /plan, brief or plan answer, which 404d every earlier link live; rotation only on /stop. Regression test in tests/test_links.py, note in docs/phases/phase-7b-report.md.

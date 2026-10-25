@@ -207,3 +207,11 @@ Live check for the coordinator after the deploy:
 3. Send `/holdings` and open the page button.
 4. Ask "What should I sell?".
 5. Send `/link_broker` on the INR profile.
+
+## Fix: every /u link 404'd on the live server
+
+- **What the owner saw.** A `/plan` link opened within a minute gave the 404. Its signature verified, but no profile held the token inside it.
+- **Root cause.** Every link issue minted a new token: `/plan`, each brief and each chat plan answer (`today.page_link`). Each new link retired all the earlier ones, so a link died as soon as any later message carried one. A chat plan question asked straight after `/plan` killed the `/plan` link. A stored brief resent the same day carried a token that was already gone. The link the owner opened was signed at 16:24:24 IST, 47 minutes before the 17:11 `/plan`, so it came from an earlier message whose token had since been replaced. This was the 3B choice (review item 11) to keep only the newest link working.
+- **Fix.** Links are signed with the stored token, and issuing one never changes it. `new_link_token` now runs only on `/stop`, so stopping still retires every link. Each link still expires after 30 days, through its signature.
+- **Trade-off.** A leaked link now stays valid until it expires or the user sends `/stop`. Before, a newer link retired it. A command that rotates the token on request can come later if it's wanted.
+- **Regression test.** `tests/test_links.py::test_every_link_sent_keeps_working_after_newer_ones` sends `/brief`, then `/plan`, then a plan question, then `/brief` through the real handlers and store. It then opens every link the bot sent through the real `/u` route. Before the fix it got `[404, 200, 404]`; it now gets 200 for each.

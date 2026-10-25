@@ -103,13 +103,24 @@ def plan_link(chat: Chat) -> str:
     return page_link(chat).removeprefix("https://nw.example")
 
 
-def test_a_fresh_link_retires_every_older_one(chat: Chat, client) -> None:
-    old = plan_link(chat)
+def sent_links(chat: Chat) -> list[str]:
+    """Every /u path the bot has sent, from message bodies and buttons alike."""
+    urls = [b.url for m in chat.bot.messages for b in m.body if isinstance(b, Link)]
+    urls += [b.url for _, _, rows in chat.bot.sent for row in rows for b in row if b.url]
+    return [u.removeprefix("https://nw.example") for u in urls if "/u/" in u]
+
+
+def test_every_link_sent_keeps_working_after_newer_ones(chat: Chat, client) -> None:
+    """Live 404: each /plan, brief and plan question minted a new token, so the link the user
+    opened a minute later was already retired."""
+    chat.say("/brief")
+    chat.say("/plan")
     chat.store.save_profile(replace(chat.profile, step=Step.DONE))  # leave plan editing
-    new = plan_link(chat)
-    assert new != old
-    assert client.get(old).status_code == 404
-    assert client.get(new).status_code == 200
+    chat.say("what is my plan?")
+    chat.say("/brief")
+    paths = sent_links(chat)
+    assert len(paths) >= 3
+    assert [client.get(p).status_code for p in paths] == [200] * len(paths)
 
 
 @pytest.mark.parametrize("token", ["abc.².sig", "abc.1999999999.sïg", "äbc.1999999999.sig"])

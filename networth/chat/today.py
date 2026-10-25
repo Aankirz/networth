@@ -253,11 +253,11 @@ def why(store: Store, profile: Profile, services: Services, today: dt.date, text
                   link=why_link(lead, services, EVERY_CASE, lang))  # fmt: skip
 
 
-def page_link(store: Store, profile: Profile, services: Services, lang: str) -> Link | None:
+def page_link(profile: Profile, services: Services, lang: str) -> Link | None:
     """A signed link to the user's own page, as /plan builds it, when the server has one."""
     if not (services.public_url and services.link_secret):
         return None
-    url = links.page_url(services.public_url, store.new_link_token(profile.user_id),
+    url = links.page_url(services.public_url, profile.link_token,
                          services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
     return Link(say(YOUR_PAGE, lang), url)
 
@@ -276,7 +276,7 @@ def plan(store: Store, profile: Profile, text: str, services: Services, today: d
     extra = history_words(line) if line else {}
     words = by_lang(lambda lang: "\n\n".join(x for x in (say(NOT_A_JUDGE, lang),
                                                          extra.get(lang)) if x))  # fmt: skip
-    return Answer.fixed(words, kind="plan", link=page_link(store, profile, services, lang))
+    return Answer.fixed(words, kind="plan", link=page_link(profile, services, lang))
 
 
 def plan_range(store: Store, profile: Profile, lang: str) -> Answer:

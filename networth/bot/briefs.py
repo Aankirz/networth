@@ -74,7 +74,7 @@ def compose_reply(profile: Profile, store: Store, services: Services,
     guard.log_verdict(services.guard_log, "brief", "template", guard.check(text, text))
     page = None
     if services.public_url and services.link_secret:
-        page = links.page_url(services.public_url, store.new_link_token(profile.user_id),
+        page = links.page_url(services.public_url, profile.link_token,
                               services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
     return Reply(out, brief.buttons(draft, lang, services.public_url, page)), back
 

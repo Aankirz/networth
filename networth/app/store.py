@@ -390,7 +390,8 @@ class Store:
         return [_profile_from(r) for r in rows]
 
     def new_link_token(self, user_id: str) -> str:
-        """A fresh page token for this user. Every link signed with the old one stops working."""
+        """A fresh page token for this user, on /stop. Every link signed with the old one stops
+        working. Links are signed with the stored token, so issuing one never retires another."""
         token = secrets.token_urlsafe(LINK_TOKEN_BYTES)
         with self._connect() as conn:
             conn.execute("UPDATE profiles SET link_token = ? WHERE user_id = ?", (token, user_id))
