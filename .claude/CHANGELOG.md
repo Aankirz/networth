@@ -538,3 +538,7 @@
 
 ## 2026-10-25 — fix: an unknown / command says it doesn't exist
 - site/: /link_broker left the bot's command list (P9 7f41489), so it leaves the web's bot-only set; a / command that is neither a web command nor a bot one now says "There's no /name" instead of pointing at the bot, on screen and in the announcement.
+
+## 2026-10-25 — Phase 10: critique, audit and report
+- site/: the light-theme chart accent is now oklch(62% 0.15 75), 3.59:1 on the page and 3.37:1 on cards (WCAG 1.4.11); Safari's details marker is hidden on the FAQ.
+- docs/phases/phase-10-report.md: design direction, libraries, the API and mention mapping, bundle and LCP numbers, what the critique and audit changed, known gaps and deviations.
