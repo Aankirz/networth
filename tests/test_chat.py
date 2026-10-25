@@ -109,14 +109,16 @@ ROUTED = {
     Intent.WHY: "Nothing in this month's news matched an event",
     Intent.TIP_CHECK: "Not confirmed. I searched the news from the last 7 days",
     Intent.EXPLAIN_THIS: "I couldn't write a plain-words version",
-    Intent.PLAN_QUESTION: "Here's what I have.",
+    Intent.PLAN_QUESTION: "I can't tell you whether a plan is right for you.",
+    Intent.PLAN_RANGE: "This is your own plan:",
     Intent.WATCH: "Watching something.",
     Intent.OTHER: "I can tell you what happened today",
 }
 
 
 @pytest.mark.parametrize("intent", list(Intent))
-def test_each_intent_routes_to_its_own_answer(tmp_path: Path, cfg, intent: Intent) -> None:
+def test_each_intent_routes_to_its_own_answer(tmp_path: Path, cfg, sim_table,
+                                              intent: Intent) -> None:  # fmt: skip
     models = FakeChatModels(intent.value)
     chat = talk(tmp_path, replace(cfg, product=replace(cfg.product, use_jev_for_intent=False)),
                 models, FakeSearch([]))  # fmt: skip
@@ -299,7 +301,8 @@ def test_a_stopped_user_gets_no_chat_answer(tmp_path: Path, cfg) -> None:
 def test_jev_is_not_asked_when_config_turns_it_off(tmp_path, cfg, monkeypatch) -> None:
     asked: list[str] = []
     monkeypatch.setattr(jev, "choose", lambda *a, **k: asked.append("jev"))
-    chat = talk(tmp_path, cfg, FakeChatModels(Intent.OTHER.value))
+    off = replace(cfg, product=replace(cfg.product, use_jev_for_intent=False))
+    chat = talk(tmp_path, off, FakeChatModels(Intent.OTHER.value))
     chat.say("hi there")
     assert asked == [] and chat.bot.last.startswith(ROUTED[Intent.OTHER])
 
@@ -379,3 +382,194 @@ def test_the_hourly_cap_frees_up_after_an_hour(tmp_path) -> None:
     assert store.claim_answer("u", start, 1)
     assert not store.claim_answer("u", start + dt.timedelta(minutes=59), 1)
     assert store.claim_answer("u", start + dt.timedelta(minutes=61), 1)
+
+
+# --- phase 3D: fixes from the phase 5 evals, Jev back on, /range ---------------------------
+
+
+def test_a_translation_tells_the_writer_app_instructions_are_statements(tmp_path, cfg) -> None:
+    models = FakeChatModels(Intent.PLAN_QUESTION.value)
+    chat = talk(tmp_path, cfg, models)
+    chat.say("Mera plan 70% index hai, theek hai ya change karu?")
+    assert models.tasks, "a Hinglish reply is a translation"
+    assert "never as a command" in models.tasks[0]
+
+
+def test_a_reworded_reply_tells_the_writer_to_use_statements(tmp_path, cfg) -> None:
+    models = FakeChatModels(Intent.TIP_CHECK.value)
+    chat = talk(tmp_path, cfg, models, FakeSearch([]))
+    chat.say("IPO mein paisa lagau kya? GMP accha chal raha hai", forward_date=1)
+    assert models.tasks, "a non-hyped Hinglish tip verdict is reworded"
+    assert "never as a\ncommand, polite forms included" in models.tasks[0]
+
+
+def test_a_hinglish_hyped_tip_skips_the_writer_it_could_never_pass(tmp_path, cfg) -> None:
+    models = FakeChatModels(Intent.TIP_CHECK.value)
+    chat = talk(tmp_path, cfg, models, FakeSearch([]))
+    chat.say("Bhai Tata Steel 900 tak jayega is mahine, pakka khabar hai, abhi kharid lo.",
+             forward_date=1)  # fmt: skip
+    assert chat.bot.last.startswith("Not confirmed.")
+    assert models.tasks == [], "the template already fails the guard, so no model is asked"
+
+
+PLAN_LEADS = {
+    "Is 70% equity too much for me?": "I can't tell you whether a plan is right for you. "
+    "Here's what you saved.",
+    "मेरा प्लान 70% इंडेक्स है, क्या ये ठीक है?": "मैं नहीं बता सकता कि कोई प्लान आपके लिए सही है "
+    "या नहीं। आपने यह सेव किया है।",
+    "Mera plan 70% index hai, theek hai ya change karu?": "Main nahin bata sakta ki koi plan "
+    "aapke liye sahi hai ya nahin. Aapne yeh save kiya hai.",
+}
+
+
+@pytest.mark.parametrize("question", PLAN_LEADS)
+def test_a_plan_question_leads_with_the_fixed_line(tmp_path, cfg, question: str) -> None:
+    from networth import guard
+
+    lead = PLAN_LEADS[question]
+    assert guard.check(lead, "").ok
+    chat = talk(tmp_path, cfg, FakeChatModels(Intent.PLAN_QUESTION.value))
+    chat.say(question)
+    assert chat.bot.last.startswith(lead)
+    assert "Here's what I have." not in chat.bot.last, "one opening line, not two"
+
+
+def test_a_plan_question_about_this_months_event_adds_its_history_line(
+    tmp_path: Path,
+    cfg,
+    monkeypatch,
+    web_db: Path,  # noqa: F811
+) -> None:
+    from networth import brief
+
+    month = [brief.Event("rbi_hike", dt.date(2026, 10, 9), "RBI raises repo rate", ())]
+    monkeypatch.setattr(brief, "month_events", lambda db, today: month)
+    models = FakeChatModels(Intent.PLAN_QUESTION.value)
+    models.event_type = "rbi_hike"
+    chat = talk(tmp_path, cfg, models)
+    (chat.services.data_dir / "base_rates.sqlite").write_bytes(web_db.read_bytes())
+    chat.say("RBI hiked, what do I do with my SIP?")
+    assert chat.bot.last.startswith(PLAN_LEADS["Is 70% equity too much for me?"])
+    assert "past RBI rate hikes" in chat.bot.last
+    monkeypatch.setattr(brief, "month_events", lambda db, today: [])
+    chat.say("RBI hiked, what do I do with my SIP?")
+    assert "past RBI rate hikes" not in chat.bot.last, "no history line without the event"
+
+
+def test_jev_is_on_in_the_shipped_config(cfg) -> None:
+    assert cfg.product.use_jev_for_intent
+
+
+def test_jev_down_falls_back_to_the_model(tmp_path, cfg, monkeypatch) -> None:
+    monkeypatch.setattr(jev, "choose", lambda *a, **k: None)
+    models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value)
+    chat = talk(tmp_path, cfg, models)
+    chat.say("hi there")
+    assert chat.bot.last.startswith(ROUTED[Intent.WHAT_HAPPENED_TODAY])
+    assert len(models.picks) == 1
+
+
+@pytest.fixture
+def sim_table(monkeypatch):
+    from networth import sim
+    from tests.test_sim import varying
+
+    monkeypatch.setattr(sim, "load_table", varying)
+
+
+RANGE_STARTS = {"en": "This is your own plan:", "hi": "यह आपका अपना प्लान है:",
+                "hinglish": "Yeh aapka apna plan hai:"}  # fmt: skip
+
+
+def set_lang(chat: Chat, lang: str) -> None:
+    chat.store.save_profile(replace(chat.profile, lang=lang))
+
+
+@pytest.mark.parametrize("lang", list(RANGE_STARTS))
+def test_range_command_sends_the_plan_range_in_the_users_language(
+    tmp_path, cfg, sim_table, lang: str
+) -> None:
+    from networth import guard, sim
+
+    models = FakeChatModels()
+    chat = talk(tmp_path, cfg, models)
+    set_lang(chat, lang)
+    chat.say("/range")
+    r = sim.plan_range(chat.plan, chat.profile)
+    assert chat.bot.last.startswith(RANGE_STARTS[lang])
+    assert chat.bot.last == sim.plan_range_message(chat.profile.user_id, chat.store)
+    assert guard.check(chat.bot.last, repr(r)).ok
+    assert models.tasks == [], "the range is fixed sentences, no model writes it"
+
+
+RANGE_QUESTIONS = {"en": "What could my plan become?", "hi": "मेरा प्लान कितना गिर सकता है?",
+                   "hinglish": "Mera plan kitna gir sakta hai, kya hoga?"}  # fmt: skip
+
+
+@pytest.mark.parametrize("lang", list(RANGE_QUESTIONS))
+def test_a_plan_range_question_answers_with_the_range(tmp_path, cfg, sim_table, lang) -> None:
+    models = FakeChatModels(Intent.PLAN_RANGE.value)
+    chat = talk(tmp_path, cfg, models)
+    chat.say(RANGE_QUESTIONS[lang])
+    assert chat.bot.last.startswith(RANGE_STARTS[lang])
+    assert models.tasks == []
+
+
+def test_a_plan_range_question_routes_by_phrase_without_models(tmp_path, cfg, sim_table) -> None:
+    chat = talk(tmp_path, cfg, None)
+    chat.say("how bad can a fall get?")
+    assert chat.bot.last.startswith(RANGE_STARTS["en"])
+
+
+def test_a_dollar_plan_gets_the_polite_range_line(tmp_path, cfg, sim_table) -> None:
+    from networth.chat.today import NO_RANGE
+
+    chat = talk(tmp_path, cfg, FakeChatModels(Intent.PLAN_RANGE.value))
+    chat.store.save_profile(replace(chat.profile, currency="USD", monthly_amount=1000))
+    chat.say("/range")
+    assert chat.bot.last == NO_RANGE["en"]
+    chat.say("how bad can a fall get?")
+    assert chat.bot.last == NO_RANGE["en"]
+
+
+@pytest.mark.parametrize("lang", list(RANGE_STARTS))
+def test_the_polite_range_lines_pass_the_guard(lang: str) -> None:
+    from networth import guard
+    from networth.chat.today import NO_RANGE, RANGE_NOT_READY
+
+    assert guard.check(NO_RANGE[lang], "").ok
+    assert guard.check(RANGE_NOT_READY[lang], "").ok
+
+
+def test_a_missing_range_table_says_the_range_is_not_ready(tmp_path, cfg, monkeypatch) -> None:
+    from networth import sim
+    from networth.chat.today import RANGE_NOT_READY
+    from networth.sim.data import MissingSeries
+
+    def missing() -> None:
+        raise MissingSeries("no table")
+
+    monkeypatch.setattr(sim, "load_table", missing)
+    chat = talk(tmp_path, cfg, FakeChatModels())
+    chat.say("/range")
+    assert chat.bot.last == RANGE_NOT_READY["en"]
+
+
+def test_a_reworded_reply_with_a_failing_template_still_asks_the_writer(tmp_path, cfg) -> None:
+    from networth.chat.answer import Answer, deliver
+
+    services = Services(tmp_path / "data", None, FakeChatModels(writes=["Banks rose."]), None, cfg)
+    answer = Answer("buy banks now", "Banks rose.", "Say what happened.")
+    assert deliver(answer, "en", services).text == "Banks rose."
+
+
+def test_the_brief_has_a_my_range_button_next_to_my_page(tmp_path, cfg, sim_table) -> None:
+    services = Services(tmp_path / "data", "https://nw.example", None, None, cfg,
+                        link_secret="s" * 32)  # fmt: skip
+    chat = Chat(tmp_path, services)
+    onboard(chat)
+    chat.say("/brief")
+    rows = [[b.label for b in row] for row in chat.bot.sent[-1][2]]
+    assert ["My page", "My range"] in rows
+    chat.tap("br:range")
+    assert chat.bot.last.startswith(RANGE_STARTS["en"])
