@@ -15,6 +15,11 @@ function turnFor(text) {
   if (t.includes("happened")) return fixture("turn-news");
   if (t.includes("plan")) return fixture("turn-plan-range");
   if (t.includes("why")) return fixture("turn-history");
+  // Recorded from real Yahoo closes by e2e/record_market.py.
+  if (t.includes("apple")) return fixture("answer-price-usd");
+  if (t.includes("price")) return fixture("answer-price-inr");
+  if (t.includes("i hold") || t.includes("i own")) return fixture("answer-position");
+  if (t.includes("years")) return fixture("answer-history");
   return fixture("turn-text");
 }
 

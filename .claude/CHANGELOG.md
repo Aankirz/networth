@@ -664,3 +664,7 @@
 
 ## 2026-10-25 — feat: the market strip on real Yahoo closes, with a source on every tile
 - Rebased the local 13B commits onto 13A's 4be1140 (networth.market). site/e2e/record_market.py records market-in/us.json from real Yahoo data through networth.market (13A has no strip route or card builder yet). Each tile now carries its own source and opens it; the tile shows its close date, the strip names its sources. MarketStrip is {tiles} with per-tile source.
+
+## 2026-10-25 — feat: the price and position cards
+- site/components/cards/price.tsx (last close, day move in --up/--down, a year of closes, 52-week range with a marker, where-in-year insight, source chip) and position.tsx (worth now against what was paid, table, dashed paid line, a what-if slider from −50% to +50% computed in the browser, break-even insight when under water); price-line.tsx is the shared pencil line with hover, tap and arrow-key read-out. lib/money gains price(), signed() and parseAmount(). Recorded answer fixtures from real Yahoo closes; the mock routes price and holding questions to them.
+- Fix: an answer, its card and the chart figure now use a minmax(0,1fr) column, so a wide caption can no longer push the card past a phone screen inside the chat scroller; the fit test checks the scroller too.
