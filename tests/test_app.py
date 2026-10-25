@@ -9,15 +9,17 @@ from __future__ import annotations
 import asyncio
 import builtins
 import json
+import runpy
 import sys
 import types
 from pathlib import Path
 
 import httpx2
 import pytest
+import uvicorn
 from fastapi import APIRouter, FastAPI
 
-from networth.app.main import SECRET_HEADER, create_app
+from networth.app.main import SECRET_HEADER, app_from_env, create_app
 from networth.app.settings import Settings
 from networth.app.store import Status, Step, Store
 from networth.bot.message import Message
@@ -207,3 +209,17 @@ def test_poll_skips_a_bad_update_and_advances_the_offset(store: Store) -> None:
     bot = OneBatch()
     assert poll_once(store, bot, None) == 12
     assert bot.texts and bot.texts[0].startswith("Hi.")
+
+
+def test_the_server_runs_without_an_access_log(monkeypatch) -> None:
+    calls: list[dict] = []
+    monkeypatch.setattr(uvicorn, "run", lambda app, **kw: calls.append(kw))
+    runpy.run_module("networth.app", run_name="__main__")
+    assert calls and calls[0]["access_log"] is False, "a /u/<token> path never reaches a log"
+
+
+def test_startup_makes_the_data_dir_private(tmp_path: Path) -> None:
+    data = tmp_path / "data"
+    data.mkdir(mode=0o755)
+    app_from_env(Settings(data, None, None, None))
+    assert data.stat().st_mode & 0o777 == 0o700

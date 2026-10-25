@@ -7,7 +7,8 @@ Tables: profiles (one per chat), plans (one per user, rewritten on change), mess
 text in and out), briefs (one per user per investing day) and alerts (one per user per event).
 contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn;
 keiki_turns holds every turn id answered; link_codes holds the single-use codes that tie an
-email contact to a Telegram user; watches are standing per-user requests, and watch_hits holds
+email contact to a Telegram user, and link_misses the codes a contact got wrong, so guessing
+stops after a few; watches are standing per-user requests, and watch_hits holds
 one row per watch per confirmed story it matched, claimed before the message goes out;
 asked_terms holds glossary terms a user asked about, until a brief brings one back.
 holdings holds one user's holdings list as networth.holdings writes it (never an image), and
@@ -39,6 +40,7 @@ US_TZ: Final = "America/New_York"
 LINK_TOKEN_BYTES: Final = 16
 LINK_CODE_DIGITS: Final = 6
 LINK_CODE_TRIES: Final = 5
+LINK_MISSES_PER_HOUR: Final = 5
 US_STOCKS: Final = "us_stocks"
 ALL_MARKETS: Final = ("in", "us")
 
@@ -217,6 +219,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "code": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "expires_at": "TEXT NOT NULL",
         "used_at": "TEXT",
     },
+    "link_misses": {"address": "TEXT NOT NULL", "at": "TEXT NOT NULL"},
     "watches": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "kind": "TEXT NOT NULL CHECK (kind IN ('type', 'entity'))", "target": "TEXT NOT NULL",
@@ -396,7 +399,8 @@ class Store:
     def profile_by_token(self, link_token: str) -> Profile | None:
         with self._connect() as conn:
             row = conn.execute(
-                "SELECT * FROM profiles WHERE link_token = ?", (link_token,)
+                "SELECT * FROM profiles WHERE link_token = ? AND status != ?",
+                (link_token, Status.STOPPED),
             ).fetchone()
         return _profile_from(row) if row else None
 
@@ -508,17 +512,29 @@ class Store:
                 return code
         raise RuntimeError("no free link code")
 
-    def redeem_link_code(self, code: str, now: dt.datetime) -> str | None:
+    def redeem_link_code(self, code: str, now: dt.datetime, contact: str) -> str | None:
         """The user id behind an unexpired, unused code, which is used up in the same
-        transaction. None for any other code."""
+        transaction. None for any other code, and a miss is counted against the contact. A
+        contact with LINK_MISSES_PER_HOUR misses in the hour before now gets None for every
+        code, so the 10^6 code space cannot be walked."""
+        now_utc = now.astimezone(dt.UTC)
         with self._connect() as conn:
             conn.execute("BEGIN IMMEDIATE")
+            since = (now_utc - dt.timedelta(hours=1)).isoformat()
+            conn.execute("DELETE FROM link_misses WHERE at <= ?", (since,))
+            misses = conn.execute(
+                "SELECT COUNT(*) FROM link_misses WHERE address = ?", (contact,)
+            ).fetchone()[0]
+            if misses >= LINK_MISSES_PER_HOUR:
+                return None
             row = conn.execute(
                 "SELECT user_id FROM link_codes WHERE code = ? AND used_at IS NULL "
                 "AND expires_at > ?",
-                (code, now.astimezone(dt.UTC).isoformat()),
+                (code, now_utc.isoformat()),
             ).fetchone()
             if row is None:
+                conn.execute("INSERT INTO link_misses (address, at) VALUES (?, ?)",
+                             (contact, now_utc.isoformat()))  # fmt: skip
                 return None
             conn.execute("UPDATE link_codes SET used_at = ? WHERE code = ?", (now_iso(), code))
         return row["user_id"]
