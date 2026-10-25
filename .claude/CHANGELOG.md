@@ -391,3 +391,8 @@
 - Reviewed and integrated the delegates' report, web page and SnapTrade client; re-exported snaptrade_link from networth.holdings.
 - Added evals/holdings_words.py (30 adversarial messages); the answer task now declines "how much / what to change" without restating the plan gap; live run 30/30 for advice, $0.288.
 - Added tests/fixtures/holdings/groww_fake.png (made-up screen) with its recorded vision output, tests/test_holdings_words.py, docs/phases/phase-7-report.md and phase-7-shots/.
+||||||| parent of e9fb8ed (docs: record the footer fetch and link code fixes in the phase 3C report)
+
+## 2026-10-25 — Phase 3C: never fetch footer or opt-out links, read link codes past footers
+- Live, a Mailtrack opt-out link in an email footer was fetched by the explain path. explain.fetchable now refuses trackers and unsubscribe, opt-out, tracking and redirect links at every hop, and user_link picks only a fetchable link, for Telegram and Keiki alike.
+- strip_quoted cuts signatures, Outlook and Mailtrack footers and two-line Gmail quote headers. A link code is a lone six-digit token on a short line near the top.
