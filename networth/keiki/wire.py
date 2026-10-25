@@ -8,9 +8,10 @@ process logs its top-level and channel keys (never values), so the first live tu
 Keiki sends.
 
 `channel` arrives as an object that also carries the sender and the inbound text, so only its
-`type` is kept. The contact is who wrote: the conversation for email (the sender's address),
-and the author for Slack, where each thread is its own conversation. Keiki's trace id for a
-turn is the turn id (seen on the first live email turn), so trace_id falls back to it.
+type is kept: the object's `channel` key on the live email turn, `type` as a fallback. The
+contact is who wrote: the conversation for email (the sender's address), and the author for
+Slack, where each thread is its own conversation. Keiki's trace id for a turn is the turn id
+(seen on the first live email turn), so trace_id falls back to it.
 
 https://onkeiki.com/docs/external-harness.md
 """
@@ -72,7 +73,7 @@ def _log_keys_once(payload: Mapping[str, object]) -> None:
 def _channel(payload: Mapping[str, object]) -> tuple[str, Mapping[str, object]]:
     raw = payload.get("channel")
     if isinstance(raw, dict):
-        return str(raw.get("type") or ""), raw
+        return str(raw.get("channel") or raw.get("type") or ""), raw
     return str(raw or ""), {}
 
 
