@@ -73,6 +73,12 @@ def filled_yoy(yoy: Mapping[dt.date, float]) -> dict[dt.date, float]:
     return out
 
 
+def spliced(early: Mapping[dt.date, float], late: Mapping[dt.date, float]) -> dict[dt.date, float]:
+    """The late series from its first month on, the early one before it."""
+    switch = min(late)
+    return {**{m: v for m, v in early.items() if m < switch}, **late}
+
+
 def build_table(series: Mapping[str, Mapping[dt.date, float]], before: dt.date) -> Table:
     """Monthly returns by column -> the gap-free table of months before `before`, the first
     incomplete month. Raises MissingSeries when a column is empty or the window has a hole."""
@@ -133,13 +139,18 @@ def fetch_series() -> dict[str, dict[dt.date, float]]:
     if cpi is None or not cpi.values:
         raise MissingSeries("sim table: no India CPI; run uv run python -m networth.engine.macro")
     client = ipv4_client(macro.TIMEOUT_S, macro.CONNECT_TIMEOUT_S)
-    safety = macro.fetch_fred(config.SAFETY_FRED_ID, client, first_release=False)
+
+    def fred(series_id: str) -> dict[dt.date, float]:
+        return dict(macro.fetch_fred(series_id, client, first_release=False).values)
+
     return {
-        "safety": rate_returns(safety.values),
+        "safety": spliced(rate_returns(fred(config.SAFETY_EARLY_FRED_ID)),
+                          rate_returns(fred(config.SAFETY_FRED_ID))),
         "core": equity_returns(yahoo_closes(config.CORE_TICKER)),
         "growth": equity_returns(yahoo_closes(config.GROWTH_TICKER)),
-        "cpi": rate_returns(filled_yoy(cpi.values)),
-    }
+        "cpi": spliced(equity_returns(fred(config.CPI_EARLY_FRED_ID)),
+                       rate_returns(filled_yoy(cpi.values))),
+    }  # fmt: skip
 
 
 def write_sources(series: Mapping[str, Mapping[dt.date, float]], table: Table,

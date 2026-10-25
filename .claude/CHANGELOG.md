@@ -288,3 +288,6 @@
 
 ## 2026-10-25 — Phase 6 report
 - docs/phases/phase-6-report.md: method hash 102d69b, sources with URLs and windows, Balanced sample in 0.099 s, guard-checked lines in en/hi/hinglish, deviations and gaps (no 2008 in the window). Fine print on the range section now names fund costs and the missing 2008 crash; shots retaken.
+
+## 2026-10-25 — Phase 6 method v2
+- Method v2 recorded before any v2 run: OECD India CPI (INDCPIALLMINMEI) before 2012-01 and OECD short rate (INDLOCOSTORSTM) before 2011-11, so the window can reach 2007-10 and hold the 2008 crash. Code splices them; range-bar labels resized for 12px+ at 320px.

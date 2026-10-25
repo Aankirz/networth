@@ -18,7 +18,7 @@ NO_TABLE: Final = (
     "uv run python -m networth.sim.data"
 )
 
-BAR_WIDTH: Final = 640
+BAR_WIDTH: Final = 400
 BAR_PAD: Final = 24
 BAR_H: Final = 18
 ROW_GAP: Final = 74
