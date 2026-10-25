@@ -34,60 +34,180 @@ from networth.app.store import (
     user_id_for,
 )
 from networth.bot import briefs, watches
-from networth.bot.onboarding import CALLBACK_PREFIX, Outcome, Reply, advance, ordinal, plan_line
+from networth.bot.message import FOOTER, Link, Message, say
+from networth.bot.onboarding import (
+    CALLBACK_PREFIX,
+    Outcome,
+    Reply,
+    advance,
+    day_label,
+    plan_line,
+    with_lead,
+)
 from networth.bot.onboarding import prompt as ask_for
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot
+from networth.chat.answer import deliver
+from networth.chat.today import YOUR_PAGE
 
 log = logging.getLogger("networth.bot")
 
-STALE_TAP: Final = "That question has moved on."
-NOT_A_PHOTO: Final = "I can read photos and text. Send a screenshot, or paste the text."
-TRY_AGAIN: Final = "Something went wrong on my side. Please try again in a minute."
-TOO_MANY: Final = (
-    "That is a lot of questions in one hour, so I am taking a short break. Ask me again in a "
-    "little while and I will answer."
-)
-PLAN_KEPT: Final = "Noted. Your plan stays as it is."
-HELP: Final = (
-    "Here's what I can do.\n\n"
-    'Ask "What happened today?" or "Why?"\n'
-    "Forward me a tip and I'll check who reported it\n"
-    "Send an IPO page, a link or a screenshot and I'll explain it\n\n"
-    "/brief this month's brief\n"
-    "/plan see or change your plan\n"
-    "/range what your plan could become, replayed over past months\n"
-    "/pause pause briefs and alerts\n"
-    "/resume turn them back on\n"
-    "/stop stop all messages\n"
-    "/start set up again or see your answers\n"
-    "/link get a code to use me by email too\n"
-    "/sendto email or /sendto telegram, where briefs and alerts go\n"
-    "/watch something to hear once when a confirmed story about it appears\n"
-    "/watches see or stop your watches\n"
-    "/unwatch 1 stop a watch by its number\n\n"
-    "Research, not advice."
-)
-UNKNOWN_COMMAND: Final = "I don't know that one yet. Type /help to see what I can do."
-FINISH_FIRST: Final = "Let's finish setting up first."
-PAUSED: Final = (
-    "Paused. I won't send briefs or alerts until you type /resume. You can still ask me things."
-)
-STOPPED: Final = "Stopped. I won't message you again. Type /start any time to come back."
-WELCOME_BACK: Final = "Welcome back."
-UNAVAILABLE: Final = "That isn't available right now. Please try again later."
-LINK_ON_TELEGRAM: Final = "Linking starts on Telegram: type /link there, then email me the code."
-LINK_CODE: Final = (
-    "Your code is {code}. Email it to {where} within {minutes} minutes. It works once. After "
-    "that, your plan, language and what you left out apply there too."
-)
-DESTINATIONS: Final = {"email": Channel.EMAIL, "telegram": Channel.TELEGRAM}
-DESTINATION_NAMES: Final = {Channel.EMAIL: "your email", Channel.TELEGRAM: "Telegram"}
-SENDTO_USAGE: Final = "Type /sendto email or /sendto telegram to choose where briefs and alerts go."
-UNREACHABLE: Final = {
-    Channel.EMAIL: "Link your email first: type /link on Telegram and email me the code.",
-    Channel.TELEGRAM: "You haven't used Networth on Telegram yet, so briefs stay on email.",
+STALE_TAP: Final = {
+    "en": "That question has moved on.",
+    "hi": "वह सवाल आगे बढ़ चुका है।",
+    "hinglish": "Woh sawaal aage badh chuka hai.",
 }
+NOT_A_PHOTO: Final = {
+    "en": "I can read photos and text. A screenshot or some pasted text works.",
+    "hi": "मैं फ़ोटो और टेक्स्ट पढ़ सकता हूँ। स्क्रीनशॉट या पेस्ट किया हुआ टेक्स्ट भेज सकते हैं।",
+    "hinglish": "Main photo aur text padh sakta hoon. Screenshot ya paste kiya hua text bhej "
+    "sakte hain.",
+}
+TRY_AGAIN: Final = {
+    "en": "That one didn't go through on my side. Give it a minute and ask me again.",
+    "hi": "यह मेरी तरफ़ से नहीं हो पाया। एक मिनट बाद फिर से पूछ सकते हैं।",
+    "hinglish": "Yeh meri taraf se nahin ho paaya. Ek minute baad phir se pooch sakte hain.",
+}
+TOO_MANY: Final = {
+    "en": "That's a lot of questions in one hour, so I'm taking a short break. I'll answer again "
+    "in a little while.",
+    "hi": "एक घंटे में काफ़ी सवाल हो गए, इसलिए मैं थोड़ा रुक रहा हूँ। थोड़ी देर में फिर जवाब दूँगा।",
+    "hinglish": "Ek ghante mein kaafi sawaal ho gaye, isliye main thoda ruk raha hoon. Thodi der "
+    "mein phir jawab doonga.",
+}
+PLAN_KEPT: Final = {
+    "en": "Got it. Your plan stays just as it is.",
+    "hi": "ठीक है। आपका प्लान जैसा है वैसा ही रहेगा।",
+    "hinglish": "Theek hai. Aapka plan jaisa hai waisa hi rahega.",
+}
+HELP_LEAD: Final = {"en": "Here's what I can do.", "hi": "मैं ये काम कर सकता हूँ।",
+                    "hinglish": "Main yeh kaam kar sakta hoon."}  # fmt: skip
+HELP_ASK: Final = {
+    "en": 'Ask "What happened today?" or "Why?"\n'
+    "Forward me a tip, and I'll check who reported it\n"
+    "Send an IPO page, a link or a screenshot, and I'll explain it",
+    "hi": 'आप पूछ सकते हैं "आज क्या हुआ?" या "क्यों?"\n'
+    "कोई टिप फ़ॉरवर्ड करने पर मैं देखूँगा कि उसे किसने रिपोर्ट किया\n"
+    "IPO पेज, लिंक या स्क्रीनशॉट भेजने पर मैं उसे समझा दूँगा",
+    "hinglish": 'Aap pooch sakte hain "Aaj kya hua?" ya "Kyun?"\n'
+    "Koi tip forward karne par main dekhoonga ki use kisne report kiya\n"
+    "IPO page, link ya screenshot bhejne par main use samjha doonga",
+}
+HELP_COMMANDS: Final = {
+    "en": "/brief this month's brief\n/plan see or change your plan\n"
+    "/range what your plan could become, replayed over past months\n"
+    "/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n"
+    "/start set up again or see your answers\n/link a code to use me by email too\n"
+    "/sendto email or /sendto telegram, where briefs and alerts go\n"
+    "/watch something, to hear once when a confirmed story about it appears\n"
+    "/watches see or stop your watches\n/unwatch 1 stop a watch by its number",
+    "hi": "/brief इस महीने का ब्रीफ़\n/plan अपना प्लान देखना या बदलना\n"
+    "/range पुराने महीनों को दोहराकर, आपका प्लान कहाँ तक पहुँच सकता है\n"
+    "/pause ब्रीफ़ और अलर्ट रोकना\n/resume उन्हें फिर से चालू करना\n/stop सारे मैसेज बंद करना\n"
+    "/start फिर से सेटअप, या अपने जवाब देखना\n/link ईमेल पर भी इस्तेमाल के लिए कोड\n"
+    "/sendto email या /sendto telegram, ब्रीफ़ और अलर्ट किस जगह आते हैं\n"
+    "/watch किसी चीज़ पर, उसकी पुष्ट ख़बर आने पर एक बार सुनने के लिए\n"
+    "/watches अपनी वॉच देखना या बंद करना\n/unwatch 1 नंबर से कोई वॉच बंद करना",
+    "hinglish": "/brief is mahine ka brief\n/plan apna plan dekhna ya badalna\n"
+    "/range purane mahinon ko dohraakar, aapka plan kahan tak pahunch sakta hai\n"
+    "/pause briefs aur alerts rokna\n/resume unhe phir se chalu karna\n"
+    "/stop saare messages band karna\n/start phir se setup, ya apne jawab dekhna\n"
+    "/link email par bhi use karne ke liye code\n"
+    "/sendto email ya /sendto telegram, briefs aur alerts kis jagah aate hain\n"
+    "/watch kisi cheez par, uski confirmed story aane par ek baar sunne ke liye\n"
+    "/watches apni watches dekhna ya band karna\n/unwatch 1 number se koi watch band karna",
+}
+UNKNOWN_COMMAND: Final = {
+    "en": "I don't know that one yet. /help shows everything I can do.",
+    "hi": "यह कमांड मुझे अभी नहीं आती। /help में मेरे सारे काम दिखते हैं।",
+    "hinglish": "Yeh command mujhe abhi nahin aati. /help mein mere saare kaam dikhte hain.",
+}
+FINISH_FIRST: Final = {
+    "en": "Let's finish setting up first.",
+    "hi": "पहले आपका सेटअप पूरा कर लेते हैं।",
+    "hinglish": "Pehle aapka setup poora kar lete hain.",
+}
+PAUSED: Final = {
+    "en": "Paused. No briefs or alerts until you send /resume. You can still ask me anything.",
+    "hi": "रोक दिया। जब तक आप /resume नहीं भेजते, ब्रीफ़ और अलर्ट नहीं आएँगे। आप फिर भी मुझसे कुछ भी पूछ सकते हैं।",
+    "hinglish": "Rok diya. Jab tak aap /resume nahin bhejte, briefs aur alerts nahin aayenge. Aap "
+    "phir bhi mujhse kuch bhi pooch sakte hain.",
+}
+STOPPED: Final = {
+    "en": "Stopped. I won't message you again. /start brings me back any time.",
+    "hi": "बंद कर दिया। मैं अब आपको मैसेज नहीं करूँगा। /start से कभी भी वापस आ सकते हैं।",
+    "hinglish": "Band kar diya. Main ab aapko message nahin karoonga. /start se kabhi bhi wapas "
+    "aa sakte hain.",
+}
+WELCOME_BACK: Final = {"en": "Welcome back.", "hi": "फिर से स्वागत है।",
+                       "hinglish": "Phir se swagat hai."}  # fmt: skip
+BACK_ON: Final = {"en": "Back on.", "hi": "फिर से चालू।", "hinglish": "Phir se chalu."}
+CHECK_IN: Final = {
+    "en": "I'll check in on the {day}.",
+    "hi": "मैं {day} तारीख़ को मैसेज करूँगा।",
+    "hinglish": "Main {day} tareekh ko message karoonga.",
+}
+UNAVAILABLE: Final = {
+    "en": "That isn't working on my side right now. You can try again in a little while.",
+    "hi": "यह अभी मेरी तरफ़ से नहीं चल रहा। थोड़ी देर बाद फिर कोशिश कर सकते हैं।",
+    "hinglish": "Yeh abhi meri taraf se nahin chal raha. Thodi der baad phir try kar sakte hain.",
+}
+LINK_ON_TELEGRAM: Final = {
+    "en": "Linking starts on Telegram: send /link there, then email me the code.",
+    "hi": "लिंक करना Telegram से शुरू होता है: वहाँ /link भेजने पर कोड मिलेगा, फिर वह कोड मुझे ईमेल कर सकते हैं।",
+    "hinglish": "Linking Telegram se shuru hoti hai: wahan /link bhejne par code milega, phir "
+    "woh code mujhe email kar sakte hain.",
+}
+LINK_CODE: Final = {
+    "en": "Your code is {code}. Email it to {where} within {minutes} minutes. It works once. "
+    "After that, your plan, language and what you left out carry over there too.",
+    "hi": "आपका कोड {code} है। इसे {minutes} मिनट के अंदर {where} पर ईमेल कर सकते हैं। यह एक ही "
+    "बार चलता है। उसके बाद आपका प्लान, भाषा और जो आपने बाहर रखा, वह वहाँ भी लागू होगा।",
+    "hinglish": "Aapka code {code} hai. Ise {minutes} minute ke andar {where} par email kar "
+    "sakte hain. Yeh ek hi baar chalta hai. Uske baad aapka plan, language aur jo aapne bahar "
+    "rakha, woh wahan bhi lagu hoga.",
+}
+DESTINATIONS: Final = {"email": Channel.EMAIL, "telegram": Channel.TELEGRAM}
+DESTINATION_NAMES: Final = {
+    Channel.EMAIL: {"en": "your email", "hi": "आपके ईमेल", "hinglish": "aapke email"},
+    Channel.TELEGRAM: {"en": "Telegram", "hi": "Telegram", "hinglish": "Telegram"},
+}
+SENT_TO: Final = {
+    "en": "Done. Briefs and alerts now go to {where}.",
+    "hi": "हो गया। अब ब्रीफ़ और अलर्ट {where} पर आएँगे।",
+    "hinglish": "Ho gaya. Ab briefs aur alerts {where} par aayenge.",
+}
+SENDTO_USAGE: Final = {
+    "en": "/sendto email or /sendto telegram chooses where briefs and alerts go.",
+    "hi": "/sendto email या /sendto telegram से चुन सकते हैं कि ब्रीफ़ और अलर्ट किस जगह आते हैं।",
+    "hinglish": "/sendto email ya /sendto telegram se chun sakte hain ki briefs aur alerts kis "
+    "jagah aate hain.",
+}
+UNREACHABLE: Final = {
+    Channel.EMAIL: {
+        "en": "Your email isn't linked yet: send /link on Telegram, then email me the code.",
+        "hi": "आपका ईमेल अभी लिंक नहीं है: Telegram पर /link भेजकर कोड मुझे ईमेल कर सकते हैं।",
+        "hinglish": "Aapka email abhi link nahin hai: Telegram par /link bhejkar code mujhe email "
+        "kar sakte hain.",
+    },
+    Channel.TELEGRAM: {
+        "en": "You haven't used Networth on Telegram yet, so briefs stay on email.",
+        "hi": "आपने अभी Telegram पर Networth इस्तेमाल नहीं किया, इसलिए ब्रीफ़ ईमेल पर ही आएँगे।",
+        "hinglish": "Aapne abhi Telegram par Networth use nahin kiya, isliye briefs email par hi "
+        "aayenge.",
+    },
+}
+PLAN_TITLE: Final = {"en": "Your plan", "hi": "आपका प्लान", "hinglish": "Aapka plan"}
+PAGE_NOTE: Final = {
+    "en": "Your page has your plan and your latest brief.",
+    "hi": "आपके पेज पर आपका प्लान और ताज़ा ब्रीफ़ है।",
+    "hinglish": "Aapke page par aapka plan aur latest brief hai.",
+}
+
+
+def help_message(lang: str | None) -> Message:
+    return Message(body=(say(HELP_LEAD, lang), say(HELP_ASK, lang), say(HELP_COMMANDS, lang)),
+                   footer=say(FOOTER, lang))  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -160,7 +280,7 @@ class Turn:
         if cfg is not None and not self.store.claim_answer(
             profile.user_id, self.clock, cfg.product.chat_max_per_hour
         ):
-            self.send(profile, Reply(TOO_MANY))
+            self.send(profile, Reply(say(TOO_MANY, profile.lang)))
             return
 
         def job() -> None:
@@ -168,7 +288,7 @@ class Turn:
                 reply = make()
             except Exception:
                 log.exception("chat answer for %s failed", profile.user_id)
-                reply = Reply(TRY_AGAIN)
+                reply = Reply(say(TRY_AGAIN, profile.lang))
             self.send(profile, reply)
 
         self.later.append(job)
@@ -245,7 +365,7 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
         profile = turn.commit(plan, outcome)
         if outcome.toast and not outcome.replies:
             ask = ask_for(profile, outcome.plan)
-            turn.send(profile, Reply(f"{outcome.toast}.\n\n{ask.text}", ask.buttons))
+            turn.send(profile, with_lead(f"{outcome.toast}.", ask))
         for reply in outcome.replies:
             turn.send(profile, reply)
     else:
@@ -274,7 +394,7 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
     elif tap.data == f"{brief.CALLBACK_PREFIX}:range":
         cmd_range(turn, profile, "")
     elif tap.data == f"{brief.CALLBACK_PREFIX}:ok":
-        turn.send(profile, Reply(PLAN_KEPT))
+        turn.send(profile, Reply(say(PLAN_KEPT, profile.lang)))
 
 
 def on_tap(turn: Turn, tap: Tap) -> None:
@@ -294,7 +414,7 @@ def on_tap(turn: Turn, tap: Tap) -> None:
     step, value = parsed
     plan = turn.plan(profile)
     if step != profile.step:
-        turn.bot.answer_callback(tap.callback_id, STALE_TAP)
+        turn.bot.answer_callback(tap.callback_id, say(STALE_TAP, profile.lang))
         if profile.step is not Step.DONE:
             turn.send(profile, ask_for(profile, plan))
         return
@@ -312,7 +432,7 @@ def on_media(turn: Turn, media: Media) -> None:
     if profile is None or profile.step is not Step.DONE or profile.status is Status.STOPPED:
         return
     if media.file_id is None:
-        turn.send(profile, Reply(NOT_A_PHOTO))
+        turn.send(profile, Reply(say(NOT_A_PHOTO, profile.lang)))
         return
     file_id = media.file_id
     turn.answer(profile, lambda: chat.respond_image(profile, turn.bot.download_file(file_id),
@@ -330,15 +450,16 @@ def cmd_start(turn: Turn, profile: Profile, args: str) -> None:
         profile = replace(profile, step=Step.CONFIRM)
     profile = turn.save(profile)
     ask = ask_for(profile, turn.plan(profile))
-    text = f"{WELCOME_BACK}\n\n{ask.text}" if returning and was_done else ask.text
-    turn.send(profile, Reply(text, ask.buttons))
+    if returning and was_done:
+        ask = with_lead(say(WELCOME_BACK, profile.lang), ask)
+    turn.send(profile, ask)
 
 
 def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
     plan = turn.plan(profile)
     if profile.step is not Step.DONE or plan is None:
         ask = ask_for(profile, plan)
-        turn.send(profile, Reply(f"{FINISH_FIRST}\n\n{ask.text}", ask.buttons))
+        turn.send(profile, with_lead(say(FINISH_FIRST, profile.lang), ask))
         return
     profile = turn.save(replace(profile, step=Step.PLAN))
     page = None
@@ -346,24 +467,28 @@ def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
         profile = replace(profile, link_token=turn.store.new_link_token(profile.user_id))
         page = links.page_url(turn.services.public_url, profile.link_token,
                               turn.services.link_secret, turn.clock)  # fmt: skip
-    mine = f"\n\nYour page, with your plan and latest brief: {page}" if page else ""
-    turn.send(profile, Reply(f"Your plan: {plan_line(plan)}.{mine}"))
+    lang = profile.lang
+    mine = (say(PAGE_NOTE, lang), Link(say(YOUR_PAGE, lang), page)) if page else ()
+    turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.", *mine),
+                                     footer=say(FOOTER, lang))))  # fmt: skip
     turn.send(profile, ask_for(profile, plan))
 
 
 def cmd_pause(turn: Turn, profile: Profile, args: str) -> None:
     profile = turn.save(replace(profile, status=Status.PAUSED))
-    turn.send(profile, Reply(PAUSED))
+    turn.send(profile, Reply(say(PAUSED, profile.lang)))
 
 
 def cmd_resume(turn: Turn, profile: Profile, args: str) -> None:
     profile = turn.save(replace(profile, status=Status.ACTIVE))
-    day = f" I'll check in on the {ordinal(profile.invest_day)}." if profile.invest_day else ""
-    turn.send(profile, Reply(f"Back on.{day}"))
+    lang = profile.lang
+    day = day_label(profile.invest_day or 1, lang)
+    check_in = f" {say(CHECK_IN, lang).format(day=day)}" if profile.invest_day else ""
+    turn.send(profile, Reply(f"{say(BACK_ON, lang)}{check_in}"))
 
 
 def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
-    turn.send(profile, Reply(STOPPED))
+    turn.send(profile, Reply(say(STOPPED, profile.lang)))
     turn.save(replace(profile, status=Status.STOPPED))
 
 
@@ -375,7 +500,7 @@ def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
             briefs.send_brief(turn.store, turn.bot, profile, turn.services, local)
         except Exception:
             log.exception("brief for %s failed", profile.user_id)
-            turn.send(profile, Reply(TRY_AGAIN))
+            turn.send(profile, Reply(say(TRY_AGAIN, profile.lang)))
 
     turn.later.append(job)
 
@@ -383,42 +508,45 @@ def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
 def cmd_range(turn: Turn, profile: Profile, args: str) -> None:
     """Fixed sentences, so no model and no hourly claim; the replay runs after the lock."""
     if profile.step is not Step.DONE:
-        turn.send(profile, Reply(FINISH_FIRST))
+        turn.send(profile, Reply(say(FINISH_FIRST, profile.lang)))
         return
 
     def job() -> None:
         try:
-            reply = chat.today.plan_range(turn.store, profile, profile.lang or "en").template
+            answer = chat.today.plan_range(turn.store, profile, profile.lang or "en")
+            reply = deliver(answer, profile.lang or "en", turn.services)
         except Exception:
             log.exception("range for %s failed", profile.user_id)
-            reply = TRY_AGAIN
-        turn.send(profile, Reply(reply))
+            reply = Reply(say(TRY_AGAIN, profile.lang))
+        turn.send(profile, reply)
 
     turn.later.append(job)
 
 
 def cmd_help(turn: Turn, profile: Profile, args: str) -> None:
-    turn.send(profile, Reply(HELP))
+    turn.send(profile, Reply(help_message(profile.lang)))
 
 
 def cmd_unknown(turn: Turn, profile: Profile, args: str) -> None:
-    turn.send(profile, Reply(UNKNOWN_COMMAND))
+    turn.send(profile, Reply(say(UNKNOWN_COMMAND, profile.lang)))
 
 
 def cmd_link(turn: Turn, profile: Profile, args: str) -> None:
     """A single-use code that ties the user's email to this Telegram profile."""
     cfg = turn.services.cfg
+    lang = profile.lang
     if profile.step is not Step.DONE:
-        turn.send(profile, Reply(FINISH_FIRST))
+        turn.send(profile, Reply(say(FINISH_FIRST, lang)))
     elif profile.channel == Channel.EMAIL:
-        turn.send(profile, Reply(LINK_ON_TELEGRAM))
+        turn.send(profile, Reply(say(LINK_ON_TELEGRAM, lang)))
     elif cfg is None:
-        turn.send(profile, Reply(UNAVAILABLE))
+        turn.send(profile, Reply(say(UNAVAILABLE, lang)))
     else:
         minutes = cfg.product.link_code_minutes
         code = turn.store.new_link_code(profile.user_id, turn.clock, dt.timedelta(minutes=minutes))
         where = turn.services.keiki_email or "Networth's email"
-        turn.send(profile, Reply(LINK_CODE.format(code=code, where=where, minutes=minutes)))
+        turn.send(profile, Reply(say(LINK_CODE, lang).format(code=code, where=where,
+                                                            minutes=minutes)))  # fmt: skip
 
 
 def reachable(turn: Turn, profile: Profile, channel: Channel) -> bool:
@@ -430,19 +558,18 @@ def reachable(turn: Turn, profile: Profile, channel: Channel) -> bool:
 def cmd_sendto(turn: Turn, profile: Profile, args: str) -> None:
     channel = DESTINATIONS.get(args.strip().lower())
     if channel is None:
-        turn.send(profile, Reply(SENDTO_USAGE))
+        turn.send(profile, Reply(say(SENDTO_USAGE, profile.lang)))
     elif not reachable(turn, profile, channel):
-        turn.send(profile, Reply(UNREACHABLE[channel]))
+        turn.send(profile, Reply(say(UNREACHABLE[channel], profile.lang)))
     else:
         profile = turn.save(replace(profile, deliver_to=channel))
-        turn.send(
-            profile, Reply(f"Done. Briefs and alerts now go to {DESTINATION_NAMES[channel]}.")
-        )
+        where = say(DESTINATION_NAMES[channel], profile.lang)
+        turn.send(profile, Reply(say(SENT_TO, profile.lang).format(where=where)))
 
 
 def cmd_watch(turn: Turn, profile: Profile, args: str) -> None:
     if profile.step is not Step.DONE:
-        turn.send(profile, Reply(FINISH_FIRST))
+        turn.send(profile, Reply(say(FINISH_FIRST, profile.lang)))
         return
     rules = turn.services.cfg.product if turn.services.cfg else None
     turn.send(profile, Reply(watches.set_watch(turn.store, profile, args, turn.now, rules)))

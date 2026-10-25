@@ -35,6 +35,7 @@ class Message:
     preview: str | None = None  # the one URL whose link preview stays on
 
 
+LANGS: Final = ("en", "hi", "hinglish")
 FOOTER: Final = {
     "en": "Research, not advice.",
     "hi": "रिसर्च, सलाह नहीं।",

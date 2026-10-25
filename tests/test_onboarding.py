@@ -33,8 +33,8 @@ SUMMARY = (
     "Looks right?"
 )
 TAPS_TO_CONFIRM = (
-    "ob:goal:house", "ob:horizon:4", "ob:amount:100000", "ob:day:1", "ob:drop:20",
-    "ob:exclude:crypto", "ob:exclude:us_stocks", "ob:exclude:done", "ob:lang:en",
+    "ob:lang:en", "ob:goal:house", "ob:horizon:4", "ob:amount:100000", "ob:day:1",
+    "ob:drop:20", "ob:exclude:crypto", "ob:exclude:us_stocks", "ob:exclude:done",
     "ob:plan:balanced",
 )  # fmt: skip
 
@@ -160,7 +160,8 @@ def test_button_taps_take_start_to_done_and_store_every_field(chat: Chat) -> Non
     assert len(p.link_token) >= 16
     assert p.created_at == p.updated_at == NOW
     assert chat.plan == Plan(USER, "balanced", {"safety": 20, "core": 70, "growth": 10}, 20, NOW)
-    assert chat.bot.last.startswith("You're all set. I'll message you on the 1st of each month")
+    assert chat.bot.messages[-1].title == "You're all set."
+    assert "I'll message you on the 1st of each month" in chat.bot.last
     assert chat.bot.last.endswith("Research, not advice.")
 
 
@@ -172,14 +173,14 @@ def test_every_tap_is_answered_so_the_spinner_stops(chat: Chat) -> None:
 def test_messages_are_logged_both_ways(chat: Chat) -> None:
     onboard(chat)
     log = chat.store.messages(USER)
-    assert [m.text for m in log if m.direction == "in"][:2] == ["/start", "ob:goal:house"]
+    assert [m.text for m in log if m.direction == "in"][:2] == ["/start", "ob:lang:en"]
     assert [m.text for m in log if m.direction == "out"] == chat.bot.texts
 
 
 def test_typed_answers_work_like_taps(chat: Chat) -> None:
     chat.say("/start")
-    for answer in ("saving for a flat", "in 4 yrs", "1 lakh", "on the 1st", "25",
-                   "crypto", "US stocks", "done", "English", "balanced"):  # fmt: skip
+    for answer in ("English", "saving for a flat", "in 4 yrs", "1 lakh", "on the 1st", "25",
+                   "crypto", "US stocks", "done", "balanced"):  # fmt: skip
         chat.say(answer)
     assert chat.bot.last == SUMMARY
     chat.say("looks right")
@@ -188,6 +189,7 @@ def test_typed_answers_work_like_taps(chat: Chat) -> None:
 
 def test_bad_amount_gets_a_retry_and_stays_on_amount(chat: Chat) -> None:
     chat.say("/start")
+    chat.tap("ob:lang:en")
     chat.tap("ob:goal:house")
     chat.tap("ob:horizon:4")
     chat.say("lots")
@@ -199,7 +201,7 @@ def test_bad_amount_gets_a_retry_and_stays_on_amount(chat: Chat) -> None:
 
 def test_day_past_28_explains_why(chat: Chat) -> None:
     chat.say("/start")
-    for data in ("ob:goal:house", "ob:horizon:4", "ob:amount:25000"):
+    for data in ("ob:lang:en", "ob:goal:house", "ob:horizon:4", "ob:amount:25000"):
         chat.tap(data)
     chat.say("31st")
     assert chat.bot.last.startswith("Pick a day from 1 to 28, so every month has it.")
@@ -243,7 +245,8 @@ def test_own_split_typed(chat: Chat) -> None:
 
 def test_exclusion_toggled_twice_comes_back(chat: Chat) -> None:
     chat.say("/start")
-    for data in ("ob:goal:growth", "ob:horizon:15", "ob:amount:10000", "ob:day:5", "ob:drop:30"):
+    for data in ("ob:lang:en", "ob:goal:growth", "ob:horizon:15", "ob:amount:10000", "ob:day:5",
+                 "ob:drop:30"):  # fmt: skip
         chat.tap(data)
     chat.tap("ob:exclude:crypto")
     assert chat.bot.answers[-1][1] == "Crypto left out"
@@ -256,6 +259,7 @@ def test_exclusion_toggled_twice_comes_back(chat: Chat) -> None:
 
 def test_stale_tap_is_told_and_gets_the_current_question(chat: Chat) -> None:
     chat.say("/start")
+    chat.tap("ob:lang:en")
     chat.tap("ob:goal:house")
     chat.tap("ob:goal:retirement")
     assert chat.bot.answers[-1][1] == "That question has moved on."
@@ -294,7 +298,10 @@ def test_pause_blocks_proactive_sends_but_not_replies(chat: Chat) -> None:
 def test_plan_command_shows_then_changes_the_plan(chat: Chat) -> None:
     onboard(chat)
     chat.say("/plan")
-    assert chat.bot.texts[-2] == "Your plan: Balanced. 20% safety, 70% core, 10% growth."
+    assert chat.bot.texts[-2] == (
+        "Your plan\n\nBalanced. 20% safety, 70% core, 10% growth.\n\nResearch, not advice."
+    )
+    assert chat.bot.messages[-2].title == "Your plan"
     chat.tap("ob:plan:steady")
     assert chat.profile.step is Step.CONFIRM
     assert "Plan: Steady. 60% safety, 40% core, 0% growth" in chat.bot.last
@@ -303,19 +310,20 @@ def test_plan_command_shows_then_changes_the_plan(chat: Chat) -> None:
 def test_plan_before_setup_asks_to_finish(chat: Chat) -> None:
     chat.say("/start")
     chat.say("/plan")
-    assert chat.bot.last.startswith("Let's finish setting up first.\n\nHi.")
+    assert chat.bot.last.startswith("Let's finish setting up first.\n\nHi. I'm Networth.")
 
 
 def test_after_setup_free_text_gets_an_answer_even_without_models(chat: Chat) -> None:
     onboard(chat)
     chat.say("Aaj market kaisa tha?")
-    assert chat.bot.last == "I haven't read today's news yet. Ask me again in a little while."
+    assert chat.bot.last == ("I haven't read today's news yet. I check a few times a day, so "
+                             "it won't be long.\n\nResearch, not advice.")  # fmt: skip
     chat.say("Stock X will double", forward_date=1_700_000_000)
     assert chat.bot.last.startswith("I can't search the news right now")
     chat.say("hello")
     assert chat.bot.last.startswith("I can tell you what happened today")
     chat.say("/frobnicate@networth_professor_bot")
-    assert chat.bot.last == "I don't know that one yet. Type /help to see what I can do."
+    assert chat.bot.last == "I don't know that one yet. /help shows everything I can do."
 
 
 def test_photo_before_setup_is_ignored(chat: Chat) -> None:
@@ -333,12 +341,13 @@ def test_store_migrations_are_idempotent(tmp_path: Path) -> None:
 
 def test_a_redelivered_update_is_applied_once(chat: Chat) -> None:
     chat.say("/start")
+    chat.tap("ob:lang:en")
     tap = tap_update("ob:goal:house")
     handle_update(tap, chat.store, chat.bot, NOW)
     handle_update(tap, chat.store, chat.bot, NOW)
     assert (chat.profile.goal, chat.profile.step) == ("house", Step.HORIZON)
     assert chat.bot.texts.count("When will you need it?") == 1, "next question sent once"
-    assert len(chat.bot.answers) == 1, "the replay is not even answered"
+    assert len(chat.bot.answers) == 2, "the language tap and the goal tap; the replay is not"
 
 
 class SlowStore(Store):
@@ -353,7 +362,7 @@ def test_two_taps_on_one_question_at_once_apply_only_one(tmp_path: Path) -> None
     chat = Chat(tmp_path)
     chat.store = SlowStore(tmp_path / "data")
     chat.say("/start")
-    for data in TAPS_TO_CONFIRM[:4]:
+    for data in TAPS_TO_CONFIRM[:5]:
         chat.tap(data)
     taps = [tap_update("ob:drop:20"), tap_update("ob:drop:10")]
     threads = [threading.Thread(target=handle_update, args=(t, chat.store, chat.bot, NOW))

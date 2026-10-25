@@ -32,7 +32,7 @@ from networth import chat
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Status, Step, Store, new_email_profile
 from networth.bot import commands
-from networth.bot.message import Message
+from networth.bot.message import Message, say
 from networth.bot.message import plain as plain_text
 from networth.bot.onboarding import Outcome, Reply
 from networth.bot.telegram import Keyboard
@@ -57,10 +57,15 @@ LINK_CODE: Final = re.compile(r"(?<!\d)\d{6}(?!\d)")
 # redeems one and a footer the mail client added never hides one.
 LINK_MESSAGE_MAX: Final = 40
 LINK_LINES: Final = 3
-LINKED: Final = (
-    "Linked. Your plan, language and what you left out now apply here too. Briefs and alerts "
-    "stay on Telegram until you reply /sendto email."
-)
+LINKED: Final = {
+    "en": "Linked. Your plan, language and what you left out now carry over here too. Briefs and "
+    "alerts stay on Telegram until you reply /sendto email.",
+    "hi": "लिंक हो गया। आपका प्लान, भाषा और जो आपने बाहर रखा, वह अब यहाँ भी लागू है। ब्रीफ़ और "
+    "अलर्ट तब तक Telegram पर आएँगे, जब तक आप /sendto email नहीं भेजते।",
+    "hinglish": "Link ho gaya. Aapka plan, language aur jo aapne bahar rakha, woh ab yahan bhi "
+    "lagu hai. Briefs aur alerts tab tak Telegram par aayenge, jab tak aap /sendto email nahin "
+    "bhejte.",
+}
 
 
 def spawn(work: Callable[[], None]) -> None:
@@ -186,7 +191,7 @@ def link(turn: commands.Turn, address: str, text: str) -> Handled | None:
         return None
     turn.store.bind_contact(address, profile.user_id)
     turn.store.log_message(profile.user_id, "in", text)
-    turn.send(profile, Reply(LINKED))
+    turn.send(profile, Reply(say(LINKED, profile.lang)))
     return Handled("link", profile.user_id)
 
 

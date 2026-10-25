@@ -13,6 +13,7 @@ import pytest
 import networth.sim as sim
 from networth import guard
 from networth.app.store import Plan, Store, new_profile
+from networth.bot.message import FOOTER
 from networth.sim import (
     NotRupees,
     horizon_years,
@@ -133,10 +134,15 @@ def test_every_line_passes_the_guard_against_its_range(lang: str) -> None:
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_the_lines_end_with_the_plain_label(lang: str) -> None:
-    labels = {"en": "Research, not advice.", "hi": "रिसर्च, सलाह नहीं।",
-              "hinglish": "Research, advice nahin."}  # fmt: skip
-    assert plan_range_lines(ranges()[0], lang)[-1].endswith(labels[lang])
+def test_the_lines_end_with_the_plain_label_and_leave_the_footer_to_the_message(lang: str) -> None:
+    labels = {
+        "en": "It is not a forecast. Your plan is your choice.",
+        "hi": "यह कोई अनुमान नहीं है। आपका प्लान आपकी अपनी पसंद है।",
+        "hinglish": "Yeh koi forecast nahin hai. Aapka plan aapki apni pasand hai.",
+    }
+    lines = plan_range_lines(ranges()[0], lang)
+    assert lines[-1].endswith(labels[lang])
+    assert not any(footer in line for line in lines for footer in FOOTER.values())
 
 
 @pytest.fixture
@@ -159,7 +165,7 @@ def test_a_rupee_user_gets_their_range(store: Store) -> None:
     text = plan_range_message(save_user(store, "INR"), store)
     assert text is not None
     assert "20% safety, 70% core, 10% growth, ₹1,50,000 a month for 3 years" in text
-    assert text.endswith("Research, not advice.")
+    assert text.endswith("Your plan is your choice.")
 
 
 def test_a_dollar_user_gets_none(store: Store) -> None:

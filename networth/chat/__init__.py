@@ -128,29 +128,33 @@ def classify(text: str, is_forward: bool, services: Services) -> Intent:
 
 
 def watch_answer(store: Store, profile: Profile, text: str, services: Services,
-                 now: dt.datetime) -> Answer:  # fmt: skip
+                 now: dt.datetime, lang: str) -> Answer:  # fmt: skip
     """Sets the watch the text asks for; fixed words, so no model writes the reply."""
     rules = services.cfg.product if services.cfg else None
-    reply = watches.set_watch(store, profile, text, now.isoformat(), rules)
-    return Answer(reply, reply, kind="watch")
+    reply = watches.set_watch(store, profile, text, now.isoformat(), rules, lang)
+    return Answer(reply, reply, kind="watch", words={lang: reply}, footer=False)
 
 
-Handler = Callable[[Store, Profile, str, Services, dt.datetime], Answer]
+def local_date(p: Profile, now: dt.datetime) -> dt.date:
+    return now.astimezone(ZoneInfo(p.tz)).date()
+
+
+Handler = Callable[[Store, Profile, str, Services, dt.datetime, str], Answer]
 HANDLERS: Final[dict[Intent, Handler]] = {
-    Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now: today.what_happened(s, now, p.tz),
-    Intent.WHY: lambda store, p, text, s, now: today.why(
-        store, p, s, now.astimezone(ZoneInfo(p.tz)).date(), text
+    Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now, lang: today.what_happened(
+        s, now, p.tz
     ),
-    Intent.TIP_CHECK: lambda store, p, text, s, now: tip.check_tip(text, p, s, now),
-    Intent.EXPLAIN_THIS: lambda store, p, text, s, now: explain.explain_message(text),
-    Intent.PLAN_QUESTION: lambda store, p, text, s, now: today.plan(
-        store, p, text, s, now.astimezone(ZoneInfo(p.tz)).date()
+    Intent.WHY: lambda store, p, text, s, now, lang: today.why(
+        store, p, s, local_date(p, now), text, lang
     ),
-    Intent.PLAN_RANGE: lambda store, p, text, s, now: today.plan_range(
-        store, p, reply_lang(text, p)
+    Intent.TIP_CHECK: lambda store, p, text, s, now, lang: tip.check_tip(text, p, s, now, lang),
+    Intent.EXPLAIN_THIS: lambda store, p, text, s, now, lang: explain.explain_message(text),
+    Intent.PLAN_QUESTION: lambda store, p, text, s, now, lang: today.plan(
+        store, p, text, s, local_date(p, now), lang
     ),
-    Intent.WATCH: lambda store, p, text, s, now: watch_answer(store, p, text, s, now),
-    Intent.OTHER: lambda store, p, text, s, now: today.scope(),
+    Intent.PLAN_RANGE: lambda store, p, text, s, now, lang: today.plan_range(store, p, lang),
+    Intent.WATCH: watch_answer,
+    Intent.OTHER: lambda store, p, text, s, now, lang: today.scope(),
 }
 
 
@@ -170,8 +174,9 @@ def respond_traced(
     short = len(text) <= MAX_TERM_QUESTION
     if intent is Intent.EXPLAIN_THIS and short and not explain.URL.search(text):
         store.add_asked_terms(profile.user_id, memory.asked_terms(text), now.isoformat())
-    answer = HANDLERS[intent](store, profile, text, services, now)
-    reply, used = deliver_traced(answer, reply_lang(text, profile), services)
+    lang = reply_lang(text, profile)
+    answer = HANDLERS[intent](store, profile, text, services, now, lang)
+    reply, used = deliver_traced(answer, lang, services)
     return reply, intent, used
 
 
