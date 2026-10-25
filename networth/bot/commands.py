@@ -199,7 +199,11 @@ def dispatch(update: dict, turn: Turn) -> None:
 def on_text(turn: Turn, msg: Text) -> None:
     profile = profile_for(turn, msg.chat_id)
     turn.store.log_message(profile.user_id, "in", msg.text)
-    text = msg.text.strip()
+    on_profile_text(turn, profile, msg.text.strip(), msg.is_forward)
+
+
+def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -> None:
+    """One typed message from a known profile, on Telegram or inside a Keiki turn."""
     if text.startswith("/"):
         run_command(turn, profile, text)
     elif profile.status is Status.STOPPED:
@@ -214,7 +218,7 @@ def on_text(turn: Turn, msg: Text) -> None:
         for reply in outcome.replies:
             turn.send(profile, reply)
     else:
-        turn.answer(profile, lambda: chat.respond(turn.store, profile, text, msg.is_forward,
+        turn.answer(profile, lambda: chat.respond(turn.store, profile, text, is_forward,
                                                   turn.services, turn.clock))  # fmt: skip
 
 

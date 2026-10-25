@@ -1,4 +1,4 @@
-"""The one Networth server: health check, Telegram webhook, and the web pages when present.
+"""The one Networth server: health check, Telegram webhook, Keiki turns, and the web pages.
 
     uv run uvicorn networth.app.main:app --port 8080
 
@@ -6,13 +6,19 @@ The webhook trusts a request only when its X-Telegram-Bot-Api-Secret-Token heade
 secret we gave setWebhook. A handled update always answers 200, even when handling failed,
 because Telegram redelivers anything else until it gets one. The web pages (networth.web) are
 another builder's; the server runs with or without them.
+
+/keiki/turn trusts a push only when its signature verifies (networth.keiki.verify) and it names
+our agent. A new turn id is claimed, answered 202 at once and run in the background; a replay
+of a claimed id answers 200 and runs nothing, so a turn is never answered twice.
 """
 
 from __future__ import annotations
 
+import functools
 import hmac
 import json
 import logging
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -23,14 +29,18 @@ from starlette.concurrency import run_in_threadpool
 from networth.app import schedule
 from networth.app.services import Services
 from networth.app.settings import Settings
-from networth.app.store import Store
+from networth.app.store import Store, now_iso
 from networth.bot.commands import handle_update
 from networth.bot.telegram import Bot, TelegramClient
+from networth.keiki import wire
+from networth.keiki.turn import Harness, run_turn
+from networth.keiki.verify import TOKEN_HEADER, Keys, verify
 
 log = logging.getLogger("networth.app")
 
 SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token"
 WEBHOOK_PATH = "/telegram/webhook"
+KEIKI_PATH = "/keiki/turn"
 OK = {"ok": True}
 
 
@@ -48,7 +58,7 @@ def mount_web(app: FastAPI) -> None:
 
 def create_app(
     store: Store | None, bot: Bot | None, secret: str | None, public_url: str | None = None,
-    services: Services | None = None,
+    services: Services | None = None, keiki: Harness | None = None,
 ) -> FastAPI:  # fmt: skip
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -85,6 +95,32 @@ def create_app(
             log.exception("update %s failed", update.get("update_id"))
         return JSONResponse(OK)
 
+    @app.post(KEIKI_PATH)
+    async def keiki_turn(request: Request) -> JSONResponse:
+        if keiki is None or store is None:
+            return JSONResponse({"ok": False, "error": "keiki not configured"}, status_code=503)
+        raw = await request.body()
+        reason = await run_in_threadpool(verify, request.headers, raw, time.time(), keiki.keys,
+                                         keiki.hmac_secret)  # fmt: skip
+        if reason is not None:
+            return JSONResponse({"error": reason}, status_code=401)
+        try:
+            event = wire.parse(json.loads(raw))
+        except ValueError:
+            event = None
+        if event is None:
+            return JSONResponse({"error": "bad payload"}, status_code=400)
+        if event.agent_id != keiki.agent_id:
+            return JSONResponse({"error": "unknown_agent"}, status_code=401)
+        if not isinstance(event, wire.KeikiTurn):
+            return JSONResponse(OK, status_code=202)
+        if not store.claim_turn(event.turn_id):
+            return JSONResponse({"ok": True, "duplicate": True})
+        client = keiki.client(event.turn_url, request.headers.get(TOKEN_HEADER, ""))
+        turn_services = services or Services(store.path.parent)
+        keiki.start(functools.partial(run_turn, event, store, turn_services, client, now_iso()))
+        return JSONResponse(OK, status_code=202)
+
     @app.get("/schedules")
     def schedules() -> list[dict]:
         return schedule.schedules()
@@ -116,7 +152,12 @@ def app_from_env(settings: Settings | None = None) -> FastAPI:
         log.warning("TELEGRAM_BOT_TOKEN not set; the webhook will answer 503")
     store = Store(settings.data_dir)
     services = Services.from_settings(settings)
-    return create_app(store, bot, settings.webhook_secret, settings.public_url, services)
+    keiki = None
+    if settings.keiki_agent_id:
+        keiki = Harness(settings.keiki_agent_id, Keys(), settings.keiki_signing_secret)
+    else:
+        log.warning("KEIKI_AGENT_ID not set; /keiki/turn will answer 503")
+    return create_app(store, bot, settings.webhook_secret, settings.public_url, services, keiki)
 
 
 app = app_from_env()

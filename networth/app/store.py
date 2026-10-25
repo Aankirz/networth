@@ -5,7 +5,8 @@
 
 Tables: profiles (one per chat), plans (one per user, rewritten on change), messages (every
 text in and out), briefs (one per user per investing day) and alerts (one per user per event).
-contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn.
+contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn;
+keiki_turns holds every turn id answered.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -15,6 +16,7 @@ additively: a column missing from an older file is added, so opening twice is a 
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import json
 import secrets
 import sqlite3
@@ -27,12 +29,21 @@ from pathlib import Path
 from typing import Final, Literal
 
 DB_NAME: Final = "networth.sqlite"
-CHANNEL: Final = "telegram"
 INDIA_TZ: Final = "Asia/Kolkata"
 US_TZ: Final = "America/New_York"
 LINK_TOKEN_BYTES: Final = 16
 US_STOCKS: Final = "us_stocks"
 ALL_MARKETS: Final = ("in", "us")
+
+
+class Channel(StrEnum):
+    TELEGRAM = "telegram"
+    EMAIL = "email"  # Keiki's AgentMail inbox
+
+
+CHANNEL: Final = Channel.TELEGRAM
+EMAIL_USER_PREFIX: Final = "kk:"
+EMAIL_USER_CHARS: Final = 16
 
 
 class Status(StrEnum):
@@ -57,9 +68,9 @@ class Step(StrEnum):
 
 @dataclass(frozen=True)
 class Profile:
-    user_id: str  # "tg:<chat_id>"
+    user_id: str  # "tg:<chat_id>", or "kk:<hash of the Keiki conversation>" for email users
     channel: str
-    chat_id: int
+    chat_id: int  # 0 for a profile that began by email and has no Telegram chat
     step: Step
     link_token: str
     created_at: str
@@ -75,6 +86,7 @@ class Profile:
     monthly_amount: int | None = None
     currency: str | None = None
     exclude: tuple[str, ...] = ()
+    deliver_to: Channel = Channel.TELEGRAM  # where proactive messages (briefs, alerts) go
 
     @property
     def markets(self) -> tuple[str, ...]:
@@ -125,6 +137,20 @@ def new_profile(chat_id: int, now: str) -> Profile:
     )  # fmt: skip
 
 
+def email_user_id(address: str) -> str:
+    """A hash, so log lines that name the user never carry an email address."""
+    digest = hashlib.sha256(address.encode()).hexdigest()[:EMAIL_USER_CHARS]
+    return f"{EMAIL_USER_PREFIX}{digest}"
+
+
+def new_email_profile(address: str, now: str) -> Profile:
+    return Profile(
+        user_id=email_user_id(address), channel=Channel.EMAIL, chat_id=0, step=Step.GOAL,
+        link_token=secrets.token_urlsafe(LINK_TOKEN_BYTES), created_at=now, updated_at=now,
+        deliver_to=Channel.EMAIL,
+    )  # fmt: skip
+
+
 COLUMNS: Final[dict[str, dict[str, str]]] = {
     "profiles": {
         "user_id": "TEXT PRIMARY KEY", "channel": "TEXT NOT NULL", "chat_id": "INTEGER NOT NULL",
@@ -133,6 +159,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "alerts_on": "INTEGER NOT NULL DEFAULT 1", "goal": "TEXT", "horizon_years": "INTEGER",
         "drop_comfort": "INTEGER", "monthly_amount": "INTEGER", "currency": "TEXT",
         "markets": "TEXT NOT NULL DEFAULT '[]'", "exclude": "TEXT NOT NULL DEFAULT '[]'",
+        "deliver_to": "TEXT NOT NULL DEFAULT 'telegram'",
         "created_at": "TEXT NOT NULL", "updated_at": "TEXT NOT NULL",
     },
     "plans": {
@@ -158,6 +185,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
     "contacts": {
         "address": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "linked_at": "TEXT NOT NULL",
     },
+    "keiki_turns": {"turn_id": "TEXT PRIMARY KEY", "seen_at": "TEXT NOT NULL"},
     "outbox": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
@@ -198,6 +226,7 @@ def _profile_from(row: sqlite3.Row) -> Profile:
     values["status"] = Status(row["status"])
     values["alerts_on"] = bool(row["alerts_on"])
     values["exclude"] = tuple(json.loads(row["exclude"]))
+    values["deliver_to"] = Channel(row["deliver_to"])
     return Profile(**values)
 
 
@@ -275,6 +304,15 @@ class Store:
             cursor = conn.execute(
                 "INSERT OR IGNORE INTO updates (update_id, seen_at) VALUES (?, ?)",
                 (update_id, now_iso()),
+            )
+        return cursor.rowcount == 1
+
+    def claim_turn(self, turn_id: str) -> bool:
+        """True the first time a Keiki turn id is seen, so a replayed turn is answered once."""
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO keiki_turns (turn_id, seen_at) VALUES (?, ?)",
+                (turn_id, now_iso()),
             )
         return cursor.rowcount == 1
 

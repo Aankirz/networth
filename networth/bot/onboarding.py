@@ -320,10 +320,14 @@ def setting(field: str, step: Step) -> Apply:
     return apply
 
 
-def apply_amount(p: Profile, plan: Plan | None, money: Money, now: str) -> Outcome:
+def with_money(p: Profile, money: Money) -> Profile:
+    """The amount, its currency, and the time zone that currency implies."""
     tz = US_TZ if money.currency == "USD" else INDIA_TZ
-    p = replace(p, monthly_amount=money.amount, currency=money.currency, tz=tz)
-    return move_on(p, plan, Step.AMOUNT)
+    return replace(p, monthly_amount=money.amount, currency=money.currency, tz=tz)
+
+
+def apply_amount(p: Profile, plan: Plan | None, money: Money, now: str) -> Outcome:
+    return move_on(with_money(p, money), plan, Step.AMOUNT)
 
 
 def parse_drop(text: str) -> int | None:
