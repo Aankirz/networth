@@ -16,7 +16,16 @@ from networth.keiki.client import KeikiApi, KeikiError, TurnClient
 from networth.keiki.mail import NOTICE, Mail
 from networth.keiki.render import plain
 from networth.keiki.wire import KeikiTurn, Other, parse, strip_quoted
-from tests.keiki_fakes import ADDRESS, TURN_URL, FakeApi, FakeTurnClient, turn_payload
+from tests.keiki_fakes import (
+    ADDRESS,
+    SLACK_TEAM,
+    SLACK_USER,
+    TURN_URL,
+    FakeApi,
+    FakeTurnClient,
+    slack_payload,
+    turn_payload,
+)  # fmt: skip
 
 NOW = "2026-10-25T06:00:00+00:00"
 
@@ -25,9 +34,22 @@ def test_a_turn_payload_parses_into_its_fields_without_silent_messages() -> None
     payload = turn_payload("What happened today?", traceId="tr_1", heldBack=True)
     payload["messages"].append({"text": "typing...", "silent": True})
     turn = parse(payload)
-    assert turn == KeikiTurn("t1", "agent-test", ADDRESS, "agentmail",
+    assert turn == KeikiTurn("t1", "agent-test", ADDRESS, ADDRESS, "agentmail",
                              ("What happened today?",), True, False, TURN_URL,
                              "tr_1")  # fmt: skip
+
+
+def test_a_turn_without_a_trace_id_uses_the_turn_id_as_keiki_does() -> None:
+    turn = parse(turn_payload("hi", turn_id="3084530f"))
+    assert turn is not None and turn.trace_id == "3084530f"
+
+
+def test_a_slack_author_is_one_contact_across_threads() -> None:
+    first, second = parse(slack_payload("hi", "1.1")), parse(slack_payload("hi", "2.2", "s2"))
+    assert first is not None and second is not None
+    assert first.conversation_id != second.conversation_id
+    assert (first.channel, first.contact) == ("slack", f"slack:{SLACK_TEAM}:{SLACK_USER}")
+    assert second.contact == first.contact
 
 
 @pytest.mark.parametrize("kind", ["keiki.turn.arrival", "keiki.turn.cancelled", "keiki.reaction"])
@@ -139,6 +161,13 @@ def test_a_failed_flush_keeps_the_row_for_the_next_turn(tmp_path: Path) -> None:
     mail.queue(profile(), Reply("Hi"))
     assert mail.flush(ADDRESS, FakeTurnClient(fail_send=True)) == 0
     assert mail.flush(ADDRESS, FakeTurnClient()) == 1
+
+
+def test_a_slack_contact_is_never_mailed(tmp_path: Path) -> None:
+    store, api = Store(tmp_path), FakeApi()
+    store.bind_contact(f"slack:{SLACK_TEAM}:{SLACK_USER}", "tg:1")
+    assert not Mail(store, api).queue(profile(), Reply("brief"))
+    assert api.notices == []
 
 
 def test_a_rebound_contact_points_at_the_newest_user(tmp_path: Path) -> None:

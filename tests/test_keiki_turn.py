@@ -30,6 +30,7 @@ from tests.keiki_fakes import (
     body,
     ed25519_headers,
     fake_keys,
+    slack_payload,
     turn_payload,
 )
 from tests.test_chat import FakeChatModels, weekend_watcher
@@ -264,6 +265,20 @@ def test_a_first_email_that_asks_something_is_answered_then_set_up(tmp_path: Pat
     assert len(keiki.client.texts) == 2, "an answer, then the first setup question"
     assert not keiki.client.texts[0].startswith("Hi, I'm Networth.")
     assert keiki.last.startswith("Hi, I'm Networth.")
+    (row,) = turn_log(keiki)
+    assert (row["kind"], row["intent"]) == ("welcome", "what_happened_today")
+
+
+def test_a_slack_dm_runs_the_same_pipeline_and_threads_share_one_profile(tmp_path) -> None:
+    keiki = Keiki(tmp_path)
+    for i, thread in enumerate(("1.1", "2.2"), start=1):
+        turn = parse(slack_payload("/help", thread, f"s{i}"))
+        assert turn is not None
+        run_turn(turn, keiki.store, keiki.services, keiki.client, now_iso())
+    first, second = turn_log(keiki)
+    assert (first["channel"], first["kind"]) == ("slack", "welcome")
+    assert (second["kind"], second["user_id"]) == ("command", first["user_id"])
+    assert "*" not in keiki.last and "<" not in keiki.last, "plain text, as for email"
 
 
 def test_a_first_email_that_only_greets_gets_just_the_setup(tmp_path: Path) -> None:
