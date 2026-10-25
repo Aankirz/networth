@@ -619,3 +619,6 @@
 
 ## 2026-10-25 — Phase 13C: /r pages and the ratings API
 - networth/web/ratings_web.py: public /r/<slug> pages (a rating, /r/sectors, /r/sector-<key>) with drivers, sources and the backtest table; GET /api/rating/{query}, /api/sectors and /api/ratings/backtest with the API's origin check. One import line in routes.py. Templates r_rating, r_sectors, r_missing. tests/test_ratings_web.py. make check exit 0. Local commit only.
+
+## 2026-10-25 — Phase 13C: money as 13A writes it
+- networth/ratings/model.money mirrors 13A's moneyShort (site/lib/money.ts): ₹2.91 lakh, ₹1.2 crore, $12,400, $1.2M. Ratings and news alerts write amounts only through it. make check exit 0. Local commit only.

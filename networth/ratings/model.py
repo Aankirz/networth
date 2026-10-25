@@ -88,12 +88,32 @@ class Rating:
         return slug_for(self.symbol)
 
 
-def money(n: float, currency: str) -> str:
-    """The one place a rating writes an amount."""
-    # ponytail: the pages' own formatter until 13A's shared money() lands; swap the import then.
-    from networth.web.fmt import money as fmt_money
+def _decimals(x: float, digits: int) -> str:
+    """Up to `digits` decimals with trailing zeros dropped, the whole part grouped as en-IN."""
+    from networth.web.fmt import indian_grouping
 
-    return fmt_money(round(n), currency, signed=False)
+    whole, _, frac = f"{abs(x):.{digits}f}".partition(".")
+    frac = frac.rstrip("0")
+    return indian_grouping(int(whole)) + (f".{frac}" if frac else "")
+
+
+def money(n: float, currency: str) -> str:
+    """The one place a rating, the sector board or a news alert writes an amount. Mirrors 13A's
+    moneyShort (site/lib/money.ts): ₹2,91,000 below a lakh is whole, then ₹2.91 lakh and
+    ₹1.2 crore; $12,400 below a million, then $1.2M."""
+    from networth.web.fmt import MINUS, SYMBOLS, western_grouping
+
+    sign, x, symbol = (MINUS if n < 0 else ""), abs(n), SYMBOLS[currency]
+    if currency == "INR":
+        if x >= 1e7:
+            return f"{sign}{symbol}{_decimals(x / 1e7, 2)} crore"
+        if x >= 1e5:
+            return f"{sign}{symbol}{_decimals(x / 1e5, 2)} lakh"
+        return f"{sign}{symbol}{_decimals(round(x), 0)}"
+    for size, unit in ((1e12, "T"), (1e9, "B"), (1e6, "M")):
+        if x >= size:
+            return f"{sign}{symbol}{f'{x / size:.1f}'.rstrip('0').rstrip('.')}{unit}"
+    return f"{sign}{symbol}{western_grouping(round(x))}"
 
 
 def slug_for(symbol: str) -> str:

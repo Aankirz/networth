@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 
 from networth.ratings import rate, rating_json, track
-from networth.ratings.model import View, view_for
+from networth.ratings.model import View, money, view_for
 from tests.ratings_fakes import NOW, FakeSources, info, seen, walk
 
 TABLE = {"groups": [
@@ -115,3 +115,17 @@ def test_the_stored_table_has_every_group_and_its_method() -> None:
     assert [g["kind"] for g in table["groups"]] == list(track.GROUPS)
     for g in table["groups"]:
         assert g["n"] == sum(r["n"] for r in g["rows"])
+
+
+@pytest.mark.parametrize(("amount", "currency", "words"), [
+    (291000, "INR", "₹2.91 lakh"), (12000000, "INR", "₹1.2 crore"), (16000, "INR", "₹16,000"),
+    (1.5e9, "INR", "₹150 crore"), (12400, "USD", "$12,400"), (1200000, "USD", "$1.2M"),
+    (-1200, "INR", "−₹1,200"),
+])  # fmt: skip
+def test_money_follows_the_currency_as_13a_writes_it(amount, currency, words) -> None:
+    assert money(amount, currency) == words
+
+
+def test_an_ipo_writes_its_issue_in_crore_not_a_long_rupee_number() -> None:
+    fresh = next(d for d in rated("SFCTECH").drivers if d.key == "fresh")
+    assert fresh.value.startswith("₹150 crore fresh against about ₹517.53 crore")
