@@ -237,6 +237,24 @@ def test_links_to_private_addresses_are_never_fetched(url: str) -> None:
         explain.page_text(url)
 
 
+def test_a_huge_page_is_read_only_up_to_the_byte_cap(monkeypatch) -> None:
+    import httpx2
+
+    served: list[int] = []
+
+    def endless():
+        while True:
+            served.append(1)
+            yield b"<p>IPO " + b"x" * 65_530 + b"</p>"
+
+    monkeypatch.setattr(explain, "_public", lambda url: None)
+    client = httpx2.Client(transport=httpx2.MockTransport(
+        lambda request: httpx2.Response(200, content=endless())))  # fmt: skip
+    text = explain.page_text("https://example.com/huge", client)
+    assert text.startswith("IPO x")
+    assert len(served) * 65_536 < explain.MAX_PAGE_BYTES + 2 * 65_536
+
+
 def test_brief_is_sent_once_a_day_and_a_repeat_resends_it(tmp_path: Path, cfg) -> None:
     models = FakeChatModels()
     chat = talk(tmp_path, cfg, models)

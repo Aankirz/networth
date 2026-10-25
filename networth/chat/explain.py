@@ -69,17 +69,29 @@ def _public(url: str) -> None:
         raise Blocked(url)
 
 
+def _capped(response: httpx2.Response) -> bytes:
+    """At most MAX_PAGE_BYTES of the body; the rest is never downloaded."""
+    chunks, size = [], 0
+    for chunk in response.iter_bytes():
+        chunks.append(chunk)
+        size += len(chunk)
+        if size >= MAX_PAGE_BYTES:
+            break
+    return b"".join(chunks)[:MAX_PAGE_BYTES]
+
+
 def page_text(url: str, client: httpx2.Client | None = None) -> str:
     """The visible text of a public page. Raises Blocked or httpx2.HTTPError."""
     http = client or net.ipv4_client(FETCH_DEADLINE_S, CONNECT_TIMEOUT_S)
     for _ in range(MAX_REDIRECTS + 1):
         _public(url)
-        response = http.get(url, follow_redirects=False)
-        if response.is_redirect:
-            url = urljoin(url, response.headers["location"])
-            continue
-        response.raise_for_status()
-        body = response.content[:MAX_PAGE_BYTES].decode(response.encoding or "utf-8", "replace")
+        with http.stream("GET", url, follow_redirects=False) as response:
+            if response.is_redirect:
+                url = urljoin(url, response.headers["location"])
+                continue
+            response.raise_for_status()
+            raw = _capped(response)
+            body = raw.decode(response.encoding or "utf-8", "replace")
         return SPACE.sub(" ", html.unescape(TAGS.sub(" ", body))).strip()
     raise Blocked(url)
 

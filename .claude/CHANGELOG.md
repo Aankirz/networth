@@ -255,3 +255,6 @@
 
 ## 2026-10-25 — Alerts survive a VM stop and a failed send
 - watcher_cycle hands alerts every insight decided in the last event_max_age_days, so a stop between cycle and alerts is caught up next run; a failed alert send releases its claim (round 2 item 8).
+
+## 2026-10-25 — Explain-this streams a capped page
+- page_text streams the body and stops at MAX_PAGE_BYTES instead of downloading it all (round 2 item 10).
