@@ -15,7 +15,7 @@ the same sentence as the term. Never turn a row into advice.
 | PAN card | Tax ID you need to open the account. | Demat khulwane ke liye PAN zaroori hai. |
 | Broker / brokerage | The app or company that places your orders. | Woh app jisse aap order lagate ho (jaise Zerodha, Groww type apps). |
 | Brokerage vs retirement account | Account types; tax-advantaged ones (ISA, Roth IRA, 401k) are US/UK. | India mein yeh nahi, yahan demat + mutual fund folio chalta hai. |
-| Index | A scoreboard that tracks a fixed group of companies. | Index = badi companies ki list ka score, jaise Nifty 50. |
+| Index | A scoreboard that tracks a fixed group of companies. | Index = badi companies ki list ka ek number, jaise Nifty 50. |
 | S&P 500 | Index of about 500 big US companies. | (US item) |
 | Nifty 50 / Sensex | India's headline indexes of large companies. | Nifty 50 = India ki top 50 badi companies ka index. |
 | Index fund | A fund that just copies an index, so you own all its companies in one go. | Index fund = ek hi investment mein poore index ki companies. |
@@ -26,14 +26,14 @@ the same sentence as the term. Never turn a row into advice.
 | Lump sum | Investing everything at once. | Lumpsum = ek baar mein poora paisa. |
 | Dollar-cost / rupee-cost averaging | Investing regularly gets you more units when cheap, fewer when dear, smoothing your average price. | Rupee cost averaging: sasta ho to zyada units, mehenga ho to kam. |
 | Compounding | Gains earn gains, so growth speeds up over time. | Byaj par byaj, time ke saath paisa tezi se badhta hai. |
-| Rule of 72 | Divide 72 by the yearly return to estimate years to double. | 72 ko return se divide karo, utne saal mein paisa double. |
-| Time in the market / long term | Holding for years beats guessing entry points. | Lambe time tak ruko; timing ki jagah time dena zyada kaam karta hai. |
-| Diversification | Spreading money so one failure does not sink you. | Saara paisa ek jagah nahi; alag-alag companies mein baanto. |
+| Rule of 72 | Divide 72 by the yearly return to estimate years to double. | 72 ko return se divide karne par utne saal mein paisa double hota hai. |
+| Time in the market / long term | Holding for years beats guessing entry points. | Lambe samay tak bane rehne waale, sahi waqt pakadne waalon se aksar aage rahe hain. |
+| Diversification | Spreading money so one failure does not sink you. | Paisa alag-alag companies mein bata ho, to ek ke girne se poora nuksaan nahi hota. |
 | Risk / risk appetite | How much ups and downs you can stomach. | Risk appetite = kitni girawat aap bardaasht kar sakte ho. |
 | Volatility | How much the price jumps around. | Price ka upar-neeche hona. |
-| Time horizon | How long until you need the money. | Paisa kitne saal baad chahiye. |
-| Emergency fund | 3 to 6 months of expenses kept aside before investing. | Investment se pehle 3-6 mahine ka kharcha alag rakho. |
-| Insurance (health, term) | Protection so one event does not wreck savings. | Health aur term insurance pehle, phir stock market. |
+| Time horizon | How long until you need the money. | Paisa kitne saal baad kaam aayega. |
+| Emergency fund | 3 to 6 months of expenses kept aside before investing. | 3-6 mahine ka kharcha jo investment se alag rakha jaata hai. |
+| Insurance (health, term) | Protection so one event does not wreck savings. | Health aur term insurance ek bade kharche se bachat ko bachata hai. |
 | Delivery vs intraday | Holding shares vs trading in and out the same day. | Delivery = rakhna; intraday = usi din nikalna (zyada risky). |
 | Technical vs fundamental analysis | Reading charts vs reading company health. | Chart dekhna vs company ke numbers dekhna. |
 | Bull / bear | Optimistic (prices up) vs pessimistic (prices down). | Bull = tezi, bear = mandi. |
@@ -58,7 +58,7 @@ the same sentence as the term. Never turn a row into advice.
 | Capital gains / tax-loss harvesting | Tax on profit when you exit; offsetting gains with losses. | Nikalne par munafe par tax (India ke rules alag, short/long term). |
 | Target-date fund, bonds, three-fund portfolio | Fund that shifts safer over time; loans to governments/companies; stock+international+bond mix. | (Mostly US; bonds = sarkar ko udhaar dena.) |
 | Rebalancing | Bringing the mix back to target proportions. | Mix ko dobara tay hisse par laana. |
-| Don't panic when markets fall | Dips are normal; exiting in fear locks losses. | Girawat mein ghabrao mat. |
+| Market falls are normal | Dips are normal; exiting in fear locks losses. | Girawat aam baat hai; darr mein nikalne se nuksaan sach mein ho jaata hai. |
 
 ## IPO and company-filing terms
 
@@ -84,15 +84,13 @@ the same sentence as the term. Never turn a row into advice.
 
 ## Teaching patterns
 
-1. **One thread, one idea, one next step.** V6 runs a single "company offers slices" story and builds stock, fund, ETF and SIP from it. V5 gives a four-beat plan and ends on a single action. A WhatsApp reply should carry exactly one idea and offer one follow-up.
-2. **Ladder of definitions.** Define the new thing as "like the previous thing, except X" (ETF = fund that trades like a stock). Keeps each message to two or three sentences.
-3. **Everyday object analogies.** Music charts for an index, a closet for a demat account, a basket for a mutual fund, buckets and cups for diversification, supermarket price tag vs haggling at a market for market vs limit order, airport codes for tickers, a first date for reading financial statements. Pick local ones for India (kirana, chai, auto fare).
-4. **Small round numbers, shown twice.** Compounding: 1,000 at 10% becomes 1,100 then 1,210. Averaging: three monthly prices and the resulting average. Doubling: Rule of 72 with Rs 1 lakh. Always show the arithmetic in one line, then the takeaway in one more.
-5. **Price the habit as a coffee.** Daily Rs 5 (one coffee) makes a tiny recurring amount feel painless. For India use a chai or auto ride.
-6. **Order of ideas that worked:** why bother (inflation, idle cash) then what a stock is then risk and diversification then product types then how to start (account) then do not panic. Safety-net first (emergency fund, insurance) appears in V1 and V2.
-7. **Fear first.** Open with the worry (will I lose money, is it too late) and answer it with time, not with tips (V1, V2, V3).
-8. **Remember-it hooks.** Bulls have horns pointing up, bears have claws swinging down. Cheap mnemonics survive in a chat.
-9. **Compare within a group.** "A ratio only means something against similar companies." Good template for explaining any number.
-10. **Disclaimers inline, short.** V2 and V3 say once, in plain words, that this is not personal advice and returns can fall. Keep it to one clause.
-11. **Hinglish register (V5, V6).** English for terms (stock, ETF, SIP, risk), Hindi for connecting words and feelings. Mirror the user's language each turn.
-12. **Short-format (Shorts) notes.** About 100 to 150 spoken words. A hook in the first sentence that names who it is for. Beats are numbered or clearly sequenced. A joke or relatable aside per beat to keep attention. A concrete "do one thing" close. A soft call to action (reply with a word to get more). Strip nuance rather than compress it, and say "ask me for the details" to push depth into the next turn. Danger: brevity encourages absolute claims (best, safe, at least 10 percent), which Networth must not copy.
+1. **Ladder of definitions.** Define the new thing as "like the previous thing, except X" (ETF = fund that trades like a stock). Keeps each message to two or three sentences.
+2. **Everyday object analogies.** Music charts for an index, a closet for a demat account, a basket for a mutual fund, buckets and cups for diversification, supermarket price tag vs haggling at a market for market vs limit order, airport codes for tickers, a first date for reading financial statements. Pick local ones for India (kirana, chai, auto fare).
+3. **Small round numbers, shown twice.** Compounding: 1,000 at 10% becomes 1,100 then 1,210. Averaging: three monthly prices and the resulting average. Doubling: Rule of 72 with Rs 1 lakh. Always show the arithmetic in one line, then the takeaway in one more.
+4. **Price the habit as a coffee.** Daily Rs 5 (one coffee) makes a tiny recurring amount feel painless. For India use a chai or auto ride.
+5. **Order of ideas that worked:** why bother (inflation, idle cash) then what a stock is then risk and diversification then product types then how to start (account) then do not panic. Safety-net first (emergency fund, insurance) appears in V1 and V2.
+6. **Fear first.** Open with the worry (will I lose money, is it too late) and answer it with time, not with tips (V1, V2, V3).
+7. **Remember-it hooks.** Bulls have horns pointing up, bears have claws swinging down. Cheap mnemonics survive in a chat.
+8. **Compare within a group.** "A ratio only means something against similar companies." Good template for explaining any number.
+9. **Disclaimers inline, short.** V2 and V3 say once, in plain words, that this is not personal advice and returns can fall. Keep it to one clause.
+10. **Hinglish register (V5, V6).** English for terms (stock, ETF, SIP, risk), Hindi for connecting words and feelings. Mirror the user's language each turn.

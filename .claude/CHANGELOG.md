@@ -234,3 +234,6 @@
 
 ## 2026-10-25 — Chat answers from the last news check and the engine; tip verdict first
 - today.py falls back to the last news check and says when; a why question naming an event type answers from brief.history; tip replies lead with Confirmed or Not confirmed and quote hype phrases (round 2 items 13, 14, 15).
+
+## 2026-10-25 — Glossary reads as description
+- Reworded advice rows and four guard-flagged rows; dropped teaching patterns 1 and 12; test runs every glossary cell through the guard (round 2 item 3).

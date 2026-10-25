@@ -162,3 +162,11 @@ def test_long_dashes_from_the_writer_become_commas_but_ranges_stay(text: str, wa
     from networth.llm import undash
 
     assert undash(text) == want
+
+
+def test_every_glossary_row_passes_the_guard() -> None:
+    glossary = Path(__file__).parents[1] / "knowledge" / "glossary.md"
+    rows = [line for line in glossary.read_text().splitlines() if line.startswith("| ")]
+    cells = [c.strip() for row in rows for c in row.strip("|").split("|")[1:]]
+    failing = {c: guard.check(c, c).problems for c in cells if not guard.check(c, c).ok}
+    assert failing == {}, "the writer copies glossary wording, so it must read as description"
