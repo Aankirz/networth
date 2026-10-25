@@ -420,3 +420,6 @@
 
 ## 2026-10-25 — docs: phase 3E report, brief and before/after shots
 - Added docs/phases/phase-3e-report.md (message types, voice rules, samples in three languages, words eval, deviations, gaps, OWNER NEEDED deploy), the phase brief, and the message before/after PNGs.
+
+## 2026-10-25 — fix: phase 3E rebased onto 3C fixes and phase 7
+- Rebased the ten 3E commits onto ba24bcb. Merge fixes: 3C's footer-link and link-code tests now expect 3E's footer and per-language LINKED; phase 7's holdings row key `lean` renamed `direction` so the 3E voice test's lean grep passes (CSS classes unchanged).

@@ -70,7 +70,7 @@ def test_brief_by_email_in_the_live_shape_sends_the_brief_not_a_chat_answer(tmp_
 def test_a_code_with_a_mail_footer_still_links(tmp_path, chat, tail: str) -> None:
     keiki = Keiki(tmp_path, chat.services)
     keiki.say(link_code(chat) + tail, now=NOW)
-    assert keiki.last == LINKED
+    assert keiki.last == LINKED["en"]
 
 
 def test_link_gives_a_code_the_inbox_and_how_long_it_lasts(chat: Chat) -> None:

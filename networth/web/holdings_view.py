@@ -41,7 +41,7 @@ def holdings_view(r: HoldingsReport) -> dict:
         "n": row.n, "name": row.name, "bucket": row.bucket.value, "units": lines.units(row.units),
         "avg_cost": lines.unit_money(row.avg_cost, c), "invested": lines.money(row.invested, c),
         "value": lines.money(row.value, c), "gain": lines.gain(row.gain, c),
-        "lean": "up" if row.gain > 0 else "down" if row.gain < 0 else "flat",
+        "direction": "up" if row.gain > 0 else "down" if row.gain < 0 else "flat",
         "ret": lines.return_text(row.ret, lang),
         "price": lines.price_text(row.price_from, r.as_of, lang),
     } for row in r.rows]  # fmt: skip
