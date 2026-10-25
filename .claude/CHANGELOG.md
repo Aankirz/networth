@@ -264,3 +264,6 @@
 
 ## 2026-10-25 — Repeat /brief refreshes after newer news
 - A repeat /brief rewrites the brief when a news check finished after it was stored; Services.last_news_check replaces schedule.last_cycle_end (round 2 item 13).
+
+## 2026-10-25 — Push watcher data to the VM
+- scripts/push_data.sh copies any data/*.sqlite onto /data in checksummed 80 KB chunks; push_rates.sh wraps it; deploy.md documents seeding news after a deploy (round 2 item 13).

@@ -61,6 +61,18 @@ scripts/push_rates.sh <agent-id>
 
 Maritime's file upload refuses bodies above about 80 KB (`HTTP 500 Write failed`), so the script uploads the file gzipped in 80 KB chunks, joins it inside the VM and checks its sha256.
 
+## News on /data
+
+The deployed watcher runs only on weekdays from 09:00 to 15:59 Kolkata, so a fresh deploy outside those hours has no news. `/brief` then finds no event this month and "What happened today?" says it hasn't read the news. To seed the VM, run one cycle locally (about $0.10 in OpenAI and Exa calls) and push its database:
+
+```bash
+uv run python -m networth.watcher.run --once      # writes data/watcher.sqlite
+npx --no-install maritime exec <agent-id> --json --body-json '{"command":"ls -la /data"}'
+scripts/push_data.sh watcher.sqlite <agent-id>
+```
+
+Look at the `ls` first. A `watcher.sqlite` there means the VM's own watcher has already run, and the push replaces whatever it wrote. Its alerts are already claimed in `networth.sqlite`, so nothing is sent twice. Only the news it pulled is lost until its next cycle. Once the VM's watcher is running on schedule, stop pushing.
+
 ## Schedules
 
 A sleeping VM's timers never fire, so Maritime is the alarm clock (https://maritime.sh/docs/triggers). The app serves `GET /schedules`:
