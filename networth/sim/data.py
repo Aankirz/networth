@@ -109,7 +109,7 @@ def save_table(table: Table, directory: Path) -> None:
 
 
 def load_table(directory: Path | None = None) -> Table:
-    path = (directory or config.SIM_DIR) / config.TABLE_FILE
+    path = (directory or config.sim_dir()) / config.TABLE_FILE
     if not path.exists():
         raise MissingSeries(f"no {path}: run uv run python -m networth.sim.data")
     with path.open(newline="", encoding="utf-8") as fh:
@@ -179,10 +179,11 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001 - one clear line, then a non-zero exit
         print(f"FAILED: {macro._redacted(exc)}", file=sys.stderr)
         return 1
-    save_table(table, config.SIM_DIR)
-    write_sources(series, table, config.SIM_DIR)
+    directory = config.sim_dir()
+    save_table(table, directory)
+    write_sources(series, table, directory)
     print(f"{len(table.months)} months, {table.months[0]:%Y-%m}..{table.months[-1]:%Y-%m}, "
-          f"in {config.SIM_DIR / config.TABLE_FILE}")  # fmt: skip
+          f"in {directory / config.TABLE_FILE}")  # fmt: skip
     return 0
 
 

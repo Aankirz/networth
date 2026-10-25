@@ -349,3 +349,7 @@
 
 ## 2026-10-25 — Memory line quotes a title that holds the term
 - networth/memory.py: the brief's memory line quotes the shortest confirmed story or article title that contains the asked term (at most 140 characters), not the story's own title, so the reader sees the term in the headline.
+
+
+## 2026-10-25 — Plan range table follows DATA_DIR
+- networth/sim/config.py: sim_dir() reads the app settings' data dir (DATA_DIR env or .env, else data/), so the VM reads /data/sim, not /app/data/sim. scripts/push_data.sh pushes sim/returns.csv and sim/sources.json; docs/deploy.md documents it. Test in tests/test_sim_data.py.

@@ -101,3 +101,12 @@ def test_splice_uses_the_late_series_from_its_first_month() -> None:
     late = {D(2011, 11, 1): 30.0, D(2011, 12, 1): 40.0}
     assert spliced(early, late) == {D(2011, 9, 1): 1.0, D(2011, 10, 1): 2.0,
                                     D(2011, 11, 1): 30.0, D(2011, 12, 1): 40.0}  # fmt: skip
+
+
+def test_the_table_is_read_from_the_data_dir_the_app_uses(tmp_path, monkeypatch) -> None:
+    from networth.sim.data import load_table, save_table
+    from tests.test_sim import varying
+
+    save_table(varying(), tmp_path / "sim")
+    monkeypatch.setenv("DATA_DIR", str(tmp_path))
+    assert load_table().months == varying().months
