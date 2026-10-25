@@ -470,3 +470,6 @@
 
 ## 2026-10-25 — fix: /u links no longer retire each other
 - networth-7b: page links sign the stored link token instead of minting one per /plan, brief or plan answer, which 404d every earlier link live; rotation only on /stop. Regression test in tests/test_links.py, note in docs/phases/phase-7b-report.md.
+
+## 2026-10-25 — docs: phase 9 brief and conversation design
+- Added the phase 9 brief and docs/phases/phase-9-design.md: the per-user turn window (8 turns, 24 hours), the Talk routing table under Intent.OTHER (the web contract pins Intent), and the site link and menu button plan.
