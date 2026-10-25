@@ -479,3 +479,6 @@
 
 ## 2026-10-25 — feat: phase 9 slice 2, one tap to the dashboard
 - NETWORTH_SITE_URL points every page link at the Vercel site (unset keeps the server's /u page); Services.page_url signs the stored token. /dashboard and "mera dashboard" send one button; a per-chat web_app menu button is set when setup finishes and on /dashboard, reset on /stop. setMyCommands on start, /help names /dashboard.
+
+## 2026-10-25 — fix: the web demo answers each message on its own
+- Coordinator review of slice 1: every demo visitor is web:demo, so a shared window handed one visitor's words to the next. talk.window and talk.remember now skip SHARED_USERS ({"web:demo"}); test_two_demo_visitors_never_see_each_other.

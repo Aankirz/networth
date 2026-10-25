@@ -350,3 +350,19 @@ def test_a_money_term_with_code_in_it_is_not_off_topic(tmp_path: Path) -> None:
     chat = chat_with(tmp_path, None, None)
     chat.say("What is an IFSC code?")
     assert talk.OFF_TOPIC_LINE["en"] not in chat.bot.last
+
+
+def test_two_demo_visitors_never_see_each_other(tmp_path: Path, cfg) -> None:
+    from networth.web import api
+
+    assert api.DEMO_USER in talk.SHARED_USERS
+    models = TalkModels(writes=[FIRST, "A SIP puts in the same amount every month."],
+                        follow="follow_up")  # fmt: skip
+    store = Store(tmp_path / "data")
+    services = Services(tmp_path / "data", None, models, cfg=cfg)
+    demo, _ = api.demo_profile(T0.isoformat())
+    chat_layer.respond_traced(store, demo, "What is an IPO? Mine is Zephyr.", False, services, T0)
+    chat_layer.respond_traced(store, demo, "why?", False, services, T0 + dt.timedelta(minutes=1))
+    _, facts = models.written[-1]
+    assert "Zephyr" not in facts, "the second visitor's prompt holds nothing of the first"
+    assert store.recent_turns(api.DEMO_USER, "", 10) == []

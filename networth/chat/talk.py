@@ -45,6 +45,10 @@ TURN_CHARS: Final = 1200  # stored per turn: the start of a pasted page, not all
 PROMPT_CHARS: Final = 600  # per turn in a prompt, so a long history is never sent whole
 FOLLOW_UP_GAP: Final = dt.timedelta(minutes=30)
 SHORT_CHARS: Final = 120  # a follow-up is a line, not a pasted page
+# The web demo's one sample user (networth.web.api.DEMO_USER) is every public visitor at once, so
+# a window there would hand one visitor's words to the next. It answers each message on its own
+# until the web passes a visitor-scoped user id.
+SHARED_USERS: Final = frozenset({"web:demo"})
 
 # --- rules: matched against the user's own words, so they are patterns, not templates -----
 
@@ -265,11 +269,15 @@ def utc(now: dt.datetime) -> str:
 
 
 def window(store: Store, user_id: str, now: dt.datetime) -> tuple[ChatTurn, ...]:
+    if user_id in SHARED_USERS:
+        return ()
     return tuple(store.recent_turns(user_id, utc(now - MAX_AGE), MAX_TURNS))
 
 
 def remember(store: Store, user_id: str, said: str, sent: str, label: str,
              now: dt.datetime) -> None:  # fmt: skip
+    if user_id in SHARED_USERS:
+        return
     at = utc(now)
     turns = (ChatTurn("user", said[:TURN_CHARS], label, at),
              ChatTurn("bot", sent[:TURN_CHARS], label, at))  # fmt: skip
