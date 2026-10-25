@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import datetime as dt
 import logging
-import re
 from typing import Final
 
 from networth import brief, chat, guard, holdings
@@ -69,7 +68,7 @@ from networth.bot.holdings_words import (
     WHICH,
     WRONG,
 )
-from networth.bot.message import FOOTER, Message, say
+from networth.bot.message import Message, say
 from networth.bot.onboarding import Reply, plan_name
 from networth.bot.telegram import Button, Keyboard
 from networth.chat.answer import Answer
@@ -116,7 +115,6 @@ LINK_LEAD: Final = {
 LINK_BUTTON: Final = {"en": "Link my broker (read-only)",
                       "hi": "मेरा ब्रोकर लिंक करना (सिर्फ़ पढ़ने के लिए)",
                       "hinglish": "Mera broker link karna (read-only)"}  # fmt: skip
-SENTENCE_END: Final = re.compile(r"(?<=[.।])\s+")
 USD: Final = "USD"
 
 
@@ -284,7 +282,7 @@ def _compared(store: Store, profile: Profile, services: Services) -> Reply:
     lines = comparison_lines(report, _plan_name(store, profile, lang), lang)
     buttons = ((Button(say(SHOW_PLAN, lang), f"{brief.CALLBACK_PREFIX}:plan"),),
                (Button(say(HISTORY, lang), f"{TAP_PREFIX}:history"),))  # fmt: skip
-    return Reply(Message(say(SAVED, lang), tuple(lines), footer=say(FOOTER, lang)), buttons)
+    return Reply(Message(say(SAVED, lang), tuple(lines)), buttons)
 
 
 def _history(store: Store, profile: Profile, services: Services) -> Reply:
@@ -294,7 +292,7 @@ def _history(store: Store, profile: Profile, services: Services) -> Reply:
     if report is None:
         return Reply(say(NO_HOLDINGS, lang))
     first, *rest = history_lines(report.history, lang)
-    return Reply(Message(first, tuple(rest), footer=say(FOOTER, lang)))
+    return Reply(Message(first, tuple(rest)))
 
 
 def _kind_buttons(n: int, verb: str, lang: str) -> Keyboard:
@@ -374,20 +372,13 @@ def tapped(store: Store, profile: Profile, data: str, services: Services,
     return _guarded(reply or Reply(say(NO_HOLDINGS, profile.lang)), services)
 
 
-def _without_label_phrase(text: str, lang: str) -> str:
-    """The text without the holdings label's closing "Research, not advice" sentence, so the
-    footer carries it once."""
-    phrase = SENTENCE_END.split(hl.LINES[lang]["label"])[-1]
-    return text.strip().removesuffix(phrase).rstrip()
-
-
 def report_message(lines: list[str], rows: int, lang: str) -> Message:
     """holdings_lines as the 3E shape: the head as title; rows, total, mix and label as body;
     history and prices in the detail."""
     total, mix_end = 1 + rows, 1 + rows + 2 + len(BUCKETS)
     body = ("\n".join(lines[1:total]), lines[total], "\n".join(lines[total + 1 : mix_end]),
-            _without_label_phrase(lines[-1], lang))  # fmt: skip
-    return Message(lines[0], body, tuple(lines[mix_end:-1]), say(FOOTER, lang))
+            lines[-1])  # fmt: skip
+    return Message(lines[0], body, tuple(lines[mix_end:-1]))
 
 
 def report_reply(store: Store, profile: Profile, services: Services, now: dt.datetime) -> Reply:
@@ -416,8 +407,7 @@ def _pick_question(store: Store, profile: Profile, lang: str) -> str | None:
 def chat_answer(store: Store, profile: Profile, text: str, services: Services,
                 lang: str) -> Answer:  # fmt: skip
     """A holdings question in chat: the guarded answer, or with no models the decline and the
-    report. A buy or sell question gets the plan gap and history, never a pick. Fixed words,
-    so deliver adds the footer once."""
+    report. A buy or sell question gets the plan gap and history. Never a footer."""
     chosen = lang_of(lang)
     report = holdings.report_for(profile.user_id, store)
     if report is None:
@@ -430,8 +420,7 @@ def chat_answer(store: Store, profile: Profile, text: str, services: Services,
     else:
         words = holdings.holdings_answer(profile.user_id, text, store, services.models,
                                          log_path=services.guard_log, lang=chosen)  # fmt: skip
-    words = _without_label_phrase(words, chosen)
-    return Answer.fixed({"en": words, chosen: words})
+    return Answer.fixed({"en": words.strip(), chosen: words.strip()}, footer=False)
 
 
 def link_broker_reply(store: Store, profile: Profile, services: Services) -> Reply:

@@ -13,7 +13,7 @@ import pytest
 from networth import guard
 from networth import holdings as nh
 from networth.bot import holdings_words as words
-from networth.bot.message import FOOTER, plain
+from networth.bot.message import plain
 from networth.holdings.lines import history_lines
 from networth.holdings.model import Bucket, Kind, bucket_for, from_json
 from networth.holdings.summary import summarize
@@ -32,6 +32,11 @@ from tests.test_onboarding import USER, Chat
 from tests.test_sim_web import TABLE
 
 OWNER = json.loads((FIXTURES / "groww_owner_vision.json").read_text())
+DISCLAIMER = re.compile(
+    r"not (financial )?advice|your (call|choice)|won'?t say yes or no|choice stays yours|"
+    r"advice nahin|aapki pasand|faisla aapka|सलाह नहीं|आपकी पसंद|फ़ैसला आपका",
+    re.IGNORECASE,
+)
 INTERNAL = re.compile(r"\b(growth|core|safety)\b|सेफ़्टी|कोर|ग्रोथ|\d+ (units|cost) \d", re.I)
 
 
@@ -124,7 +129,7 @@ def test_thats_everything_compares_with_the_plan_in_rupees(tmp_path) -> None:
     photo(chat)
     chat.tap("hd:ok")
     m = last(chat)
-    assert stored(chat).confirmed and m.title == "Saved." and m.footer == FOOTER["en"]
+    assert stored(chat).confirmed and m.title == "Saved." and m.footer == ""
     assert m.body == (
         "Your plan is Balanced: about 20% in safe money (liquid, gilt, FD), 70% in broad index "
         "funds and 10% in single shares or themes.",
@@ -145,7 +150,7 @@ def test_what_would_history_say_gives_the_history_lines(tmp_path) -> None:
     report = nh.report_for(USER, chat.store, table=TABLE)
     first, *rest = history_lines(report.history, "en")
     assert last(chat).title == first and last(chat).body == tuple(rest)
-    assert last(chat).footer == FOOTER["en"]
+    assert last(chat).footer == ""
 
 
 def test_somethings_wrong_fixes_a_holding_through_buttons_and_plain_words(tmp_path) -> None:
@@ -194,7 +199,7 @@ def _every_reply(tmp_path: Path, lang: str) -> list[str]:
     start, sent = len(chat.bot.messages), len(chat.bot.sent)
     for step in ("photo", "hd:more", "photo", "hd:fix", "hd:pick:1", "say:huh", "say:15 shares",
                  "hd:pick:2", "hd:kind:2:growth", "hd:ok", "hd:history", "say:/holdings",
-                 "say:what should I sell?", "say:kya bechna chahiye"):  # fmt: skip
+                 "say:what should I sell?"):  # fmt: skip
         if step == "photo":
             photo(chat)
         elif step.startswith("say:"):
@@ -252,3 +257,9 @@ def test_goldbees_shows_as_safe_money_in_the_plan_comparison(tmp_path) -> None:
     assert stored(chat).items[-1].bucket is Bucket.SAFETY
     chat.tap("hd:ok")
     assert "2% is in safe money (liquid, gilt, FD)" in plain(last(chat))
+
+
+@pytest.mark.parametrize("lang", LANGS)
+def test_no_holdings_reply_carries_a_footer_or_a_disclaimer(tmp_path, lang: str) -> None:
+    for text in _every_reply(tmp_path, lang):
+        assert not DISCLAIMER.search(text), text

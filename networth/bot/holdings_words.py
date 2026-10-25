@@ -197,12 +197,12 @@ BUCKET_WORDS: Final = {
                     "hinglish": "safe paisa (liquid, gilt, FD)"},
 }  # fmt: skip
 NOT_A_PICK: Final = {
-    "en": "I don't pick holdings or say what to do with them. That choice stays yours. Here is "
+    "en": "I don't pick holdings or say what to do with them. Here is "
     "how your holdings sit next to your plan, and what history says about a mix like this.",
-    "hi": "मैं होल्डिंग्स नहीं चुनता, न यह बताता हूँ कि इनका क्या करना है। यह फ़ैसला आपका है। यह रहा कि "
+    "hi": "मैं होल्डिंग्स नहीं चुनता, न यह बताता हूँ कि इनका क्या करना है। यह रहा कि "
     "आपकी होल्डिंग्स आपके प्लान के मुकाबले कैसी हैं, और इतिहास ऐसे मिश्रण के बारे में क्या कहता है।",
-    "hinglish": "Main holdings nahin chunta, na yeh batata hoon ki inka kya karna hai. Yeh faisla "
-    "aapka hai. Yeh raha ki aapki holdings aapke plan ke muqable kaisi hain, aur itihaas aise "
+    "hinglish": "Main holdings nahin chunta, na yeh batata hoon ki inka kya karna hai. "
+    "Yeh raha ki aapki holdings aapke plan ke muqable kaisi hain, aur itihaas aise "
     "mix ke baare mein kya kehta hai.",
 }
 REMOVE_BUTTON: Final = {"en": "Remove it", "hi": "इसे हटा दो", "hinglish": "Ise hata do"}

@@ -45,8 +45,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "looked_up": "Prices looked up on {date}: {looked_up} of {count} holdings.",
         "from_source": "Prices from your {source}: {from_source} of {count} holdings.",
         "unpriced": "No current price: {unpriced} of {count} holdings, valued at what they cost.",
-        "label": "This is what you hold and what history says about a mix like it. It is not "
-        "advice. What you do is your choice. Research, not advice.",
+        "label": "This is what you hold and what history says about a mix like it.",
         "decline": "I don't rate holdings or say what to do with them. Here is what you hold "
         "and what history says about a mix like it.",
         "no_report": "Send a screenshot of your holdings in the bot, then confirm it.",
@@ -91,8 +90,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "looked_up": "{date} को देखी गई कीमतें: {count} में से {looked_up} होल्डिंग्स।",
         "from_source": "आपके {source} से ली गई कीमतें: {count} में से {from_source} होल्डिंग्स।",
         "unpriced": "अभी की कीमत नहीं: {count} में से {unpriced} होल्डिंग्स, लागत पर गिनी गईं।",
-        "label": "यह वह है जो आपके पास है, और इतिहास ऐसे मिश्रण के बारे में क्या कहता है। यह सलाह "
-        "नहीं है। आप क्या करते हैं, यह आपकी पसंद है। रिसर्च, सलाह नहीं।",
+        "label": "यह वह है जो आपके पास है, और इतिहास ऐसे मिश्रण के बारे में क्या कहता है।",
         "decline": "मैं होल्डिंग्स को रेट नहीं करता, न यह बताता हूँ कि इनका क्या करना है। यह रहा "
         "कि आपके पास क्या है और इतिहास ऐसे मिश्रण के बारे में क्या कहता है।",
         "no_report": "बॉट में आपकी होल्डिंग्स का स्क्रीनशॉट आने और आपके कन्फ़र्म करने के बाद यह "
@@ -140,8 +138,7 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "unpriced": "Abhi ki keemat nahin: {count} mein se {unpriced} holdings, cost par gini "
         "gayi.",
         "label": "Yeh wahi hai jo aapke paas hai, aur itihaas aise mix ke baare mein kya kehta "
-        "hai. Yeh advice nahin hai. Aap kya karte hain, yeh aapki pasand hai. Research, advice "
-        "nahin.",
+        "hai.",
         "decline": "Main holdings ko rate nahin karta, na yeh batata hoon ki inka kya karna hai. "
         "Yeh raha aapke paas kya hai aur itihaas aise mix ke baare mein kya kehta hai.",
         "no_report": "Bot mein aapki holdings ka screenshot aane aur aapke confirm karne ke baad "

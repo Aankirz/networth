@@ -568,3 +568,6 @@
 
 ## 2026-10-25 — plan screens in plain words
 - networth/bot/onboarding.py, networth/sim: plan readback, /plan plan_line, the starter-plan picker, the own-split ask and the /range plan line say safe money, broad index funds, single shares or themes in en, hi and hinglish; the picker drops the "common mixes, shown for education" sentence; a grep test guards every plan screen.
+
+## 2026-10-25 — no footer or disclaimer in holdings replies
+- networth/holdings/lines.py, networth/bot/holdings.py, holdings_words: dropped "Research, not advice." footer and every not-advice/your-choice sentence in en, hi, hinglish (owner order); tests updated; a grep test fails if any holdings reply carries one.

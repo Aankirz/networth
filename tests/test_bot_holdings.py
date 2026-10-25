@@ -168,7 +168,7 @@ def test_thats_everything_compares_with_the_plan(tmp_path, lang: str) -> None:
     confirm(chat)
     m = last(chat)
     assert stored(chat).confirmed
-    assert m.title == words.SAVED[lang] and m.footer == FOOTER[lang]
+    assert m.title == words.SAVED[lang] and m.footer == ""
     assert [d for _, d, _ in buttons(chat)] == ["br:plan", "hd:history"]
 
 
@@ -250,7 +250,7 @@ def test_what_should_i_sell_gets_the_plan_gap_and_history_not_a_pick(tmp_path, l
     assert all(line in text for line in flow.comparison_lines(report, "Balanced", lang))
     assert all(line in text for line in nh.lines.history_lines(report.history, lang))
     assert guard.check(text, text).ok
-    assert m.footer == FOOTER[lang] and text.count(FOOTER[lang]) == 1
+    assert m.footer == "" and FOOTER[lang] not in text
 
 
 def test_a_hinglish_portfolio_question_is_answered_in_hinglish(tmp_path: Path) -> None:
@@ -259,8 +259,7 @@ def test_a_hinglish_portfolio_question_is_answered_in_hinglish(tmp_path: Path) -
     chat.services = dataclasses.replace(chat.services, models=None)
     chat.say("kya mera portfolio theek hai")
     assert plain(last(chat)).startswith(nh.LINES["hinglish"]["decline"])
-    assert last(chat).footer == FOOTER["hinglish"]
-    assert "Research, advice nahin." not in plain(last(chat))
+    assert last(chat).footer == "" and FOOTER["hinglish"] not in plain(last(chat))
 
 
 def test_a_sell_question_never_reaches_the_writer(tmp_path: Path) -> None:
@@ -270,7 +269,7 @@ def test_a_sell_question_never_reaches_the_writer(tmp_path: Path) -> None:
     chat.say("What should I sell?")
     text = plain(last(chat))
     assert text.startswith(words.NOT_A_PICK["en"]) and len(models.writes) == 2
-    assert "sell" not in text.lower() and text.count(FOOTER["en"]) == 1
+    assert "sell" not in text.lower() and FOOTER["en"] not in text
 
 
 def test_a_fix_typed_after_confirming_goes_to_chat_and_keeps_the_list(chat: Chat) -> None:

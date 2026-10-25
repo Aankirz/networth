@@ -15,7 +15,7 @@ from networth import guard
 from networth.app.store import Status, user_id_for
 from networth.bot import commands, holdings_words
 from networth.bot import holdings as flow
-from networth.bot.message import FOOTER, LANGS, Message, plain
+from networth.bot.message import LANGS, Message, plain
 from networth.holdings import snaptrade
 from networth.holdings.snaptrade import SnapTradeError, SnapUser
 from tests.test_bot_holdings import (
@@ -229,11 +229,10 @@ WITHOUT_FOOTER = {"summary": prompt, "no holdings": "NO_HOLDINGS", "started over
 
 @pytest.mark.parametrize("lang", LANGS)
 @pytest.mark.parametrize("kind", list(WITH_FOOTER))
-def test_the_report_and_answer_end_with_one_footer(tmp_path, kind: str, lang: str) -> None:
+def test_the_report_and_answer_carry_no_footer(tmp_path, kind: str, lang: str) -> None:
     m = WITH_FOOTER[kind](talk(tmp_path, lang=lang))
     text = plain(m)
-    assert m.footer == FOOTER[lang] and text.endswith(FOOTER[lang])
-    assert sum(text.count(f) for f in FOOTERS) == 1
+    assert m.footer == "" and not any(f in text for f in FOOTERS)
     assert guard.check(text, text).ok, guard.check(text, text).problems
     check_language(m, lang)
 

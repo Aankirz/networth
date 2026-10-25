@@ -44,10 +44,7 @@ FIXTURES = Path(__file__).parent / "fixtures" / "holdings"
 PNG = (FIXTURES / "groww_fake.png").read_bytes()
 NOW = dt.datetime(2026, 10, 25, 6, tzinfo=dt.UTC)
 LANGS = ("en", "hi", "hinglish")
-LABEL = (
-    "This is what you hold and what history says about a mix like it. It is not advice. "
-    "What you do is your choice. Research, not advice."
-)
+LABEL = "This is what you hold and what history says about a mix like it."
 PATHS = 200
 
 
