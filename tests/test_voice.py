@@ -28,6 +28,7 @@ from networth.bot import commands, onboarding
 from networth.bot.alerts import alert_message
 from networth.bot.message import FOOTER, LANGS, Message, plain
 from networth.bot.telegram import html
+from networth.chat import dashboard as dashboard_chat
 from networth.chat import explain, talk, tip, today
 from networth.chat.answer import Answer, deliver
 from networth.keiki import onboard as email_onboard
@@ -44,6 +45,7 @@ MODULES = (
     "networth.brief.lines", "networth.chat", "networth.chat.answer", "networth.chat.explain",
     "networth.chat.talk", "networth.chat.tip", "networth.chat.today", "networth.keiki.onboard",
     "networth.keiki.turn",
+    "networth.chat.dashboard",
     "networth.memory", "networth.sim", "networth.watch",
 )  # fmt: skip
 HYPE: Final = re.compile(
@@ -196,6 +198,13 @@ def should_i(chat: Chat, lang: str) -> Message:
     return reply.message
 
 
+def dashboard(chat: Chat, lang: str) -> Message:
+    answer = dashboard_chat.dashboard(chat.profile, chat.services, dt.datetime.now(dt.UTC), lang)
+    reply = deliver(answer, lang, chat.services)
+    assert isinstance(reply.message, Message) and reply.buttons
+    return reply.message
+
+
 WITH_FOOTER: Final[dict[str, Callable[[Chat, str], Message]]] = {
     "brief": lambda chat, lang: event_brief().message(lang),
     "alert": lambda chat, lang: alert_message(insight(9), lang),
@@ -220,6 +229,8 @@ WITH_FOOTER: Final[dict[str, Callable[[Chat, str], Message]]] = {
     "money": fixed(talk.MONEY_FALLBACK),
     "follow-up": fixed(talk.FOLLOW_UP_FALLBACK),
     "should i": should_i,
+    "dashboard": dashboard,
+    "dashboard elsewhere": fixed(dashboard_chat.DASHBOARD_ON_TELEGRAM),
 }
 
 

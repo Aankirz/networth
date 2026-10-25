@@ -5,6 +5,7 @@ from __future__ import annotations
 import itertools
 import threading
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -47,6 +48,8 @@ class FakeBot:
     edits: list[tuple[int, int, Keyboard]] = field(default_factory=list)
     webhooks: list[tuple[str, str]] = field(default_factory=list)
     downloads: list[str] = field(default_factory=list)
+    menus: list[tuple[int, str, str | None]] = field(default_factory=list)
+    commands: list[tuple[tuple[str, str], ...]] = field(default_factory=list)
     _ids: itertools.count = field(default_factory=lambda: itertools.count(100))
 
     def send_message(self, chat_id: int, message: Message, buttons: Keyboard = ()) -> dict:
@@ -65,6 +68,12 @@ class FakeBot:
 
     def delete_webhook(self) -> None:
         pass
+
+    def set_chat_menu_button(self, chat_id: int, text: str, url: str | None) -> None:
+        self.menus.append((chat_id, text, url))
+
+    def set_my_commands(self, commands: Sequence[tuple[str, str]]) -> None:
+        self.commands.append(tuple(commands))
 
     def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]:
         return []

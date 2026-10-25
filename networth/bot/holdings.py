@@ -19,7 +19,6 @@ from collections.abc import Callable
 from typing import Final
 
 from networth import chat, holdings
-from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Store
 from networth.bot.message import FOOTER, Message, say
@@ -169,8 +168,10 @@ def report_reply(store: Store, profile: Profile, services: Services, now: dt.dat
     if report is None:
         return Reply(say(NO_HOLDINGS, lang))
     message = report_message(holdings_lines(report, lang), len(report.rows), lang)
-    page = links.page_url(services.public_url, profile.link_token, services.link_secret, now)
-    buttons = ((Button(say(PAGE_BUTTON, lang), "", f"{page}/holdings"),),) if page else ()
+    page = services.page_url(profile.link_token, now)
+    # The site has one page per user; only this server's /u page has a /holdings subpage.
+    url = page if services.site_url else f"{page}/holdings"
+    buttons = ((Button(say(PAGE_BUTTON, lang), "", url),),) if page else ()
     return Reply(message, buttons)
 
 

@@ -9,6 +9,7 @@ respond_traced is build, deliver_traced, then remember: the exchange joins the u
 (networth.chat.talk). build reads the window first: a follow-up to the last answer, then
 classify; an OTHER pick (and a short "should I" read as EXPLAIN_THIS) is refined into a Talk
 kind, which still reports Intent.OTHER, because the site's contract pins Intent.
+A dashboard ask (networth.chat.dashboard) is answered before any of that.
 
 The pick is a typed Jev Choice when config says Jev measured at least as accurate as the cheap
 model (evals/intent_accuracy.py), and Jev answered above its confidence floor in time. In every
@@ -31,7 +32,7 @@ from networth.app.store import Profile, Store
 from networth.bot import holdings, watches
 from networth.bot.message import Message
 from networth.bot.onboarding import Reply
-from networth.chat import explain, jev, talk, tip, today
+from networth.chat import dashboard, explain, jev, talk, tip, today
 from networth.chat.answer import Answer, Used, deliver, deliver_traced
 from networth.chat.talk import Said, Talk
 
@@ -216,6 +217,10 @@ def build(
     def said(lang: str) -> Said:
         return Said(profile, text, window, services, now, lang)
 
+    if dashboard.asks(text, is_forward):
+        lang = reply_lang(text, profile)
+        answer = dashboard.dashboard(profile, services, now, lang)
+        return Built(answer, Intent.OTHER, lang, Talk.DASHBOARD)
     if talk.follows_up(text, is_forward, window, now, services.models):
         last = talk.last_exchange(window)
         before = reply_lang(last.asked.text, profile) if last else profile.lang

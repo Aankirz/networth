@@ -20,9 +20,9 @@ from __future__ import annotations
 import html as markup_escape
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, Final, Protocol
+from typing import Any, Final, Protocol, runtime_checkable
 
 import httpx2
 
@@ -77,6 +77,15 @@ class Bot(Protocol):
     def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]: ...
 
     def download_file(self, file_id: str) -> bytes: ...
+
+
+@runtime_checkable
+class MenuBot(Protocol):
+    """The chat menu and the command list: Telegram has them, a Keiki turn does not."""
+
+    def set_chat_menu_button(self, chat_id: int, text: str, url: str | None) -> None: ...
+
+    def set_my_commands(self, commands: Sequence[tuple[str, str]]) -> None: ...
 
 
 def _button(b: Button) -> dict:
@@ -160,6 +169,16 @@ class TelegramClient:
 
     def delete_webhook(self) -> None:
         self._call("deleteWebhook", {})
+
+    def set_chat_menu_button(self, chat_id: int, text: str, url: str | None) -> None:
+        """A web_app button opening url (HTTPS only), or Telegram's default menu when None."""
+        button = {"type": "web_app", "text": text, "web_app": {"url": url}} if url else {
+            "type": "default"}  # fmt: skip
+        self._call("setChatMenuButton", {"chat_id": chat_id, "menu_button": button})
+
+    def set_my_commands(self, commands: Sequence[tuple[str, str]]) -> None:
+        listed = [{"command": name, "description": about} for name, about in commands]
+        self._call("setMyCommands", {"commands": listed})
 
     def get_updates(self, offset: int | None, timeout_s: int) -> list[dict]:
         params: dict[str, Any] = {"timeout": timeout_s, "allowed_updates": ALLOWED_UPDATES}

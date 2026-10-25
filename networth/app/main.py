@@ -31,8 +31,8 @@ from networth.app import schedule
 from networth.app.services import Services
 from networth.app.settings import Settings
 from networth.app.store import Store, now_iso
-from networth.bot.commands import handle_update
-from networth.bot.telegram import Bot, TelegramClient
+from networth.bot.commands import COMMAND_LIST, handle_update
+from networth.bot.telegram import Bot, MenuBot, TelegramClient
 from networth.keiki import wire
 from networth.keiki.turn import Harness, run_turn
 from networth.keiki.verify import TOKEN_HEADER, Keys, verify
@@ -70,6 +70,11 @@ def create_app(
                 log.info("webhook set to %s%s", public_url, WEBHOOK_PATH)
             except Exception as exc:
                 log.warning("setWebhook failed, continuing: %s", exc)
+        if isinstance(bot, MenuBot):
+            try:
+                await run_in_threadpool(bot.set_my_commands, COMMAND_LIST)
+            except Exception as exc:
+                log.warning("setMyCommands failed, continuing: %s", exc)
         yield
 
     app = FastAPI(title="Networth", lifespan=lifespan, docs_url=None, redoc_url=None)

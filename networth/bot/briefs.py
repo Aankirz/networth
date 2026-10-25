@@ -24,7 +24,6 @@ from typing import Final
 from zoneinfo import ZoneInfo
 
 from networth import brief, guard, memory
-from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
 from networth.bot import message
@@ -72,10 +71,7 @@ def compose_reply(profile: Profile, store: Store, services: Services,
     out = draft.message(lang)
     text = message.plain(out)
     guard.log_verdict(services.guard_log, "brief", "template", guard.check(text, text))
-    page = None
-    if services.public_url and services.link_secret:
-        page = links.page_url(services.public_url, profile.link_token,
-                              services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
+    page = services.page_url(profile.link_token, dt.datetime.now(dt.UTC))
     return Reply(out, brief.buttons(draft, lang, services.public_url, page)), back
 
 

@@ -11,7 +11,6 @@ from typing import Final
 from zoneinfo import ZoneInfo
 
 from networth import brief, sim
-from networth.app import links
 from networth.app.services import Services
 from networth.app.store import INDIA_TZ, Profile, Store
 from networth.bot.message import LANGS, Link, say
@@ -255,11 +254,8 @@ def why(store: Store, profile: Profile, services: Services, today: dt.date, text
 
 def page_link(profile: Profile, services: Services, lang: str) -> Link | None:
     """A signed link to the user's own page, as /plan builds it, when the server has one."""
-    if not (services.public_url and services.link_secret):
-        return None
-    url = links.page_url(services.public_url, profile.link_token,
-                         services.link_secret, dt.datetime.now(dt.UTC))  # fmt: skip
-    return Link(say(YOUR_PAGE, lang), url)
+    url = services.page_url(profile.link_token, dt.datetime.now(dt.UTC))
+    return Link(say(YOUR_PAGE, lang), url) if url else None
 
 
 def plan(store: Store, profile: Profile, text: str, services: Services, today: dt.date,

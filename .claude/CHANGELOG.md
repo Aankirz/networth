@@ -476,3 +476,6 @@
 
 ## 2026-10-25 — feat: phase 9 slice 1, the bot holds a conversation
 - networth/chat/talk.py and a turns table: a per-user window of 8 turns over 24 hours, deleted on /stop. Follow-ups resolve against the last answer, open money questions get guarded writer answers (a fixed IPO explainer underneath), small talk and off-topic get fixed kind lines, "should I" gets the decline then the facts, in three languages. respond_traced keeps its signature, so Telegram, Keiki and web gain it unchanged. 20 conversational eval threads added to the words eval.
+
+## 2026-10-25 — feat: phase 9 slice 2, one tap to the dashboard
+- NETWORTH_SITE_URL points every page link at the Vercel site (unset keeps the server's /u page); Services.page_url signs the stored token. /dashboard and "mera dashboard" send one button; a per-chat web_app menu button is set when setup finishes and on /dashboard, reset on /stop. setMyCommands on start, /help names /dashboard.

@@ -20,7 +20,6 @@ from dataclasses import dataclass, field, replace
 from typing import Final
 
 from networth import brief, chat
-from networth.app import links
 from networth.app.services import Services
 from networth.app.store import (
     Channel,
@@ -47,7 +46,8 @@ from networth.bot.onboarding import (
 )
 from networth.bot.onboarding import prompt as ask_for
 from networth.bot.outbox import send
-from networth.bot.telegram import Bot
+from networth.bot.telegram import Bot, MenuBot, TelegramError
+from networth.chat import dashboard
 from networth.chat.answer import deliver
 from networth.chat.today import YOUR_PAGE
 from networth.holdings import snaptrade
@@ -87,16 +87,21 @@ HELP_LEAD: Final = {"en": "Here's what I can do.", "hi": "मैं ये क�
 HELP_ASK: Final = {
     "en": 'Ask "What happened today?" or "Why?"\n'
     "Forward me a tip, and I'll check who reported it\n"
-    "Send an IPO page, a link or a screenshot, and I'll explain it",
+    "Send an IPO page, a link or a screenshot, and I'll explain it\n"
+    "Ask anything about money, then follow up: why, simpler, in Hindi",
     "hi": 'आप पूछ सकते हैं "आज क्या हुआ?" या "क्यों?"\n'
     "कोई टिप फ़ॉरवर्ड करने पर मैं देखूँगा कि उसे किसने रिपोर्ट किया\n"
-    "IPO पेज, लिंक या स्क्रीनशॉट भेजने पर मैं उसे समझा दूँगा",
+    "IPO पेज, लिंक या स्क्रीनशॉट भेजने पर मैं उसे समझा दूँगा\n"
+    "पैसे से जुड़ा कोई भी सवाल पूछ सकते हैं, फिर आगे पूछ सकते हैं: क्यों, और आसान, Hinglish में",
     "hinglish": 'Aap pooch sakte hain "Aaj kya hua?" ya "Kyun?"\n'
     "Koi tip forward karne par main dekhoonga ki use kisne report kiya\n"
-    "IPO page, link ya screenshot bhejne par main use samjha doonga",
+    "IPO page, link ya screenshot bhejne par main use samjha doonga\n"
+    "Paise se juda koi bhi sawaal pooch sakte hain, phir aage pooch sakte hain: kyun, aur "
+    "aasaan, English mein",
 }
 HELP_COMMANDS: Final = {
     "en": "/brief this month's brief\n/plan see or change your plan\n"
+    "/dashboard one tap to your own page\n"
     "/range what your plan could become, replayed over past months\n"
     "/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n"
     "/start set up again or see your answers\n/link a code to use me by email too\n"
@@ -106,6 +111,7 @@ HELP_COMMANDS: Final = {
     "/holdings what you hold, read from a screenshot you send\n"
     "/link_broker link a US broker, read-only",
     "hi": "/brief इस महीने का ब्रीफ़\n/plan अपना प्लान देखना या बदलना\n"
+    "/dashboard एक टैप में आपका अपना पेज\n"
     "/range पुराने महीनों को दोहराकर, आपका प्लान कहाँ तक पहुँच सकता है\n"
     "/pause ब्रीफ़ और अलर्ट रोकना\n/resume उन्हें फिर से चालू करना\n/stop सारे मैसेज बंद करना\n"
     "/start फिर से सेटअप, या अपने जवाब देखना\n/link ईमेल पर भी इस्तेमाल के लिए कोड\n"
@@ -115,6 +121,7 @@ HELP_COMMANDS: Final = {
     "/holdings आपके पास क्या है, आपके भेजे स्क्रीनशॉट से\n"
     "/link_broker US ब्रोकर लिंक करना, सिर्फ़ पढ़ने के लिए",
     "hinglish": "/brief is mahine ka brief\n/plan apna plan dekhna ya badalna\n"
+    "/dashboard ek tap mein aapka apna page\n"
     "/range purane mahinon ko dohraakar, aapka plan kahan tak pahunch sakta hai\n"
     "/pause briefs aur alerts rokna\n/resume unhe phir se chalu karna\n"
     "/stop saare messages band karna\n/start phir se setup, ya apne jawab dekhna\n"
@@ -205,6 +212,25 @@ UNREACHABLE: Final = {
         "aayenge.",
     },
 }
+# The BotFather command list, also sent with setMyCommands when the server starts.
+COMMAND_LIST: Final = (
+    ("brief", "This month's brief"),
+    ("plan", "See or change your plan"),
+    ("dashboard", "One tap to your own page"),
+    ("range", "What your plan could become, replayed over past months"),
+    ("holdings", "What you hold, read from a screenshot"),
+    ("watch", "Hear once when a confirmed story about something appears"),
+    ("watches", "See or stop your watches"),
+    ("unwatch", "Stop a watch by its number"),
+    ("link", "A code to use Networth by email too"),
+    ("link_broker", "Link a US broker, read-only"),
+    ("sendto", "Where briefs and alerts go: email or telegram"),
+    ("pause", "Pause briefs and alerts"),
+    ("resume", "Turn briefs and alerts back on"),
+    ("stop", "Stop all messages"),
+    ("start", "Set up again or see your answers"),
+    ("help", "Everything Networth can do"),
+)
 PRIVATE_ONLY: Final = (
     "I only answer in a private chat. Message me directly and we'll start there.\n"
     "मैं सिर्फ़ प्राइवेट चैट में जवाब देता हूँ। मुझे सीधे मैसेज करने पर वहीं से बात शुरू होगी।"
@@ -409,7 +435,7 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
     elif profile.status is Status.STOPPED:
         return
     elif profile.step is not Step.DONE:
-        plan = turn.plan(profile)
+        plan, before = turn.plan(profile), profile.step
         outcome = advance(profile, plan, text, turn.now)
         profile = turn.commit(plan, outcome)
         if outcome.toast and not outcome.replies:
@@ -417,6 +443,7 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
             turn.send(profile, with_lead(f"{outcome.toast}.", ask))
         for reply in outcome.replies:
             turn.send(profile, reply)
+        finished_setup(turn, before, profile)
     elif (fixed := holdings_flow.typed_fix(turn.store, profile, text)) is not None:
         turn.send(profile, fixed)
     else:
@@ -474,6 +501,7 @@ def on_tap(turn: Turn, tap: Tap) -> None:
         if profile.step is not Step.DONE:
             turn.send(profile, ask_for(profile, plan))
         return
+    before = profile.step
     outcome = advance(profile, plan, value, turn.now)
     profile = turn.commit(plan, outcome)
     turn.bot.answer_callback(tap.callback_id, outcome.toast)
@@ -481,6 +509,7 @@ def on_tap(turn: Turn, tap: Tap) -> None:
         turn.bot.edit_buttons(tap.chat_id, tap.message_id, outcome.edit_buttons)
     for reply in outcome.replies:
         turn.send(profile, reply)
+    finished_setup(turn, before, profile)
 
 
 def on_media(turn: Turn, media: Media) -> None:
@@ -509,6 +538,29 @@ def later(turn: Turn, profile: Profile, what: str, make: Callable[[], Reply]) ->
     turn.later.append(job)
 
 
+def set_menu(turn: Turn, profile: Profile, on: bool = True) -> None:
+    """The chat's menu button: a web app opening the user's signed page, or Telegram's default.
+    Only an HTTPS page can open as a web app. A failure is logged by method only and never
+    holds up a reply."""
+    if not isinstance(turn.bot, MenuBot) or profile.chat_id == 0:
+        return
+    url = turn.services.page_url(profile.link_token, turn.clock) if on else None
+    if on and not (url and url.startswith("https://")):
+        return
+    try:
+        turn.bot.set_chat_menu_button(profile.chat_id, say(brief.BUTTONS["page"], profile.lang),
+                                      url)  # fmt: skip
+    except TelegramError as exc:
+        log.warning("telegram %s: %s", exc.method, exc.description)
+    except Exception as exc:  # noqa: BLE001 - the menu is a convenience, the reply still goes
+        log.warning("menu button for %s failed: %s", profile.user_id, type(exc).__name__)
+
+
+def finished_setup(turn: Turn, before: Step, profile: Profile) -> None:
+    if before is not Step.DONE and profile.step is Step.DONE:
+        set_menu(turn, profile)
+
+
 # --- commands ------------------------------------------------------------------------------
 
 
@@ -532,10 +584,7 @@ def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
         turn.send(profile, with_lead(say(FINISH_FIRST, profile.lang), ask))
         return
     profile = turn.save(replace(profile, step=Step.PLAN))
-    page = None
-    if turn.services.public_url and turn.services.link_secret:
-        page = links.page_url(turn.services.public_url, profile.link_token,
-                              turn.services.link_secret, turn.clock)  # fmt: skip
+    page = turn.services.page_url(profile.link_token, turn.clock)
     lang = profile.lang
     mine = (say(PAGE_NOTE, lang), Link(say(YOUR_PAGE, lang), page)) if page else ()
     turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.", *mine),
@@ -566,6 +615,18 @@ def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
         log.warning("snaptrade forget for %s failed: %s", profile.user_id, type(exc).__name__)
     turn.store.new_link_token(profile.user_id)
     turn.save(replace(profile, status=Status.STOPPED))
+    set_menu(turn, profile, on=False)
+
+
+def cmd_dashboard(turn: Turn, profile: Profile, args: str) -> None:
+    """One button to the user's own page, and the chat menu set to open it too."""
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(say(FINISH_FIRST, profile.lang)))
+        return
+    lang = profile.lang or "en"
+    turn.send(profile, deliver(dashboard.dashboard(profile, turn.services, turn.clock, lang), lang,
+                               turn.services))  # fmt: skip
+    set_menu(turn, profile)
 
 
 def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
@@ -679,6 +740,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/start": cmd_start,
     "/brief": cmd_brief,
     "/plan": cmd_plan,
+    "/dashboard": cmd_dashboard,
     "/range": cmd_range,
     "/pause": cmd_pause,
     "/resume": cmd_resume,
