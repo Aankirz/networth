@@ -185,16 +185,17 @@ Put each article id in exactly one group. If an article reports the same event a
 open stories, use that story's id as existing_story_id; otherwise leave existing_story_id
 empty and write a short neutral title for the new story."""
 
-CLASSIFY_INSTRUCTIONS: Final = """You map one confirmed news story to a market event type from
-a fixed table, or to "none". Pick a type only when the story reports that event itself
-happening (a decision announced, a war started, a tariff imposed), not commentary, previews,
-expectations or anniversaries. The cause must be one of the causes listed for that type.
-If nothing fits, answer type "none" and cause "". Give event_date, the day the event itself
-happened (YYYY-MM-DD), read from the article text, not from the published dates, which can be
-recrawl dates. Articles often mention older events; date the event, not the article. Give
-region for every answer, "none" included: "in" when the event happens in India or is about
-India's market, "us" when it happens in the US or is about the US market, "global" when it
-moves markets everywhere (a war, an OPEC decision, a pandemic). Give a one-sentence reason."""
+CLASSIFY_INSTRUCTIONS: Final = """You map one confirmed news story to a market event type from a
+fixed table, or to "none". Pick a type only when the story reports that event itself happening
+(a decision announced, a war started, a tariff imposed), not commentary, previews,
+expectations, anniversaries, or a pause, delay, suspension or rollback of the action. The cause
+must be one of the causes listed for that type. If nothing fits, answer type "none" and cause
+"". Give event_date, the day the event itself happened (YYYY-MM-DD), read from the article
+text, not from the published dates, which can be recrawl dates. Articles often mention older
+events; date the event, not the article. Give region for every answer, "none" included: "in"
+when the event happens in India or is about India's market, "us" when it happens in the US or
+is about the US market, "global" when it moves markets everywhere (a war, an OPEC decision, a
+pandemic). Give a one-sentence reason."""
 
 RELATED_INSTRUCTIONS: Final = """You match unconfirmed news stories to confirmed market events.
 A story matches an event when it is about the same subject: the same central bank's policy
