@@ -1,0 +1,75 @@
+{
+  "trace_id": "9a39f4c509b745eba42daa35331d9e99",
+  "command": "brief",
+  "message": {
+    "title": "Evening. Here's your brief for this month.",
+    "body": [
+      {
+        "kind": "text",
+        "text": "No confirmed news this month matched anything in our history. Nothing needs your attention."
+      },
+      {
+        "kind": "text",
+        "text": "Your plan: Balanced, the one you chose."
+      }
+    ],
+    "detail": [],
+    "footer": "Research, not advice.",
+    "preview": null
+  },
+  "text": "Evening. Here's your brief for this month.\n\nNo confirmed news this month matched anything in our history. Nothing needs your attention.\n\nYour plan: Balanced, the one you chose.\n\nResearch, not advice.",
+  "card": {
+    "type": "history",
+    "rows": [
+      {
+        "type": "bank_stress",
+        "asset": "^NSEBANK",
+        "asset_name": "Indian banks (Nifty Bank)",
+        "sentence": "Indian banks (Nifty Bank) beat ^NSEI in 6 of 9 past bank stress episodes. Normal is 59%, so this is within normal ups and downs.",
+        "count": "6 of 9",
+        "rate": "67%",
+        "normal": "59%",
+        "weak": false,
+        "near_normal": true,
+        "bar": {
+          "hit": 66.7,
+          "normal": 59.1
+        },
+        "why_url": "https://nw.example/why/bank_stress/%5ENSEBANK"
+      },
+      {
+        "type": "bank_stress",
+        "asset": "^CNXIT",
+        "asset_name": "Indian IT (Nifty IT)",
+        "sentence": "Indian IT (Nifty IT) beat ^NSEI in 3 of 9 past bank stress episodes. Normal is 52%.",
+        "count": "3 of 9",
+        "rate": "33%",
+        "normal": "52%",
+        "weak": false,
+        "near_normal": false,
+        "bar": {
+          "hit": 33.3,
+          "normal": 52.4
+        },
+        "why_url": "https://nw.example/why/bank_stress/%5ECNXIT"
+      },
+      {
+        "type": "rbi_hike",
+        "asset": "^NSEI",
+        "asset_name": "The Nifty 50",
+        "sentence": "The Nifty 50 beat ^NSEI in 2 of 4 past RBI rate hikes. Normal is 55%. Only 4 past cases, too few to call a pattern.",
+        "count": "2 of 4",
+        "rate": "50%",
+        "normal": "55%",
+        "weak": true,
+        "near_normal": true,
+        "bar": {
+          "hit": 50.0,
+          "normal": 55.0
+        },
+        "why_url": "https://nw.example/why/rbi_hike/%5ENSEI"
+      }
+    ],
+    "note": null
+  }
+}

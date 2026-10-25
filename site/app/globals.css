@@ -1,176 +1,324 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-/* The theme follows the system unless the reader picked one: html[data-theme] wins. */
-@custom-variant dark {
-  &:where([data-theme="dark"], [data-theme="dark"] *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
-      @slot;
-    }
-  }
-}
+/* Dark is the default; a reader who picks light gets html[data-theme="light"] from a cookie, so
+   the server renders it with no flash. */
+@custom-variant light (&:where([data-theme="light"], [data-theme="light"] *));
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-sheet: var(--sheet);
+  --color-bg: var(--bg);
+  --color-raised: var(--raised);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
   --color-ink: var(--ink);
-  --color-graphite: var(--graphite);
-  --color-rule: var(--rule);
-  --color-link: var(--link);
-  --color-background: var(--paper);
-  --color-foreground: var(--ink);
-  --color-card: var(--sheet);
-  --color-card-foreground: var(--ink);
-  --color-popover: var(--sheet);
-  --color-popover-foreground: var(--ink);
-  --color-primary: var(--link);
-  --color-primary-foreground: var(--paper);
-  --color-secondary: var(--paper);
-  --color-secondary-foreground: var(--ink);
-  --color-muted: var(--paper);
-  --color-muted-foreground: var(--graphite);
-  --color-accent: var(--paper);
-  --color-accent-foreground: var(--ink);
-  --color-destructive: var(--ink);
-  --color-border: var(--rule);
-  --color-input: var(--rule);
-  --color-ring: var(--link);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --font-sans: var(--font-text);
-  --font-heading: var(--font-display);
-  --font-display: var(--font-display);
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
-  --text-note: 0.875rem;
-  --text-body: 1rem;
-  --text-head: 1.375rem;
-  --text-display: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
-  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Near-black slate with graphite marks on it, and one highlighter for what you can act on. */
 :root {
-  color-scheme: light;
-  --paper: oklch(96.1% 0.006 135);
-  --sheet: oklch(98.6% 0.004 135);
-  --ink: oklch(23.5% 0.028 245);
-  --graphite: oklch(45% 0.02 240);
-  --rule: oklch(88% 0.008 135);
-  --link: oklch(42% 0.1 250);
-  --chart-1: oklch(64.6% 0.222 41.116);
-  --chart-2: oklch(60% 0.118 184.704);
-  --chart-3: oklch(39.8% 0.07 227.392);
-  --radius: 8px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --paper: oklch(20.6% 0.016 235);
-    --sheet: oklch(24.4% 0.018 235);
-    --ink: oklch(92.8% 0.008 135);
-    --graphite: oklch(75% 0.015 220);
-    --rule: oklch(34% 0.016 235);
-    --link: oklch(80% 0.07 245);
-    --chart-1: oklch(48.8% 0.243 264.376);
-    --chart-2: oklch(69.6% 0.17 162.48);
-    --chart-3: oklch(76.9% 0.188 70.08);
-  }
-}
-
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: oklch(20.6% 0.016 235);
-  --sheet: oklch(24.4% 0.018 235);
-  --ink: oklch(92.8% 0.008 135);
-  --graphite: oklch(75% 0.015 220);
-  --rule: oklch(34% 0.016 235);
-  --link: oklch(80% 0.07 245);
-  --chart-1: oklch(48.8% 0.243 264.376);
-  --chart-2: oklch(69.6% 0.17 162.48);
-  --chart-3: oklch(76.9% 0.188 70.08);
+  --bg: oklch(14.5% 0.004 255);
+  --raised: oklch(18.2% 0.005 255);
+  --hover: oklch(22.5% 0.006 255);
+  --line: oklch(27.5% 0.006 255);
+  --line-strong: oklch(35% 0.007 255);
+  --ink: oklch(96.5% 0.003 255);
+  --ink-2: oklch(76% 0.006 255);
+  --ink-3: oklch(64% 0.006 255);
+  --pencil: oklch(90% 0.004 255);
+  --pencil-soft: oklch(62% 0.006 255);
+  --accent: oklch(88% 0.13 96);
+  --accent-ink: oklch(21% 0.03 96);
+  --ring: oklch(88% 0.13 96);
+  --scrim: oklch(10% 0.004 255 / 0.6);
+  --dur-fast: 150ms;
+  --dur: 240ms;
+  --dur-draw: 900ms;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: oklch(98.8% 0.002 95);
+  --raised: oklch(96.6% 0.003 95);
+  --hover: oklch(93.8% 0.004 95);
+  --line: oklch(89.5% 0.004 95);
+  --line-strong: oklch(80% 0.005 95);
+  --ink: oklch(19% 0.006 255);
+  --ink-2: oklch(40% 0.008 255);
+  --ink-3: oklch(48% 0.008 255);
+  --pencil: oklch(28% 0.008 255);
+  --pencil-soft: oklch(58% 0.008 255);
+  --accent: oklch(89% 0.14 96);
+  --accent-ink: oklch(21% 0.03 96);
+  --ring: oklch(58% 0.14 75);
+  --scrim: oklch(30% 0.006 255 / 0.35);
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   html,
   body {
     overflow-x: clip;
   }
   body {
-    background: var(--paper);
+    background: var(--bg);
     color: var(--ink);
-    font-family: var(--font-text), "Kohinoor Devanagari", "Noto Sans Devanagari", system-ui, sans-serif;
-    font-size: var(--text-body);
-    line-height: 1.55;
+    font-family: var(--font-geist-sans), "Kohinoor Devanagari", "Noto Sans Devanagari", system-ui, sans-serif;
+    font-size: var(--text-base);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
   h1,
   h2,
-  h3 {
-    font-family: var(--font-display), "Kohinoor Devanagari", "Noto Sans Devanagari", serif;
+  h3,
+  h4 {
     font-style: normal;
     letter-spacing: -0.02em;
-    line-height: 1.15;
+    line-height: 1.2;
     overflow-wrap: anywhere;
     min-width: 0;
+    text-wrap: balance;
   }
   a {
-    color: var(--link);
-    text-underline-offset: 0.2em;
+    color: inherit;
+    text-decoration-color: var(--line-strong);
+    text-underline-offset: 0.22em;
+    transition: text-decoration-color var(--dur-fast) var(--ease-out);
+  }
+  a:hover {
+    text-decoration-color: currentColor;
+  }
+  button {
+    cursor: pointer;
   }
   :focus-visible {
-    outline: 2px solid var(--link);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
   ::selection {
-    background: color-mix(in oklch, var(--link) 25%, transparent);
+    background: color-mix(in oklch, var(--accent) 45%, transparent);
   }
 }
 
-.figures {
+/* Every figure the server sends is set in Geist Mono, tabular, so columns of money line up. */
+.figure {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
-/* The pencil line that draws while the server answers. */
-.pencil-draw {
-  stroke-dasharray: 240;
-  stroke-dashoffset: 240;
-  animation: pencil-draw 1.6s var(--ease-out-quint) infinite;
+/* One quiet button vocabulary for the whole site. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.25rem;
+  padding: 0 0.875rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--raised);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.btn:hover {
+  background: var(--hover);
+  border-color: var(--line-strong);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.985);
+}
+.btn:disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+.btn-primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.btn-primary:hover {
+  background: color-mix(in oklch, var(--ink) 88%, var(--bg));
+  border-color: color-mix(in oklch, var(--ink) 88%, var(--bg));
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.btn-ghost:hover {
+  background: var(--hover);
+  border-color: transparent;
+}
+.btn-icon {
+  width: 2.25rem;
+  padding: 0;
+}
+.btn svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
 }
 
-@keyframes pencil-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
+/* A chip is something you can point at: a starter question, an @ mention, a / command. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2rem;
+  max-width: 100%;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  text-align: left;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+.chip:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--raised);
+}
+.chip:active {
+  transform: scale(0.98);
+}
+.chip svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex: none;
+}
+
+/* The highlighter: a mention in a sent question, the picked row in a picker. */
+.mark {
+  background: color-mix(in oklch, var(--accent) 22%, transparent);
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 0 0.3em;
+}
+
+/* Pencil strokes draw in once, the first time a chart is seen. */
+.sketch path[data-draw] {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.sketch.is-drawn path[data-draw] {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--dur-draw) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+.sketch .mark-hit {
+  outline: none;
+}
+.sketch .mark-hit:hover path,
+.sketch .mark-hit:focus-visible path {
+  stroke: var(--accent);
+}
+.sketch .mark-hit:focus-visible rect[data-focus] {
+  stroke: var(--ring);
 }
 
 .arrive {
-  animation: arrive 360ms var(--ease-out-quint) both;
+  animation: arrive var(--dur) var(--ease-out) both;
 }
-
 @keyframes arrive {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(8px);
+  }
+}
+
+.thinking-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: thinking 1.4s var(--ease-out) infinite;
+}
+@keyframes thinking {
+  to {
+    stroke-dashoffset: -1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pencil-draw {
+  .sketch path[data-draw],
+  .sketch.is-drawn path[data-draw] {
+    stroke-dashoffset: 0;
+    transition: none;
+  }
+  .arrive,
+  .thinking-line {
     animation: none;
     stroke-dashoffset: 0;
   }
-  .arrive {
+  .btn:active,
+  .chip:active {
+    transform: none;
+  }
+}
+
+/* A row in the sidebar: an icon, a few words, a quiet hover. */
+.side-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.125rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  color: var(--ink-2);
+  font-size: var(--text-sm);
+  text-align: left;
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+.side-item:hover {
+  background: var(--hover);
+  color: var(--ink);
+}
+.side-item svg {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+}
+
+.canvas-in {
+  animation: canvas-in var(--dur) var(--ease-out) both;
+}
+@keyframes canvas-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .canvas-in {
     animation: none;
   }
 }

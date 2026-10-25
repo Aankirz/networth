@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { ApiError, ChatRequest, ChatTurn, Dashboard, Message } from "@/lib/contract";
+import type { ApiError, ChatRequest, ChatTurn, CommandRequest, CommandTurn, Dashboard, Message, TrackRecord } from "@/lib/contract";
 
 // The one place the site talks to the Python server. NETWORTH_API_URL is a server-only
 // variable: it is never read in a client component and never prefixed NEXT_PUBLIC_.
@@ -25,7 +25,9 @@ export function plausibleToken(token: string): boolean {
   return token.length <= 200 && TOKEN.test(token);
 }
 
-function path(scope: Scope, route: "dashboard" | "chat"): string {
+type Route = "dashboard" | "chat" | "command";
+
+function path(scope: Scope, route: Route): string {
   return scope.kind === "demo"
     ? `/api/demo/${route}`
     : `/api/u/${encodeURIComponent(scope.token)}/${route}`;
@@ -42,8 +44,7 @@ function asError(body: unknown): ApiError | null {
 }
 
 async function call<T>(
-  scope: Scope,
-  route: "dashboard" | "chat",
+  url: string,
   init: RequestInit,
   timeout: number,
   valid: (body: unknown) => body is T,
@@ -51,7 +52,7 @@ async function call<T>(
   const root = base();
   if (!root) return { ok: false, status: 503, error: null };
   try {
-    const response = await fetch(`${root}${path(scope, route)}`, {
+    const response = await fetch(`${root}${url}`, {
       ...init,
       cache: "no-store",
       signal: AbortSignal.timeout(timeout),
@@ -75,7 +76,7 @@ function isTurn(body: unknown): body is ChatTurn {
 }
 
 export function getDashboard(scope: Scope): Promise<Result<Dashboard>> {
-  return call(scope, "dashboard", { method: "GET" }, DASHBOARD_TIMEOUT_MS, isDashboard);
+  return call(path(scope, "dashboard"), { method: "GET" }, DASHBOARD_TIMEOUT_MS, isDashboard);
 }
 
 export function postChat(
@@ -83,13 +84,33 @@ export function postChat(
   request: ChatRequest,
   visitor: string | null,
 ): Promise<Result<ChatTurn>> {
+  return call(path(scope, "chat"), post(request, visitor), CHAT_TIMEOUT_MS, isTurn);
+}
+
+function post(body: object, visitor: string | null): RequestInit {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (visitor) headers["X-Networth-Visitor"] = visitor;
-  return call(
-    scope,
-    "chat",
-    { method: "POST", headers, body: JSON.stringify(request) },
-    CHAT_TIMEOUT_MS,
-    isTurn,
-  );
+  return { method: "POST", headers, body: JSON.stringify(body) };
+}
+
+function isCommandTurn(body: unknown): body is CommandTurn {
+  const t = body as CommandTurn | null;
+  return !!t && typeof t.command === "string" && isMessage(t.message) && !!t.card;
+}
+
+export function postCommand(
+  scope: Scope,
+  request: CommandRequest,
+  visitor: string | null,
+): Promise<Result<CommandTurn>> {
+  return call(path(scope, "command"), post(request, visitor), CHAT_TIMEOUT_MS, isCommandTurn);
+}
+
+function isTrackRecord(body: unknown): body is TrackRecord {
+  const t = body as TrackRecord | null;
+  return !!t && Array.isArray(t.stats) && (t.tested === null || Array.isArray(t.tested));
+}
+
+export function getTrackRecord(): Promise<Result<TrackRecord>> {
+  return call("/api/track-record", { method: "GET" }, DASHBOARD_TIMEOUT_MS, isTrackRecord);
 }

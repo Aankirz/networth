@@ -511,3 +511,15 @@
 
 ## 2026-10-25 — web chat 500: torn call log line
 - Live /api/demo/chat 500: line 76 of /data/llm_calls.jsonl is 403 NUL bytes (VM stopped mid-append during the Maritime outage); run_turn -> cost_between -> net.read_records raised JSONDecodeError on every web turn. read_records now strips NULs and skips unparseable lines with a warning. Tests: demo chat 200 with a torn log, read_records keeps whole records.
+||||||| parent of a31f04e (feat: make the web app a chat with the dashboard one click away)
+||||||| parent of 395ddb1 (feat: make the web app a chat with the dashboard one click away)
+||||||| parent of 4b3cde8 (feat: make the web app a chat with the dashboard one click away)
+||||||| parent of 338ea2d (feat: make the web app a chat with the dashboard one click away)
+||||||| parent of f904838 (feat: make the web app a chat with the dashboard one click away)
+
+## 2026-10-25 — Phase 10 slice 1: the chat-first web app
+- site/: centred chat home for /demo and /u/[token], sidebar with past chats kept in the browser, @ mentions and / commands, Vercel-black theme with Geist and a light theme, one card per server card type, designed thinking, error, unreachable, missing, rate-limited and over-length states.
+- site/: rough.js sketches with hidden tables, and the dashboard as a slide-over or pinned canvas.
+- site/: commands fall back to the chat question they stand for while the API lacks the command route; a 404 no longer says "check your connection"; past chats get readable titles; the news timeline runs oldest to newest.
+- networth/web/api.py: command routes, mentions, track record; today's stories now carry the day they were first seen.
+- Removed the unused shadcn and base-ui dependencies, components.json and lib/utils.ts.

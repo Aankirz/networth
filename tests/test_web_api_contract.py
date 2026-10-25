@@ -1,4 +1,4 @@
-"""The contract in docs/phases/phase-8-contract.md, the site's TypeScript copy of it and the JSON
+"""The contract in docs/phases/phase-10-contract.md, the site's TypeScript copy of it and the JSON
 the API really returns all name the same fields."""
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from tests.test_onboarding import USER
 from tests.test_web_api import World, cfg  # noqa: F401 - the config fixture
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT = ROOT / "docs" / "phases" / "phase-8-contract.md"
+CONTRACT = ROOT / "docs" / "phases" / "phase-10-contract.md"
 SITE_TYPES = ROOT / "site" / "lib" / "contract.ts"
 INTERFACE = re.compile(r"export interface (\w+) \{\n(.*?)\n\}", re.S)
 FIELD = re.compile(r"^  (\w+)(\?)?: ", re.M)
@@ -59,6 +59,8 @@ def check_cards(board: dict) -> None:
     for item in board["news"]["items"]:
         shape(item, "NewsItem")
     shape(board["history"], "HistoryCard")
+    for m in board["mentions"]:
+        shape(m, "Mention")
     shape(board["plan_range"], "PlanRangeCard")
     r = board["plan_range"]["range"]
     shape(r, "PlanRange")
@@ -110,6 +112,20 @@ def test_a_chat_turn_and_an_error_match_the_types(world: World) -> None:
     error = world.client.get("/api/u/nope/dashboard").json()
     shape(error, "ApiError")
     shape(error["message"], "Message")
+
+
+def test_a_command_turn_matches_the_types(world: World) -> None:
+    for name, card in (("range", "PlanRangeCard"), ("holdings", "HoldingsCard"),
+                       ("brief", "HistoryCard"), ("help", "TextCard")):  # fmt: skip
+        turn = world.client.post(f"/api/u/{world.token(USER)}/command", json={"name": name})
+        shape(turn.json(), "CommandTurn")
+        shape(turn.json()["message"], "Message")
+        shape(turn.json()["card"], card)
+
+
+def test_every_command_name_is_declared() -> None:
+    names = re.search(r"export type CommandName =(.*?);", ts_block(), re.S)
+    assert names and set(re.findall(r'"(\w+)"', names.group(1))) == set(api.COMMANDS)
 
 
 def test_a_news_card_matches_the_types(world: World) -> None:

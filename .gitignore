@@ -9,3 +9,4 @@ __pycache__/
 .ruff_cache/
 .code-review-graph/
 .DS_Store
+.vercel

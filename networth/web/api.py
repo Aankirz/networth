@@ -3,11 +3,16 @@ Telegram does. docs/phases/phase-8-contract.md is the contract; site/lib/contrac
 
     GET  /api/u/{token}/dashboard     POST /api/u/{token}/chat   {"text": "...", "lang"?: "hi"}
     GET  /api/demo/dashboard          POST /api/demo/chat
+    POST /api/u/{token}/command       POST /api/demo/command   {"name": "brief", "lang"?: "hi"}
+    GET  /api/track-record
+
+A command answers with the message Telegram sends for the same slash command, built by the bot's
+own entry points, and never changes the profile: /plan shows the plan without asking to edit it.
 
 A chat turn runs chat.respond_traced, the Telegram pipeline with its guard, then attaches a card
-built only from data the server computed: the intent picks the builder from CARDS. Every turn
-appends one line to data/web_turns.jsonl (trace id, hashed user id, intent, guard verdict, cost),
-never the text or the token.
+built only from data the server computed: the intent picks the builder from CARDS. Every turn and
+command appends one line to data/web_turns.jsonl (trace id, hashed user id, intent, guard
+verdict, cost), never the text or the token.
 
     uv run python -m networth.web.api reset-demo    # put the sample profile back as it started
 """
@@ -22,6 +27,7 @@ import json
 import logging
 import os
 import re
+import sqlite3
 import sys
 import threading
 import time
@@ -29,7 +35,8 @@ import uuid
 from collections import deque
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
-from typing import Annotated, Final
+from pathlib import Path
+from typing import Annotated, Final, Literal, get_args
 from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
@@ -42,19 +49,31 @@ from networth.app import links
 from networth.app.services import Services
 from networth.app.settings import Settings
 from networth.app.store import Plan, Profile, Status, Step, Store, now_iso
-from networth.bot.commands import TOO_MANY, TRY_AGAIN
+from networth.bot import briefs
+from networth.bot import holdings as holdings_flow
+from networth.bot.commands import FINISH_FIRST, PLAN_TITLE, TOO_MANY, TRY_AGAIN, help_message
 from networth.bot.message import FOOTER, LANGS, Link, Message, plain, say
-from networth.bot.onboarding import BUCKETS, STARTER_PLANS, format_money, ordinal, plan_line
+from networth.bot.onboarding import (
+    BUCKETS,
+    STARTER_PLANS,
+    Reply,
+    format_money,
+    ordinal,
+    plan_line,
+    with_lead,
+)
+from networth.bot.onboarding import prompt as ask_for
 from networth.brief.lines import Line, day_words, odds_line
+from networth.chat.answer import deliver
 from networth.engine import odds as engine
 from networth.keiki.turn import TURN_LOCK, cost_between
 from networth.sim.data import Table
 from networth.watcher.store import Confirmed
 from networth.watcher.store import Store as WatcherStore
-from networth.web import holdings_view, plan_view
-from networth.web.fmt import percent
-from networth.web.names import asset_name, why_path
-from networth.web.routes import BAD_LINK, settings, sim_table
+from networth.web import holdings_view, plan_view, routes
+from networth.web.fmt import percent, western_grouping
+from networth.web.names import TYPES, asset_name, why_path
+from networth.web.routes import BAD_LINK, rates_db, settings, sim_table
 from networth.web.routes import router as pages
 
 log = logging.getLogger("networth.web.api")
@@ -299,9 +318,9 @@ def holdings_card(store: Store, profile: Profile, table: Table | None) -> dict |
             "label": v["label"]}  # fmt: skip
 
 
-def today_stories(services: Services, now: dt.datetime) -> list[dict]:
+def today_stories(services: Services, now: dt.datetime, lang: str | None = None) -> list[dict]:
     """The confirmed stories today.what_happened words: pulled in the 24 hours before the last
-    news check, in the same order."""
+    news check, in the same order. Each carries the day the story was first seen."""
     if not services.watcher_db.exists():
         return []
     ws = WatcherStore.open(services.watcher_db)
@@ -313,7 +332,11 @@ def today_stories(services: Services, now: dt.datetime) -> list[dict]:
     finally:
         ws.close()
     return [
-        {"title": d.story.title.rstrip("."), "day": None, "publishers": list(d.verdict.publishers)}
+        {
+            "title": d.story.title.rstrip("."),
+            "day": day_words(d.story.first_seen.date(), lang),
+            "publishers": list(d.verdict.publishers),
+        }
         for d in decided
         if isinstance(d.verdict, Confirmed)
     ][: chat.today.MAX_STORIES]
@@ -351,7 +374,7 @@ CardBuilder = Callable[[TurnFacts], dict]
 CARDS: Final[Mapping[chat.Intent, CardBuilder]] = {
     chat.Intent.WHAT_HAPPENED_TODAY: lambda f: {
         "type": "news",
-        "items": today_stories(f.services, f.now),
+        "items": today_stories(f.services, f.now, f.lang),
         "note": None,
     },
     chat.Intent.WHY: lambda f: why_card(f.reply, f.asker.profile, f.services, f.lang),
@@ -370,27 +393,68 @@ def card_for(intent: chat.Intent, facts: TurnFacts) -> dict:
 # Dashboard ----------------------------------------------------------------------------------
 
 
+def month_brief(store: Store, profile: Profile, services: Services,
+                now: dt.datetime) -> brief.Brief:  # fmt: skip
+    """This month's events and history lines for the profile, as the dashboard shows them."""
+    plan = store.get_plan(profile.user_id)
+    today = now.astimezone(ZoneInfo(profile.tz)).date()
+    events = brief.month_events(services.watcher_db, today)
+    return brief.compose(events, profile, plan, services.rates_db,
+                         dt.datetime.combine(today, dt.time()))  # fmt: skip
+
+
+def history_card(drafted: brief.Brief, lang: str, services: Services) -> dict:
+    rows = [history_row(line, lang, services.public_url) for line in drafted.lines]
+    return {"type": "history", "rows": rows, "note": None if rows else say(NO_COUNTS, lang)}
+
+
+MentionKind = Literal["news", "story", "history", "plan", "range", "holdings", "holding"]
+
+
+def mention(id: str, kind: MentionKind, label: str, text: str) -> dict:
+    return {"id": id, "kind": kind, "label": label, "text": text}
+
+
+def mentions(news: list[dict], history: list[dict], holdings: dict | None) -> list[dict]:
+    """What @ can point at. Each text is a plain question the chat pipeline already routes, so
+    the answer stays the server's. English on purpose: chat.reply_lang still answers an English
+    question in the profile's own language."""
+    rows = holdings["rows"] if holdings else []
+    return [
+        mention("news", "news", "news", "What happened today?"),
+        *(mention(f"story:{i}", "story", n["title"], f"Why does this story matter: {n['title']}?")
+          for i, n in enumerate(news)),
+        *(mention(f"history:{h['type']}:{h['asset']}", "history",
+                  f"{TYPES[h['type']].title}, {h['asset_name']}",
+                  f"Why? What history counted for {TYPES[h['type']].title} and {h['asset_name']}")
+          for h in history),
+        mention("plan", "plan", "plan", "What is my plan?"),
+        mention("range", "range", "range", "What could my plan become?"),
+        mention("holdings", "holdings", "holdings", "How are my holdings doing?"),
+        *(mention(f"holding:{i}", "holding", r["name"],
+                  f"How are my holdings doing? About {r['name']}") for i, r in enumerate(rows)),
+    ]  # fmt: skip
+
+
 def dashboard(asker: Asker, services: Services, table: Table | None, now: dt.datetime) -> dict:
     store, profile = asker.store, asker.profile
     lang = profile.lang if profile.lang in LANGS else "en"
     plan = store.get_plan(profile.user_id)
-    today = now.astimezone(ZoneInfo(profile.tz)).date()
-    events = brief.month_events(services.watcher_db, today)
-    drafted = brief.compose(events, profile, plan, services.rates_db,
-                            dt.datetime.combine(today, dt.time()))  # fmt: skip
+    drafted = month_brief(store, profile, services, now)
     news = [{"title": e.title.rstrip("."), "day": day_words(e.event_date, lang),
              "publishers": []} for e in drafted.events]  # fmt: skip
-    rows = [history_row(line, lang, services.public_url) for line in drafted.lines]
+    history = history_card(drafted, lang, services)
+    held = holdings_card(store, profile, table)
     return {
         "sample": asker.sample, "lang": lang,
         "profile": {"plan": plan_line(plan, lang) if plan else None,
                     "money": format_money(profile.monthly_amount or 0, profile.currency or "INR"),
                     "day": ordinal(profile.invest_day) if profile.invest_day else None},
         "news": {"type": "news", "items": news, "note": None if news else say(NO_NEWS_YET, lang)},
-        "history": {"type": "history", "rows": rows,
-                    "note": None if rows else say(NO_COUNTS, lang)},
+        "history": history,
         "plan_range": plan_range_card(store, profile, table),
-        "holdings": holdings_card(store, profile, table),
+        "holdings": held,
+        "mentions": mentions(news, history["rows"], held),
         "footer": say(FOOTER, lang),
     }  # fmt: skip
 
@@ -513,6 +577,145 @@ def answer(asker: Asker, body: ChatIn, services: Services, table: Table | None,
         return error(500, "failed", TRY_AGAIN, lang, request)
 
 
+# Commands -----------------------------------------------------------------------------------
+
+CommandName = Literal["brief", "range", "plan", "holdings", "help"]
+
+
+@dataclass(frozen=True)
+class CommandFacts:
+    asker: Asker
+    profile: Profile  # the asker's, in this command's language
+    services: Services
+    table: Table | None
+    now: dt.datetime
+
+
+TEXT_CARD: Final = {"type": "text"}
+
+
+def not_set_up(f: CommandFacts, words: Mapping[str, str]) -> tuple[Message, dict] | None:
+    """Telegram's reply to a command from a user who hasn't finished setup."""
+    if f.profile.step is Step.DONE:
+        return None
+    return Message(body=(say(words, f.profile.lang),)), TEXT_CARD
+
+
+def run_brief(f: CommandFacts) -> tuple[Message, dict]:
+    """compose_reply, not send_brief: the web shows the brief and never claims or saves it."""
+    if early := not_set_up(f, briefs.NOT_SET_UP):
+        return early
+    local = briefs.local_now(f.profile, f.now)
+    reply, _ = briefs.compose_reply(f.profile, f.asker.store, f.services, local)
+    drafted = month_brief(f.asker.store, f.profile, f.services, f.now)
+    return message_of(reply), history_card(drafted, f.profile.lang or "en", f.services)
+
+
+def run_range(f: CommandFacts) -> tuple[Message, dict]:
+    if early := not_set_up(f, FINISH_FIRST):
+        return early
+    lang = f.profile.lang or "en"
+    reply = deliver(chat.today.plan_range(f.asker.store, f.profile, lang), lang, f.services)
+    return message_of(reply), plan_range_card(f.asker.store, f.profile, f.table)
+
+
+def run_plan(f: CommandFacts) -> tuple[Message, dict]:
+    """cmd_plan's first message without the page link and without moving the profile to the
+    plan step: the web shows the plan, it never changes it."""
+    plan = f.asker.store.get_plan(f.profile.user_id)
+    lang = f.profile.lang
+    if f.profile.step is not Step.DONE or plan is None:
+        return message_of(with_lead(say(FINISH_FIRST, lang), ask_for(f.profile, plan))), TEXT_CARD
+    return Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.",),
+                   footer=say(FOOTER, lang)), TEXT_CARD  # fmt: skip
+
+
+def run_holdings(f: CommandFacts) -> tuple[Message, dict]:
+    if early := not_set_up(f, FINISH_FIRST):
+        return early
+    reply = holdings_flow.report_reply(f.asker.store, f.profile, f.services, f.now)
+    return message_of(reply), holdings_card(f.asker.store, f.profile, f.table) or TEXT_CARD
+
+
+CommandBuilder = Callable[[CommandFacts], tuple[Message, dict]]
+COMMANDS: Final[Mapping[str, CommandBuilder]] = {
+    "brief": run_brief,
+    "range": run_range,
+    "plan": run_plan,
+    "holdings": run_holdings,
+    "help": lambda f: (help_message(f.profile.lang), TEXT_CARD),
+}
+if set(COMMANDS) != set(get_args(CommandName)):
+    raise RuntimeError("COMMANDS must build every CommandName")
+
+
+def message_of(reply: Reply) -> Message:
+    m = reply.message
+    return m if isinstance(m, Message) else Message(body=(m,))
+
+
+class CommandIn(BaseModel):
+    name: CommandName
+    lang: str | None = None
+
+
+def run_command(asker: Asker, body: CommandIn, services: Services, table: Table | None) -> dict:
+    """One command's message and card, and one log line with the command, never the text."""
+    now = dt.datetime.now(dt.UTC)
+    trace_id = uuid.uuid4().hex
+    profile = replace(asker.profile, lang=body.lang) if body.lang in LANGS else asker.profile
+    facts = CommandFacts(asker, profile, services, table, now)
+    with TURN_LOCK:
+        start, outcome = dt.datetime.now(dt.UTC), "completed"
+        try:
+            message, card = COMMANDS[body.name](facts)
+        except Exception:
+            log.exception("web command %s failed", trace_id)
+            message, card, outcome = None, None, "failed"
+        cost = cost_between(services.call_log, start, dt.datetime.now(dt.UTC))
+    log_turn(services, {
+        "ts": now.isoformat(timespec="seconds"), "trace_id": trace_id,
+        "user_id": hashed(profile.user_id), "channel": "demo" if asker.sample else "web",
+        "intent": f"/{body.name}", "guard": None, "cost_usd": cost, "outcome": outcome,
+    })  # fmt: skip
+    if message is None or card is None:
+        raise TurnFailed(trace_id)
+    if not asker.sample:
+        asker.store.log_message(profile.user_id, "in", f"/{body.name}")
+        asker.store.log_message(profile.user_id, "out", plain(message))
+    return {"trace_id": trace_id, "command": body.name, "message": message_json(message),
+            "text": plain(message), "card": card}  # fmt: skip
+
+
+def command(asker: Asker, body: CommandIn, services: Services, table: Table | None,
+            request: Request) -> Response:  # fmt: skip
+    """The demo shares the chat's caps; a user's commands, like Telegram's, claim no hourly
+    answer."""
+    lang = body.lang if body.lang in LANGS else asker.profile.lang
+    if asker.sample and not claim_turn(asker, services, request, dt.datetime.now(dt.UTC)):
+        return error(429, "rate_limited", TOO_MANY, lang, request)
+    try:
+        return cors(JSONResponse(run_command(asker, body, services, table)), request)
+    except TurnFailed:
+        return error(500, "failed", TRY_AGAIN, lang, request)
+
+
+# Track record -------------------------------------------------------------------------------
+
+
+def track_record(db: Path) -> dict:
+    """The /track-record page's own test sentences and the /stats page's counts."""
+    stats: list[dict] = []
+    if db.exists():
+        conn = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        try:
+            stats = [{"label": label, "value": western_grouping(conn.execute(sql).fetchone()[0])}
+                     for label, sql in routes.STATS_QUERIES]  # fmt: skip
+        finally:
+            conn.close()
+    return {"tested": routes._own_test(routes.EVAL_SUMMARY), "stats": stats}
+
+
 # Routes -------------------------------------------------------------------------------------
 
 Origin = Depends(check_origin)
@@ -548,6 +751,27 @@ def demo_dashboard(request: Request, cfg: Config, services: Svc, table: SimTable
 def demo_chat(request: Request, body: ChatIn, cfg: Config, services: Svc,
               table: SimTable) -> Response:  # fmt: skip
     return answer(demo_user(cfg), body, services, table, request)
+
+
+@router.post("/u/{token}/command", dependencies=[Origin])
+def user_command(request: Request, token: str, body: CommandIn, cfg: Config, services: Svc,
+                 table: SimTable) -> Response:  # fmt: skip
+    try:
+        asker = user_by_token(token, cfg)
+    except HTTPException:
+        return error(404, "not_found", {"en": BAD_LINK}, "en", request)
+    return command(asker, body, services, table, request)
+
+
+@router.post("/demo/command", dependencies=[Origin])
+def demo_command(request: Request, body: CommandIn, cfg: Config, services: Svc,
+                 table: SimTable) -> Response:  # fmt: skip
+    return command(demo_user(cfg), body, services, table, request)
+
+
+@router.get("/track-record", dependencies=[Origin])
+def track_record_route(request: Request, db: Annotated[Path, Depends(rates_db)]) -> Response:
+    return cors(JSONResponse(track_record(db)), request)
 
 
 pages.include_router(router)

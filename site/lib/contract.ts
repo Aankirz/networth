@@ -1,4 +1,4 @@
-// Generated from docs/phases/phase-8-contract.md. Edit the contract, then copy this block.
+// Generated from docs/phases/phase-10-contract.md. Edit the contract, then copy this block.
 
 export type Lang = "en" | "hi" | "hinglish";
 
@@ -12,6 +12,13 @@ export type Intent =
   | "watch"
   | "holdings"
   | "other";
+
+export type CommandName = "brief" | "range" | "plan" | "holdings" | "help";
+
+export interface CommandRequest {
+  name: CommandName;
+  lang?: Lang;
+}
 
 export interface ChatRequest {
   text: string;
@@ -185,6 +192,23 @@ export interface ChatTurn {
   card: Card;
 }
 
+export interface CommandTurn {
+  trace_id: string;
+  command: CommandName;
+  message: Message;
+  text: string;
+  card: Card;
+}
+
+export type MentionKind = "news" | "story" | "history" | "plan" | "range" | "holdings" | "holding";
+
+export interface Mention {
+  id: string;
+  kind: MentionKind;
+  label: string;
+  text: string;
+}
+
 export interface ProfileLine {
   plan: string | null;
   money: string;
@@ -199,7 +223,18 @@ export interface Dashboard {
   history: HistoryCard;
   plan_range: PlanRangeCard;
   holdings: HoldingsCard | null;
+  mentions: Mention[];
   footer: string;
+}
+
+export interface Stat {
+  label: string;
+  value: string;
+}
+
+export interface TrackRecord {
+  tested: string[] | null;
+  stats: Stat[];
 }
 
 export type ErrorCode = "forbidden_origin" | "not_found" | "too_long" | "rate_limited" | "failed";

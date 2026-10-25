@@ -1,0 +1,20 @@
+{
+  "trace_id": "7f5197b73984482c84a4b86e87f4d264",
+  "command": "plan",
+  "message": {
+    "title": "Your plan",
+    "body": [
+      {
+        "kind": "text",
+        "text": "Balanced. 20% safety, 70% core, 10% growth."
+      }
+    ],
+    "detail": [],
+    "footer": "Research, not advice.",
+    "preview": null
+  },
+  "text": "Your plan\n\nBalanced. 20% safety, 70% core, 10% growth.\n\nResearch, not advice.",
+  "card": {
+    "type": "text"
+  }
+}

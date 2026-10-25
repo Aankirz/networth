@@ -1,0 +1,170 @@
+{
+  "trace_id": "247381919dbe46b4998bafcc393b9f3a",
+  "command": "holdings",
+  "message": {
+    "title": "What you hold, valued on 25 October 2026: 7 holdings.",
+    "body": [
+      {
+        "kind": "text",
+        "text": "1. UTI Nifty 50 Index Fund Direct Growth (core): 1250 units at an average cost of ₹128.40. Put in ₹1,60,500, worth ₹2,02,625 now, +₹42,125 (+5.2% a year, XIRR). Price from your screenshot.\n2. HDFC Liquid Fund Direct Growth (safety): 20.5 units at an average cost of ₹4,720.00. Put in ₹96,760, worth ₹1,04,659 now, +₹7,899 (+2.8% a year, XIRR). Price from your screenshot.\n3. Parag Parikh Flexi Cap Fund Direct Growth (growth): 800 units at an average cost of ₹68.50. Put in ₹54,800, worth ₹67,360 now, +₹12,560 (+22.9% in total, a simple return as no start date was shown). Price from your screenshot.\n4. Reliance Industries (growth): 40 units at an average cost of ₹2,450.00. Put in ₹98,000, worth ₹1,12,500 now, +₹14,500 (+14.8% in total, a simple return as no start date was shown). Price from your screenshot.\n5. Tata Motors (growth): 60 units at an average cost of ₹910.00. Put in ₹54,600, worth ₹44,541 now, −₹10,059 (−18.4% in total, a simple return as no start date was shown). Price from your screenshot.\n6. Nippon India ETF Bank BeES (growth): 150 units at an average cost of ₹470.00. Put in ₹70,500, worth ₹79,290 now, +₹8,790 (+12.5% in total, a simple return as no start date was shown). Price from your screenshot.\n7. Infosys (growth): 25 units at an average cost of ₹1,540.00. Put in ₹38,500, worth ₹40,310 now, +₹1,810 (+4.7% in total, a simple return as no start date was shown). Price from your screenshot."
+      },
+      {
+        "kind": "text",
+        "text": "In total: put in ₹5,73,660, worth ₹6,51,285 now, +₹77,625 (+13.5% in total, a simple return as no start date was shown)."
+      },
+      {
+        "kind": "text",
+        "text": "Your mix by value now, next to the plan you saved:\nYour plan says 20% safety. Your holdings are 16% safety.\nYour plan says 70% core. Your holdings are 31% core.\nYour plan says 10% growth. Your holdings are 53% growth."
+      },
+      {
+        "kind": "text",
+        "text": "This is what you hold and what history says about a mix like it. It is not advice. What you do is your choice."
+      }
+    ],
+    "detail": [
+      "What history says is not ready on this server yet.",
+      "Prices from your screenshot: 7 of 7 holdings."
+    ],
+    "footer": "Research, not advice.",
+    "preview": null
+  },
+  "text": "What you hold, valued on 25 October 2026: 7 holdings.\n\n1. UTI Nifty 50 Index Fund Direct Growth (core): 1250 units at an average cost of ₹128.40. Put in ₹1,60,500, worth ₹2,02,625 now, +₹42,125 (+5.2% a year, XIRR). Price from your screenshot.\n2. HDFC Liquid Fund Direct Growth (safety): 20.5 units at an average cost of ₹4,720.00. Put in ₹96,760, worth ₹1,04,659 now, +₹7,899 (+2.8% a year, XIRR). Price from your screenshot.\n3. Parag Parikh Flexi Cap Fund Direct Growth (growth): 800 units at an average cost of ₹68.50. Put in ₹54,800, worth ₹67,360 now, +₹12,560 (+22.9% in total, a simple return as no start date was shown). Price from your screenshot.\n4. Reliance Industries (growth): 40 units at an average cost of ₹2,450.00. Put in ₹98,000, worth ₹1,12,500 now, +₹14,500 (+14.8% in total, a simple return as no start date was shown). Price from your screenshot.\n5. Tata Motors (growth): 60 units at an average cost of ₹910.00. Put in ₹54,600, worth ₹44,541 now, −₹10,059 (−18.4% in total, a simple return as no start date was shown). Price from your screenshot.\n6. Nippon India ETF Bank BeES (growth): 150 units at an average cost of ₹470.00. Put in ₹70,500, worth ₹79,290 now, +₹8,790 (+12.5% in total, a simple return as no start date was shown). Price from your screenshot.\n7. Infosys (growth): 25 units at an average cost of ₹1,540.00. Put in ₹38,500, worth ₹40,310 now, +₹1,810 (+4.7% in total, a simple return as no start date was shown). Price from your screenshot.\n\nIn total: put in ₹5,73,660, worth ₹6,51,285 now, +₹77,625 (+13.5% in total, a simple return as no start date was shown).\n\nYour mix by value now, next to the plan you saved:\nYour plan says 20% safety. Your holdings are 16% safety.\nYour plan says 70% core. Your holdings are 31% core.\nYour plan says 10% growth. Your holdings are 53% growth.\n\nThis is what you hold and what history says about a mix like it. It is not advice. What you do is your choice.\n\nWhat history says is not ready on this server yet.\nPrices from your screenshot: 7 of 7 holdings.\n\nResearch, not advice.",
+  "card": {
+    "type": "holdings",
+    "as_of": "25 October 2026",
+    "count": 7,
+    "rows": [
+      {
+        "name": "UTI Nifty 50 Index Fund Direct Growth",
+        "bucket": "core",
+        "units": "1250",
+        "value": "₹2,02,625",
+        "gain": "+₹42,125",
+        "direction": "up",
+        "ret": "+5.2% a year, XIRR"
+      },
+      {
+        "name": "HDFC Liquid Fund Direct Growth",
+        "bucket": "safety",
+        "units": "20.5",
+        "value": "₹1,04,659",
+        "gain": "+₹7,899",
+        "direction": "up",
+        "ret": "+2.8% a year, XIRR"
+      },
+      {
+        "name": "Parag Parikh Flexi Cap Fund Direct Growth",
+        "bucket": "growth",
+        "units": "800",
+        "value": "₹67,360",
+        "gain": "+₹12,560",
+        "direction": "up",
+        "ret": "+22.9% in total, a simple return as no start date was shown"
+      },
+      {
+        "name": "Reliance Industries",
+        "bucket": "growth",
+        "units": "40",
+        "value": "₹1,12,500",
+        "gain": "+₹14,500",
+        "direction": "up",
+        "ret": "+14.8% in total, a simple return as no start date was shown"
+      },
+      {
+        "name": "Tata Motors",
+        "bucket": "growth",
+        "units": "60",
+        "value": "₹44,541",
+        "gain": "−₹10,059",
+        "direction": "down",
+        "ret": "−18.4% in total, a simple return as no start date was shown"
+      },
+      {
+        "name": "Nippon India ETF Bank BeES",
+        "bucket": "growth",
+        "units": "150",
+        "value": "₹79,290",
+        "gain": "+₹8,790",
+        "direction": "up",
+        "ret": "+12.5% in total, a simple return as no start date was shown"
+      },
+      {
+        "name": "Infosys",
+        "bucket": "growth",
+        "units": "25",
+        "value": "₹40,310",
+        "gain": "+₹1,810",
+        "direction": "up",
+        "ret": "+4.7% in total, a simple return as no start date was shown"
+      }
+    ],
+    "invested": "₹5,73,660",
+    "value": "₹6,51,285",
+    "gain": "+₹77,625",
+    "ret": "+13.5% in total, a simple return as no start date was shown",
+    "mix": [
+      "Your plan says 20% safety. Your holdings are 16% safety.",
+      "Your plan says 70% core. Your holdings are 31% core.",
+      "Your plan says 10% growth. Your holdings are 53% growth."
+    ],
+    "bar": {
+      "width": 400,
+      "rows": [
+        {
+          "name": "Your plan",
+          "segments": [
+            {
+              "bucket": "safety",
+              "pct": "20%",
+              "x": 8.0,
+              "w": 76.8
+            },
+            {
+              "bucket": "core",
+              "pct": "70%",
+              "x": 84.8,
+              "w": 268.8
+            },
+            {
+              "bucket": "growth",
+              "pct": "10%",
+              "x": 353.6,
+              "w": 38.4
+            }
+          ]
+        },
+        {
+          "name": "Your holdings",
+          "segments": [
+            {
+              "bucket": "safety",
+              "pct": "16%",
+              "x": 8.0,
+              "w": 61.4
+            },
+            {
+              "bucket": "core",
+              "pct": "31%",
+              "x": 69.4,
+              "w": 119.0
+            },
+            {
+              "bucket": "growth",
+              "pct": "53%",
+              "x": 188.4,
+              "w": 203.5
+            }
+          ]
+        }
+      ]
+    },
+    "bar_title": "Your plan: 20% safety, 70% core, 10% growth. Your holdings: 16% safety, 31% core, 53% growth.",
+    "history": [
+      "In 98% of paths a mix like your holdings fell 20% or more at some point. Your saved plan: 90%.",
+      "The typical worst fall: 30% for a mix like your holdings, 21% for your saved plan.",
+      "The middle case after 5 years of ₹1,00,000 a month: ₹1.15 Cr for a mix like your holdings, ₹1.02 Cr for your saved plan. Money put in: ₹60,00,000.",
+      "Both replay real past months from 2015 to 2018, 10,000 times, using index prices, not your funds' own."
+    ],
+    "label": "This is what you hold and what history says about a mix like it. It is not advice. What you do is your choice. Research, not advice."
+  }
+}
