@@ -33,7 +33,7 @@ The server is `networth/web/api.py`. The TypeScript below is the source of truth
 2. **The words are the server's.** `ChatTurn.text` is `plain(message)`, the same plain render Keiki email, the logs and the guard use. `message` carries the same thing split into blocks so the site can style it. The footer, "Research, not advice." in the reader's language, comes only from `message.footer` or `Dashboard.footer`.
 3. **Errors carry their own words.** Every non-200 answer is an `ApiError` whose `message` holds the server's sentence in the reader's language (the hourly-cap words are Telegram's own `TOO_MANY`).
 4. **A view lives in the words, never in a card.** Since Phase 13A (owner decision, 2026-10-25) a `stock_view` answer opens with Networth's read ("I would not add to Swiggy right now"), labelled "Networth's read" until the Phase 13C rating engine scores it. Cards still carry only computed, sourced numbers: no score, rank or buy/sell field. A history row says "6 of 9" next to "normal 59%". `near_normal` is the engine's own flag for "within normal ups and downs". `weak` is its "too few cases" flag. Neither is a direction.
-5. **Every market number carries its source and time.** A `price`, `price_history`, `position`, `compare` or `market_today` card has a `Source` with the provider's name, a link when there is one, and `as_of`, the provider's own timestamp formatted on the server ("24 Oct 2026, 15:30 IST", or "last close 24 Oct 2026"). A number with no source is never sent. `Point.v` is the raw value for drawing a line; the site never prints it, it prints the `label` strings.
+5. **Every market number carries its source and time.** A `price`, `price_history`, `position`, `compare` or `market_today` card has a `Source` with the provider's name, the link to the provider's page for that symbol, and `as_of`, the provider's own timestamp formatted on the server ("24 Oct 2026, 15:30 IST", or "last close 24 Oct 2026"). A number with no source is never sent. `Source` is the same interface the Phase 13C block declares, field for field, so the two blocks can sit in one file. `Point.v` is the raw value for drawing a line; the site never prints it, it prints the `label` strings.
 
 ## Request
 
@@ -315,7 +315,7 @@ export type Direction = "up" | "down" | "flat";
 
 export interface Source {
   name: string;
-  url: string | null;
+  url: string;
   as_of: string;
 }
 

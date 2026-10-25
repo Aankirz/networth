@@ -557,3 +557,6 @@
 ## 2026-10-25 — Phase 13C: rate() signature and the ratings/sectors contract
 - networth/ratings/{__init__,model}.py: Rating, Driver, Source, Track, View and the rate() signature 13A codes against.
 - docs/phases/phase-10-contract.md: Phase 13C routes and the RatingCard, SectorsCard, RatingsBacktest types in their own block.
+
+## 2026-10-25 — Phase 13A card contract
+- Added price, price_history, position, compare, market_today cards and five intents to the phase-10 contract; commit the 13A brief.
