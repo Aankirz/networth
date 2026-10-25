@@ -721,6 +721,7 @@ h2 {
 .range-bar svg {
   display: block;
   width: 100%;
+  max-width: 480px;
   height: auto;
 }
 
@@ -752,7 +753,7 @@ h2 {
 .range-bar__name,
 .range-bar__label {
   fill: var(--muted);
-  font: 600 22px var(--sans);
+  font: 600 18px var(--sans);
 }
 
 .range-bar__name {

@@ -8,7 +8,7 @@ from typing import Final
 
 from networth.engine.model import DATA_DIR
 
-METHOD_VERSION: Final = "plan-range-v1"
+METHOD_VERSION: Final = "plan-range-v2"
 SEED: Final = 20261025
 PATHS: Final = 10_000
 MEAN_BLOCK_MONTHS: Final = 12
@@ -29,6 +29,9 @@ SOURCES_FILE: Final = "sources.json"
 CORE_TICKER: Final = "^NSEI"
 GROWTH_TICKER: Final = "^NSEMDCP50"
 SAFETY_FRED_ID: Final = "INDIR3TIB01STM"
+# v2: older series used only for months before the main series starts (method doc, v2).
+SAFETY_EARLY_FRED_ID: Final = "INDLOCOSTORSTM"
+CPI_EARLY_FRED_ID: Final = "INDCPIALLMINMEI"
 # Inside the window only these CPI gaps may be filled, by a straight line (MoSPI has no print).
 CPI_MAX_FILL_MONTHS: Final = 2
 
@@ -46,14 +49,23 @@ SOURCES: Final[Mapping[str, Mapping[str, str]]] = {
         "https://www.niftyindices.com/indices/equity/broad-based-indices/nifty-midcap-50",
     },
     "safety": {
-        "series": "3-month interbank rate, India (FRED INDIR3TIB01STM, OECD MEI)",
-        "url": "https://fred.stlouisfed.org/series/INDIR3TIB01STM",
-        "note": "% a year, turned into a monthly return as (1 + r/100)^(1/12) - 1.",
+        "series": "3-month interbank rate, India (FRED INDIR3TIB01STM, OECD MEI) from 2011-11; "
+        "before that the OECD MEI short-term rate for India (FRED INDLOCOSTORSTM, the "
+        "overnight call money rate)",
+        "url": "https://fred.stlouisfed.org/series/INDIR3TIB01STM | "
+        "https://fred.stlouisfed.org/series/INDLOCOSTORSTM",
+        "note": "% a year, turned into a monthly return as (1 + r/100)^(1/12) - 1. The call "
+        "rate before 2011-11 spikes in stress months (18.6% in 2008-10), which overstates "
+        "what FDs and liquid funds earned in those few months.",
     },
     "cpi": {
-        "series": "India CPI Combined, official YoY % (MoSPI, via networth/engine/macro.py)",
-        "url": "https://api.mospi.gov.in/api/cpi",
-        "note": "Monthly inflation = (1 + yoy/100)^(1/12) - 1. 2020-04 and 2020-05 have no "
-        "print and take the straight line between 2020-03 and 2020-06.",
+        "series": "India CPI Combined, official YoY % (MoSPI, via networth/engine/macro.py) "
+        "from 2012-01; before that the OECD all-items CPI for India, index 2015=100 (FRED "
+        "INDCPIALLMINMEI)",
+        "url": "https://api.mospi.gov.in/api/cpi | "
+        "https://fred.stlouisfed.org/series/INDCPIALLMINMEI",
+        "note": "From 2012-01 monthly inflation = (1 + yoy/100)^(1/12) - 1; 2020-04 and "
+        "2020-05 have no print and take the straight line between 2020-03 and 2020-06. "
+        "Before 2012-01 it is the OECD index's month-on-month change.",
     },
 }

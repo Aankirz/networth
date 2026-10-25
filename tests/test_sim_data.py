@@ -15,6 +15,7 @@ from networth.sim.data import (
     load_table,
     rate_returns,
     save_table,
+    spliced,
 )
 
 D = dt.date
@@ -93,3 +94,10 @@ def test_saved_table_reads_back_unchanged(tmp_path) -> None:
 def test_missing_table_names_the_build_command(tmp_path) -> None:
     with pytest.raises(MissingSeries, match="python -m networth.sim.data"):
         load_table(tmp_path)
+
+
+def test_splice_uses_the_late_series_from_its_first_month() -> None:
+    early = {D(2011, 9, 1): 1.0, D(2011, 10, 1): 2.0, D(2011, 11, 1): 3.0}
+    late = {D(2011, 11, 1): 30.0, D(2011, 12, 1): 40.0}
+    assert spliced(early, late) == {D(2011, 9, 1): 1.0, D(2011, 10, 1): 2.0,
+                                    D(2011, 11, 1): 30.0, D(2011, 12, 1): 40.0}  # fmt: skip
