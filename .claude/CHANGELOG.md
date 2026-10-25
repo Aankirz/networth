@@ -276,3 +276,6 @@
 
 ## 2026-10-25 — Phase 6 method v1
 - docs/phases/phase-6-method.md fixes the plan-range sources (^NSEI, ^NSEMDCP50, FRED INDIR3TIB01STM, MoSPI CPI), window, bootstrap, investing, fall and rounding rules before any run.
+
+## 2026-10-25 — Phase 6 return table and scaffold
+- networth/sim/config.py, data.py build data/sim/returns.csv (177 months, 2012-01..2026-09); sim/__init__.py scaffolds PlanRange and the API; numpy added with uv add because sim imports it directly (it was only a pandas transitive).
