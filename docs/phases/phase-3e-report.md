@@ -227,7 +227,31 @@ Live Telegram screenshots wait for the deploy (OWNER NEEDED below).
 - **Hindi spelling is inconsistent.** Both रकम and रक़म appear.
 - **The mixed-script jailbreak** is the one words-eval failure. It is described above.
 - **Live Telegram rendering is untested** until the deploy. Local tests cover the HTML, the escaping and the 400 fallback with a fake transport.
-- **Stale local branches.** The delegate worktrees under `.claude/worktrees/` and the local branches `phase-3e-web`, `phase-3e-charts` and two `worktree-agent-*` branches remain. They are already merged and untracked, and none is pushed.
+- **Stale local branches.** `phase-3e-web` and `phase-3e-charts` and their worktrees remain. See Rebase.
+
+## Rebase
+
+3E was rebased onto `origin/main` at ba24bcb, which has the Phase 3C fixes and Phase 7. Both sides were kept in every conflict.
+
+| File | Conflict | Resolution |
+|---|---|---|
+| `.claude/CHANGELOG.md` | Both sides appended entries, on three commits | Kept both, 3C and 7 first, then 3E |
+| `networth/web/routes.py` | 7 imported `holdings_view`, 3E imported `percent` | One import line with both |
+| `networth/chat/__init__.py` | 3C routed Explain this through `explain.explain_message` (never fetches footer, opt-out or tracking links), 3E gave every handler a `lang` argument | 3E's handler signatures, with Explain this calling `explain_message` |
+| `networth/chat/explain.py` | 3C added `URL`, `SKIP_HOSTS` and `SKIP_WORDS` for `user_link` and `fetchable`, 3E made `NOT_EXPLAINED`, `CANT_FETCH` and `CANT_READ` three-language tables | 3E's tables, followed by 3C's link filters |
+| `networth/keiki/turn.py` | 3C added `LINK_LINES` so a code is read past a mail footer, 3E made `LINKED` three-language | Both: `LINK_LINES = 3` and 3E's `LINKED` table |
+
+`strip_quoted` (drops Keiki's `[Email from ...]` header line and footers), sender-keyed contacts and the slash-command-in-a-first-email setup path all merged without conflict.
+
+These broke only after the merge. The first was fixed inside the rebased 3E commit, the rest in one follow-up commit (5116897):
+
+- `tests/test_chat.py` and `tests/test_keiki_turn.py`: 3C's footer-link explain tests expected the bare explanation. 3E adds the one "Research, not advice." footer, so they now expect it.
+- `tests/test_keiki_link.py`: 3C compared against `LINKED`, which is now a table, so the test compares against `LINKED["en"]`.
+- Phase 7's holdings page used a row key called `lean` for the gain colour class. 3E's voice test greps every template for "lean", so the key is now `direction`. The CSS classes and the page are unchanged.
+
+No test was dropped from either side. Three tests were deleted before the rebase by 3E itself, because they covered behaviour 3E removed: the translation task, the "Type /plan" nudge and plain-text Telegram sends. One sim test was renamed. `make check`: 918 passed.
+
+Both `worktree-agent-*` branches are deleted with `git branch -d`. `phase-3e-web` and `phase-3e-charts` remain, along with the two worktrees under `.claude/worktrees/` that hold them. The rebase rewrote their commits, so `git branch -d` refuses them as unmerged, even though their content is on main (checked with `git range-diff`: only the CHANGELOG differs). Removing them needs `git worktree remove` and then `git branch -D`.
 
 ## Owner needed
 

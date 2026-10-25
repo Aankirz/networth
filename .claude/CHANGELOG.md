@@ -423,3 +423,6 @@
 
 ## 2026-10-25 — fix: phase 3E rebased onto 3C fixes and phase 7
 - Rebased the ten 3E commits onto ba24bcb. Merge fixes: 3C's footer-link and link-code tests now expect 3E's footer and per-language LINKED; phase 7's holdings row key `lean` renamed `direction` so the 3E voice test's lean grep passes (CSS classes unchanged).
+
+## 2026-10-25 — docs: rebase section in the phase 3E report
+- Added a Rebase section to docs/phases/phase-3e-report.md: each conflict and its resolution, the post-merge test fixes, and the branch cleanup (worktree-agent-* deleted; phase-3e-web/charts kept because -d refuses rebased branches).
