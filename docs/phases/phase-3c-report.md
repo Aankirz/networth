@@ -26,6 +26,8 @@ Keiki only carries messages. Every user-facing word comes from our own pipeline 
 3. **`kind=onboarding` on an answered first email.** The behaviour is intended and is deviation 2 below. A first message that asks something is answered, then the short setup starts, so a stranger's question is never deferred. The brief's text onboarding still happens in the same turn. The log now calls that turn `welcome`, keeps `onboarding` for answers to a setup question, and records the answer's intent and guard. Test: `test_a_first_email_that_asks_something_is_answered_then_set_up`.
 4. **Slack (new scope, owner approved).** See the Slack section below.
 5. **Build 125ec77 read the wrong key.** The live channel object names its type `channel` (`{'channel': 'agentmail', 'inboxId': …, 'inboundText': …}`), not `type`, so 125ec77 logs an empty channel and would not recognise Slack. The parser now reads `channel` first and `type` as a fallback, and the fixtures mirror the live shape. It needs another redeploy.
+6. **Each email thread was a new user.** Keiki's `conversationId` (the trace's `phone`) changes with every email thread. Live, the three turns had three different conversation ids, while the channel's `userId` hashed the same on all three. Hashes were compared, never the values. The contact is now the channel's `userId`, lowercased, and Slack is keyed by `teamId` and `userId`. The test payloads give every email its own thread, as Keiki does. Tests: `test_an_email_sender_is_one_contact_across_threads_whatever_the_case`, `test_two_email_threads_from_one_sender_are_one_user`, `test_a_slack_author_is_one_contact_across_threads`.
+7. **A slash command in a first email got a chat answer.** A message starting with `/` from a linked or known sender already ran as a command, as on Telegram. The bug only showed because of fix 6. A brand-new contact's first message that is a command now gets the setup and no chat answer, because a command needs a finished setup, as on Telegram. Tests: `test_brief_by_email_in_a_new_thread_is_a_command_for_the_linked_user` (with a "Sent from my iPhone" signature) and `test_a_first_email_that_is_a_command_gets_the_setup_not_a_chat_answer`.
 
 ## Spike answers (from `phase-3c-spike.md`)
 
@@ -57,17 +59,19 @@ Keiki only carries messages. Every user-facing word comes from our own pipeline 
 
 Keiki's trace id is our turn id. Traces have no share link (spike answer 6), so none is given. Keiki's `costUsd` is null on the external harness, so the cost is ours, from `llm_calls.jsonl` during the turn.
 
-| # | Turn and trace id | Channel | Kind | Intent | Guard | Our cost | Keiki status |
+| # | Turn and trace id | Message | Kind | Intent | Guard | Our cost | Keiki status |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | `3084530f5c9942b506205342be74b73b` | agentmail | `onboarding` in the old log, `welcome` from this build on | what_happened_today | guarded answer (verdict in the VM log line) | in the VM log line | completed, 7.6 s, tokensIn 0 |
-| 2 | pending | agentmail | | | | | |
-| 3 | pending | agentmail or slack | | | | | |
+| 1 | `3084530f5c9942b506205342be74b73b` | "What happened today?" | `onboarding` (logged by c80dbbe; `welcome` from 125ec77 on) | what_happened_today | model | $0.002563 | completed, 7.6 s, tokensIn 0 |
+| 2 | `7ad17098d67fbdfa93558472d1d1c303` | Orbit Solar IPO text | `welcome` | explain_this | model | $0.011182 | completed |
+| 3 | `3b1028e4ef5acb4a89032f9e3e39a157` | "/brief" | `welcome` | what_happened_today | model | $0.012606 | completed |
 
-`tokensIn 0` on turn 1 is the proof that no Keiki model ran. Rows 2 and 3 need two more owner emails after the redeploy (OWNER NEEDED 1, then 3). The fixed log then carries the trace id, channel type, kind, intent, guard and cost on each line.
+All three came from the VM's `data/keiki_turns.jsonl` after the scrub, which printed `1 rows, channels ['agentmail']` for the first line. The log holds no text and no address. `guard: model` means the model's wording passed the guard unchanged. `tokensIn 0` on turn 1 shows that no Keiki model ran.
+
+Rows 2 and 3 exposed two bugs, both fixed in this round (fixes 6 and 7 below). All three turns came from one sender but got three user ids (`kk:9c1f…`, `kk:43f4…`, `kk:1dc0…`). So `/brief` reached a brand-new user, was treated as a first message, and got a chat answer instead of the command. After the next redeploy, the same `/brief` from a linked sender logs `kind: command` under the Telegram user's id.
 
 ## Cost per turn
 
-Keiki bills turns on the org's plan and reports no model cost for an external harness (`costUsd` null, `tokensIn 0`). Our cost per turn is the sum of our own model and search calls during the turn, written to `cost_usd` in each log line. A template answer such as "What happened today?" costs about $0.004 in the test fixture's call log. The live figure is in the VM log lines for turns 1 to 3.
+Keiki bills turns on the org's plan and reports no model cost for an external harness (`costUsd` null, `tokensIn 0`). Our cost per turn is the sum of our own model and search calls during the turn, written to `cost_usd` in each log line. Live, the three email turns cost $0.002563, $0.011182 and $0.012606, so about $0.009 a turn on average. Turns 2 and 3 cost more because each also ran the first-message setup path.
 
 ## Sample messages per channel
 
@@ -126,7 +130,8 @@ Slack runs on the same agent, the same external harness and the same `/keiki/tur
 
 ## Known gaps
 
-- **Notice delivery is unproven live.** Proactive email waits in the outbox until Keiki runs a notice turn. If Keiki never dispatches it, the mail goes out on the contact's next email.
+- **Notice delivery is unproven live.** Proactive email waits in the outbox until Keiki runs a notice turn. The notice now names the sender's address, because the contact is the sender. Keiki's per-thread conversation id is not kept. If Keiki needs the conversation id to start a notice turn, the notice fails and the mail goes out on the contact's next email.
+- **Old profiles are orphaned.** The three users created live before fix 6 (`kk:9c1f…`, `kk:43f4…`, `kk:1dc0…`) keep their rows, but no contact points at them now. The owner's next email starts fresh as a fourth user, or as their Telegram user once they `/link`.
 - **The HMAC secret format is unverified.** Ed25519 verifies every turn, and HMAC is optional.
 - **Slack is untested live.** The author key names come from Keiki's docs, and the scopes in deploy path B are a guess unless Keiki's manifest is used.
 - **No proactive Slack.** A Slack-only user gets answers and `/brief` on demand, but no scheduled brief until they link Telegram or email. Their setup still says "I'll write on the …", which is only true after linking.

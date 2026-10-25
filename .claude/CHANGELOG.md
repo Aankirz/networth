@@ -376,3 +376,7 @@
 ## 2026-10-25 — Phase 3C: read the channel type from the live key, fix the log scrub
 - The live Keiki channel object names its type `channel`, not `type`; the parser reads `channel` first and the fixtures mirror the live shape.
 - The report's one-off log scrub now parses repr-string channels down to the type word, with `unknown` for anything unparseable.
+
+## 2026-10-25 — Phase 3C: one user per email sender, commands in a first email
+- Live, each email thread had its own Keiki conversationId, so one sender became three users. The contact is now the channel's userId (lowercased); Slack stays team plus user. Fixtures give each email its own thread.
+- A first message that is a slash command gets the setup, not a chat answer. The report's turn table is filled with the three live turns.
