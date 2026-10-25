@@ -372,3 +372,7 @@
 - trace_id falls back to the turn id, which is Keiki's trace id. A first message answered then set up is logged as kind `welcome`.
 - Slack turns use the same /keiki/turn pipeline; a Slack author is one contact (`slack:<team>:<user>`) and is never mailed.
 - docs/deploy.md gains the Slack setup (OWNER NEEDED app install); docs/phases/phase-3c-report.md written.
+
+## 2026-10-25 — Phase 3C: read the channel type from the live key, fix the log scrub
+- The live Keiki channel object names its type `channel`, not `type`; the parser reads `channel` first and the fixtures mirror the live shape.
+- The report's one-off log scrub now parses repr-string channels down to the type word, with `unknown` for anything unparseable.
