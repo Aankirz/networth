@@ -3,8 +3,9 @@
     send_brief(store, bot, profile, services, today)   # /brief, or one user's scheduled brief
     run_daily(store, bot, services, now)               # every user whose investing day is today
 
-The brief row is claimed before anything is sent, so a schedule that fires twice, or a retry
-after a crash, never sends a second brief the same day. Asking /brief again that day resends
+The brief row is claimed before anything is sent, so a schedule that fires twice never sends
+a second brief the same day. A compose or send that fails releases the claim, so the next try
+sends it. Asking /brief again that day resends
 the stored text without another model call.
 """
 
@@ -76,9 +77,14 @@ def send_brief(
         last = store.last_brief(profile.user_id)
         if last and last[0] == day:
             return send(store, bot, profile, Reply(last[1]))
-    reply, used = compose_reply(profile, store, services, today)
+    try:
+        reply, used = compose_reply(profile, store, services, today)
+        sent = send(store, bot, profile, reply, proactive=proactive)
+    except Exception:
+        store.release_brief(profile.user_id, day)
+        raise
     store.save_brief(profile.user_id, day, reply.text, used)
-    return send(store, bot, profile, reply, proactive=proactive)
+    return sent
 
 
 def run_daily(store: Store, bot: Bot, services: Services, now: dt.datetime) -> int:

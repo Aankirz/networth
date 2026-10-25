@@ -64,6 +64,17 @@ def test_the_daily_brief_never_goes_out_twice_on_the_same_day(chat: Chat) -> Non
     assert chat.bot.last.startswith("Investing day, Oct 25.")
 
 
+def test_a_brief_that_failed_to_send_goes_out_on_the_next_run(chat: Chat, monkeypatch) -> None:
+    def down(*args: object) -> dict:
+        raise ConnectionError("telegram is down")
+
+    with monkeypatch.context() as m:
+        m.setattr(chat.bot, "send_message", down)
+        assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 0 sent"
+    assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 1 sent"
+    assert chat.bot.last.startswith("Investing day, Oct 25.")
+
+
 def test_no_brief_on_other_days(chat: Chat) -> None:
     chat.store.save_profile(replace(chat.profile, invest_day=3))
     assert job(chat, schedule.BRIEF_PROMPT) == "brief ran: 0 sent"

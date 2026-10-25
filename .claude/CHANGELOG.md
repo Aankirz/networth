@@ -246,3 +246,6 @@
 
 ## 2026-10-25 — Non-ASCII link tokens get a 404
 - links.verify rejects non-ASCII tokens before isdigit and compare_digest, which gave a 500 (round 2 item 6).
+
+## 2026-10-25 — Failed brief releases its claim
+- send_brief deletes the day's claim when compose or send raises, so the next run sends it (round 2 item 7).

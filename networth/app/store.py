@@ -267,6 +267,10 @@ class Store:
             )
         return cursor.rowcount == 1
 
+    def release_brief(self, user_id: str, day: str) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM briefs WHERE user_id = ? AND day = ?", (user_id, day))
+
     def save_brief(self, user_id: str, day: str, text: str, used: str) -> None:
         with self._connect() as conn:
             conn.execute(
