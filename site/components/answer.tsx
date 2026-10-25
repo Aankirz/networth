@@ -7,6 +7,7 @@ import { HistoryRows } from "@/components/cards/history";
 import { HoldingsView } from "@/components/cards/holdings";
 import { NewsList } from "@/components/cards/news";
 import { PositionView } from "@/components/cards/position";
+import { PriceHistoryView } from "@/components/cards/price-history";
 import { PriceView } from "@/components/cards/price";
 import { RangeView } from "@/components/cards/range";
 import { MessageView } from "@/components/message";
@@ -24,7 +25,7 @@ const CARDS: { [K in Card["type"]]: { title: string; icon: typeof Newspaper; ren
   text: { title: "", icon: Landmark, render: () => null },
   // ponytail: these 13A cards answer in words until their own renderers land
   price: { title: "The last close", icon: LineChart, render: (card) => <PriceView card={card} /> },
-  price_history: { title: "", icon: Landmark, render: () => null },
+  price_history: { title: "Over the years", icon: History, render: (card) => <PriceHistoryView card={card} /> },
   position: { title: "Your holding", icon: Briefcase, render: (card) => <PositionView card={card} /> },
   compare: { title: "", icon: Landmark, render: () => null },
   market_today: { title: "", icon: Landmark, render: () => null },

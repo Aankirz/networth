@@ -668,3 +668,6 @@
 ## 2026-10-25 — feat: the price and position cards
 - site/components/cards/price.tsx (last close, day move in --up/--down, a year of closes, 52-week range with a marker, where-in-year insight, source chip) and position.tsx (worth now against what was paid, table, dashed paid line, a what-if slider from −50% to +50% computed in the browser, break-even insight when under water); price-line.tsx is the shared pencil line with hover, tap and arrow-key read-out. lib/money gains price(), signed() and parseAmount(). Recorded answer fixtures from real Yahoo closes; the mock routes price and holding questions to them.
 - Fix: an answer, its card and the chart figure now use a minmax(0,1fr) column, so a wide caption can no longer push the card past a phone screen inside the chat scroller; the fit test checks the scroller too.
+
+## 2026-10-25 — feat: the history card with a 1Y/3Y/5Y/10Y range switch
+- site/components/cards/price-history.tsx renders price_history: the server's return for the years asked, a range switch that cuts the closes in the browser (a shorter span shows the change between the first and last close on the line, and says so), the worst falls shaded on the line and listed with their recovery, a worst-fall-in-this-stretch insight and the source chip. Tested against the recorded 10-year Nifty 50 answer.

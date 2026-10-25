@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import type { ChatTurn, PositionCard, PriceCard } from "../lib/contract";
+import type { ChatTurn, PositionCard, PriceCard, PriceHistoryCard } from "../lib/contract";
 
 const turn = (name: string) =>
   JSON.parse(readFileSync(join(process.cwd(), "e2e", "fixtures", `${name}.json`), "utf8")) as ChatTurn;
@@ -86,4 +86,40 @@ test("the price and holding cards fit a 320px phone", async ({ page }) => {
       Math.max(...[document.documentElement, ...document.querySelectorAll(".overflow-y-auto")].map((el) => el.scrollWidth - el.clientWidth)));
     expect(overflow).toBeLessThanOrEqual(0);
   }
+});
+
+const NIFTY = turn("answer-history").card as PriceHistoryCard;
+const TEN_YEARS = "How has Nifty 50 done over the last 10 years?";
+
+test("a history answer opens on the server's return for the years asked, with its worst falls", async ({ page }) => {
+  const card = await ask(page, TEN_YEARS, "price_history");
+  await expect(card.locator("[data-headline]")).toContainText(`${NIFTY.returns[0].value} over ${NIFTY.returns[0].label}`);
+  for (const r of NIFTY.returns) await expect(card).toContainText(r.value);
+  await expect(card.locator("[data-fall]")).toHaveCount(NIFTY.drawdowns.length);
+  await expect(card.locator("[data-span]")).toHaveCount(NIFTY.drawdowns.length);
+  await expect(card.locator(`a[href="${NIFTY.source.url}"]`)).toContainText(NIFTY.source.as_of);
+});
+
+test("the range switch cuts the line in the browser and shades only the falls inside it", async ({ page }) => {
+  const card = await ask(page, TEN_YEARS, "price_history");
+  const requests: string[] = [];
+  page.on("request", (r) => { if (!r.url().includes("_rsc=")) requests.push(r.url()); });
+  await card.getByRole("button", { name: "3Y" }).click();
+  await expect(card.getByRole("button", { name: "3Y" })).toHaveAttribute("aria-pressed", "true");
+  await expect(card.locator("[data-headline]")).toContainText("over 3 years");
+  await expect(card.locator("[data-headline]")).not.toContainText(NIFTY.returns[0].value);
+  const shown = await card.locator("[data-fall][data-shown]").count();
+  await expect(card.locator("[data-span]")).toHaveCount(shown);
+  expect(shown).toBeLessThan(NIFTY.drawdowns.length);
+  await card.getByRole("button", { name: "All" }).click();
+  await expect(card.locator("[data-headline]")).toContainText(NIFTY.returns[0].value);
+  expect(requests).toEqual([]);
+});
+
+test("the history card fits a 320px phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await ask(page, TEN_YEARS, "price_history");
+  const overflow = await page.evaluate(() =>
+    Math.max(...[document.documentElement, ...document.querySelectorAll(".overflow-y-auto")].map((el) => el.scrollWidth - el.clientWidth)));
+  expect(overflow).toBeLessThanOrEqual(0);
 });
