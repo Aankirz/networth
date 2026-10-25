@@ -545,3 +545,6 @@
 
 ## 2026-10-25 — holdings: Indian ETF tickers placed by bucket
 - networth/holdings/model.py: TICKER_RULES read an INR ETF ticker (identifier or ticker-only name): LIQUID/GILT/Bharat Bond safety, sector (BANKBEES, PSUBNKBEES, ITBEES...) growth, broad index core. "nifty it" added to sector words. Tests from the Groww fixture Bank BeES row.
+
+## 2026-10-25 — holdings: small-cap and US tech ETF tickers are growth
+- TICKER_RULES growth now matches SML (HDFCSML250), MON100 and FANG (MAFANG). Tests added.

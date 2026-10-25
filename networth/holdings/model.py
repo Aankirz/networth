@@ -116,7 +116,7 @@ TICKER_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
     for pattern, bucket in (
         (r"LIQUID|GILT|GSEC|SDL|EBBETF|BBETF|OVERNIGHT|MONEY", Bucket.SAFETY),
         (r"BANK|BNK|BK|PHARMA|HEALTH|INFRA|PSU|CPSE|FMCG|CONSUM|AUTO|METAL|ENERGY|REALTY|^IT"
-         r"|MIDCAP|MID150|SMALLCAP|SMLCAP", Bucket.GROWTH),
+         r"|MIDCAP|MID150|SMALLCAP|SML|MON100|FANG", Bucket.GROWTH),
         (r"NIFTY|NIF50|SENSEX|JUNIOR|BEES|ETF", Bucket.CORE),
     )
 )  # fmt: skip

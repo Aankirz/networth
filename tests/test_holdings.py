@@ -452,6 +452,9 @@ def bank_bees_row(**changes: str) -> dict:
     ({"name": "Nippon India ETF Liquid BeES", "identifier": "LIQUIDBEES"}, Bucket.SAFETY),
     ({"name": "GILT5YBEES", "identifier": "GILT5YBEES"}, Bucket.SAFETY),
     ({"name": "ITOT", "identifier": "ITOT", "currency": "USD"}, Bucket.CORE),
+    ({"name": "HDFCSML250", "identifier": "HDFCSML250"}, Bucket.GROWTH),
+    ({"name": "MON100", "identifier": "MON100"}, Bucket.GROWTH),  # US tech, bought in INR
+    ({"name": "MAFANG", "identifier": "MAFANG"}, Bucket.GROWTH),
 ])  # fmt: skip
 def test_an_equity_etf_is_growth_and_a_liquid_or_gilt_etf_is_safety(
     changes: dict, bucket: Bucket
