@@ -560,3 +560,8 @@
 
 ## 2026-10-25 — Phase 13A card contract
 - Added price, price_history, position, compare, market_today cards and five intents to the phase-10 contract; commit the 13A brief.
+
+## 2026-10-25 — Phase 13C: the rating engine and its backtest
+- networth/ratings/{sources,score,kinds,track}.py and rate(): stocks, funds, ETFs and NSE IPOs from free sources (Yahoo, mfapi.in, NSE, the watcher), every driver sourced, missing data named.
+- networth/ratings/backtest.json: the measured hit rate of the price part since 2015, Indian against the Nifty, US against the S&P 500. ipo_rhp.json holds SFCTECH's RHP numbers with pages.
+- Contract: currency on RatingCard and SectorsCard, the backtest as groups.

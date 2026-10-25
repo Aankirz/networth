@@ -513,6 +513,8 @@ A chat turn or a command may carry a `rating` or `sectors` card once 13A and 13B
 
 - `score` is out of 100 and is printed. `Driver.effect` says whether that driver pushed the score up, down or neither.
 - `Source.as_of` is an ISO time or date. A driver never appears without a source; missing data is named in `missing` and lowers `confidence`.
+- `currency` is the market's currency on every card: `INR` for NSE names and Indian funds, `USD` for US shares and ETFs. Every amount a card shows is already written in it on the server. Indian ratings are measured against the Nifty 50, US ones against the S&P 500.
+- `RatingsBacktest` is `networth/ratings/backtest.json`, written by `uv run python -m networth.ratings.track`. `baseline_rate` is geometry for drawing, as in rule 1; the site prints `baseline`. No card carries "Research, not advice." or any other disclaimer (owner order, 2026-10-25).
 - `Track.text` is the sentence to show. `weak` is true when the measured edge over all stocks is small or the sample thin, and the site shows it as plainly as a strong one.
 - Every `SectorRow` change string is formatted on the server (`+1.2%`). `stories` are 0 to 3 confirmed watcher stories whose titles or event type match the sector, newest first.
 
@@ -560,6 +562,7 @@ export interface RatingCard {
   track: Track;
   as_of: string;
   url: string;
+  currency: "INR" | "USD";
 }
 
 export interface SectorStory {
@@ -585,6 +588,7 @@ export interface SectorsCard {
   as_of: string;
   rows: SectorRow[];
   note: string | null;
+  currency: "INR" | "USD";
 }
 
 export interface BacktestRow {
@@ -595,12 +599,22 @@ export interface BacktestRow {
   excess: string;
 }
 
+export interface BacktestGroup {
+  kind: "in_stock" | "in_fund" | "us_stock" | "us_fund";
+  n: number;
+  assets: number;
+  baseline: string;
+  baseline_rate: number;
+  rows: BacktestRow[];
+}
+
 export interface RatingsBacktest {
   method: string;
+  caveat: string;
   since: string;
   as_of: string;
-  baseline: string;
-  rows: BacktestRow[];
+  skipped: string[];
+  groups: BacktestGroup[];
 }
 ```
 

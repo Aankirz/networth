@@ -81,10 +81,19 @@ class Rating:
     missing: tuple[str, ...]  # drivers we had no data for, said plainly
     track: Track
     as_of: str
+    currency: str = "INR"  # "INR" or "USD": the market it trades in, and how money is written
 
     @property
     def slug(self) -> str:
         return slug_for(self.symbol)
+
+
+def money(n: float, currency: str) -> str:
+    """The one place a rating writes an amount."""
+    # ponytail: the pages' own formatter until 13A's shared money() lands; swap the import then.
+    from networth.web.fmt import money as fmt_money
+
+    return fmt_money(round(n), currency, signed=False)
 
 
 def slug_for(symbol: str) -> str:
@@ -93,11 +102,29 @@ def slug_for(symbol: str) -> str:
 
 def rating_json(r: Rating, public_url: str | None = None) -> dict:
     """The contract's RatingCard."""
-    drivers = [{"key": d.key, "label": d.label, "value": d.value, "effect": d.effect,
-                "source": asdict(d.source)} for d in r.drivers]  # fmt: skip
+    drivers = [
+        {
+            "key": d.key,
+            "label": d.label,
+            "value": d.value,
+            "effect": d.effect,
+            "source": asdict(d.source),
+        }
+        for d in r.drivers
+    ]
     return {
-        "type": "rating", "slug": r.slug, "name": r.name, "kind": r.kind, "view": r.view.value,
-        "score": r.score, "confidence": r.confidence, "outlook": r.outlook, "drivers": drivers,
-        "missing": list(r.missing), "track": asdict(r.track), "as_of": r.as_of,
+        "type": "rating",
+        "slug": r.slug,
+        "name": r.name,
+        "kind": r.kind,
+        "view": r.view.value,
+        "score": r.score,
+        "confidence": r.confidence,
+        "outlook": r.outlook,
+        "drivers": drivers,
+        "missing": list(r.missing),
+        "track": asdict(r.track),
+        "as_of": r.as_of,
         "url": f"{public_url or ''}/r/{r.slug}",
-    }  # fmt: skip
+        "currency": r.currency,
+    }

@@ -1,0 +1,24 @@
+{
+  "_about": "Numbers copied from each IPO's Red Herring Prospectus, with the page they are on. NSE's live issue data (price band, fresh issue against OFS, subscription) is read live; this file holds only what is in the RHP PDF. Amounts in rupees million.",
+  "SFCTECH": {
+    "name": "SFC Environmental Technologies Limited",
+    "rhp_url": "https://nsearchives.nseindia.com/content/ipo/RHP_SFCTECH.zip",
+    "read_at": "2026-10-25",
+    "revenue": {"FY2024": 6574.95, "FY2025": 6978.58, "FY2026": 8036.29, "page": 184},
+    "pat": {"FY2024": 1441.73, "FY2025": 1520.08, "FY2026": 1602.13, "page": 184},
+    "net_debt_to_equity_fy2026": {"value": 0.05, "page": 184},
+    "diluted_eps_fy2026": {"value": 16.52, "page": 184},
+    "peer_pe": {"average": 101.38, "lowest": 31.34, "highest": 220.77, "page": 185,
+                "note": "Peers' closing price on BSE on October 16, 2026 over FY2026 diluted EPS"},
+    "fresh_issue": {"value": 1500.0, "page": 168},
+    "ofs_shares": {"value": 15682750, "page": 168},
+    "use_of_proceeds": {
+      "page": 169,
+      "items": [
+        {"label": "Prepaying borrowings", "amount": 422.28, "kind": "debt"},
+        {"label": "Working capital", "amount": 749.17, "kind": "growth"},
+        {"label": "General corporate purposes, up to 25% of the fresh issue", "amount": null, "kind": "general"}
+      ]
+    }
+  }
+}

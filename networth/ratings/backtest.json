@@ -1,0 +1,185 @@
+{
+ "method": "fixed before the first run (2026-10-25):\n- Every month end from January 2015 to 12 months before the last price, every stock in the\n  universe gets the price part of its score (score.price_part) from prices up to that day only.\n- Its view comes from the same bands a full rating uses (model.view_for).\n- A hit is the stock's next-12-month total return beating the Nifty 50's (^NSEI, price index).\n- Funds the same way, on AMFI NAVs from mfapi.in, scored against their category's index.\n- US stocks and ETFs the same way against the S&P 500 (^GSPC), on Yahoo's adjusted closes.",
+ "caveat": "Only the price part of the score is replayed. The stock list is today's Nifty 50, so stocks that dropped out are missing (survivorship bias). The Nifty 50 here is the price index without dividends, about 1 point a year below its total return, which flatters funds and stocks a little.",
+ "since": "2015",
+ "as_of": "2026-10-25",
+ "skipped": [],
+ "groups": [
+  {
+   "kind": "in_stock",
+   "n": 6052,
+   "assets": 50,
+   "baseline": "58%",
+   "baseline_rate": 0.5806,
+   "rows": [
+    {
+     "view": "Strong",
+     "n": 1607,
+     "beat": 941,
+     "rate": "59%",
+     "excess": "0 points"
+    },
+    {
+     "view": "Positive",
+     "n": 1321,
+     "beat": 763,
+     "rate": "58%",
+     "excess": "0 points"
+    },
+    {
+     "view": "Neutral",
+     "n": 1435,
+     "beat": 829,
+     "rate": "58%",
+     "excess": "0 points"
+    },
+    {
+     "view": "Weak",
+     "n": 1046,
+     "beat": 586,
+     "rate": "56%",
+     "excess": "-2 points"
+    },
+    {
+     "view": "Avoid",
+     "n": 643,
+     "beat": 395,
+     "rate": "61%",
+     "excess": "+3 points"
+    }
+   ]
+  },
+  {
+   "kind": "in_fund",
+   "n": 1671,
+   "assets": 13,
+   "baseline": "82%",
+   "baseline_rate": 0.8151,
+   "rows": [
+    {
+     "view": "Strong",
+     "n": 44,
+     "beat": 29,
+     "rate": "66%",
+     "excess": "-16 points"
+    },
+    {
+     "view": "Positive",
+     "n": 613,
+     "beat": 529,
+     "rate": "86%",
+     "excess": "+5 points"
+    },
+    {
+     "view": "Neutral",
+     "n": 821,
+     "beat": 675,
+     "rate": "82%",
+     "excess": "+1 points"
+    },
+    {
+     "view": "Weak",
+     "n": 163,
+     "beat": 110,
+     "rate": "67%",
+     "excess": "-14 points"
+    },
+    {
+     "view": "Avoid",
+     "n": 30,
+     "beat": 19,
+     "rate": "63%",
+     "excess": "-18 points"
+    }
+   ]
+  },
+  {
+   "kind": "us_stock",
+   "n": 3870,
+   "assets": 30,
+   "baseline": "58%",
+   "baseline_rate": 0.5788,
+   "rows": [
+    {
+     "view": "Strong",
+     "n": 907,
+     "beat": 567,
+     "rate": "63%",
+     "excess": "+5 points"
+    },
+    {
+     "view": "Positive",
+     "n": 1014,
+     "beat": 544,
+     "rate": "54%",
+     "excess": "-4 points"
+    },
+    {
+     "view": "Neutral",
+     "n": 1054,
+     "beat": 574,
+     "rate": "54%",
+     "excess": "-3 points"
+    },
+    {
+     "view": "Weak",
+     "n": 604,
+     "beat": 350,
+     "rate": "58%",
+     "excess": "0 points"
+    },
+    {
+     "view": "Avoid",
+     "n": 291,
+     "beat": 205,
+     "rate": "70%",
+     "excess": "+13 points"
+    }
+   ]
+  },
+  {
+   "kind": "us_fund",
+   "n": 1419,
+   "assets": 11,
+   "baseline": "56%",
+   "baseline_rate": 0.556,
+   "rows": [
+    {
+     "view": "Strong",
+     "n": 40,
+     "beat": 30,
+     "rate": "75%",
+     "excess": "+19 points"
+    },
+    {
+     "view": "Positive",
+     "n": 394,
+     "beat": 266,
+     "rate": "68%",
+     "excess": "+12 points"
+    },
+    {
+     "view": "Neutral",
+     "n": 604,
+     "beat": 291,
+     "rate": "48%",
+     "excess": "-7 points"
+    },
+    {
+     "view": "Weak",
+     "n": 330,
+     "beat": 167,
+     "rate": "51%",
+     "excess": "-5 points"
+    },
+    {
+     "view": "Avoid",
+     "n": 51,
+     "beat": 35,
+     "rate": "69%",
+     "excess": "+13 points"
+    }
+   ]
+  }
+ ]
+}
