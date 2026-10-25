@@ -273,3 +273,6 @@
 
 ## 2026-10-25 — Phase 3C spike
 - docs/phases/phase-3c-spike.md answers the six Keiki questions with redacted evidence, and records the first writes: agent 8d5b1d0c created, external push harness set, AgentMail inbox networth@agentmail.to connected.
+
+## 2026-10-25 — Phase 6 method v1
+- docs/phases/phase-6-method.md fixes the plan-range sources (^NSEI, ^NSEMDCP50, FRED INDIR3TIB01STM, MoSPI CPI), window, bootstrap, investing, fall and rounding rules before any run.
