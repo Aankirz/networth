@@ -1,5 +1,6 @@
 """One Keiki turn, end to end: flush queued email, find who wrote, answer through the same
-pipeline as Telegram, then complete the turn.
+pipeline as Telegram, then complete the turn. Email and Slack arrive the same way and get the
+same plain text.
 
     harness.start(lambda: run_turn(turn, store, services, harness.client(url, token), now))
 
@@ -9,9 +10,10 @@ contact we have never seen gets an email-native profile and the short setup in o
 A /link code from Telegram, sent by email, points the contact at that Telegram user instead,
 even when the contact already had an email-native profile.
 
-Every turn appends one line to data/keiki_turns.jsonl: the turn and trace ids, who, which kind
-of turn, the chat intent and guard verdict, the model cost, and the outcome. Never the text,
-the address or a token. Cost is the sum of llm_calls.jsonl records written during the turn.
+Every turn appends one line to data/keiki_turns.jsonl: the turn and trace ids, the hashed user
+id, the channel type, which kind of turn, the chat intent and guard verdict, the model cost,
+and the outcome. Never the text, the address or a token. Cost is the sum of llm_calls.jsonl
+records written during the turn.
 """
 
 from __future__ import annotations
@@ -42,7 +44,9 @@ from networth.net import read_records
 
 log = logging.getLogger("networth.keiki")
 
-Kind = Literal["chat", "command", "onboarding", "link", "notice"]
+# welcome: a first message from a new contact, answered when it asks something, then the
+# short setup starts. onboarding: an answer to a setup question.
+Kind = Literal["chat", "command", "welcome", "onboarding", "link", "notice"]
 # ponytail: one process-wide lock, so turns run one at a time. Per-turn cost attribution reads
 # the call log by time window, and that is only exact while no other turn overlaps.
 TURN_LOCK: Final = threading.Lock()
@@ -132,7 +136,7 @@ def welcome(turn: commands.Turn, address: str, text: str) -> Handled:
                                               cfg.product.chat_max_per_hour):  # fmt: skip
         turn.later.append(lambda: first_answer(turn, profile, text))
     turn.later.append(lambda: send_outcome(turn, onboard.start(profile)))
-    return Handled("onboarding", profile.user_id)
+    return Handled("welcome", profile.user_id)
 
 
 def first_answer(turn: commands.Turn, profile: Profile, text: str) -> None:
@@ -193,12 +197,12 @@ def route(turn: commands.Turn, address: str, text: str) -> Handled:
 def handle(turn: KeikiTurn, store: Store, services: Services, client: TurnClient,
            now: str) -> Handled:  # fmt: skip
     if services.mail is not None:
-        services.mail.flush(turn.conversation_id, client)
+        services.mail.flush(turn.contact, client)
     text = inbound_text(turn)
     if not text or text == NOTICE:
-        return Handled("notice", store.contact_user(turn.conversation_id))
+        return Handled("notice", store.contact_user(turn.contact))
     io = commands.Turn(store, KeikiTurnBot(client, turn.turn_id), now, services)
-    handled = route(io, turn.conversation_id, text)
+    handled = route(io, turn.contact, text)
     for job in io.later:
         job()
     return replace(handled, intent=io.trace.get("intent"), guard=io.trace.get("guard"))

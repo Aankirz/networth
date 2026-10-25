@@ -51,6 +51,7 @@ def body(payload: dict) -> bytes:
 
 
 AGENT = "agent-test"
+SLACK_TEAM, SLACK_USER = "T_ACME", "U_ASHA"
 ADDRESS = "asha@example.com"
 TURN_URL = "https://onkeiki.example/api/v1/harness/turns/t1"
 
@@ -59,12 +60,20 @@ def turn_payload(*texts: str, turn_id: str = "t1", address: str = ADDRESS,
                  **extra: object) -> dict:  # fmt: skip
     return {
         "type": "keiki.turn", "turnId": turn_id, "agentId": AGENT, "conversationId": address,
-        "channel": "agentmail", "messages": [{"text": t, "messageId": f"m{i}"}
-                                             for i, t in enumerate(texts)],
+        "channel": {"type": "agentmail", "from": address, "inboundText": "\n".join(texts)},
+        "messages": [{"text": t, "messageId": f"m{i}"} for i, t in enumerate(texts)],
         "heldBack": False, "quietLoop": False,
         "keiki": {"apiBase": "https://onkeiki.example/api/v1", "turnUrl": TURN_URL},
         **extra,
     }  # fmt: skip
+
+
+def slack_payload(text: str, thread: str, turn_id: str = "s1") -> dict:
+    """A Slack DM as Keiki pushes it: the conversation is the thread, the author is userId."""
+    channel = {"type": "slack", "teamId": SLACK_TEAM, "channelId": "D1", "threadTs": thread,
+               "userId": SLACK_USER, "inboundText": text}  # fmt: skip
+    return turn_payload(text, turn_id=turn_id, address=f"slack:{SLACK_TEAM}:D1:{thread}",
+                        channel=channel)  # fmt: skip
 
 
 @dataclass

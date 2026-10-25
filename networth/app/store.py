@@ -48,6 +48,7 @@ class Channel(StrEnum):
 
 CHANNEL: Final = Channel.TELEGRAM
 EMAIL_USER_PREFIX: Final = "kk:"
+SLACK_CONTACT_PREFIX: Final = "slack:"  # a Slack author's contact; every other one is an email
 EMAIL_USER_CHARS: Final = 16
 
 
@@ -609,12 +610,12 @@ class Store:
         self._upsert("contacts", {"address": address, "user_id": user_id, "linked_at": now_iso()})
 
     def contact_for(self, user_id: str) -> str | None:
-        """The user's newest bound Keiki conversation, if any."""
+        """The user's newest bound email address, if any. A Slack contact is never one."""
         with self._connect() as conn:
             row = conn.execute(
-                "SELECT address FROM contacts WHERE user_id = ? "
+                "SELECT address FROM contacts WHERE user_id = ? AND address NOT LIKE ? "
                 "ORDER BY linked_at DESC, rowid DESC LIMIT 1",
-                (user_id,),
+                (user_id, f"{SLACK_CONTACT_PREFIX}%"),
             ).fetchone()
         return row["address"] if row else None
 
