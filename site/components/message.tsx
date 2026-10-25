@@ -27,7 +27,3 @@ export function MessageView({ message, showTitle = true }: { message: Message; s
     </div>
   );
 }
-
-export function Footer({ text }: { text: string }) {
-  return text ? <p className="text-xs text-ink-3">{text}</p> : null;
-}

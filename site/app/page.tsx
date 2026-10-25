@@ -16,7 +16,7 @@ import { BOT_URL } from "@/lib/chat";
 
 export const metadata: Metadata = {
   title: "Networth · market news, checked against history",
-  description: "Networth reads the market news, keeps only what's confirmed, and shows what history counted on the day you invest. On Telegram, by email and on the web. Research, not advice.",
+  description: "Networth reads the market news, keeps only what's confirmed, and shows what history counted on the day you invest. On Telegram, by email and on the web.",
 };
 
 const STEPS = [
@@ -34,7 +34,6 @@ const NEVER = [
 ];
 
 const FAQ: { q: string; a: ReactNode }[] = [
-  { q: "Is this financial advice?", a: "No. It is research: what the news says and what history counted, in plain words. What you do is your choice." },
   { q: "Do I need an account?", a: <>No. <Link href="/demo" className="underline">The demo</Link> opens a sample profile. To set up your own, send /start to the bot.</> },
   { q: "What does “what history counted” mean?", a: "For an event like an RBI rate hike, it counts how often an asset beat the Nifty 50 in the past cases, and puts that next to its normal rate. Too few cases are called out as too few." },
   { q: "Can it see my money?", a: "Only what you tell it: your plan, and your holdings if you choose to share them. It never places an order." },
@@ -148,7 +147,7 @@ function Letter() {
           We also tested ourselves. We checked whether a count far from its normal rate said anything about the cases that came next. Out of sample, the counts did no better than chance. So we show them as history, never as a signal.
         </p>
         <p className="rise" style={{ ["--i" as string]: 4 }}>
-          That is the whole idea. Read the news, see the history, keep your plan. What you do with it is your choice.
+          That is the whole idea. Read the news, see the history, keep your plan.
         </p>
         <p className="rise text-ink-2" style={{ ["--i" as string]: 5 }}>The Networth team</p>
       </InView>
@@ -197,7 +196,6 @@ function Footer() {
     <footer className="border-t border-line px-4">
       <div className="mx-auto grid max-w-5xl justify-items-center gap-4 py-14 text-center text-sm text-ink-3">
         <span className="flex items-center gap-2 text-ink-2"><Mark className="size-4" /> Networth</span>
-        <span className="text-base text-ink">Research, not advice.</span>
         <span className="flex gap-6">
           <Link href="/demo" className="no-underline hover:text-ink">Demo</Link>
           <a href={BOT_URL} rel="noopener" target="_blank" className="no-underline hover:text-ink">Telegram bot</a>

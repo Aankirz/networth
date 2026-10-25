@@ -1,7 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const FOOTER = "Research, not advice.";
-
 test("a first visit lands on a centred composer with starters", async ({ page }) => {
   await page.goto("/demo");
   await expect(page.getByRole("heading", { name: "What would you like to know about your money?" })).toBeVisible();
@@ -14,12 +12,11 @@ test("a first visit lands on a centred composer with starters", async ({ page })
   await expect(page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: "My brief" })).toBeVisible();
 });
 
-test("a starter gets a card and the footer shows once in the answer", async ({ page }) => {
+test("a starter gets a card", async ({ page }) => {
   await page.goto("/demo");
   await page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: "My range" }).click();
   const answer = page.locator("article[data-card='plan_range']");
   await expect(answer).toBeVisible();
-  await expect(answer.getByText(FOOTER, { exact: false })).toHaveCount(1);
 });
 
 test("the / picker runs a command by keyboard", async ({ page }) => {

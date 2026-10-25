@@ -7,7 +7,7 @@ import { HistoryRows } from "@/components/cards/history";
 import { HoldingsView } from "@/components/cards/holdings";
 import { NewsList } from "@/components/cards/news";
 import { RangeView } from "@/components/cards/range";
-import { Footer, MessageView } from "@/components/message";
+import { MessageView } from "@/components/message";
 import type { Answer } from "@/lib/chat";
 import type { Card } from "@/lib/contract";
 
@@ -78,8 +78,7 @@ export function AnswerCard({ answer }: { answer: Answer }) {
           </div>
         </details>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Footer text={message.footer} />
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <CopyButton text={answer.text} />
       </div>
     </article>

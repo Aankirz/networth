@@ -7,7 +7,6 @@ import { HistoryRows } from "@/components/cards/history";
 import { HoldingsView } from "@/components/cards/holdings";
 import { NewsList } from "@/components/cards/news";
 import { RangeView } from "@/components/cards/range";
-import { Footer } from "@/components/message";
 import type { Dashboard } from "@/lib/contract";
 import { withoutFooter } from "@/lib/words";
 
@@ -112,7 +111,6 @@ export function Canvas({ board, pinned, focus, onPin, onClose }: CanvasProps) {
           </Block>
         )}
         <div className="grid gap-1 pb-4">
-          <Footer text={board.footer} />
           {!board.sample && (
             <p className="text-xs text-ink-3">This page is private to you. Anyone with the link can see it, so don&apos;t share it.</p>
           )}

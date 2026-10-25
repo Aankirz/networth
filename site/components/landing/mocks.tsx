@@ -19,7 +19,7 @@ const IPO_THREAD: Turn[] = [
   {
     bot: true,
     wait: 2800,
-    text: "Whether to put money in is your call, so I won't say yes or no. Here is what it is and how it works. An IPO is when a company offers its shares to the public for the first time, so it can be listed on the stock exchange.",
+    text: "An IPO is when a company offers its shares to the public for the first time, so it can be listed on the stock exchange.",
   },
   { text: "what should I read first?" },
   {
@@ -30,12 +30,7 @@ const IPO_THREAD: Turn[] = [
   { text: "explain that in Hinglish" },
   {
     bot: true,
-    text: (
-      <>
-        RHP sabse pehle dekhne wala document hai. Isme LIC ka business, finances, owners, paisa kahan use hoga, aur risks likhe hote hain.
-        <span className="mt-2 block text-xs text-ink-3">Research hai, advice nahin.</span>
-      </>
-    ),
+    text: "RHP sabse pehle dekhne wala document hai. Isme LIC ka business, finances, owners, paisa kahan use hoga, aur risks likhe hote hain.",
   },
 ];
 
@@ -107,9 +102,8 @@ export async function BriefMock() {
       <BotHeader title="Networth" sub="your brief, on the 1st" />
       <div className="bg-[var(--chat)] px-3 py-4 sm:px-4">
         <article className="grid gap-2.5 rounded-2xl rounded-bl-md border border-line bg-raised px-4 py-3.5 text-[0.9375rem] leading-snug">
-          <p data-at="" data-bot="" className="font-semibold text-ink">Morning. It&apos;s your investing day, and {board.profile.money} is ready.</p>
-          {briefLines(board).map((line) => (
-            <p key={line} data-at="" data-wait={1100} className="text-ink">{line}</p>
+          {briefLines(board).map((line, i) => (
+            <p key={line} data-at="" data-bot={i === 0 ? "" : undefined} data-wait={i === 0 ? undefined : 1100} className={i === 0 ? "font-semibold text-ink" : "text-ink"}>{line}</p>
           ))}
           {counted.length > 0 && (
             <div data-at="" data-wait={2400} className="grid gap-1.5 border-t border-line pt-2.5">
@@ -119,7 +113,6 @@ export async function BriefMock() {
               ))}
             </div>
           )}
-          <p data-at="" className="text-xs text-ink-3">{board.footer}</p>
         </article>
         <ul data-at="" className="mt-2 grid grid-cols-3 gap-1.5">
           {BRIEF_BUTTONS.map((b) => (
@@ -150,7 +143,6 @@ export function EmailMock() {
           <p className="text-[0.9375rem] leading-relaxed text-ink">
             The repo rate is the rate at which the RBI lends to banks, so changes can affect loan and deposit rates.
           </p>
-          <p className="text-xs text-ink-3">Research, not advice.</p>
         </li>
       </ol>
       <p className="mock-typing-line px-5 pb-4 text-xs text-ink-3">Networth is writing…</p>

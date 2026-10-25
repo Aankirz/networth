@@ -4,7 +4,7 @@ import type { Ref } from "react";
 import { AlertCircle, Forward, LayoutPanelLeft, RotateCcw, Send } from "lucide-react";
 
 import { AnswerCard } from "@/components/answer";
-import { Footer, MessageView } from "@/components/message";
+import { MessageView } from "@/components/message";
 import { BOT_URL, isTelegramOnly, type Entry, type Outcome } from "@/lib/chat";
 
 export const WORDS = {
@@ -36,7 +36,6 @@ function Failed({ outcome, onRetry }: { outcome: Extract<Outcome, { kind: "faile
         <AlertCircle aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-ink-3" />
         {error ? <MessageView message={error.message} /> : <p>{status === 404 ? WORDS.missing : WORDS.unreachable}</p>}
       </div>
-      {error && <Footer text={error.message.footer} />}
       <div className="flex flex-wrap gap-2">
         {!limited && (
           <button type="button" className="btn" onClick={onRetry}>

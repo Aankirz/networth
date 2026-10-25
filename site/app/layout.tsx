@@ -9,7 +9,7 @@ const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], pre
 
 export const metadata: Metadata = {
   title: "Networth",
-  description: "Know what the news means for your money. Research, not advice.",
+  description: "Know what the news means for your money.",
 };
 
 export const viewport: Viewport = {

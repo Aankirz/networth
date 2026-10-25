@@ -45,7 +45,6 @@ test("the brief mock is the server's brief for the sample profile", async ({ pag
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/");
   const brief = page.getByRole("group", { name: "The monthly brief for the sample profile" });
-  await expect(brief).toContainText("Morning. It's your investing day, and ₹1,00,000 is ready.");
   await expect(brief).toContainText("Yours is built to sit through a fall of up to 20%.");
 });
 
@@ -65,14 +64,14 @@ test("the letter carries our negative result", async ({ page }) => {
 test("the FAQ opens one answer at a time", async ({ page }) => {
   await page.goto("/");
   const faq = page.locator("#faq");
-  await faq.getByText("Is this financial advice?").click();
-  await faq.getByText("Can it see my money?").click();
+  await faq.locator("summary").nth(0).click();
+  await faq.locator("summary").nth(1).click();
   await expect(faq.locator("details[open]")).toHaveCount(1);
 });
 
-test("the footer says research, not advice, and a phone has no sideways scroll", async ({ page }) => {
+test("the footer links to privacy, and a phone has no sideways scroll", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto("/");
-  await expect(page.getByRole("contentinfo").getByText("Research, not advice.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "Privacy" })).toBeVisible();
   expect(await overflow(page)).toBeLessThanOrEqual(0);
 });

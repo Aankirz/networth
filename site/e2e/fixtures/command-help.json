@@ -18,10 +18,10 @@
       }
     ],
     "detail": [],
-    "footer": "Research, not advice.",
+    "footer": "",
     "preview": null
   },
-  "text": "Here's what I can do.\n\nAsk \"What happened today?\" or \"Why?\"\nForward me a tip, and I'll check who reported it\nSend an IPO page, a link or a screenshot, and I'll explain it\n\n/brief this month's brief\n/plan see or change your plan\n/range what your plan could become, replayed over past months\n/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n/start set up again or see your answers\n/link a code to use me by email too\n/sendto email or /sendto telegram, where briefs and alerts go\n/watch something, to hear once when a confirmed story about it appears\n/watches see or stop your watches\n/unwatch 1 stop a watch by its number\n/holdings what you hold, read from a screenshot you send\n/link_broker link a US broker, read-only\n\nResearch, not advice.",
+  "text": "Here's what I can do.\n\nAsk \"What happened today?\" or \"Why?\"\nForward me a tip, and I'll check who reported it\nSend an IPO page, a link or a screenshot, and I'll explain it\n\n/brief this month's brief\n/plan see or change your plan\n/range what your plan could become, replayed over past months\n/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n/start set up again or see your answers\n/link a code to use me by email too\n/sendto email or /sendto telegram, where briefs and alerts go\n/watch something, to hear once when a confirmed story about it appears\n/watches see or stop your watches\n/unwatch 1 stop a watch by its number\n/holdings what you hold, read from a screenshot you send\n/link_broker link a US broker, read-only",
   "card": {
     "type": "text"
   }

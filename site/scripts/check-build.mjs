@@ -1,8 +1,11 @@
 // The line we never cross, checked on what ships. Run after `npm run build`.
 // 1. The site's own source sends no verdict words and prints no figure of its own.
 // 2. Nothing in .next/ names a server secret or carries a Slack or OpenAI style key.
+// 3. No "not advice" style disclaimer anywhere in the source or the build.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+
+import { DISCLAIMERS } from "./disclaimers.mjs";
 
 const SOURCE_DIRS = ["app", "components", "lib"];
 const BANNED_WORDS = [
@@ -33,7 +36,7 @@ const problems = [];
 for (const dir of SOURCE_DIRS) {
   for (const path of files(dir)) {
     const text = readFileSync(path, "utf8").replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
-    for (const re of BANNED_WORDS) {
+    for (const re of [...BANNED_WORDS, ...DISCLAIMERS]) {
       const hit = text.match(re);
       if (hit) problems.push(`${path}: "${hit[0]}" (${re})`);
     }
@@ -49,6 +52,7 @@ for (const path of files(".next")) {
   const text = readFileSync(path, "utf8");
   for (const name of SECRET_NAMES) if (text.includes(name)) problems.push(`${path}: names ${name}`);
   for (const re of KEY_SHAPES) if (re.test(text)) problems.push(`${path}: looks like a key (${re})`);
+  for (const re of DISCLAIMERS) if (re.test(text)) problems.push(`${path}: a disclaimer (${re})`);
   if (/NEXT_PUBLIC_NETWORTH/.test(text)) problems.push(`${path}: a NEXT_PUBLIC_ Networth variable`);
 }
 
@@ -56,4 +60,4 @@ if (problems.length) {
   console.error(problems.join("\n"));
   process.exit(1);
 }
-console.log("check-build: no verdict words, no figures of our own, no secrets in .next/");
+console.log("check-build: no verdict words, no disclaimers, no figures of our own, no secrets in .next/");

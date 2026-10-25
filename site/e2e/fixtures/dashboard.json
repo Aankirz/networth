@@ -105,7 +105,7 @@
       "recovery": "Getting back to the level before it took 7 months.",
       "paths": "10,000",
       "window": "January 2015 to December 2018",
-      "label": "This replays real past months. It is not a forecast. Your plan is your choice. Research, not advice.",
+      "label": "This replays real past months. It is not a forecast.",
       "bar": {
         "rows": [
           {
@@ -294,7 +294,7 @@
       "The middle case after 5 years of ₹1,00,000 a month: ₹1.15 Cr for a mix like your holdings, ₹1.02 Cr for your saved plan. Money put in: ₹60,00,000.",
       "Both replay real past months from 2015 to 2018, 10,000 times, using index prices, not your funds' own."
     ],
-    "label": "This is what you hold and what history says about a mix like it. It is not advice. What you do is your choice. Research, not advice."
+    "label": "This is what you hold and what history says about a mix like it."
   },
   "mentions": [
     {
@@ -394,5 +394,5 @@
       "text": "How are my holdings doing? About Infosys"
     }
   ],
-  "footer": "Research, not advice."
+  "footer": ""
 }
