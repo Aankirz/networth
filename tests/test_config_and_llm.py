@@ -215,3 +215,11 @@ def test_an_answer_with_an_unknown_region_is_invalid(type_: str) -> None:
     out = judged(type_, "inflation" if type_ != "none" else "", region="india")
     assert isinstance(out, NotAnEvent) and out.reason.startswith(INVALID_OUTPUT)
     assert out.region is None
+
+
+def test_the_news_judge_is_told_a_paused_action_is_not_the_event() -> None:
+    from networth.llm import CLASSIFY_INSTRUCTIONS
+
+    assert "a pause, delay, suspension or rollback of the action" in " ".join(
+        CLASSIFY_INSTRUCTIONS.split()
+    )

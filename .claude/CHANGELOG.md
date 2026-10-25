@@ -353,3 +353,6 @@
 
 ## 2026-10-25 — Plan range table follows DATA_DIR
 - networth/sim/config.py: sim_dir() reads the app settings' data dir (DATA_DIR env or .env, else data/), so the VM reads /data/sim, not /app/data/sim. scripts/push_data.sh pushes sim/returns.csv and sim/sources.json; docs/deploy.md documents it. Test in tests/test_sim_data.py.
+
+## 2026-10-25 — News judge: a paused action is not the event
+- networth/llm.py CLASSIFY_INSTRUCTIONS lists a pause, delay, suspension or rollback of the action as not the event (phase 5 finding 4); test in tests/test_config_and_llm.py.
