@@ -119,7 +119,7 @@ def type_history(type: str, profile: Profile, services: Services) -> Answer | No
             if services.public_url else "")  # fmt: skip
     text = (
         f"What history shows after {names.TYPES[type].plural.removeprefix('past ')}:\n"
-        f"{line.mark} {line.text}\nThat is a count of what happened, not a forecast.{link}"
+        f"{line.words('en')}\nThat is a count of what happened, not a forecast.{link}"
     )
     return Answer(text, text, TYPE_TASK, kind="why")
 
@@ -132,7 +132,7 @@ def why(store: Store, profile: Profile, services: Services, today: dt.date,
         return answer
     events = brief.month_events(services.watcher_db, today)
     draft = brief.compose(events, profile, store.get_plan(profile.user_id), services.rates_db,
-                          today)  # fmt: skip
+                          dt.datetime.combine(today, dt.time()))  # fmt: skip
     lead = draft.lead
     if lead is None:
         return Answer(NO_LEAD, NO_LEAD)
@@ -146,8 +146,8 @@ def why(store: Store, profile: Profile, services: Services, today: dt.date,
         )
     link = f" Every past episode is listed here: {services.public_url}/why/{lead.type}/{lead.asset}"
     text = (f"The brief starts from this news: {event.title} ({event.event_date:%b} "
-            f"{event.event_date.day}). {rule}The line \"{lead.text}\" counts what happened after "
-            f"every {names.TYPES[lead.type].plural.removeprefix('past ')} in our records."
+            f"{event.event_date.day}). {rule}The line \"{lead.words('en')}\" counts what happened "
+            f"after every {names.TYPES[lead.type].plural.removeprefix('past ')} in our records."
             f"{link if services.public_url else ''}")  # fmt: skip
     return Answer(text, text, WHY_TASK, kind="why")
 

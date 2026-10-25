@@ -64,7 +64,7 @@ def _history(claim: str, briefs: list[ArticleBrief], profile: Profile, services:
     if line is None:
         return "", ""
     url = f"{services.public_url}/why/{line.type}/{line.asset}" if services.public_url else ""
-    return f"\n\nWhat history says. {line.mark} {line.text}", f"\n{url}" if url else ""
+    return f"\n\nWhat history says. {line.words('en')}", f"\n{url}" if url else ""
     return "", ""
 
 

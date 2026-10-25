@@ -368,11 +368,11 @@ def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
 
 
 def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
-    today = briefs.local_today(profile, turn.clock)
+    local = briefs.local_now(profile, turn.clock)
 
     def job() -> None:
         try:
-            briefs.send_brief(turn.store, turn.bot, profile, turn.services, today)
+            briefs.send_brief(turn.store, turn.bot, profile, turn.services, local)
         except Exception:
             log.exception("brief for %s failed", profile.user_id)
             turn.send(profile, Reply(TRY_AGAIN))

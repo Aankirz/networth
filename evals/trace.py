@@ -1,14 +1,14 @@
-"""Number trace: 20 model-worded messages (a brief and a why answer for 10 event types), each
-number in the sent text mapped back to the engine field, event date or profile field it came
-from.
+"""Number trace: 20 messages (a brief and a why answer for 10 event types), each number in the
+sent text mapped back to the engine field, event date or profile field it came from.
 
-    raw = run(services)       # paid: the writer words each message through the guard
+    raw = run(services)       # paid: the writer words each why answer through the guard
     scores = score(raw)       # offline: every number mapped, or listed as unmapped
 
 A brief is brief.compose() over an Event whose odds are odds(type, asset) for the type's
-configured assets, worded by the same guarded writer call bot.briefs.compose_reply makes. A why
-answer is today.type_history() through deliver(). Fields are the values the message was built
-from, each read through guard.numbers so "56%" and "₹1,00,000" normalise the same way.
+configured assets, in the reader's language, written by code as bot.briefs.compose_reply
+writes it (no model, so used is "template"). A why answer is today.type_history() through
+deliver(). Fields are the values the message was built from, each read through guard.numbers
+so "56%" and "₹1,00,000" normalise the same way.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from evals import spend
 from evals.words import NOW, PLAN, USER
 from networth import brief, guard
 from networth.app.services import Services
-from networth.bot.briefs import BRIEF_TASK, LANGUAGES
+from networth.bot.message import plain
 from networth.bot.onboarding import format_money, plan_line
 from networth.chat.answer import deliver
 from networth.chat.today import type_history
@@ -89,14 +89,10 @@ def one_brief(type: str, lang: str, services: Services) -> dict:
     assets = services.cfg.triggers.assets_by_type[type]
     rows, fields = engine_fields(type, assets, services.rates_db)
     event = brief.Event(type, EVENT_DATE, names.TYPES[type].title, tuple(rows))
-    draft = brief.compose([event], USER, PLAN, services.rates_db, TODAY)
-    template = draft.text()
-    task = BRIEF_TASK.format(language=LANGUAGES[lang])
-    spend.check()
-    out = guard.guarded(lambda fb: services.models.write(task, template, fb), draft.source(),
-                        template, services.guard_log, "brief")  # fmt: skip
-    return {"kind": "brief", "type": type, "lang": lang, "text": out.text, "used": out.used,
-            "template": template, "fields": fields + profile_fields()}  # fmt: skip
+    draft = brief.compose([event], USER, PLAN, services.rates_db, NOW)
+    text = plain(draft.message(lang))
+    return {"kind": "brief", "type": type, "lang": lang, "text": text, "used": "template",
+            "template": text, "fields": fields + profile_fields()}  # fmt: skip
 
 
 def one_why(type: str, lang: str, services: Services) -> dict:
