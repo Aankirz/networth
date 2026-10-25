@@ -115,3 +115,12 @@ def test_a_fresh_link_retires_every_older_one(chat: Chat, client) -> None:
 @pytest.mark.parametrize("token", ["abc.².sig", "abc.1999999999.sïg", "äbc.1999999999.sig"])
 def test_a_non_ascii_link_gets_the_friendly_404_not_a_500(client, token: str) -> None:
     assert client.get(f"/u/{token}").status_code == 404
+
+
+@pytest.mark.parametrize("page", ["", "/holdings"])
+def test_a_stopped_users_pages_get_the_friendly_404(chat: Chat, client, page: str) -> None:
+    path = page_path(chat.store) + page
+    chat.say("/stop")
+    response = client.get(path)
+    assert response.status_code == 404
+    assert "This link has expired or isn't right." in html.unescape(response.text)

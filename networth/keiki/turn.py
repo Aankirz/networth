@@ -8,7 +8,8 @@ The reply goes through KeikiTurnBot, a Bot whose send_message posts the plain re
 message to the turn, so commands, onboarding and chat answers (intent, handler, guard) run
 unchanged. A contact we have never seen gets an email-native profile and the short setup in
 onboard.py. A /link code from Telegram, sent by email, points the contact at that Telegram
-user instead, even when the contact already had an email-native profile.
+user instead, even when the contact already had an email-native profile. After five wrong codes
+in an hour, the contact's codes are not tried and the message is answered as any other.
 
 Every turn appends one line to data/keiki_turns.jsonl: the turn and trace ids, the hashed user
 id, the channel type, which kind of turn, the chat intent and guard verdict, the model cost,
@@ -185,7 +186,7 @@ def link_code(text: str) -> str | None:
 def link(turn: commands.Turn, address: str, text: str) -> Handled | None:
     """Bind the contact to the user whose /link code the text carries, if it carries one."""
     code = link_code(text)
-    user_id = turn.store.redeem_link_code(code, turn.clock) if code else None
+    user_id = turn.store.redeem_link_code(code, turn.clock, address) if code else None
     profile = turn.store.get_profile(user_id) if user_id else None
     if profile is None:
         return None

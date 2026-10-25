@@ -12,7 +12,7 @@ import pytest
 
 from networth import config
 from networth.app.services import Services
-from networth.app.store import Channel, Store
+from networth.app.store import LINK_MISSES_PER_HOUR, Channel, Store
 from networth.bot.briefs import run_daily
 from networth.keiki.mail import Mail
 from networth.keiki.turn import LINKED
@@ -99,16 +99,16 @@ def test_a_code_works_only_once(tmp_path: Path, chat: Chat) -> None:
 def test_a_code_expires_after_the_configured_minutes(tmp_path: Path) -> None:
     store = Store(tmp_path)
     code = store.new_link_code("tg:1", CLOCK, TEN_MINUTES)
-    assert store.redeem_link_code(code, CLOCK + dt.timedelta(minutes=11)) is None
+    assert store.redeem_link_code(code, CLOCK + dt.timedelta(minutes=11), ADDRESS) is None
     fresh = store.new_link_code("tg:1", CLOCK, TEN_MINUTES)
-    assert store.redeem_link_code(fresh, CLOCK + dt.timedelta(minutes=9)) == "tg:1"
+    assert store.redeem_link_code(fresh, CLOCK + dt.timedelta(minutes=9), ADDRESS) == "tg:1"
 
 
 def test_a_code_belongs_to_the_user_who_made_it(tmp_path: Path) -> None:
     store = Store(tmp_path)
     mine, theirs = (store.new_link_code(u, CLOCK, TEN_MINUTES) for u in ("tg:1", "tg:2"))
-    assert store.redeem_link_code(theirs, CLOCK) == "tg:2"
-    assert store.redeem_link_code(mine, CLOCK) == "tg:1"
+    assert store.redeem_link_code(theirs, CLOCK, ADDRESS) == "tg:2"
+    assert store.redeem_link_code(mine, CLOCK, ADDRESS) == "tg:1"
 
 
 def test_a_new_code_retires_the_users_older_unused_one(tmp_path: Path, monkeypatch) -> None:
@@ -119,8 +119,8 @@ def test_a_new_code_retires_the_users_older_unused_one(tmp_path: Path, monkeypat
     store = Store(tmp_path)
     assert store.new_link_code("tg:1", CLOCK, TEN_MINUTES) == "111111"
     assert store.new_link_code("tg:1", CLOCK, TEN_MINUTES) == "222222"
-    assert store.redeem_link_code("111111", CLOCK) is None
-    assert store.redeem_link_code("222222", CLOCK) == "tg:1"
+    assert store.redeem_link_code("111111", CLOCK, ADDRESS) is None
+    assert store.redeem_link_code("222222", CLOCK, ADDRESS) == "tg:1"
 
 
 def test_an_email_profile_can_be_relinked_to_telegram(tmp_path: Path, chat: Chat) -> None:
@@ -180,3 +180,27 @@ def test_a_code_inside_a_longer_message_does_not_link(tmp_path: Path, chat: Chat
     keiki = Keiki(tmp_path, chat.services)
     keiki.say(f"Did the Nifty really close at {code} points yesterday, or was that a typo?")
     assert keiki.store.contact_user(ADDRESS) != USER
+
+
+def guess_wrong(keiki: Keiki, code: str, times: int) -> None:
+    for wrong in [c for c in (f"{n:06d}" for n in range(times + 1)) if c != code][:times]:
+        keiki.say(wrong, now=NOW)
+
+
+def test_five_wrong_codes_in_an_hour_stop_codes_from_that_contact(tmp_path, chat) -> None:
+    code = link_code(chat)
+    keiki = Keiki(tmp_path, chat.services)
+    guess_wrong(keiki, code, LINK_MISSES_PER_HOUR)
+    keiki.say(code, now=NOW)
+    assert keiki.last != LINKED["en"], "the right code is answered as a normal message"
+    assert keiki.store.contact_user(ADDRESS) != USER
+    keiki.say(code, address="someone@example.com", now=NOW)
+    assert keiki.store.contact_user("someone@example.com") == USER, "other contacts still link"
+
+
+def test_codes_from_a_contact_work_again_an_hour_after_the_misses(tmp_path, chat) -> None:
+    keiki = Keiki(tmp_path, chat.services)
+    guess_wrong(keiki, link_code(chat), LINK_MISSES_PER_HOUR)
+    later = CLOCK + dt.timedelta(hours=1, minutes=1)
+    keiki.say(chat.store.new_link_code(USER, later, TEN_MINUTES), now=later.isoformat())
+    assert keiki.last == LINKED["en"]

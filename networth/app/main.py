@@ -21,6 +21,7 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -42,6 +43,7 @@ SECRET_HEADER = "X-Telegram-Bot-Api-Secret-Token"
 WEBHOOK_PATH = "/telegram/webhook"
 KEIKI_PATH = "/keiki/turn"
 OK = {"ok": True}
+DATA_DIR_MODE = 0o700
 
 
 def mount_web(app: FastAPI) -> None:
@@ -145,8 +147,16 @@ def create_app(
     return app
 
 
+def secure_data_dir(path: Path) -> None:
+    """Only the server's own user may read the data dir: it holds every profile, message,
+    holding and broker secret."""
+    path.mkdir(parents=True, exist_ok=True)
+    path.chmod(DATA_DIR_MODE)
+
+
 def app_from_env(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
+    secure_data_dir(settings.data_dir)
     bot = TelegramClient(settings.bot_token) if settings.bot_token else None
     if bot is None:
         log.warning("TELEGRAM_BOT_TOKEN not set; the webhook will answer 503")
