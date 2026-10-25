@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 from typing import Final, Literal
 
 from networth.app.store import INDIA_TZ, US_TZ, Plan, Profile, Step
+from networth.bot.holdings_words import BUCKET_WORDS
 from networth.bot.message import FOOTER, Message, plain, say
 from networth.bot.telegram import Button, Keyboard
 
@@ -194,7 +195,8 @@ OWN_PLAN_NAME: Final = "Your own split"
 OWN_PLAN_NAMES: Final = {"en": OWN_PLAN_NAME, "hi": "आपका अपना बँटवारा",
                          "hinglish": "Aapka apna split"}  # fmt: skip
 BUCKETS: Final = ("safety", "core", "growth")
-BUCKET_NAMES: Final = {"hi": {"safety": "सुरक्षा", "core": "कोर", "growth": "ग्रोथ"}}
+BUCKET_NAMES: Final = {lang: {b.value: words[lang] for b, words in BUCKET_WORDS.items()}
+                       for lang in ("en", "hi", "hinglish")}  # fmt: skip
 ORDER: Final = (Step.LANG, Step.GOAL, Step.HORIZON, Step.AMOUNT, Step.DAY, Step.DROP,
                 Step.EXCLUDE, Step.PLAN)  # fmt: skip
 FIX_LABELS: Final = {
@@ -371,38 +373,36 @@ TEXT: Final[Mapping[Step, Mapping[str, str]]] = {
         "phir Ho gaya.",
     },
     Step.PLAN: {
-        "en": "Pick a starting plan, or make your own. These are common mixes, shown for "
-        "education. The plan is always your choice.\n\n"
-        "Safety is money you'll need soon: FDs, liquid funds.\n"
-        "Core is broad index funds you hold for years.\n"
-        "Growth is single stocks and sectors.\n\n"
-        "Steady: 60% safety, 40% core, 0% growth\n"
-        "Balanced: 20% safety, 70% core, 10% growth\n"
-        "Ambitious: 10% safety, 60% core, 30% growth",
-        "hi": "शुरुआती प्लान चुन सकते हैं, या अपना बना सकते हैं। ये आम मिश्रण हैं, सिर्फ़ समझाने के "
-        "लिए। प्लान हमेशा आपकी पसंद है।\n\n"
-        "सुरक्षा वह पैसा है जो जल्दी काम आएगा: FD, लिक्विड फ़ंड।\n"
-        "कोर बड़े इंडेक्स फ़ंड हैं, जो सालों तक रखे जाते हैं।\n"
-        "ग्रोथ अलग-अलग स्टॉक्स और सेक्टर हैं।\n\n"
-        "Steady: 60% सुरक्षा, 40% कोर, 0% ग्रोथ\n"
-        "Balanced: 20% सुरक्षा, 70% कोर, 10% ग्रोथ\n"
-        "Ambitious: 10% सुरक्षा, 60% कोर, 30% ग्रोथ",
-        "hinglish": "Ek starting plan chun sakte hain, ya apna bana sakte hain. Yeh aam mixes "
-        "hain, sirf samjhane ke liye. Plan hamesha aapki choice hai.\n\n"
-        "Safety woh paisa hai jo jaldi kaam aayega: FD, liquid funds.\n"
-        "Core broad index funds hain, jo saalon tak rakhe jaate hain.\n"
-        "Growth alag-alag stocks aur sectors hain.\n\n"
-        "Steady: 60% safety, 40% core, 0% growth\n"
-        "Balanced: 20% safety, 70% core, 10% growth\n"
-        "Ambitious: 10% safety, 60% core, 30% growth",
+        "en": "Pick a starting plan, or make your own.\n\n"
+        "Safe money (liquid, gilt, FD) is money you'll need soon.\n"
+        "Broad index funds hold the whole market and are kept for years.\n"
+        "Single shares or themes are single company shares and sector funds.\n\n"
+        "Steady: 60% safe money, 40% broad index funds, 0% single shares or themes\n"
+        "Balanced: 20% safe money, 70% broad index funds, 10% single shares or themes\n"
+        "Ambitious: 10% safe money, 60% broad index funds, 30% single shares or themes",
+        "hi": "शुरुआती प्लान चुन सकते हैं, या अपना बना सकते हैं।\n\n"
+        "सुरक्षित पैसा (लिक्विड, गिल्ट, FD) वह पैसा है जो जल्दी काम आएगा।\n"
+        "ब्रॉड इंडेक्स फ़ंड पूरे बाज़ार वाले फ़ंड हैं, जो सालों तक रखे जाते हैं।\n"
+        "अलग शेयर या थीम का मतलब है एक-एक कंपनी के शेयर और सेक्टर फ़ंड।\n\n"
+        "Steady: 60% सुरक्षित पैसा, 40% ब्रॉड इंडेक्स फ़ंड, 0% अलग शेयर या थीम\n"
+        "Balanced: 20% सुरक्षित पैसा, 70% ब्रॉड इंडेक्स फ़ंड, 10% अलग शेयर या थीम\n"
+        "Ambitious: 10% सुरक्षित पैसा, 60% ब्रॉड इंडेक्स फ़ंड, 30% अलग शेयर या थीम",
+        "hinglish": "Ek starting plan chun sakte hain, ya apna bana sakte hain.\n\n"
+        "Safe paisa (liquid, gilt, FD) woh paisa hai jo jaldi kaam aayega.\n"
+        "Broad index funds poore bazaar wale funds hain, jo saalon tak rakhe jaate hain.\n"
+        "Alag shares ya theme matlab ek-ek company ke shares aur sector funds.\n\n"
+        "Steady: 60% safe paisa, 40% broad index funds, 0% alag shares ya theme\n"
+        "Balanced: 20% safe paisa, 70% broad index funds, 10% alag shares ya theme\n"
+        "Ambitious: 10% safe paisa, 60% broad index funds, 30% alag shares ya theme",
     },
     Step.OWN_SPLIT: {
-        "en": "Type your split as three numbers that add up to 100: safety, core, growth. "
-        "For example: 20 70 10",
-        "hi": "अपना बँटवारा तीन नंबरों में लिख सकते हैं, जिनका जोड़ 100 हो: सुरक्षा, कोर, ग्रोथ। "
+        "en": "Type your split as three numbers that add up to 100: safe money, broad index funds, "
+        "single shares or themes. For example: 20 70 10",
+        "hi": "अपना बँटवारा तीन नंबरों में लिख सकते हैं, जिनका जोड़ 100 हो: सुरक्षित पैसा, ब्रॉड इंडेक्स फ़ंड, "
+        "अलग शेयर या थीम। "
         "जैसे: 20 70 10",
-        "hinglish": "Apna split teen numbers mein likh sakte hain, jinka jod 100 ho: safety, "
-        "core, growth. Jaise: 20 70 10",
+        "hinglish": "Apna split teen numbers mein likh sakte hain, jinka jod 100 ho: safe paisa, "
+        "broad index funds, alag shares ya theme. Jaise: 20 70 10",
     },
 }  # fmt: skip
 FIX_TEXT: Final = {
@@ -621,7 +621,7 @@ class Question:
 
 RETRY: Final[Mapping[str, Mapping[str, str]]] = {
     "goal": {
-        "en": "I didn't catch that. Tap one, or type house, retirement, education or growth.",
+        "en": "I didn't catch that. Tap one, or type house, retirement, education or grow it.",
         "hi": "यह समझ नहीं आया। एक बटन दबा सकते हैं, या घर, रिटायरमेंट, पढ़ाई या बढ़ाना लिख सकते हैं।",
         "hinglish": "Yeh samajh nahin aaya. Ek button daba sakte hain, ya ghar, retirement, "
         "padhai ya badhana likh sakte hain.",

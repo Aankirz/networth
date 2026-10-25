@@ -138,7 +138,11 @@ def test_a_weblink_code_shows_the_linked_user_their_own_plan(web: Web) -> None:
     assert web.link(ANA, code).json() == {"linked": True, "name": "Ana"}
     assert web.call(ANA, "get", "/api/web/me").json()["linked"] is True
     board = web.call(ANA, "get", "/api/web/dashboard").json()
-    assert board["profile"]["plan"] == "Balanced. 20% safety, 70% core, 10% growth"
+    assert (
+        board["profile"]["plan"]
+        == "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+        "10% single shares or themes"
+    )
     assert board["sample"] is False
 
 

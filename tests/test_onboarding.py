@@ -30,7 +30,8 @@ SUMMARY = (
     "A fall you can sit through: up to 20%\n"
     "Left out: Crypto, US stocks\n"
     "Language: English\n"
-    "Plan: Balanced. 20% safety, 70% core, 10% growth\n\n"
+    "Plan: Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+    "10% single shares or themes\n\n"
     "Looks right?"
 )
 TAPS_TO_CONFIRM = (
@@ -249,7 +250,10 @@ def test_own_split_typed(chat: Chat) -> None:
     assert chat.plan is not None
     assert (chat.plan.name, dict(chat.plan.targets_pct)) == (
         "own", {"safety": 25, "core": 50, "growth": 25})  # fmt: skip
-    assert "Plan: Your own split. 25% safety, 50% core, 25% growth" in chat.bot.last
+    assert (
+        "Plan: Your own split. 25% safe money (liquid, gilt, FD), 50% broad index funds, "
+        "25% single shares or themes" in chat.bot.last
+    )
 
 
 def test_exclusion_toggled_twice_comes_back(chat: Chat) -> None:
@@ -308,12 +312,16 @@ def test_plan_command_shows_then_changes_the_plan(chat: Chat) -> None:
     onboard(chat)
     chat.say("/plan")
     assert chat.bot.texts[-2] == (
-        "Your plan\n\nBalanced. 20% safety, 70% core, 10% growth.\n\nResearch, not advice."
+        "Your plan\n\nBalanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+        "10% single shares or themes.\n\nResearch, not advice."
     )
     assert chat.bot.messages[-2].title == "Your plan"
     chat.tap("ob:plan:steady")
     assert chat.profile.step is Step.CONFIRM
-    assert "Plan: Steady. 60% safety, 40% core, 0% growth" in chat.bot.last
+    assert (
+        "Plan: Steady. 60% safe money (liquid, gilt, FD), 40% broad index funds, "
+        "0% single shares or themes" in chat.bot.last
+    )
 
 
 def test_plan_before_setup_asks_to_finish(chat: Chat) -> None:

@@ -164,7 +164,10 @@ def save_user(store: Store, currency: str, *, with_plan: bool = True) -> str:
 def test_a_rupee_user_gets_their_range(store: Store) -> None:
     text = plan_range_message(save_user(store, "INR"), store)
     assert text is not None
-    assert "20% safety, 70% core, 10% growth, ₹1,50,000 a month for 3 years" in text
+    assert (
+        "20% safe money, 70% broad index funds, "
+        "10% single shares or themes, ₹1,50,000 a month for 3 years" in text
+    )
     assert text.endswith("Your plan is your choice.")
 
 

@@ -198,9 +198,10 @@ def rupees(n: int) -> str:
 # Fixed sentences per language; only PlanRange fields fill the gaps. Hindi keeps ASCII digits.
 LINES: Final[Mapping[str, Mapping[str, str]]] = {
     "en": {
-        "what": "This is your own plan: {safety}% safety, {core}% core, {growth}% growth, "
-        "{amount} a month for {years} years. It replays real past months from {start} to "
-        "{end}, in blocks of about {block} months, {paths} times.",
+        "what": "This is your own plan: {safety}% safe money, {core}% broad index funds, "
+        "{growth}% single shares or themes, {amount} a month for {years} years. It "
+        "replays real past months from {start} to {end}, in blocks of about {block} "
+        "months, {paths} times.",
         "invested": "Money put in over those years: {invested}.",
         "nominal": "Where it could end up: bad case {nominal_p10}, middle {nominal_median}, "
         "good case {nominal_p90}.",
@@ -215,9 +216,10 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "label": "This replays real past months. It is not a forecast. Your plan is your choice.",
     },
     "hi": {
-        "what": "यह आपका अपना प्लान है: {safety}% सेफ़्टी, {core}% कोर, {growth}% ग्रोथ, हर महीने "
-        "{amount}, {years} साल तक। इसमें {start} से {end} तक के असली पुराने महीने, लगभग {block} "
-        "महीनों के टुकड़ों में, {paths} बार दोहराए गए हैं।",
+        "what": "यह आपका अपना प्लान है: {safety}% सुरक्षित पैसा, {core}% ब्रॉड इंडेक्स फ़ंड, "
+        "{growth}% अलग शेयर या थीम, हर महीने {amount}, {years} साल तक। इसमें {start} से "
+        "{end} तक के असली पुराने महीने, लगभग {block} महीनों के टुकड़ों में, {paths} बार "
+        "दोहराए गए हैं।",
         "invested": "इन सालों में लगाया गया कुल पैसा: {invested}।",
         "nominal": "पैसा कहाँ तक पहुँच सकता है: बुरे हाल में {nominal_p10}, बीच में "
         "{nominal_median}, अच्छे हाल में {nominal_p90}।",
@@ -231,9 +233,10 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "label": "यह असली पुराने महीनों को दोहराता है। यह कोई अनुमान नहीं है। आपका प्लान आपकी अपनी पसंद है।",
     },
     "hinglish": {
-        "what": "Yeh aapka apna plan hai: {safety}% safety, {core}% core, {growth}% growth, "
-        "har mahine {amount}, {years} saal tak. Ismein {start} se {end} tak ke asli purane "
-        "mahine, lagbhag {block} mahine ke blocks mein, {paths} baar dohraaye gaye hain.",
+        "what": "Yeh aapka apna plan hai: {safety}% safe paisa, {core}% broad index funds, "
+        "{growth}% alag shares ya theme, har mahine {amount}, {years} saal tak. Ismein "
+        "{start} se {end} tak ke asli purane mahine, lagbhag {block} mahine ke blocks "
+        "mein, {paths} baar dohraaye gaye hain.",
         "invested": "In saalon mein lagaya gaya kul paisa: {invested}.",
         "nominal": "Paisa kahan tak pahunch sakta hai: bure haal mein {nominal_p10}, beech "
         "mein {nominal_median}, achhe haal mein {nominal_p90}.",

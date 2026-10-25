@@ -21,7 +21,7 @@ from typing import Final
 
 import pytest
 
-from networth import config, guard
+from networth import config, guard, sim
 from networth.app.services import Services
 from networth.app.store import Plan, Step, new_profile
 from networth.bot import commands, onboarding
@@ -388,13 +388,33 @@ def test_the_email_setup_asks_the_language_first(tmp_path: Path) -> None:
     assert email_onboard.EMAIL_STEPS[0] is Step.LANG
 
 
-def test_the_plan_line_names_the_buckets_in_hindi() -> None:
+def test_the_plan_line_names_the_buckets_in_plain_words() -> None:
     plan = Plan("u", "balanced", {"safety": 20, "core": 70, "growth": 10}, 20, NOW)
-    assert onboarding.plan_line(plan, "hi") == "Balanced. 20% सुरक्षा, 70% कोर, 10% ग्रोथ"
-    assert onboarding.plan_line(plan) == "Balanced. 20% safety, 70% core, 10% growth"
+    assert (
+        onboarding.plan_line(plan, "hi")
+        == "Balanced. 20% सुरक्षित पैसा (लिक्विड, गिल्ट, FD), 70% ब्रॉड इंडेक्स फ़ंड, 10% अलग शेयर या थीम"
+    )
+    assert (
+        onboarding.plan_line(plan)
+        == "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+        "10% single shares or themes"
+    )
 
 
 def test_the_late_day_retry_is_local(tmp_path: Path) -> None:
     p = replace(new_profile(7, NOW), lang="hinglish", step=Step.DAY)
     reply = onboarding.advance(p, None, "31", NOW).replies[0]
     assert reply.text.startswith("1 se 28 tak ki koi tareekh chun sakte hain")
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "hinglish"])
+def test_the_plan_screens_never_say_a_bare_bucket_name(lang: str) -> None:
+    bare = re.compile(r"\b(safety|core|growth)\b|सुरक्षा|सेफ़्टी|कोर|ग्रोथ", re.IGNORECASE)
+    plans = [Plan("u", name, dict(zip(("safety", "core", "growth"), split, strict=True)), 20, "")
+             for name, (_, split) in onboarding.STARTER_PLANS.items()]  # fmt: skip
+    screens = [onboarding.TEXT[Step.PLAN][lang],
+               onboarding.TEXT[Step.OWN_SPLIT][lang],
+               onboarding.RETRY["goal"][lang], sim.LINES[lang]["what"],
+               *(onboarding.plan_line(p, lang) for p in plans)]  # fmt: skip
+    for text in screens:
+        assert not bare.search(re.sub(r"\{\w+\}", "", text)), text

@@ -84,7 +84,10 @@ def test_the_demo_page_prints_the_simulated_range(client) -> None:
 
 def test_a_custom_split_is_the_one_simulated(client) -> None:
     words = text(client.get("/plan-range?plan=own&safety=30&core=50&growth=20").text)
-    assert "Your own split. 30% safety, 50% core, 20% growth." in words
+    assert (
+        "Your own split. 30% safe money (liquid, gilt, FD), 50% broad index funds, "
+        "20% single shares or themes." in words
+    )
 
 
 @pytest.mark.parametrize("query", [
@@ -133,7 +136,10 @@ def test_the_user_page_shows_only_the_users_own_range(chat: Chat) -> None:
     assert "What history says about this plan" in words
     assert LABEL in words and DISCLAIMER in page
     assert sim.rupees(r.nominal_median) in words
-    assert "Balanced. 20% safety, 70% core, 10% growth" in words
+    assert (
+        "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+        "10% single shares or themes" in words
+    )
     assert "Steady" not in words and "Ambitious" not in words
     assert not BANNED.search(page)
 

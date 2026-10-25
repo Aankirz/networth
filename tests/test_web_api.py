@@ -94,7 +94,11 @@ def origins(monkeypatch) -> None:
 def test_the_dashboard_is_the_token_owners_own(world: World) -> None:
     a = world.client.get(f"/api/u/{world.token(USER)}/dashboard").json()
     b = world.client.get(f"/api/u/{world.token(OTHER_USER)}/dashboard").json()
-    assert a["profile"]["plan"] == "Balanced. 20% safety, 70% core, 10% growth"
+    assert (
+        a["profile"]["plan"]
+        == "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
+        "10% single shares or themes"
+    )
     assert b["profile"]["plan"].startswith("Steady.")
     assert "Steady" not in json.dumps(a) and "Balanced" not in json.dumps(b)
     assert a["sample"] is False and a["footer"] == "Research, not advice."
