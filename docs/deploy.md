@@ -11,7 +11,7 @@ One container serves the bot webhook, `/health` and the web pages. Its state is 
 - On boot, if `PUBLIC_URL` is set, the app calls Telegram `setWebhook` with `PUBLIC_URL/telegram/webhook` and the secret. A Telegram update to a sleeping agent wakes it in about a second.
 - `GET /schedules` publishes the scheduled jobs, and `POST /chat` runs the one Maritime delivers (see Schedules below).
 - `GET /u/{token}` is a user's own page, signed with `LINK_SIGNING_SECRET`.
-- `POST /keiki/turn` takes signed Keiki turns for email (see Keiki below). An unsigned or stale request gets 401.
+- `POST /keiki/turn` takes signed Keiki turns for email and Slack (see Keiki below). An unsigned or stale request gets 401.
 
 ## Once, by the owner
 
@@ -168,7 +168,36 @@ Check it after a deploy:
 curl -s -o /dev/null -w '%{http_code}\n' -X POST https://api.maritime.sh/a/<agent-id>/keiki/turn -d '{}'   # 401 unsigned
 ```
 
-Then email `networth@agentmail.to` from your own address. `data/keiki_turns.jsonl` on the VM gets one line per turn (turn id, intent, guard verdict, cost; never message text), and `GET https://onkeiki.com/api/v1/traces?limit=5` shows Keiki's side of the same turns.
+Then email `networth@agentmail.to` from your own address. `data/keiki_turns.jsonl` on the VM gets one line per turn (turn id, trace id, hashed user id, channel type, kind, intent, guard verdict, cost; never message text or an address), and `GET https://onkeiki.com/api/v1/traces?limit=5` shows Keiki's side of the same turns. Keiki's trace id for a turn is the turn id.
+
+### Slack through the same harness
+
+Slack is a second Keiki channel on the same agent and the same harness. A Slack message becomes a signed `POST /keiki/turn` like an email, runs the same intent, handler and guard, and gets the same plain text back. The contact is the Slack author (`slack:<team>:<user>`), so all of one person's threads and DMs are one profile. A first message gets the same short setup as a first email. `/link` works from Slack too: the user sends the six-digit code there instead of by email. Briefs and alerts are never sent to Slack. They stay on Telegram or email. Source: https://onkeiki.com/docs/slack-agents.md and the channel table in https://onkeiki.com/docs/partner-deployments.md, read on 2026-10-25.
+
+The agent answers DMs to the app and messages that mention it. Keiki ignores other channel chatter before it reaches the harness.
+
+OWNER NEEDED: create and install a Slack app. Keiki needs its bot token and signing secret, and only the workspace owner can install an app. Use one of these two ways.
+
+**A. From the Keiki dashboard (recommended).** Keiki writes the app manifest with the right scopes and its own event URLs.
+1. Open https://onkeiki.com/dashboard, go to agent `Networth`, then Channels, then Slack.
+2. Follow its "create app from manifest" link. In Slack, pick the workspace, paste the manifest and click Create.
+3. In the Slack app: Install App, then Install to Workspace, then Allow.
+4. Paste the Bot User OAuth Token (`xoxb-...`, under OAuth & Permissions) and the Signing Secret (under Basic Information) back into Keiki's Slack form.
+5. Do not change the harness or the model on that page. The harness stays `external`.
+
+**B. Through the developer API.** Use this if the dashboard has no Slack option. Create the app at https://api.slack.com/apps (From scratch), install it, and copy the bot token and signing secret into the local `.env` as `SLACK_BOT_TOKEN` and `SLACK_SIGNING_SECRET`. Never commit them. Then:
+
+```bash
+curl -s -X POST https://onkeiki.com/api/v1/developer/deployments -H "$K" -H "$J" \
+  -d "{\"external_ref\":\"networth\",\"agent\":{},\"channels\":[{\"type\":\"slack\",\"bot_token\":\"$SLACK_BOT_TOKEN\",\"signing_secret\":\"$SLACK_SIGNING_SECRET\"}]}"
+curl -s -H "$K" https://onkeiki.com/api/v1/developer/deployments/networth   # the slack channel's detail
+```
+
+Paste the URLs from the channel's `detail` into the Slack app. Event Subscriptions takes the events URL. Interactivity takes the actions URL if one is listed. Keiki's dashboard manifest lists the scopes. Without it, these are a guess, not taken from Keiki: `app_mentions:read`, `chat:write`, `im:history`, `im:read`, `im:write`, `users:read`, `reactions:write`, with bot events `app_mention` and `message.im`. Turn on App Home, then Messages Tab, then "Allow users to send messages".
+
+No Maritime env var changes. The server needs nothing new for Slack.
+
+Check it: DM the app `What happened today?`. The answer must match the email and Telegram answers. Then `GET https://onkeiki.com/api/v1/traces?limit=5` shows a trace with `metadata.channel` `slack`, and `data/keiki_turns.jsonl` gets a line with `"channel": "slack"`. The first payload after a boot logs its channel keys (never values). If that log shows no `teamId` and `userId`, each Slack conversation becomes its own contact. The fix is then the key names in `networth/keiki/wire.py` `_contact`.
 
 ## Local development
 

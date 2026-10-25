@@ -365,3 +365,10 @@
 
 ## 2026-10-25 — Phase 3D eval rerun and report
 - evals/results: live words and news rerun after findings 1 to 4; evals/intent_results_heldout_3d.json held-out intent rerun with the new criteria. docs/phases/phase-5-report.md before-and-after section and spend $2.42; phase-5-findings.md status per finding; phase-3b-report.md and phase-3b-decisions.tsv record Jev back on; docs/phases/phase-3d-report.md.
+||||||| parent of da2ecbf (docs: add the Slack setup and the phase 3C report)
+
+## 2026-10-25 — Phase 3C: clean turn log, trace id, welcome kind, Slack route, report
+- The turn log kept Keiki's whole channel object (sender address and email text). It now keeps only the channel type; the fixture sends the object as Keiki does and the log test checks no address or text.
+- trace_id falls back to the turn id, which is Keiki's trace id. A first message answered then set up is logged as kind `welcome`.
+- Slack turns use the same /keiki/turn pipeline; a Slack author is one contact (`slack:<team>:<user>`) and is never mailed.
+- docs/deploy.md gains the Slack setup (OWNER NEEDED app install); docs/phases/phase-3c-report.md written.
