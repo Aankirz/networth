@@ -616,3 +616,6 @@
 ## 2026-10-25 — Phase 13C: the news notifier and /alerts
 - networth/notify: after each watcher cycle (run_watcher, no new scheduler) a confirmed story about a holding, its sector or the plan's Nifty 50 sends one message through the outbox: the story and publishers, the last close's move with its source, the move in the holding's currency, and the rating when its view changed. 3 a day per user, quiet 22:00-08:00 IST, claims in data/notify.sqlite.
 - networth/bot/alerts_cmd.py: /alerts on|off flips the profile's alerts_on. tests/test_notify.py covers the cap, quiet hours, /alerts off, a failed send and the rating line. make check exit 0. Local commit only.
+
+## 2026-10-25 — Phase 13C: /r pages and the ratings API
+- networth/web/ratings_web.py: public /r/<slug> pages (a rating, /r/sectors, /r/sector-<key>) with drivers, sources and the backtest table; GET /api/rating/{query}, /api/sectors and /api/ratings/backtest with the API's origin check. One import line in routes.py. Templates r_rating, r_sectors, r_missing. tests/test_ratings_web.py. make check exit 0. Local commit only.

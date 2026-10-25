@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ r.name }}: {{ r.view.value }} · Networth{% endblock %}
+{% block description %}{{ r.outlook }}{% endblock %}
+{% block main %}
+<article class="note rating">
+  <p class="normal">Networth rating · {{ r.kind|upper if r.kind == 'ipo' else r.kind }} · {{ r.symbol }}</p>
+  <h1 class="verdict">{{ r.name }}: {{ r.view.value }}, {{ r.score }}/100</h1>
+  <p class="normal">{{ r.outlook }}</p>
+  <p class="fineprint">Confidence: {{ r.confidence }}. Rated {{ r.as_of[:10] }}.</p>
+
+  <h2>What it is based on</h2>
+  <table class="ledger ledger--plain">
+    <thead><tr><th scope="col">Driver</th><th scope="col">The number</th><th scope="col">Pulls the score</th><th scope="col">Source</th></tr></thead>
+    <tbody>
+      {% for d in card.drivers %}<tr>
+        <td data-label="Driver">{{ d.label }}</td>
+        <td data-label="The number">{{ d.value }}</td>
+        <td data-label="Pulls the score">{{ d.effect }}</td>
+        <td data-label="Source"><a href="{{ d.source.url }}" rel="nofollow noopener">{{ d.source.name }}</a>, {{ d.source.as_of }}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  {% if r.missing %}
+  <h2>What we couldn't read</h2>
+  <ul>{% for m in r.missing %}<li>{{ m }}</li>{% endfor %}</ul>
+  <p class="fineprint">Missing inputs are left out, never guessed, and they lower the confidence.</p>
+  {% endif %}
+
+  <h2>How often ratings like this were right</h2>
+  <p class="callout">{{ r.track.text }}</p>
+  <p class="normal">{{ r.track.edge }}</p>
+  {% if group %}
+  <table class="ledger ledger--plain">
+    <caption>Every month since {{ r.track.since }}: {{ group.n }} cases over {{ group.assets }} names. All of them: {{ group.baseline }}.</caption>
+    <thead><tr><th scope="col">View</th><th scope="col">Cases</th><th scope="col">Beat the market</th><th scope="col">Against all</th></tr></thead>
+    <tbody>
+      {% for row in group.rows %}<tr>
+        <td data-label="View">{{ row.view }}</td><td data-label="Cases">{{ row.n }}</td>
+        <td data-label="Beat the market">{{ row.rate }}</td><td data-label="Against all">{{ row.excess }}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if caveat %}<p class="fineprint">{{ caveat }}</p>{% endif %}
+  <p class="normal"><a href="{{ bot_url }}">Ask Networth about anything you hold</a> · <a href="/r/sectors">Today's sector board</a></p>
+</article>
+{% endblock %}

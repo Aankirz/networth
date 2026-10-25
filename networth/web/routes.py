@@ -410,3 +410,4 @@ def plan_range_page(
 # The JSON API for the Next.js site adds its routes to this router when it loads. Imported last,
 # because it reads the settings and the sim table above.
 import networth.web.api  # noqa: E402, F401
+import networth.web.ratings_web  # noqa: E402, F401 - /r pages and the ratings API

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ single or 'Sector moves' }} to {{ card.as_of }} · Networth{% endblock %}
+{% block description %}The main NSE sectors' moves, each with the confirmed news behind it.{% endblock %}
+{% block main %}
+<article class="note sectors">
+  <h1 class="verdict">{{ single ~ ' sector' if single else 'Sector moves' }} to {{ card.as_of }}</h1>
+  <table class="ledger ledger--plain">
+    <thead><tr><th scope="col">Sector</th><th scope="col">Day</th><th scope="col">Week</th><th scope="col">Month</th><th scope="col">The news behind it</th></tr></thead>
+    <tbody>
+      {% for s in rows %}<tr>
+        <td data-label="Sector"><a href="/r/sector-{{ s.key }}">{{ s.name }}</a></td>
+        <td data-label="Day">{{ s.day }}</td><td data-label="Week">{{ s.week }}</td><td data-label="Month">{{ s.month }}</td>
+        <td data-label="The news behind it">{% for n in s.stories %}{{ n.title }} ({{ n.publishers[:2]|join(', ') }}, {{ n.day }}){% if not loop.last %}<br>{% endif %}{% else %}No confirmed story this week{% endfor %}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  {% if card.note %}<p class="normal">{{ card.note }}</p>{% endif %}
+  <p class="fineprint">Prices: Yahoo Finance, NSE index closes to {{ card.as_of }}. News: stories the Networth watcher confirmed from more than one publisher.</p>
+  {% if single %}<p class="normal"><a href="/r/sectors">Every sector</a></p>{% endif %}
+</article>
+{% endblock %}
