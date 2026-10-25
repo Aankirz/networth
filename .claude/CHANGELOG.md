@@ -553,3 +553,7 @@
 
 ## 2026-10-25 — Phase 12: holdings reply leads with the answer
 - networth: holdings reply now leads with worth, invested and gain, each share and a takeaway; count and merge across screenshots; plain-word fix flow; plan comparison in rupees on confirm; sell questions get plan gap and history; plain bucket words in LINES; gold and silver ETFs and gold funds are safe money (owner decision); owner Groww fixture and tests; make check exit 0.
+
+## 2026-10-25 — Phase 13C: rate() signature and the ratings/sectors contract
+- networth/ratings/{__init__,model}.py: Rating, Driver, Source, Track, View and the rate() signature 13A codes against.
+- docs/phases/phase-10-contract.md: Phase 13C routes and the RatingCard, SectorsCard, RatingsBacktest types in their own block.

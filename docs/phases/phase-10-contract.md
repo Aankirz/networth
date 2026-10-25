@@ -353,6 +353,112 @@ export interface ApiError {
 }
 ```
 
+## Phase 13C: ratings and the sector board
+
+Phase 13C lifts rule 4 for these cards only: a rating carries a view and a score, because the owner decided Networth now gives a view. Every driver carries the source and the time its number came from, and every rating carries its measured track record, weak or not.
+
+| Route | Who | Returns |
+|---|---|---|
+| `GET /api/rating/{query}` | anyone | `RatingCard`, from `networth.ratings.rate(query)`; `404 not_found` when nothing by that name exists |
+| `GET /api/sectors` | anyone | `SectorsCard`, from `networth.sectors.board()` |
+| `GET /api/ratings/backtest` | anyone | `RatingsBacktest`, the stored backtest table |
+| `GET /r/{slug}` | anyone, no sign-in | the public HTML page for a rating or a sector (`sector-bank`, ...) |
+
+A chat turn or a command may carry a `rating` or `sectors` card once 13A and 13B wire them in. The block below is separate from the main one so `site/lib/contract.ts` stays a copy of the main block until 13B adds this one under it.
+
+- `score` is out of 100 and is printed. `Driver.effect` says whether that driver pushed the score up, down or neither.
+- `Source.as_of` is an ISO time or date. A driver never appears without a source; missing data is named in `missing` and lowers `confidence`.
+- `Track.text` is the sentence to show. `weak` is true when the measured edge over all stocks is small or the sample thin, and the site shows it as plainly as a strong one.
+- Every `SectorRow` change string is formatted on the server (`+1.2%`). `stories` are 0 to 3 confirmed watcher stories whose titles or event type match the sector, newest first.
+
+```ts
+// Phase 13C additions. Copy under the main block when the site renders them.
+
+export type View = "Strong" | "Positive" | "Neutral" | "Weak" | "Avoid";
+
+export type RatingKind = "stock" | "fund" | "etf" | "ipo";
+
+export interface Source {
+  name: string;
+  url: string;
+  as_of: string;
+}
+
+export interface Driver {
+  key: string;
+  label: string;
+  value: string;
+  effect: "up" | "down" | "flat";
+  source: Source;
+}
+
+export interface Track {
+  text: string;
+  hits: number;
+  n: number;
+  since: string;
+  edge: string;
+  weak: boolean;
+}
+
+export interface RatingCard {
+  type: "rating";
+  slug: string;
+  name: string;
+  kind: RatingKind;
+  view: View;
+  score: number;
+  confidence: "high" | "medium" | "low";
+  outlook: string;
+  drivers: Driver[];
+  missing: string[];
+  track: Track;
+  as_of: string;
+  url: string;
+}
+
+export interface SectorStory {
+  title: string;
+  day: string | null;
+  publishers: string[];
+}
+
+export interface SectorRow {
+  key: string;
+  name: string;
+  day: string;
+  week: string;
+  month: string;
+  direction: "up" | "down" | "flat";
+  stories: SectorStory[];
+  source: Source;
+  url: string;
+}
+
+export interface SectorsCard {
+  type: "sectors";
+  as_of: string;
+  rows: SectorRow[];
+  note: string | null;
+}
+
+export interface BacktestRow {
+  view: View;
+  n: number;
+  beat: number;
+  rate: string;
+  excess: string;
+}
+
+export interface RatingsBacktest {
+  method: string;
+  since: string;
+  as_of: string;
+  baseline: string;
+  rows: BacktestRow[];
+}
+```
+
 ## Security and isolation
 
 - **Tokens.** The token is the signed `/u` token. `links.verify` checks it with `hmac.compare_digest`, and only then is the link token looked up, so a forged token never reaches the database. A uvicorn access-log filter rewrites `/u/<token>` to `/u/…`. The turn log has no token field.
