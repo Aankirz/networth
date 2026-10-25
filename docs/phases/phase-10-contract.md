@@ -32,7 +32,8 @@ The server is `networth/web/api.py`. The TypeScript below is the source of truth
 1. **Only fields the server computed.** Every string a card shows is formatted on the server (`format_money`, `percent`, `sim.rupees`, `holdings.lines`). Numeric fields named `x`, `w`, `median_x`, `invested_x`, `hit` and `normal` inside a `bar` are geometry for drawing, in percent of the chart width (or in the holdings bar's own units, out of `width`). The site never prints them.
 2. **The words are the server's.** `ChatTurn.text` is `plain(message)`, the same plain render Keiki email, the logs and the guard use. `message` carries the same thing split into blocks so the site can style it. The footer, "Research, not advice." in the reader's language, comes only from `message.footer` or `Dashboard.footer`.
 3. **Errors carry their own words.** Every non-200 answer is an `ApiError` whose `message` holds the server's sentence in the reader's language (the hourly-cap words are Telegram's own `TOO_MANY`).
-4. **No scores, ranks, buy or sell, allocation advice or F&O, and no "leans".** A history row says "6 of 9" next to "normal 59%". `near_normal` is the engine's own flag for "within normal ups and downs". `weak` is its "too few cases" flag. Neither is a direction.
+4. **A view lives in the words, never in a card.** Since Phase 13A (owner decision, 2026-10-25) a `stock_view` answer opens with Networth's read ("I would not add to Swiggy right now"), labelled "Networth's read" until the Phase 13C rating engine scores it. Cards still carry only computed, sourced numbers: no score, rank or buy/sell field. A history row says "6 of 9" next to "normal 59%". `near_normal` is the engine's own flag for "within normal ups and downs". `weak` is its "too few cases" flag. Neither is a direction.
+5. **Every market number carries its source and time.** A `price`, `price_history`, `position`, `compare` or `market_today` card has a `Source` with the provider's name, a link when there is one, and `as_of`, the provider's own timestamp formatted on the server ("24 Oct 2026, 15:30 IST", or "last close 24 Oct 2026"). A number with no source is never sent. `Point.v` is the raw value for drawing a line; the site never prints it, it prints the `label` strings.
 
 ## Request
 
@@ -63,7 +64,22 @@ The server is `networth/web/api.py`. The TypeScript below is the source of truth
 | `why` | `history`: the engine's `odds()` row behind the answer's `/why` link |
 | `plan_range` | `plan_range`: `sim.plan_range` for the asker's own saved plan |
 | `holdings` | `holdings`: the asker's own saved holdings report, or `text` when they have none |
+| `price` | `price`: the last price, the day's change, the 52-week range and a year of daily closes |
+| `price_history` | `price_history`: closes over the asked years, returns and the worst falls |
+| `position` | `position`: the holding the user typed ("I hold 390 at 230") priced now, with its P&L |
+| `stock_view` | `position` when the user typed a holding, otherwise `price` |
+| `compare` | `compare`: two or more series rebased to 100, and a table of the same numbers |
 | every other intent | `text`: the message is the whole answer |
+
+A market card can't always be built: a symbol the source doesn't know, or the source down. Then the turn carries a `text` card and the message says what is missing; it never guesses a number.
+
+### Phase 13A cards (added 2026-10-25)
+
+- `price` answers "what is Tesla's price". `series` is a year of daily closes, so the site can draw a sparkline next to the number.
+- `price_history` answers "how has Nifty 50 done over the last 5 years". `returns` holds rows such as `{label: "5 years", value: "+82.4%"}` and `{label: "a year, on average", value: "+12.8%"}`. `drawdowns` lists the worst falls, worst first, at most three.
+- `position` answers a holding typed as text. `quantity`, `avg_cost`, `invested`, `value`, `gain` and `gain_pct` are already formatted; `direction` is the sign of the gain.
+- `compare` answers "Nifty vs Sensex over 3 years" or "TCS vs Infosys". `series` are rebased to 100 at `from`; `columns` names one column per series and each `rows` entry is a label plus one value per column.
+- `market_today` is what `what_happened_today` carries when the index data is in: index tiles first (Nifty 50, Sensex, Bank Nifty, Nifty Midcap, Nifty Smallcap), then up to four confirmed reasons from today with their publishers. Without index data the intent keeps its `news` card.
 
 `holdings` also appears on the dashboard. The demo has no holdings, so its holdings questions get a `text` card.
 
@@ -119,6 +135,11 @@ export type Intent =
   | "plan_range"
   | "watch"
   | "holdings"
+  | "price"
+  | "price_history"
+  | "position"
+  | "compare"
+  | "stock_view"
   | "other";
 
 export type CommandName = "brief" | "range" | "plan" | "holdings" | "help";
@@ -290,7 +311,131 @@ export interface TextCard {
   type: "text";
 }
 
-export type Card = NewsCard | HistoryCard | PlanRangeCard | HoldingsCard | TextCard;
+export type Direction = "up" | "down" | "flat";
+
+export interface Source {
+  name: string;
+  url: string | null;
+  as_of: string;
+}
+
+export interface Point {
+  t: string;
+  v: number;
+}
+
+export interface Series {
+  name: string;
+  label: string;
+  points: Point[];
+}
+
+export interface PriceCard {
+  type: "price";
+  symbol: string;
+  name: string;
+  exchange: string;
+  currency: string;
+  price: string;
+  change: string;
+  change_pct: string;
+  direction: Direction;
+  low_52w: string;
+  high_52w: string;
+  series: Series;
+  source: Source;
+}
+
+export interface ReturnRow {
+  label: string;
+  value: string;
+}
+
+export interface Drawdown {
+  fall: string;
+  peak: string;
+  trough: string;
+  recovered: string | null;
+}
+
+export interface PriceHistoryCard {
+  type: "price_history";
+  symbol: string;
+  name: string;
+  from: string;
+  to: string;
+  series: Series;
+  returns: ReturnRow[];
+  drawdowns: Drawdown[];
+  source: Source;
+}
+
+export interface PositionCard {
+  type: "position";
+  symbol: string;
+  name: string;
+  quantity: string;
+  avg_cost: string;
+  price: string;
+  invested: string;
+  value: string;
+  gain: string;
+  gain_pct: string;
+  direction: Direction;
+  low_52w: string;
+  high_52w: string;
+  series: Series;
+  source: Source;
+}
+
+export interface CompareRow {
+  label: string;
+  values: string[];
+}
+
+export interface CompareCard {
+  type: "compare";
+  from: string;
+  to: string;
+  series: Series[];
+  columns: string[];
+  rows: CompareRow[];
+  source: Source;
+}
+
+export interface IndexTile {
+  symbol: string;
+  name: string;
+  level: string;
+  change: string;
+  change_pct: string;
+  direction: Direction;
+}
+
+export interface Reason {
+  text: string;
+  publishers: string[];
+}
+
+export interface MarketTodayCard {
+  type: "market_today";
+  day: string;
+  tiles: IndexTile[];
+  reasons: Reason[];
+  source: Source;
+}
+
+export type Card =
+  | NewsCard
+  | HistoryCard
+  | PlanRangeCard
+  | HoldingsCard
+  | TextCard
+  | PriceCard
+  | PriceHistoryCard
+  | PositionCard
+  | CompareCard
+  | MarketTodayCard;
 
 export interface ChatTurn {
   trace_id: string;

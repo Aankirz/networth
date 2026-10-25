@@ -46,6 +46,11 @@ class Intent(StrEnum):
     PLAN_RANGE = "plan_range"
     WATCH = "watch"
     HOLDINGS = "holdings"
+    PRICE = "price"
+    PRICE_HISTORY = "price_history"
+    POSITION = "position"
+    COMPARE = "compare"
+    STOCK_VIEW = "stock_view"
     OTHER = "other"
 
 

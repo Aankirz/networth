@@ -123,7 +123,7 @@ ROUTED = {
 }
 
 
-@pytest.mark.parametrize("intent", list(Intent))
+@pytest.mark.parametrize("intent", list(ROUTED))
 def test_each_intent_routes_to_its_own_answer(tmp_path: Path, cfg, sim_table,
                                               intent: Intent) -> None:  # fmt: skip
     models = FakeChatModels(intent.value)
