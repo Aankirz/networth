@@ -13,6 +13,7 @@ import pytest
 from networth.app.services import Services
 from networth.app.store import Plan, Profile, Status, Step, Store
 from networth.bot.commands import handle_update
+from networth.bot.message import Message, plain
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Keyboard
@@ -40,15 +41,17 @@ TAPS_TO_CONFIRM = (
 
 @dataclass
 class FakeBot:
-    sent: list[tuple[int, str, Keyboard]] = field(default_factory=list)
+    sent: list[tuple[int, str, Keyboard]] = field(default_factory=list)  # the plain render
+    messages: list[Message] = field(default_factory=list)
     answers: list[tuple[str, str | None]] = field(default_factory=list)
     edits: list[tuple[int, int, Keyboard]] = field(default_factory=list)
     webhooks: list[tuple[str, str]] = field(default_factory=list)
     downloads: list[str] = field(default_factory=list)
     _ids: itertools.count = field(default_factory=lambda: itertools.count(100))
 
-    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict:
-        self.sent.append((chat_id, text, buttons))
+    def send_message(self, chat_id: int, message: Message, buttons: Keyboard = ()) -> dict:
+        self.sent.append((chat_id, plain(message), buttons))
+        self.messages.append(message)
         return {"message_id": next(self._ids)}
 
     def answer_callback(self, callback_id: str, text: str | None = None) -> None:

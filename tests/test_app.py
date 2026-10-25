@@ -20,6 +20,7 @@ from fastapi import APIRouter, FastAPI
 from networth.app.main import SECRET_HEADER, create_app
 from networth.app.settings import Settings
 from networth.app.store import Status, Step, Store
+from networth.bot.message import Message
 from networth.bot.telegram import Button, TelegramClient, TelegramError
 from tests.test_onboarding import FakeBot, text_update
 
@@ -92,7 +93,7 @@ def test_webhook_with_the_secret_stores_a_profile_at_the_first_step(
 
 def test_webhook_answers_200_even_when_handling_fails(store: Store) -> None:
     class BrokenBot(FakeBot):
-        def send_message(self, chat_id: int, text: str, buttons=()) -> dict:
+        def send_message(self, chat_id: int, message, buttons=()) -> dict:
             raise TelegramError("sendMessage", "Forbidden: bot was blocked by the user")
 
     app = create_app(store, BrokenBot(), SECRET)
@@ -154,7 +155,7 @@ def telegram(handler) -> tuple[TelegramClient, list[float]]:
     return TelegramClient(TOKEN, client=client, sleep=slept.append), slept
 
 
-def test_telegram_sends_plain_text_with_an_inline_keyboard() -> None:
+def test_telegram_sends_html_with_an_inline_keyboard() -> None:
     seen: list[dict] = []
 
     def handler(request: httpx2.Request) -> httpx2.Response:
@@ -162,9 +163,10 @@ def test_telegram_sends_plain_text_with_an_inline_keyboard() -> None:
         return httpx2.Response(200, json={"ok": True, "result": {"message_id": 9}})
 
     bot, _ = telegram(handler)
-    result = bot.send_message(1, "Hi", ((Button("Yes", "ob:confirm:ok"),),))
+    result = bot.send_message(1, Message(body=("Hi",)), ((Button("Yes", "ob:confirm:ok"),),))
     assert result == {"message_id": 9}
-    assert seen == [{"chat_id": 1, "text": "Hi", "reply_markup": {
+    assert seen == [{"chat_id": 1, "text": "Hi", "parse_mode": "HTML",
+                     "link_preview_options": {"is_disabled": True}, "reply_markup": {
         "inline_keyboard": [[{"text": "Yes", "callback_data": "ob:confirm:ok"}]]}}]  # fmt: skip
 
 
@@ -190,7 +192,7 @@ def test_telegram_errors_never_carry_the_token() -> None:
 
     bot, _ = telegram(lambda r: httpx2.Response(400, json={"ok": False, "description": "Bad"}))
     with pytest.raises(TelegramError, match="sendMessage: Bad") as caught:
-        bot.send_message(1, "x")
+        bot.send_message(1, Message(body=("x",)))
     assert TOKEN not in str(caught.value)
 
 

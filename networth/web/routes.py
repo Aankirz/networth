@@ -23,6 +23,7 @@ from networth import holdings, sim
 from networth.app import links
 from networth.app.settings import Settings
 from networth.app.store import Plan, Profile, Store
+from networth.bot.message import from_stored, plain
 from networth.bot.onboarding import (
     BUCKETS,
     DROPS,
@@ -246,6 +247,7 @@ def user_page(request: Request, token: str, cfg: Config, table: SimTable) -> HTM
     money = format_money(profile.monthly_amount or 0, profile.currency or "INR")
     day = ordinal(profile.invest_day) if profile.invest_day else None
     last = store.last_brief(profile.user_id)
+    last = (last[0], plain(from_stored(last[1]))) if last else None
     response = _page(request, "user.html", plan=plan_line(plan) if plan else None, money=money,
                      day=day, brief=last, **_user_range(plan, profile, table))  # fmt: skip
     response.headers["X-Robots-Tag"] = "noindex"

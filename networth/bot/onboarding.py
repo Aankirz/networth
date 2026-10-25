@@ -21,6 +21,7 @@ from dataclasses import dataclass, replace
 from typing import Final, Literal
 
 from networth.app.store import INDIA_TZ, US_TZ, Plan, Profile, Step
+from networth.bot.message import Message, plain
 from networth.bot.telegram import Button, Keyboard
 
 CALLBACK_PREFIX: Final = "ob"
@@ -28,8 +29,18 @@ CALLBACK_PREFIX: Final = "ob"
 
 @dataclass(frozen=True)
 class Reply:
-    text: str
+    """A message and its buttons. A plain string is a message with one body block."""
+
+    message: Message | str
     buttons: Keyboard = ()
+
+    def __post_init__(self) -> None:
+        if isinstance(self.message, str):
+            object.__setattr__(self, "message", Message(body=(self.message,)))
+
+    @property
+    def text(self) -> str:
+        return plain(self.message)  # type: ignore[arg-type]
 
 
 @dataclass(frozen=True)

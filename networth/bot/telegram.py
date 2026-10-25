@@ -1,16 +1,23 @@
 """The Telegram Bot API, the only module that knows its wire format.
 
     bot = TelegramClient(token)
-    bot.send_message(chat_id, "Hi", ((Button("Yes", "ob:confirm:ok"),),))
+    bot.send_message(chat_id, Message(body=("Hi",)), ((Button("Yes", "ob:confirm:ok"),),))
 
-Plain text only, no parse_mode. Every call goes over IPv4 under a wall-clock deadline, because
-this network resolves IPv6 and then hangs. A 429 is retried once after its retry_after.
+Messages go out as HTML (parse_mode "HTML"), rendered here by html() and nowhere else: this is
+the one place any text is escaped, so call sites never escape. Telegram rejects bad markup
+with a 400 "can't parse entities"; the same message is then resent once as plain text with no
+parse_mode, and a warning names the method and Telegram's description, never the text. Link
+previews are off unless the message names its one preview link.
+
+Every call goes over IPv4 under a wall-clock deadline, because this network resolves IPv6 and
+then hangs. A 429 is retried once after its retry_after.
 The token sits in every request URL, so no error, log line or exception here ever carries
 the URL: httpx2's own request log is silenced and transport errors are re-raised by name only.
 """
 
 from __future__ import annotations
 
+import html as markup_escape
 import logging
 import time
 from collections.abc import Callable
@@ -19,6 +26,7 @@ from typing import Any, Final, Protocol
 
 import httpx2
 
+from networth.bot.message import Link, Message, plain
 from networth.net import call_with_deadline, ipv4_client
 
 API_BASE: Final = "https://api.telegram.org"
@@ -29,7 +37,9 @@ LONG_POLL_SLACK_S: Final = 10.0
 MAX_RETRY_AFTER_S: Final = 30.0
 TOO_MANY_REQUESTS: Final = 429
 ALLOWED_UPDATES: Final = ["message", "callback_query"]
+PARSE_ERROR: Final = "Bad Request: can't parse entities"
 
+log = logging.getLogger("networth.bot")
 logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 
@@ -54,7 +64,7 @@ class TelegramError(Exception):
 
 
 class Bot(Protocol):
-    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict: ...
+    def send_message(self, chat_id: int, message: Message, buttons: Keyboard = ()) -> dict: ...
 
     def answer_callback(self, callback_id: str, text: str | None = None) -> None: ...
 
@@ -77,6 +87,33 @@ def markup(buttons: Keyboard) -> dict:
     return {"inline_keyboard": [[_button(b) for b in row] for row in buttons]}
 
 
+def _text(s: str) -> str:
+    return markup_escape.escape(s, quote=False)
+
+
+def _block(block: str | Link) -> str:
+    if isinstance(block, str):
+        return _text(block)
+    return f'<a href="{markup_escape.escape(block.url, quote=True)}">{_text(block.label)}</a>'
+
+
+def html(m: Message) -> str:
+    """The message as Telegram HTML: a bold title, the body, one expandable blockquote of
+    detail, an italic footer. Every piece of text is escaped here."""
+    detail = "\n".join(m.detail)
+    parts = [
+        f"<b>{_text(m.title)}</b>" if m.title else "",
+        *(_block(b) for b in m.body),
+        f"<blockquote expandable>{_text(detail)}</blockquote>" if detail else "",
+        f"<i>{_text(m.footer)}</i>" if m.footer else "",
+    ]
+    return "\n\n".join(p for p in parts if p)
+
+
+def preview_options(m: Message) -> dict:
+    return {"url": m.preview} if m.preview else {"is_disabled": True}
+
+
 class TelegramClient:
     def __init__(
         self,
@@ -92,11 +129,20 @@ class TelegramClient:
     def __repr__(self) -> str:
         return "TelegramClient(token=<hidden>)"
 
-    def send_message(self, chat_id: int, text: str, buttons: Keyboard = ()) -> dict:
-        params: dict[str, Any] = {"chat_id": chat_id, "text": text}
+    def send_message(self, chat_id: int, message: Message, buttons: Keyboard = ()) -> dict:
+        params: dict[str, Any] = {"chat_id": chat_id, "text": html(message),
+                                  "parse_mode": "HTML",
+                                  "link_preview_options": preview_options(message)}  # fmt: skip
         if buttons:
             params["reply_markup"] = markup(buttons)
-        return self._call("sendMessage", params)
+        try:
+            return self._call("sendMessage", params)
+        except TelegramError as exc:
+            if not exc.description.startswith(PARSE_ERROR):
+                raise
+            log.warning("telegram %s: %s; resent as plain text", exc.method, exc.description)
+        params.pop("parse_mode")
+        return self._call("sendMessage", {**params, "text": plain(message)})
 
     def answer_callback(self, callback_id: str, text: str | None = None) -> None:
         params: dict[str, Any] = {"callback_query_id": callback_id}
