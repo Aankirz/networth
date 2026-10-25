@@ -110,6 +110,7 @@ ROUTED = {
     Intent.TIP_CHECK: "Not confirmed. I searched the news from the last 7 days",
     Intent.EXPLAIN_THIS: "I couldn't write a plain-words version",
     Intent.PLAN_QUESTION: "Here's what I have.",
+    Intent.WATCH: "Watching something.",
     Intent.OTHER: "I can tell you what happened today",
 }
 

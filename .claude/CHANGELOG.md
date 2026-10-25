@@ -310,3 +310,6 @@
 
 ## 2026-10-25 — Link email to Telegram and route proactive mail
 - /link gives a single-use 6-digit code (link_codes table, expires after link_code_minutes, a new code retires the user's older one); a Keiki turn carrying it binds that contact to the Telegram user. /sendto email|telegram sets deliver_to, checked against a bound contact or a Telegram chat. outbox.send queues proactive briefs, alerts and watches for Keiki when deliver_to is email; the per-user brief claim keeps it to one brief a day across channels. Config gains watch_max_active, watch_max_per_month, link_code_minutes, memory_days; commands take their argument text (Phase 3C unit 3).
+
+## 2026-10-25 — Watch this for me
+- networth/watch.py parses a watch into watcher event types (TOPICS table) or a named entity, and refuses price targets and trade triggers; every reply passes the guard's word rules. networth/bot/watches.py sets, lists and stops watches (/watch, /watches with Stop buttons, /unwatch, the new chat intent WATCH) and, after each watcher cycle, tells a user once when a confirmed story first seen after the watch matches it, with its source and the engine's history line and Why link when there is one. Store gains watches and watch_hits; caps are 5 active and 4 messages a month per user (Phase 3C unit 4).

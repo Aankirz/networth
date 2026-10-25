@@ -27,7 +27,7 @@ from zoneinfo import ZoneInfo
 
 from networth.app.services import Services
 from networth.app.store import Store
-from networth.bot import alerts, briefs
+from networth.bot import alerts, briefs, watches
 from networth.bot.telegram import Bot
 from networth.llm import OpenAIModels
 from networth.watcher import prices, run
@@ -99,7 +99,8 @@ def run_watcher(store: Store, bot: Bot, services: Services, now: dt.datetime,
         return f"watcher skipped: last cycle ended {last.isoformat(timespec='seconds')}"
     fresh = cycle(services, now)
     sent = alerts.run_alerts(store, bot, services, fresh, now.strftime("%Y-%m"))
-    return f"watcher ran: {len(fresh)} insights, {sent} alerts sent"
+    watched = watches.run_watches(store, bot, services, now)
+    return f"watcher ran: {len(fresh)} insights, {sent} alerts sent, {watched} watch messages sent"
 
 
 def run_brief(store: Store, bot: Bot, services: Services, now: dt.datetime) -> str:

@@ -19,6 +19,7 @@ from zoneinfo import ZoneInfo
 
 from networth.app.services import Services
 from networth.app.store import Profile, Store
+from networth.bot import watches
 from networth.bot.onboarding import Reply
 from networth.chat import explain, jev, tip, today
 from networth.chat.answer import Answer, deliver
@@ -30,6 +31,7 @@ class Intent(StrEnum):
     TIP_CHECK = "tip_check"
     EXPLAIN_THIS = "explain_this"
     PLAN_QUESTION = "plan_question"
+    WATCH = "watch"
     OTHER = "other"
 
 
@@ -49,6 +51,9 @@ CRITERIA: Final[dict[str, str]] = {
         "asks about their own saved plan, split, amount, investing day, what they left out, "
         "or other settings"
     ),
+    Intent.WATCH: (
+        "asks to be told when something happens, or to watch or track a topic, event or company"
+    ),
     Intent.OTHER: "anything else: greetings, thanks, unrelated questions",
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"
@@ -62,6 +67,7 @@ HINGLISH_WORDS: Final = frozenset(
 )
 HINGLISH_MIN_WORDS: Final = 2
 PHRASES: Final = (
+    (("watch", "tell me if", "tell me when", "let me know when", "alert me"), Intent.WATCH),
     (("what happened", "aaj market", "news today", "kya hua"), Intent.WHAT_HAPPENED_TODAY),
     (("why",), Intent.WHY),
     (("my plan", "my amount", "investing day"), Intent.PLAN_QUESTION),
@@ -110,6 +116,14 @@ def classify(text: str, is_forward: bool, services: Services) -> Intent:
     return _by_phrase(text, is_forward)
 
 
+def watch_answer(store: Store, profile: Profile, text: str, services: Services,
+                 now: dt.datetime) -> Answer:  # fmt: skip
+    """Sets the watch the text asks for; fixed words, so no model writes the reply."""
+    rules = services.cfg.product if services.cfg else None
+    reply = watches.set_watch(store, profile, text, now.isoformat(), rules)
+    return Answer(reply, reply, kind="watch")
+
+
 Handler = Callable[[Store, Profile, str, Services, dt.datetime], Answer]
 HANDLERS: Final[dict[Intent, Handler]] = {
     Intent.WHAT_HAPPENED_TODAY: lambda store, p, text, s, now: today.what_happened(s, now, p.tz),
@@ -121,6 +135,7 @@ HANDLERS: Final[dict[Intent, Handler]] = {
         explain.explain_link(m.group(0)) if (m := URL.search(text)) else explain.explain_text(text)
     ),
     Intent.PLAN_QUESTION: lambda store, p, text, s, now: today.plan(store, p),
+    Intent.WATCH: lambda store, p, text, s, now: watch_answer(store, p, text, s, now),
     Intent.OTHER: lambda store, p, text, s, now: today.scope(),
 }
 
