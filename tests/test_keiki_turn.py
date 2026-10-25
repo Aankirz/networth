@@ -127,8 +127,11 @@ def test_a_chat_turn_runs_the_guard_and_blocks_a_planted_number(tmp_path: Path, 
     models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value, writes=[planted, planted])
     keiki = Keiki(tmp_path, Services(tmp_path / "data", None, models, None, cfg))
     set_up(keiki)
-    weekend_watcher(keiki.services.watcher_db, dt.datetime.now(dt.UTC) - dt.timedelta(hours=1))
-    keiki.say("What happened today?")
+    # A fixed clock: a check planted exactly an hour before the wall clock went stale whenever
+    # the turn's whole-second now_iso() ticked past it, as it did once in a slow full run.
+    now = dt.datetime(2026, 10, 25, 9, 0, tzinfo=dt.UTC)
+    weekend_watcher(keiki.services.watcher_db, now - dt.timedelta(minutes=30))
+    keiki.say("What happened today?", now=now.isoformat(timespec="seconds"))
     assert keiki.last.startswith("Confirmed in the last 24 hours:")
     assert "RBI raises repo rate to 5.50%" in keiki.last
     assert not any("6.25" in text for text in keiki.client.texts)
@@ -237,7 +240,8 @@ def test_each_turn_logs_its_ids_intent_guard_and_cost_but_no_text(tmp_path: Path
                           writes=[planted, planted])  # fmt: skip
     keiki = Keiki(tmp_path, Services(data, None, models, None, cfg))
     profile = set_up(keiki)
-    weekend_watcher(keiki.services.watcher_db, dt.datetime.now(dt.UTC) - dt.timedelta(hours=1))
+    # Half an hour, not exactly the hour: at the hour a whole-second now_iso() reads it as stale.
+    weekend_watcher(keiki.services.watcher_db, dt.datetime.now(dt.UTC) - dt.timedelta(minutes=30))
     hour_ago = (dt.datetime.now(dt.UTC) - dt.timedelta(hours=1)).isoformat(timespec="seconds")
     append_record(data / "llm_calls.jsonl", CallRecord(hour_ago, "write", "writer", "m", 1, 0,
                                                        1, 5.0, True, ""))  # fmt: skip

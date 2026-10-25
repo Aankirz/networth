@@ -542,3 +542,6 @@
 ## 2026-10-25 — Phase 10: the landing page, redone Maritime-style
 - site/app/page.tsx, app/landing.css, components/landing/{hero-sketch,step-icons,mocks,playback,in-view}.tsx, lib/pencil.ts: `/` rebuilt from scratch as one centred column with the hackathon pill, a self-drawing pencil hero, three self-drawing steps and five product mocks (the LIC IPO chat, the monthly brief, the range chart, an email reply and the dashboard sheet), plus the letter, the line we never cross and the FAQ; the old ask box (components/landing/ask.tsx) is removed.
 - site/e2e/landing.spec.ts: tests for the new page (centring, mock playback, reduced motion, the server's brief, the letter); docs/phases/phase-10-report.md: before/after critique, gates and LCP.
+
+## 2026-10-25 — hermetic keiki what-happened tests
+- tests/test_keiki_turn.py: the planted-number test runs on a fixed clock with the news check 30 min old; the turn-log test plants its check 30 min back. Both raced the whole-second now_iso() against a check exactly 1h old.
