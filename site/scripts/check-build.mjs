@@ -14,6 +14,11 @@ const BANNED_WORDS = [
   /\bskyrocket/i, /\bto the moon\b/i, /\bcan'?t lose\b/i, /\brecommend(ed|s|ation)?\b/i,
   /🟢|🔴|⚪/u,
 ];
+// Phase 13C lifts the ban on a score and a rank for the rating card only (the owner decided
+// Networth gives a view). Everywhere else they stay banned.
+const RATING_ONLY = new Set([/\bscores?\b/i, /\brank(ed|ing|s)?\b/i].map(String));
+const RATING_FILES = new Set(["components/cards/rating.tsx", "lib/ratings-contract.ts"]);
+
 // A rupee amount or a percentage written into the site is a number the server didn't send.
 const OWN_FIGURES = [/₹\s?\d/u, /\d+(\.\d+)?\s?%(?![\w-])/];
 const SECRET_NAMES = [
@@ -37,6 +42,7 @@ for (const dir of SOURCE_DIRS) {
   for (const path of files(dir)) {
     const text = readFileSync(path, "utf8").replace(/^\s*(\/\/|\*|\/\*).*$/gm, "");
     for (const re of [...BANNED_WORDS, ...DISCLAIMERS]) {
+      if (RATING_FILES.has(path) && RATING_ONLY.has(String(re))) continue;
       const hit = text.match(re);
       if (hit) problems.push(`${path}: "${hit[0]}" (${re})`);
     }
