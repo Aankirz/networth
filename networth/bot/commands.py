@@ -33,7 +33,7 @@ from networth.app.store import (
     now_iso,
     user_id_for,
 )
-from networth.bot import briefs
+from networth.bot import briefs, watches
 from networth.bot.onboarding import CALLBACK_PREFIX, Outcome, Reply, advance, ordinal, plan_line
 from networth.bot.onboarding import prompt as ask_for
 from networth.bot.outbox import send
@@ -61,7 +61,10 @@ HELP: Final = (
     "/stop stop all messages\n"
     "/start set up again or see your answers\n"
     "/link get a code to use me by email too\n"
-    "/sendto email or /sendto telegram, where briefs and alerts go\n\n"
+    "/sendto email or /sendto telegram, where briefs and alerts go\n"
+    "/watch something to hear once when a confirmed story about it appears\n"
+    "/watches see or stop your watches\n"
+    "/unwatch 1 stop a watch by its number\n\n"
     "Research, not advice."
 )
 UNKNOWN_COMMAND: Final = "I don't know that one yet. Type /help to see what I can do."
@@ -266,6 +269,10 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
 def on_tap(turn: Turn, tap: Tap) -> None:
     profile = profile_for(turn, tap.chat_id)
     turn.store.log_message(profile.user_id, "in", tap.data)
+    if profile.status is not Status.STOPPED and tap.data.startswith(watches.STOP_PREFIX):
+        turn.bot.answer_callback(tap.callback_id)
+        turn.send(profile, Reply(watches.stop_tapped(turn.store, profile, tap.data)))
+        return
     if profile.status is not Status.STOPPED and tap.data.startswith(f"{brief.CALLBACK_PREFIX}:"):
         on_brief_tap(turn, profile, tap)
         return
@@ -405,6 +412,22 @@ def cmd_sendto(turn: Turn, profile: Profile, args: str) -> None:
         )
 
 
+def cmd_watch(turn: Turn, profile: Profile, args: str) -> None:
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(FINISH_FIRST))
+        return
+    rules = turn.services.cfg.product if turn.services.cfg else None
+    turn.send(profile, Reply(watches.set_watch(turn.store, profile, args, turn.now, rules)))
+
+
+def cmd_watches(turn: Turn, profile: Profile, args: str) -> None:
+    turn.send(profile, watches.list_reply(turn.store, profile))
+
+
+def cmd_unwatch(turn: Turn, profile: Profile, args: str) -> None:
+    turn.send(profile, Reply(watches.stop_nth(turn.store, profile, args)))
+
+
 COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/start": cmd_start,
     "/brief": cmd_brief,
@@ -415,6 +438,9 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/help": cmd_help,
     "/link": cmd_link,
     "/sendto": cmd_sendto,
+    "/watch": cmd_watch,
+    "/watches": cmd_watches,
+    "/unwatch": cmd_unwatch,
 }
 
 

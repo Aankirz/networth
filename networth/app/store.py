@@ -7,7 +7,8 @@ Tables: profiles (one per chat), plans (one per user, rewritten on change), mess
 text in and out), briefs (one per user per investing day) and alerts (one per user per event).
 contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn;
 keiki_turns holds every turn id answered; link_codes holds the single-use codes that tie an
-email contact to a Telegram user.
+email contact to a Telegram user; watches are standing per-user requests, and watch_hits holds
+one row per watch per confirmed story it matched, claimed before the message goes out.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -105,6 +106,24 @@ class Plan:
     written_at: str
 
 
+WatchKind = Literal["type", "entity"]
+
+
+@dataclass(frozen=True)
+class Watch:
+    id: int
+    user_id: str
+    kind: WatchKind
+    target: str  # comma-joined event types for "type", the name as typed for "entity"
+    label: str  # what the user is told they are watching
+    created_at: str
+    stopped_at: str | None = None
+
+    @property
+    def types(self) -> tuple[str, ...]:
+        return tuple(self.target.split(",")) if self.kind == "type" else ()
+
+
 @dataclass(frozen=True)
 class OutMail:
     id: int
@@ -193,6 +212,15 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "code": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "expires_at": "TEXT NOT NULL",
         "used_at": "TEXT",
     },
+    "watches": {
+        "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
+        "kind": "TEXT NOT NULL CHECK (kind IN ('type', 'entity'))", "target": "TEXT NOT NULL",
+        "label": "TEXT NOT NULL", "created_at": "TEXT NOT NULL", "stopped_at": "TEXT",
+    },
+    "watch_hits": {
+        "user_id": "TEXT NOT NULL", "watch_id": "INTEGER NOT NULL", "match_key": "TEXT NOT NULL",
+        "month": "TEXT NOT NULL", "sent_at": "TEXT NOT NULL",
+    },
     "outbox": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
@@ -213,6 +241,9 @@ def migrate(conn: sqlite3.Connection) -> None:
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS briefs_user_day ON briefs (user_id, day)")
     conn.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS alerts_user_event ON alerts (user_id, event_key)"
+    )
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS watch_hits_key ON watch_hits (watch_id, match_key)"
     )
 
 
@@ -235,6 +266,12 @@ def _profile_from(row: sqlite3.Row) -> Profile:
     values["exclude"] = tuple(json.loads(row["exclude"]))
     values["deliver_to"] = Channel(row["deliver_to"])
     return Profile(**values)
+
+
+def _watches(conn: sqlite3.Connection, where: str, args: tuple) -> list[Watch]:
+    rows = conn.execute(f"SELECT * FROM watches WHERE {where} ORDER BY id", args).fetchall()
+    return [Watch(r["id"], r["user_id"], r["kind"], r["target"], r["label"], r["created_at"],
+                  r["stopped_at"]) for r in rows]  # fmt: skip
 
 
 class Store:
@@ -455,6 +492,70 @@ class Store:
                 return None
             conn.execute("UPDATE link_codes SET used_at = ? WHERE code = ?", (now_iso(), code))
         return row["user_id"]
+
+    def add_watch(self, user_id: str, kind: WatchKind, target: str, label: str, now: str,
+                  cap: int) -> Watch | None:  # fmt: skip
+        """The new watch, or the same active one if the user already has it. None when the
+        user is at the cap. The check and the insert are one transaction."""
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            active = _watches(conn, "user_id = ? AND stopped_at IS NULL", (user_id,))
+            same = next((w for w in active if (w.kind, w.target) == (kind, target)), None)
+            if same is not None:
+                return same
+            if len(active) >= cap:
+                return None
+            cursor = conn.execute(
+                "INSERT INTO watches (user_id, kind, target, label, created_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, kind, target, label, now),
+            )
+        return Watch(int(cursor.lastrowid or 0), user_id, kind, target, label, now)
+
+    def active_watches(self, user_id: str) -> list[Watch]:
+        with self._connect() as conn:
+            return _watches(conn, "user_id = ? AND stopped_at IS NULL", (user_id,))
+
+    def all_active_watches(self) -> list[Watch]:
+        with self._connect() as conn:
+            return _watches(conn, "stopped_at IS NULL", ())
+
+    def stop_watch(self, user_id: str, watch_id: int) -> bool:
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "UPDATE watches SET stopped_at = ? WHERE id = ? AND user_id = ? "
+                "AND stopped_at IS NULL",
+                (now_iso(), watch_id, user_id),
+            )
+        return cursor.rowcount == 1
+
+    def claim_watch_hit(self, user_id: str, watch_id: int, match_key: str, month: str,
+                        cap: int) -> bool:  # fmt: skip
+        """True when this user has had no message for this story and is under the month's
+        cap. The check and the claim are one transaction."""
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            told = conn.execute(
+                "SELECT COUNT(*) FROM watch_hits WHERE user_id = ? AND match_key = ?",
+                (user_id, match_key),
+            ).fetchone()[0]
+            sent = conn.execute(
+                "SELECT COUNT(*) FROM watch_hits WHERE user_id = ? AND month = ?", (user_id, month)
+            ).fetchone()[0]
+            if told or sent >= cap:
+                return False
+            cursor = conn.execute(
+                "INSERT OR IGNORE INTO watch_hits (user_id, watch_id, match_key, month, sent_at) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, watch_id, match_key, month, now_iso()),
+            )
+        return cursor.rowcount == 1
+
+    def release_watch_hit(self, watch_id: int, match_key: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM watch_hits WHERE watch_id = ? AND match_key = ?", (watch_id, match_key)
+            )
 
     def contact_user(self, address: str) -> str | None:
         with self._connect() as conn:
