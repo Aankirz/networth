@@ -9,7 +9,8 @@ is claimed before anything is sent, so a schedule that fires twice never sends a
 the same day. The claim is per user, not per channel, so a person who gets briefs by email
 gets one a day across Telegram and email. A compose or send that fails releases the claim, so
 the next try sends it. Asking /brief again that day resends the stored message, unless a news
-check has finished since it was written or the profile changed; then it is written afresh.
+check has finished since it was written, the profile changed, or a deploy changed the code that
+writes briefs (FORMAT_KEY, stored inside each brief's inputs key); then it is written afresh.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import datetime as dt
 import hashlib
 import logging
 from dataclasses import replace
+from pathlib import Path
 from typing import Final
 from zoneinfo import ZoneInfo
 
@@ -41,6 +43,10 @@ NOT_SET_UP: Final = {
 BRIEF_INPUTS: Final = ("lang", "goal", "horizon_years", "drop_comfort", "monthly_amount",
                        "currency", "invest_day", "markets", "exclude", "tz")  # fmt: skip
 INPUTS_KEY_CHARS: Final = 16
+# The code a stored brief's words come from: any deploy that edits it rewrites that day's brief.
+FORMAT_KEY: Final = hashlib.sha256(b"".join(
+    f.read_bytes() for f in sorted(Path(brief.__file__).parent.glob("*.py"))
+) + Path(message.__file__).read_bytes()).hexdigest()  # fmt: skip
 
 
 def callback(profile: Profile, store: Store, services: Services,
@@ -74,9 +80,10 @@ def compose_reply(profile: Profile, store: Store, services: Services,
 
 
 def inputs_key(profile: Profile, store: Store) -> str:
-    """What a brief is written from, so an edit to any of it makes the next /brief fresh."""
+    """What a brief is written from, its code included, so an edit to any of it makes the next
+    /brief fresh."""
     plan = store.get_plan(profile.user_id)
-    used = [getattr(profile, f) for f in BRIEF_INPUTS]
+    used = [FORMAT_KEY, *(getattr(profile, f) for f in BRIEF_INPUTS)]
     used += [plan.name, sorted(plan.targets_pct.items()), plan.max_drop_ok] if plan else [None]
     return hashlib.sha256(repr(used).encode()).hexdigest()[:INPUTS_KEY_CHARS]
 
