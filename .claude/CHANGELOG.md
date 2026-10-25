@@ -488,3 +488,6 @@
 
 ## 2026-10-25 — should-I answers stop listing steps to decide
 - talk.SHOULD_I_TASK: should-I explains what the thing is and its risks only; lead reworded in 3 languages. Live words eval showed 5 should-I replies graded as advice. Test added.
+
+## 2026-10-25 — Phase 9 report
+- docs/phases/phase-9-report.md: data shape, caps, samples, command list, /erase, before/after eval, gaps, pending menu check, owner steps.
