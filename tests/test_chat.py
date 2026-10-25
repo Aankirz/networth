@@ -13,7 +13,7 @@ import pytest
 from networth import config
 from networth.app.services import Services
 from networth.app.store import Profile
-from networth.bot.message import FOOTER
+from networth.bot.message import DISCLAIMER
 from networth.chat import Intent, explain, jev, reply_lang
 from networth.chat.talk import HELLO
 from networth.chat.today import TYPE_QUESTION
@@ -139,7 +139,7 @@ def test_a_plan_question_never_restates_the_split_or_invites_a_change(tmp_path, 
     chat.say("is my plan right for me?")
     assert "Looks right?" not in chat.bot.last
     assert "%" not in chat.bot.last and "/plan" not in chat.bot.last
-    assert chat.bot.last.endswith("Research, not advice.")
+    assert not DISCLAIMER.search(chat.bot.last)
 
 
 SHOW_PLAN = {
@@ -204,9 +204,7 @@ def test_a_tip_reported_by_one_publisher_is_not_confirmed(tmp_path: Path, cfg) -
     assert chat.bot.last.startswith(
         "Not confirmed. Only livemint.com reported this in the last 7 days."
     )
-    assert chat.bot.last.endswith(
-        'also uses hype: "buy now". Real news rarely needs it.\n\nResearch, not advice.'
-    )
+    assert chat.bot.last.endswith('also uses hype: "buy now". Real news rarely needs it.')
 
 
 def test_a_tip_reported_by_enough_publishers_in_the_window_is_reported(tmp_path, cfg) -> None:
@@ -236,7 +234,7 @@ def explain_chat(tmp_path: Path, cfg, writes: Sequence[str]) -> tuple[Chat, Fake
 def test_explain_this_sends_a_checked_plain_explanation(tmp_path: Path, cfg) -> None:
     chat, models = explain_chat(tmp_path, cfg, [GOOD_EXPLANATION])
     chat.say(IPO_TEXT)
-    assert chat.bot.last == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
+    assert chat.bot.last == f"{GOOD_EXPLANATION}"
     assert "never say what the reader should do" in models.tasks[0]
 
 
@@ -253,7 +251,7 @@ def test_a_screenshot_is_read_then_explained(tmp_path: Path, cfg) -> None:
     chat.send_photo("big")
     assert chat.bot.downloads == ["big"]
     assert models.images == [b"\xff\xd8 fake jpeg"]
-    assert chat.bot.last == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
+    assert chat.bot.last == f"{GOOD_EXPLANATION}"
 
 
 def test_a_sticker_gets_told_what_can_be_read(tmp_path: Path, cfg) -> None:
@@ -270,7 +268,7 @@ def test_a_mail_footer_link_is_never_fetched_and_the_text_is_explained(
     chat, _ = explain_chat(tmp_path, cfg, [GOOD_EXPLANATION])
     chat.say(IPO_TEXT + MAILTRACK_FOOTER)
     assert fetched == []
-    assert chat.bot.last == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
+    assert chat.bot.last == f"{GOOD_EXPLANATION}"
 
 
 @pytest.mark.parametrize("url", [
@@ -473,7 +471,7 @@ def test_a_hinglish_plan_question_gets_hinglish_words_and_no_translation(tmp_pat
     chat = talk(tmp_path, cfg, models)
     chat.say("Mera plan 70% index hai, theek hai ya change karu?")
     assert chat.bot.last.startswith("Main nahin bata sakta")
-    assert chat.bot.last.endswith("Research hai, advice nahin.")
+    assert not DISCLAIMER.search(chat.bot.last)
     assert models.tasks == [], "code wrote the Hinglish, so no model translates it"
 
 
@@ -580,7 +578,7 @@ def test_range_command_sends_the_plan_range_in_the_users_language(
     r = sim.plan_range(chat.plan, chat.profile)
     assert chat.bot.last.startswith(RANGE_STARTS[lang])
     body = sim.plan_range_message(chat.profile.user_id, chat.store)
-    assert chat.bot.last == f"{body}\n\n{FOOTER[lang]}"
+    assert chat.bot.last == f"{body}"
     assert guard.check(chat.bot.last, repr(r)).ok
     assert models.tasks == [], "the range is fixed sentences, no model writes it"
 
@@ -610,9 +608,9 @@ def test_a_dollar_plan_gets_the_polite_range_line(tmp_path, cfg, sim_table) -> N
     chat = talk(tmp_path, cfg, FakeChatModels(Intent.PLAN_RANGE.value))
     chat.store.save_profile(replace(chat.profile, currency="USD", monthly_amount=1000))
     chat.say("/range")
-    assert chat.bot.last == f"{NO_RANGE['en']}\n\n{FOOTER['en']}"
+    assert chat.bot.last == f"{NO_RANGE['en']}"
     chat.say("how bad can a fall get?")
-    assert chat.bot.last == f"{NO_RANGE['en']}\n\n{FOOTER['en']}"
+    assert chat.bot.last == f"{NO_RANGE['en']}"
 
 
 @pytest.mark.parametrize("lang", list(RANGE_STARTS))
@@ -635,7 +633,7 @@ def test_a_missing_range_table_says_the_range_is_not_ready(tmp_path, cfg, monkey
     monkeypatch.setattr(sim, "load_table", missing)
     chat = talk(tmp_path, cfg, FakeChatModels())
     chat.say("/range")
-    assert chat.bot.last == f"{RANGE_NOT_READY['en']}\n\n{FOOTER['en']}"
+    assert chat.bot.last == f"{RANGE_NOT_READY['en']}"
 
 
 def test_a_reworded_reply_with_a_failing_template_still_asks_the_writer(tmp_path, cfg) -> None:
@@ -643,7 +641,7 @@ def test_a_reworded_reply_with_a_failing_template_still_asks_the_writer(tmp_path
 
     services = Services(tmp_path / "data", None, FakeChatModels(writes=["Banks rose."]), None, cfg)
     answer = Answer("buy banks now", "Banks rose.", "Say what happened.")
-    assert deliver(answer, "en", services).text == "Banks rose.\n\nResearch, not advice."
+    assert deliver(answer, "en", services).text == "Banks rose."
 
 
 def test_the_brief_has_a_my_range_button_next_to_my_page(tmp_path, cfg, sim_table) -> None:

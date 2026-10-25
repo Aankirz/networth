@@ -22,7 +22,7 @@ from tests.test_links import SECRET, page_path
 from tests.test_onboarding import Chat, onboard
 from tests.test_web import BANNED, DISCLAIMER, text
 
-LABEL = "This replays real past months. It is not a forecast. Your plan is your choice."
+LABEL = "This replays real past months. It is not a forecast."
 STARTERS = {"steady": "Steady", "balanced": "Balanced", "ambitious": "Ambitious"}
 
 
@@ -68,7 +68,7 @@ DEMO_PAGES = (
 def test_the_demo_page_renders_with_the_label_and_no_banned_words(client, path: str) -> None:
     response = client.get(path)
     assert response.status_code == 200
-    assert DISCLAIMER in response.text
+    assert DISCLAIMER not in response.text
     assert LABEL in text(response.text)
     assert "<svg" in response.text
     assert not BANNED.search(response.text)
@@ -102,7 +102,7 @@ def test_a_custom_split_is_the_one_simulated(client) -> None:
 def test_bad_input_gets_the_friendly_400(client, query: str) -> None:
     response = client.get(f"/plan-range?{query}")
     assert response.status_code == 400
-    assert DISCLAIMER in response.text
+    assert DISCLAIMER not in response.text
     assert not BANNED.search(response.text)
 
 
@@ -117,7 +117,7 @@ def test_a_missing_table_gets_a_page_saying_how_to_build_it() -> None:
     response = app_with(None).get("/plan-range")
     assert response.status_code == 503
     assert "uv run python -m networth.sim.data" in response.text
-    assert DISCLAIMER in response.text
+    assert DISCLAIMER not in response.text
 
 
 @pytest.fixture
@@ -134,7 +134,7 @@ def test_the_user_page_shows_only_the_users_own_range(chat: Chat) -> None:
     page = app_with(TABLE, chat.store.path.parent).get(page_path(chat.store)).text
     words = text(page)
     assert "What history says about this plan" in words
-    assert LABEL in words and DISCLAIMER in page
+    assert LABEL in words and DISCLAIMER not in page
     assert sim.rupees(r.nominal_median) in words
     assert (
         "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "

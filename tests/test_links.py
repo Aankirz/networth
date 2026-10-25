@@ -78,7 +78,7 @@ def test_the_user_page_shows_the_plan_and_the_last_brief(chat: Chat, client) -> 
         "10% single shares or themes" in response.text
     )
     assert "Your plan: Balanced, the one you chose." in response.text
-    assert "Research, not advice" in response.text
+    assert "Research, not advice" not in response.text
     assert response.headers["x-robots-tag"] == "noindex"
 
 
@@ -86,7 +86,7 @@ def test_a_tampered_link_gets_the_friendly_404(chat: Chat, client) -> None:
     response = client.get(page_path(chat.store)[:-2] + "zz")
     assert response.status_code == 404
     assert "This link has expired or isn't right." in html.unescape(response.text)
-    assert "Research, not advice" in response.text
+    assert "Research, not advice" not in response.text
 
 
 def test_plan_command_hands_out_a_working_link(chat: Chat, client) -> None:

@@ -20,7 +20,7 @@ from typing import Final
 from networth import brief, guard
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
-from networth.bot.message import FOOTER, Message, plain, say
+from networth.bot.message import Message, plain, say
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot
@@ -68,7 +68,7 @@ def alert_message(i: Insight, lang: str | None) -> Message:
                                     day=day_words(i.event_date, lang))  # fmt: skip
     body = (line.words(lang), *([say(SHOCKS, lang)] if i.type in brief.STRESS_TYPES else []),
             say(YOURS, lang))  # fmt: skip
-    return Message(title, body, footer=say(FOOTER, lang))
+    return Message(title, body)
 
 
 def wants_alerts(p: Profile) -> bool:

@@ -34,7 +34,7 @@ from networth.app.store import (
 )
 from networth.bot import briefs, watches
 from networth.bot import holdings as holdings_flow
-from networth.bot.message import FOOTER, Link, Message, say
+from networth.bot.message import Link, Message, say
 from networth.bot.onboarding import (
     CALLBACK_PREFIX,
     Outcome,
@@ -285,8 +285,7 @@ PAGE_NOTE: Final = {
 
 
 def help_message(lang: str | None) -> Message:
-    return Message(body=(say(HELP_LEAD, lang), say(HELP_ASK, lang), say(HELP_COMMANDS, lang)),
-                   footer=say(FOOTER, lang))  # fmt: skip
+    return Message(body=(say(HELP_LEAD, lang), say(HELP_ASK, lang), say(HELP_COMMANDS, lang)))
 
 
 @dataclass(frozen=True)
@@ -633,8 +632,7 @@ def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
     page = turn.services.page_url(profile.link_token, turn.clock)
     lang = profile.lang
     mine = (say(PAGE_NOTE, lang), Link(say(YOUR_PAGE, lang), page)) if page else ()
-    turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.", *mine),
-                                     footer=say(FOOTER, lang))))  # fmt: skip
+    turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.", *mine))))
     turn.send(profile, ask_for(profile, plan))
 
 

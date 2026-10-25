@@ -108,7 +108,7 @@ ERROR_PAGES = ("/why/nope/X", "/what-if/rbi_hike/^NSEBANK?amount=-5")  # the 404
 @pytest.mark.parametrize("path", [*PAGES, *ERROR_PAGES])
 def test_pages_carry_the_disclaimer_and_no_banned_words(client: TestClient, path: str) -> None:
     page = client.get(path).text
-    assert DISCLAIMER in page
+    assert DISCLAIMER not in page
     assert not BANNED.search(page)
 
 
@@ -224,7 +224,7 @@ def test_scoreboard_never_ranks(client) -> None:
 def test_unknown_type_or_asset_is_a_friendly_404(client, path) -> None:
     r = client.get(path)
     assert r.status_code == 404
-    assert "That page isn't here" in r.text and DISCLAIMER in r.text
+    assert "That page isn't here" in r.text and DISCLAIMER not in r.text
 
 
 @pytest.mark.parametrize(
@@ -322,7 +322,7 @@ def test_real_db_why_pages_never_use_banned_words() -> None:
         for a in assets:
             page = c.get(f"/why/{t.value}/{a}").text
             assert not BANNED.search(page), (t, a)
-            assert DISCLAIMER in page
+            assert DISCLAIMER not in page
 
 
 def test_the_one_real_headline_with_a_banned_word_is_reworded() -> None:

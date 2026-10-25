@@ -12,6 +12,7 @@ import pytest
 from networth import config, guard, watch
 from networth.app.services import Services
 from networth.app.store import Status
+from networth.bot.message import DISCLAIMER
 from networth.bot.watches import run_watches
 from networth.chat import Intent
 from networth.engine.model import EventType, Region
@@ -163,7 +164,7 @@ def test_a_confirmed_match_is_sent_once_and_not_on_the_next_run(chat: Chat) -> N
     assert chat.bot.messages[-1].title == "Something you're watching: RBI rate changes."
     assert ("The watcher confirmed it: RBI raises repo rate to 5.50%.\nSource: rbi.org.in"
             in chat.bot.last)  # fmt: skip
-    assert chat.bot.last.endswith("Research, not advice.")
+    assert not DISCLAIMER.search(chat.bot.last)
     assert watches(chat) == 0
 
 

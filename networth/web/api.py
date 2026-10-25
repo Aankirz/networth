@@ -59,7 +59,7 @@ from networth.app.store import Plan, Profile, Status, Step, Store, now_iso
 from networth.bot import briefs
 from networth.bot import holdings as holdings_flow
 from networth.bot.commands import FINISH_FIRST, PLAN_TITLE, TOO_MANY, TRY_AGAIN, help_message
-from networth.bot.message import FOOTER, LANGS, Link, Message, plain, say
+from networth.bot.message import LANGS, Link, Message, plain, say
 from networth.bot.onboarding import (
     BUCKETS,
     STARTER_PLANS,
@@ -462,7 +462,7 @@ def dashboard(asker: Asker, services: Services, table: Table | None, now: dt.dat
         "plan_range": plan_range_card(store, profile, table),
         "holdings": held,
         "mentions": mentions(news, history["rows"], held),
-        "footer": say(FOOTER, lang),
+        "footer": "",
     }  # fmt: skip
 
 
@@ -633,8 +633,7 @@ def run_plan(f: CommandFacts) -> tuple[Message, dict]:
     lang = f.profile.lang
     if f.profile.step is not Step.DONE or plan is None:
         return message_of(with_lead(say(FINISH_FIRST, lang), ask_for(f.profile, plan))), TEXT_CARD
-    return Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.",),
-                   footer=say(FOOTER, lang)), TEXT_CARD  # fmt: skip
+    return Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.",)), TEXT_CARD  # fmt: skip
 
 
 def run_holdings(f: CommandFacts) -> tuple[Message, dict]:

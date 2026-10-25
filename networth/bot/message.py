@@ -1,7 +1,7 @@
-"""One outgoing message as data: a title, short body blocks, an expandable detail, a footer.
+"""One outgoing message as data: a title, short body blocks, an expandable detail and a
+footer, empty since the owner dropped every disclaimer (2026-10-25).
 
-    m = Message(title="Morning.", body=("This month's news: RBI rate hike on Oct 20.",),
-                footer=say(FOOTER, "en"))
+    m = Message(title="Morning.", body=("This month's news: RBI rate hike on Oct 20.",))
     plain(m)                     # the one plain-text render: Keiki email, logs, the guard
     from_stored(to_json(m))      # a sent brief, stored and read back
 
@@ -12,6 +12,7 @@ the wire format and the only place that escapes. Nothing here escapes anything.
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
@@ -36,11 +37,14 @@ class Message:
 
 
 LANGS: Final = ("en", "hi", "hinglish")
-FOOTER: Final = {
-    "en": "Research, not advice.",
-    "hi": "रिसर्च, सलाह नहीं।",
-    "hinglish": "Research hai, advice nahin.",
-}
+# ponytail: blank, not deleted, while networth/bot/holdings.py (Phase 12) still imports it.
+# Owner order 2026-10-25: no footer or disclaimer in any language. Delete with its last user.
+FOOTER: Final = {"en": "", "hi": "", "hinglish": ""}
+DISCLAIMER: Final = re.compile(
+    r"[^.!?\n]*(?:not (?:financial |investment )?advice|your call|won'?t say yes or no|"
+    r"whether to put money|रिसर्च, सलाह नहीं|advice nahin?)[^.!?\n]*[.!?।]?",
+    re.I,
+)
 
 
 def say(table: Mapping[str, str], lang: str | None) -> str:

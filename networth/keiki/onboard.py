@@ -14,7 +14,7 @@ from dataclasses import replace
 from typing import Final
 
 from networth.app.store import Profile, Step
-from networth.bot.message import FOOTER, Message, say
+from networth.bot.message import Message, say
 from networth.bot.onboarding import (
     QUESTIONS,
     Outcome,
@@ -76,7 +76,7 @@ APPLY: Final[dict[Step, Callable[[Profile, object], Profile]]] = {
 def done_message(p: Profile) -> Message:
     lang = p.lang
     day = say(DONE_BODY, lang).format(day=day_label(p.invest_day or 1, lang))
-    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)), footer=say(FOOTER, lang))
+    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)))
 
 
 def prompt(profile: Profile) -> Reply:

@@ -12,7 +12,7 @@ import pytest
 
 from networth import brief, guard, sim
 from networth.app.store import Plan, Profile, Step
-from networth.bot.message import FOOTER, plain
+from networth.bot.message import DISCLAIMER, plain
 from networth.bot.telegram import html
 from networth.brief.lines import Line
 from networth.engine import odds as engine
@@ -70,7 +70,7 @@ def test_an_empty_month_says_nothing_needs_attention(lang: str) -> None:
     m = replace(event_brief(), events=(), lines=(), range=None).message(lang)
     assert len(visible(plain(m), m.detail)) <= MAX_VISIBLE and m.detail == ()
     assert len(m.body) == 2, "the news line and the plan line"
-    assert m.footer == FOOTER[lang]
+    assert m.footer == ""
 
 
 def test_an_event_month_leads_with_the_plan_range_before_any_count() -> None:
@@ -117,7 +117,7 @@ def test_no_lean_words_or_colour_marks_and_the_guard_passes(lang: str) -> None:
     text = plain(event_brief().message(lang))
     assert not any(mark in text for mark in ("🟢", "🔴", "⚪", "lean", "Weak signal"))
     assert guard.check(text, text).ok, guard.check(text, text).problems
-    assert text.count(FOOTER[lang]) == 1 and text.endswith(FOOTER[lang])
+    assert not DISCLAIMER.search(text) and not DISCLAIMER.search(text)
 
 
 def test_stress_news_names_the_feeling_and_never_promises() -> None:

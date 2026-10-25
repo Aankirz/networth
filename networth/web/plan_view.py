@@ -8,10 +8,7 @@ from typing import Final
 from networth.sim import PlanRange, rupees
 from networth.web.fmt import western_grouping
 
-LABEL: Final = (
-    "This replays real past months. It is not a forecast. Your plan is your choice. "
-    "Research, not advice."
-)
+LABEL: Final = "This replays real past months. It is not a forecast."
 RUPEES_ONLY: Final = "Rupee plans only for now."
 NO_TABLE: Final = (
     "The plan range isn't ready on this server yet. Its table of past months is built with "

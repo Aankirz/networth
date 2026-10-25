@@ -1,7 +1,7 @@
 """One shape for every chat reply: the template code wrote, the same words in each language, what
 the guard checks the writer against, and the writer's task. deliver() is the only place a chat
 reply meets a model, and it hands back a Message: the words as the body, any code-owned link
-after them, and a footer in the reader's language that no model writes.
+after them, and no footer: the owner dropped every disclaimer (2026-10-25).
 
     reply = deliver(Answer(template, source, task, words=by_lang), text_lang, services)
     reply = deliver(Answer.fixed(TABLE), "hinglish", services)    # fixed words, no model
@@ -16,13 +16,14 @@ out: the guard's "model", "rewrite" or "template", or "fixed" when no model was 
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Final, Literal
 
 from networth import guard
 from networth.app.services import Services
-from networth.bot.message import FOOTER, Link, Message, say
+from networth.bot.message import DISCLAIMER, Link, Message, say
 from networth.bot.onboarding import Reply
 from networth.bot.telegram import Keyboard
 
@@ -34,7 +35,7 @@ LANGUAGES: Final = {
 REWORD_TASK: Final = """{task} Write it in {language}, as plain text with no markup. Use only the
 facts below; keep every number exactly as written and every link unchanged. Never say buy, sell,
 apply, skip, score or rank, and never say what the reader should do. Write every sentence as a
-statement, never as a command, polite forms included. Add no disclaimer: the app adds one.
+statement, never as a command, polite forms included. Add no disclaimer or caveat about advice.
 Return only the message text."""
 
 
@@ -49,7 +50,9 @@ class Answer:
     words: Mapping[str, str] = field(default_factory=dict)  # the template, per language
     lead: Mapping[str, str] = field(default_factory=dict)  # a fixed first line per language
     link: Link | None = None  # one code-owned link after the words, its preview kept
-    footer: bool = True  # "Research, not advice" in the reader's language
+    footer: bool = (
+        True  # ponytail: ignored, no footer since 2026-10-25; bot/holdings still passes it
+    )
 
     @classmethod
     def fixed(cls, words: Mapping[str, str], **kwargs: object) -> Answer:
@@ -68,19 +71,16 @@ def deliver(answer: Answer, lang: str, services: Services) -> Reply:
     return deliver_traced(answer, lang, services)[0]
 
 
-def without_footer(text: str) -> str:
-    """The text with any footer line a model added taken out, so the footer appears once."""
-    for line in FOOTER.values():
-        text = text.replace(line, "")
-    return text.strip()
+def without_disclaimer(text: str) -> str:
+    """The text with any disclaimer sentence a model added taken out: the owner wants none."""
+    return re.sub(r"[ \t]{2,}", " ", DISCLAIMER.sub("", text)).strip()
 
 
 def deliver_traced(answer: Answer, lang: str, services: Services) -> tuple[Reply, Used]:
     text, used = words(answer, lang, services)
     lead = say(answer.lead, lang) if answer.lead else ""
-    body = tuple(b for b in (lead, without_footer(text), answer.link) if b)
-    message = Message(body=body, footer=say(FOOTER, lang) if answer.footer else "",
-                      preview=answer.link.url if answer.link else None)  # fmt: skip
+    body = tuple(b for b in (lead, without_disclaimer(text), answer.link) if b)
+    message = Message(body=body, preview=answer.link.url if answer.link else None)
     return Reply(message, answer.buttons), used
 
 

@@ -115,7 +115,7 @@ def test_a_users_command_is_logged_like_telegrams(world: World) -> None:
 
 def test_a_language_choice_changes_only_this_command(world: World) -> None:
     web = run(world, USER, "help", lang="hi").json()
-    assert web["message"]["footer"] == "रिसर्च, सलाह नहीं।"
+    assert web["message"]["footer"] == ""
     profile = world.store.get_profile(USER)
     assert profile is not None and profile.lang == "en"
 

@@ -14,7 +14,7 @@ import pytest
 from networth.app.services import Services
 from networth.app.store import Plan, Profile, Status, Step, Store
 from networth.bot.commands import handle_update
-from networth.bot.message import Message, plain
+from networth.bot.message import DISCLAIMER, Message, plain
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Keyboard
@@ -172,7 +172,7 @@ def test_button_taps_take_start_to_done_and_store_every_field(chat: Chat) -> Non
     assert chat.plan == Plan(USER, "balanced", {"safety": 20, "core": 70, "growth": 10}, 20, NOW)
     assert chat.bot.messages[-1].title == "You're all set."
     assert "I'll message you on the 1st of each month" in chat.bot.last
-    assert chat.bot.last.endswith("Research, not advice.")
+    assert not DISCLAIMER.search(chat.bot.last)
 
 
 def test_every_tap_is_answered_so_the_spinner_stops(chat: Chat) -> None:
@@ -313,7 +313,7 @@ def test_plan_command_shows_then_changes_the_plan(chat: Chat) -> None:
     chat.say("/plan")
     assert chat.bot.texts[-2] == (
         "Your plan\n\nBalanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
-        "10% single shares or themes.\n\nResearch, not advice."
+        "10% single shares or themes."
     )
     assert chat.bot.messages[-2].title == "Your plan"
     chat.tap("ob:plan:steady")
@@ -334,7 +334,7 @@ def test_after_setup_free_text_gets_an_answer_even_without_models(chat: Chat) ->
     onboard(chat)
     chat.say("Aaj market kaisa tha?")
     assert chat.bot.last == ("I haven't read today's news yet. I check a few times a day, so "
-                             "it won't be long.\n\nResearch, not advice.")  # fmt: skip
+                             "it won't be long.")  # fmt: skip
     chat.say("Stock X will double", forward_date=1_700_000_000)
     assert chat.bot.last.startswith("I can't search the news right now")
     chat.say("hello")

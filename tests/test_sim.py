@@ -13,7 +13,7 @@ import pytest
 import networth.sim as sim
 from networth import guard
 from networth.app.store import Plan, Store, new_profile
-from networth.bot.message import FOOTER
+from networth.bot.message import DISCLAIMER
 from networth.sim import (
     NotRupees,
     horizon_years,
@@ -142,7 +142,7 @@ def test_the_lines_end_with_the_plain_label_and_leave_the_footer_to_the_message(
     }
     lines = plan_range_lines(ranges()[0], lang)
     assert lines[-1].endswith(labels[lang])
-    assert not any(footer in line for line in lines for footer in FOOTER.values())
+    assert not any(DISCLAIMER.search(line) for line in lines)
 
 
 @pytest.fixture

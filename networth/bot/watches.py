@@ -23,7 +23,7 @@ from typing import Final
 from networth import brief, guard, watch
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store, Watch
-from networth.bot.message import FOOTER, Block, Link, Message, plain, say
+from networth.bot.message import Block, Link, Message, plain, say
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot, Button
@@ -212,8 +212,9 @@ def watch_message(w: Watch, seen: Seen, insight: Insight | None, public_url: str
                 say(WHY_COUNTS, lang), public_url + names.why_path(insight.type, insight.asset)
             )
             body.append(link)
-    return Message(say(WATCHED, lang).format(label=w.label), tuple(body),
-                   footer=say(FOOTER, lang), preview=link.url if link else None)  # fmt: skip
+    return Message(
+        say(WATCHED, lang).format(label=w.label), tuple(body), preview=link.url if link else None
+    )
 
 
 def checked_message(w: Watch, seen: Seen, insight: Insight | None, services: Services,

@@ -17,7 +17,7 @@ from networth import config, guard
 from networth.app.services import Services
 from networth.app.store import DB_NAME, Store
 from networth.bot.commands import handle_update
-from networth.bot.message import FOOTER
+from networth.bot.message import DISCLAIMER
 from networth.chat import talk
 from networth.chat.answer import LANGUAGES
 from networth.chat.today import NOT_A_JUDGE, SCOPE, TYPE_QUESTION
@@ -194,7 +194,7 @@ def test_the_ipo_question_gets_an_explanation_not_the_help_line(tmp_path: Path) 
     assert not reply.startswith(SCOPE["en"][:30])
     assert "red herring prospectus" in reply and "risk factors" in reply
     assert "apply" not in reply.lower() and "skip" not in reply.lower()
-    assert reply.count(FOOTER["en"]) == 1 and reply.endswith(FOOTER["en"])
+    assert not DISCLAIMER.search(reply) and not DISCLAIMER.search(reply)
 
 
 def test_the_ipo_explainer_is_what_the_writer_rewords(tmp_path: Path, cfg) -> None:
@@ -216,7 +216,7 @@ def test_small_talk_and_off_topic_get_short_kind_replies(
     chat = chat_with(tmp_path, None, None)
     chat.say(text)
     lang = chat_layer.reply_lang(text, chat.profile)
-    assert chat.bot.last == f"{words[lang]}\n\n{FOOTER[lang]}"
+    assert chat.bot.last == f"{words[lang]}"
 
 
 def test_an_open_money_question_is_answered_by_the_writer(tmp_path: Path, cfg) -> None:
@@ -241,7 +241,7 @@ def test_the_guard_blocks_planted_advice_and_numbers(tmp_path: Path, cfg, questi
                                                      planted: str, lang: str) -> None:  # fmt: skip
     chat = chat_with(tmp_path, cfg, TalkModels(kind="money", writes=[planted, planted]))
     chat.say(question)
-    assert chat.bot.last == f"{talk.MONEY_FALLBACK[lang]}\n\n{FOOTER[lang]}"
+    assert chat.bot.last == f"{talk.MONEY_FALLBACK[lang]}"
 
 
 def test_a_jailbreak_is_answered_as_a_normal_message(tmp_path: Path, cfg) -> None:
@@ -261,8 +261,8 @@ def test_a_jailbreak_is_answered_as_a_normal_message(tmp_path: Path, cfg) -> Non
     ("क्या मुझे अभी सोना खरीदना चाहिए?", "hi"),
     ("Gold mein paisa lagau kya?", "hinglish"),
 ])  # fmt: skip
-def test_should_i_gets_the_decline_then_the_facts(tmp_path: Path, cfg, question: str,
-                                                  lang: str) -> None:  # fmt: skip
+def test_should_i_gets_the_facts_with_no_decline(tmp_path: Path, cfg, question: str,
+                                                 lang: str) -> None:  # fmt: skip
     facts = {
         "en": "Gold is a metal many people hold to spread risk.",
         "hi": "सोना एक धातु है जिसे कई लोग जोखिम बाँटने के लिए रखते हैं।",
@@ -270,7 +270,7 @@ def test_should_i_gets_the_decline_then_the_facts(tmp_path: Path, cfg, question:
     }
     chat = chat_with(tmp_path, cfg, TalkModels(kind="should_i", writes=[facts[lang]]))
     chat.say(question)
-    assert chat.bot.last == f"{talk.SHOULD_I_LEAD[lang]}\n\n{facts[lang]}\n\n{FOOTER[lang]}"
+    assert chat.bot.last == facts[lang]
 
 
 def test_should_i_never_asks_the_writer_for_steps_to_decide(tmp_path: Path, cfg) -> None:
@@ -292,7 +292,7 @@ def test_a_follow_up_can_ask_for_hinglish(tmp_path: Path, cfg) -> None:
     chat.say("explain that in Hinglish")
     task, facts = models.written[-1]
     assert LANGUAGES["hinglish"] in task and "Zephyr" in facts
-    assert chat.bot.last.endswith(FOOTER["hinglish"])
+    assert not DISCLAIMER.search(chat.bot.last)
     assert chat.bot.last.startswith("IPO matlab company")
 
 

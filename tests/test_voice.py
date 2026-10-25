@@ -26,7 +26,7 @@ from networth.app.services import Services
 from networth.app.store import Plan, Step, new_profile
 from networth.bot import commands, onboarding
 from networth.bot.alerts import alert_message
-from networth.bot.message import FOOTER, LANGS, Message, plain
+from networth.bot.message import DISCLAIMER, LANGS, Message, plain
 from networth.bot.telegram import html
 from networth.chat import dashboard as dashboard_chat
 from networth.chat import explain, talk, tip, today
@@ -54,7 +54,6 @@ HYPE: Final = re.compile(
     re.IGNORECASE,
 )
 LEAN: Final = re.compile(r"\blean(s|ing)?\b|🟢|🔴|⚪", re.IGNORECASE)
-FOOTERS: Final = tuple(FOOTER.values())
 DEVANAGARI: Final = re.compile("[ऀ-ॿ]")
 TAG: Final = re.compile(r"<[^>]+>")
 SCRIPT: Final = re.compile(r"<script.*?</script>", re.DOTALL)
@@ -95,7 +94,7 @@ TEMPLATES = list(templates())
 
 def test_the_walk_sees_every_message_table() -> None:
     names = {name for _, name, _ in TEMPLATES}
-    assert {"FOOTER", "HELP_COMMANDS", "TEXT", "RETRY", "NOT_A_JUDGE", "TITLE", "LINES",
+    assert {"HELP_COMMANDS", "TEXT", "RETRY", "NOT_A_JUDGE", "TITLE", "LINES",
             "WATCHING", "BEAT", "LINKED", "EMAIL_TEXT"} <= names  # fmt: skip
     assert len(TEMPLATES) > 400
 
@@ -111,9 +110,9 @@ def test_every_template_passes_the_guards_word_rules() -> None:
     assert bad == []
 
 
-def test_research_not_advice_lives_only_in_the_footer_table() -> None:
-    bad = [(m, n, t) for m, n, t in TEMPLATES
-           if n != "FOOTER" and any(f in t for f in FOOTERS)]  # fmt: skip
+def test_no_template_holds_a_disclaimer() -> None:
+    """Owner order 2026-10-25: no "not advice", "your call" or "I won't say yes or no"."""
+    bad = [(m, n, t) for m, n, t in TEMPLATES if DISCLAIMER.search(t)]
     assert bad == []
 
 
@@ -273,7 +272,7 @@ WITHOUT_FOOTER: Final[dict[str, Callable[[Chat, str], Message]]] = {
 
 
 def footers_in(m: Message) -> int:
-    return sum(plain(m).count(f) for f in FOOTERS)
+    return len(DISCLAIMER.findall(plain(m)))
 
 
 def check_language(m: Message, lang: str) -> None:
@@ -284,11 +283,11 @@ def check_language(m: Message, lang: str) -> None:
 
 @pytest.mark.parametrize("lang", LANGS)
 @pytest.mark.parametrize("kind", list(WITH_FOOTER))
-def test_each_answer_type_ends_with_one_footer_in_its_language(chat: Chat, kind: str,
+def test_each_answer_type_carries_no_footer_or_disclaimer(chat: Chat, kind: str,
                                                                lang: str) -> None:  # fmt: skip
     m = WITH_FOOTER[kind](chat, lang)
-    assert m.footer == FOOTER[lang]
-    assert footers_in(m) == 1 and plain(m).endswith(FOOTER[lang])
+    assert m.footer == ""
+    assert footers_in(m) == 0
     check_language(m, lang)
 
 
@@ -344,7 +343,7 @@ def test_a_hinglish_setup_asks_and_sums_up_in_hinglish(tmp_path: Path) -> None:
     assert "Bahar rakha: Crypto" in chat.bot.last
     chat.tap("ob:confirm:ok")
     assert chat.bot.messages[-1].title == "Sab taiyaar hai."
-    assert chat.bot.last.endswith("Research hai, advice nahin.")
+    assert not DISCLAIMER.search(chat.bot.last)
 
 
 def test_typed_local_labels_and_english_words_both_parse(tmp_path: Path) -> None:

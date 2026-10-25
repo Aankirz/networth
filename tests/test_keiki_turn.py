@@ -16,6 +16,7 @@ from networth import config
 from networth.app.main import create_app
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Step, Store, new_email_profile, now_iso
+from networth.bot.message import DISCLAIMER
 from networth.bot.onboarding import Reply
 from networth.chat import Intent, explain
 from networth.keiki.mail import NOTICE, Mail
@@ -92,7 +93,7 @@ def test_a_new_contact_is_set_up_by_email_in_four_answers(tmp_path: Path) -> Non
     assert (p.channel, p.chat_id, p.deliver_to, p.step) == ("email", 0, Channel.EMAIL, Step.DONE)
     assert (p.goal, p.monthly_amount, p.invest_day, p.lang) == ("retirement", 100_000, 5, "en")
     assert keiki.last.startswith("You're set.\n\nI'll write on the 5th of each month")
-    assert keiki.last.endswith("Research, not advice.")
+    assert not DISCLAIMER.search(keiki.last)
     assert ADDRESS not in p.user_id, "the address never becomes a user id in logs"
 
 
@@ -303,7 +304,7 @@ def test_an_email_with_a_mailtrack_footer_is_explained_without_fetching(
     set_up(keiki)
     keiki.say(IPO_TEXT + MAILTRACK_FOOTER + GMAIL_QUOTE)
     assert fetched == []
-    assert keiki.last == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
+    assert keiki.last == f"{GOOD_EXPLANATION}"
 
 
 def test_two_email_threads_from_one_sender_are_one_user(tmp_path: Path) -> None:

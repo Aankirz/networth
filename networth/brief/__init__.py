@@ -22,7 +22,7 @@ from typing import Final
 
 from networth import sim
 from networth.app.store import Plan, Profile
-from networth.bot.message import FOOTER, Message, say
+from networth.bot.message import Message, say
 from networth.bot.onboarding import STARTER_PLANS, format_money
 from networth.bot.telegram import Button, Keyboard
 from networth.brief.lines import Line, day_words, lang_of, odds_line, type_words
@@ -170,7 +170,7 @@ class Brief:
         if self.lines:
             body.append(say(HISTORY_LEAD, lang))
         detail = tuple(line.words(lang) for line in self.lines)
-        return Message(self._title(lang), tuple(body), detail, say(FOOTER, lang))
+        return Message(self._title(lang), tuple(body), detail)
 
     def _title(self, lang: str) -> str:
         hour = self.local.hour

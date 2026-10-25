@@ -83,7 +83,7 @@ CRITERIA: Final[dict[str, str]] = {
     ),
     Intent.OTHER: (
         "anything else: greetings, thanks, general questions about how money, investing or "
-        "markets work, whether to put money into something, unrelated questions"
+        "markets work, unrelated questions"
     ),
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"
@@ -168,7 +168,7 @@ def watch_answer(store: Store, profile: Profile, text: str, services: Services,
     """Sets the watch the text asks for; fixed words, so no model writes the reply."""
     rules = services.cfg.product if services.cfg else None
     reply = watches.set_watch(store, profile, text, now.isoformat(), rules, lang)
-    return Answer(reply, reply, kind="watch", words={lang: reply}, footer=False)
+    return Answer(reply, reply, kind="watch", words={lang: reply})
 
 
 def local_date(p: Profile, now: dt.datetime) -> dt.date:

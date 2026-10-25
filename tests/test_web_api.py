@@ -101,7 +101,7 @@ def test_the_dashboard_is_the_token_owners_own(world: World) -> None:
     )
     assert b["profile"]["plan"].startswith("Steady.")
     assert "Steady" not in json.dumps(a) and "Balanced" not in json.dumps(b)
-    assert a["sample"] is False and a["footer"] == "Research, not advice."
+    assert a["sample"] is False and a["footer"] == ""
     assert (a["profile"]["money"], a["profile"]["day"]) == ("₹1,00,000", "1st")
 
 
@@ -144,8 +144,8 @@ def test_the_web_answer_is_the_telegram_answer(tmp_path: Path, cfg) -> None:
     w.a.say(IPO_TEXT)
     telegram = w.a.bot.last
     web = w.ask(USER, IPO_TEXT).json()
-    assert web["text"] == telegram == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
-    assert web["message"]["footer"] == "Research, not advice."
+    assert web["text"] == telegram == f"{GOOD_EXPLANATION}"
+    assert web["message"]["footer"] == ""
     assert web["intent"] == "explain_this" and w.turns()[-1]["guard"] == "model"
 
 
@@ -281,7 +281,7 @@ def test_access_logs_drop_the_token() -> None:
 
 def test_a_language_choice_changes_only_this_turn(world: World) -> None:
     turn = world.ask(USER, "hello there", lang="hi").json()
-    assert turn["message"]["footer"] == "रिसर्च, सलाह नहीं।"
+    assert turn["message"]["footer"] == ""
     profile = world.store.get_profile(USER)
     assert profile is not None and profile.lang == "en"
 

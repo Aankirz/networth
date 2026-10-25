@@ -582,8 +582,6 @@
 
 ## 2026-10-25 — no merge line when nothing new was added
 - networth/bot/holdings.py: a screenshot that adds no new rows no longer says "This screenshot added 0"; test added.
-||||||| parent of cf75221 (feat: the sector board with the confirmed stories behind each move)
-||||||| parent of 40ddf83 (feat: the sector board with the confirmed stories behind each move)
 
-## 2026-10-25 — Phase 13C: the sector board
-- networth/sectors: day, week and month moves of 11 NSE sector indices from Yahoo, each with up to 3 confirmed watcher stories; SectorsCard and the /sectors message. make check exit 0.
+## 2026-10-25 — Phase 13A: no footer, no disclaimers
+- Owner order: FOOTER blanked, every "Research, not advice", "your call", "I will not say yes or no" and "your choice" line removed from chat, bot, keiki, web templates and holdings copy; tests now assert none; DISCLAIMER regex strips any a model adds.

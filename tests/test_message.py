@@ -12,7 +12,7 @@ import httpx2
 import pytest
 
 from networth import guard
-from networth.bot.message import FOOTER, Link, Message, from_stored, plain, say, to_json
+from networth.bot.message import Link, Message, from_stored, plain, say, to_json
 from networth.bot.telegram import TelegramClient
 from networth.bot.telegram import html as render_html
 
@@ -29,7 +29,6 @@ SAMPLE = Message(
         "Indian banks beat the Nifty 50 in 14 of 22. Normal is 56%.",
         "The Nifty 50 rose in 12 of 22.",
     ),
-    footer=say(FOOTER, "en"),
 )
 
 
@@ -47,7 +46,7 @@ def test_plain_puts_blank_lines_between_parts_and_writes_links_as_label_and_url(
         "Morning. ₹1,00,000 is ready.\n\nThis month's news: RBI rate hike on Oct 20.\n\n"
         "Your page: https://n.app/u/x?a=1&b=2\n\n"
         "Indian banks beat the Nifty 50 in 14 of 22. Normal is 56%.\n"
-        "The Nifty 50 rose in 12 of 22.\n\nResearch, not advice."
+        "The Nifty 50 rose in 12 of 22."
     )
 
 
@@ -56,7 +55,7 @@ def test_html_bolds_the_title_folds_the_detail_and_italicises_the_footer() -> No
     assert out.startswith("<b>Morning. ₹1,00,000 is ready.</b>\n\n")
     assert '<a href="https://n.app/u/x?a=1&amp;b=2">Your page</a>' in out
     assert "<blockquote expandable>Indian banks" in out and out.count("<blockquote") == 1
-    assert out.endswith("<i>Research, not advice.</i>")
+    assert "<i>" not in out
 
 
 def test_a_story_title_with_markup_renders_as_text() -> None:
@@ -134,5 +133,6 @@ def test_a_stored_message_round_trips_and_a_legacy_row_is_plain_text() -> None:
 
 
 def test_say_falls_back_to_english() -> None:
-    assert say(FOOTER, "hinglish") == "Research hai, advice nahin."
-    assert say(FOOTER, "fr") == say(FOOTER, None) == "Research, not advice."
+    table = {"en": "Hi.", "hinglish": "Namaste."}
+    assert say(table, "hinglish") == "Namaste."
+    assert say(table, "fr") == say(table, None) == "Hi."

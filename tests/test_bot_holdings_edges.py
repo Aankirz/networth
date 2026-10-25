@@ -15,7 +15,7 @@ from networth import guard
 from networth.app.store import Status, user_id_for
 from networth.bot import commands, holdings_words
 from networth.bot import holdings as flow
-from networth.bot.message import LANGS, Message, plain
+from networth.bot.message import DISCLAIMER, LANGS, Message, plain
 from networth.holdings import snaptrade
 from networth.holdings.snaptrade import SnapTradeError, SnapUser
 from tests.test_bot_holdings import (
@@ -28,7 +28,7 @@ from tests.test_bot_holdings import (
     talk,
 )
 from tests.test_onboarding import USER, Chat, tap_update, text_update
-from tests.test_voice import FOOTERS, check_language
+from tests.test_voice import check_language
 
 PORTAL = "https://app.snaptrade.com/portal?read"
 
@@ -232,7 +232,7 @@ WITHOUT_FOOTER = {"summary": prompt, "no holdings": "NO_HOLDINGS", "started over
 def test_the_report_and_answer_carry_no_footer(tmp_path, kind: str, lang: str) -> None:
     m = WITH_FOOTER[kind](talk(tmp_path, lang=lang))
     text = plain(m)
-    assert m.footer == "" and not any(f in text for f in FOOTERS)
+    assert m.footer == "" and not DISCLAIMER.search(text)
     assert guard.check(text, text).ok, guard.check(text, text).problems
     check_language(m, lang)
 
@@ -247,5 +247,5 @@ def test_prompts_and_acks_carry_no_footer(tmp_path, kind: str, lang: str) -> Non
     else:
         words = getattr(flow, build, None) or getattr(holdings_words, build)
         m = Message(body=(words[lang],))
-    assert m.footer == "" and not any(f in plain(m) for f in FOOTERS)
+    assert m.footer == "" and not DISCLAIMER.search(plain(m))
     check_language(m, lang)

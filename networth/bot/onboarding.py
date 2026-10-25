@@ -22,7 +22,7 @@ from typing import Final, Literal
 
 from networth.app.store import INDIA_TZ, US_TZ, Plan, Profile, Step
 from networth.bot.holdings_words import BUCKET_WORDS
-from networth.bot.message import FOOTER, Message, plain, say
+from networth.bot.message import Message, plain, say
 from networth.bot.telegram import Button, Keyboard
 
 CALLBACK_PREFIX: Final = "ob"
@@ -316,7 +316,7 @@ DONE_HELP: Final = {
 def done_message(p: Profile) -> Message:
     lang = p.lang
     day = say(DONE_BODY, lang).format(day=day_label(p.invest_day or 1, lang))
-    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)), footer=say(FOOTER, lang))
+    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)))
 
 
 def with_lead(lead: str, ask: Reply) -> Reply:

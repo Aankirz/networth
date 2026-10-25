@@ -395,7 +395,7 @@ def test_the_page_shows_the_report_the_mix_bar_and_the_label(chat: Chat) -> None
     assert response.status_code == 200
     assert response.headers["X-Robots-Tag"] == "noindex"
     page, words = response.text, text(response.text)
-    assert DISCLAIMER in page and LABEL in words
+    assert DISCLAIMER not in page and LABEL in words
     assert '<svg viewBox="0 0 400' in page and 'role="img"' in page and "<title" in page
     assert (
         "Your plan says 10% single shares or themes. Your holdings are 53% single shares or themes."
