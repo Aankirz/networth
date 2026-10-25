@@ -20,12 +20,14 @@ from tests.keiki_fakes import (
     ADDRESS,
     GMAIL_QUOTE,
     IPHONE,
+    LIVE_BRIEF,
     MAILTRACK_FOOTER,
     SLACK_TEAM,
     SLACK_USER,
     TURN_URL,
     FakeApi,
     FakeTurnClient,
+    email_text,
     slack_payload,
     turn_payload,
 )  # fmt: skip
@@ -38,7 +40,7 @@ def test_a_turn_payload_parses_into_its_fields_without_silent_messages() -> None
     payload["messages"].append({"text": "typing...", "silent": True})
     turn = parse(payload)
     assert turn == KeikiTurn("t1", "agent-test", "t1.thread@agentmail.to", ADDRESS, "agentmail",
-                             ("What happened today?",), True, False, TURN_URL,
+                             (email_text("What happened today?"),), True, False, TURN_URL,
                              "tr_1")  # fmt: skip
 
 
@@ -47,6 +49,11 @@ def test_footers_signatures_and_gmail_quotes_are_stripped(tail: str) -> None:
     assert strip_quoted("What does this mean?\nIt says 5%." + tail) == (
         "What does this mean?\nIt says 5%."
     )
+
+
+def test_keikis_email_header_and_the_mailtrack_footer_leave_just_the_command() -> None:
+    text = email_text(LIVE_BRIEF, subject="brief check")
+    assert strip_quoted(text) == "/brief"
 
 
 def test_a_turn_without_a_trace_id_uses_the_turn_id_as_keiki_does() -> None:

@@ -16,7 +16,7 @@ from networth.app.store import Channel, Store
 from networth.bot.briefs import run_daily
 from networth.keiki.mail import Mail
 from networth.keiki.turn import LINKED
-from tests.keiki_fakes import ADDRESS, IPHONE, MAILTRACK_FOOTER, FakeApi
+from tests.keiki_fakes import ADDRESS, IPHONE, LIVE_BRIEF, MAILTRACK_FOOTER, FakeApi
 from tests.test_keiki_turn import Keiki, turn_log
 from tests.test_onboarding import NOW, USER, Chat, onboard
 from tests.watcher_fakes import FAKE_ENV
@@ -54,6 +54,16 @@ def test_brief_by_email_in_a_new_thread_is_a_command_for_the_linked_user(tmp_pat
     linked, brief = turn_log(keiki)
     assert (linked["kind"], linked["user_id"]) == ("link", USER)
     assert (brief["kind"], brief["user_id"], brief["intent"]) == ("command", USER, None)
+
+
+def test_brief_by_email_in_the_live_shape_sends_the_brief_not_a_chat_answer(tmp_path, chat):
+    keiki = Keiki(tmp_path, chat.services)
+    keiki.say(link_code(chat), now=NOW)
+    keiki.say(LIVE_BRIEF, now=NOW)
+    _, brief = turn_log(keiki)
+    assert (brief["kind"], brief["user_id"], brief["intent"]) == ("command", USER, None)
+    chat.say("/brief")
+    assert keiki.last == chat.bot.last, "the same brief Telegram sends that day"
 
 
 @pytest.mark.parametrize("tail", [MAILTRACK_FOOTER, IPHONE, MAILTRACK_FOOTER + IPHONE])
