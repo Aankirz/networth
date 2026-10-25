@@ -291,3 +291,6 @@
 
 ## 2026-10-25 — Phase 6 method v2
 - Method v2 recorded before any v2 run: OECD India CPI (INDCPIALLMINMEI) before 2012-01 and OECD short rate (INDLOCOSTORSTM) before 2011-11, so the window can reach 2007-10 and hold the 2008 crash. Code splices them; range-bar labels resized for 12px+ at 320px.
+
+## 2026-10-25 — Range bar labels
+- Range bar viewBox 400 wide, labels 18 units, SVG capped at 480px: smallest label renders 13px at 320px. Row names move to the side away from the invested line; test added. Shots retaken on the v2 table.

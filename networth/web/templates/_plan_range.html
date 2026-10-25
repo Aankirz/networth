@@ -23,7 +23,7 @@
     <svg viewBox="0 0 {{ pr.bar.width }} {{ pr.bar.height }}" role="img" aria-labelledby="range-bar-title">
       <title id="range-bar-title">Before inflation, from {{ pr.nominal.p10 }} to {{ pr.nominal.p90 }}, middle {{ pr.nominal.median }}. After inflation, from {{ pr.real.p10 }} to {{ pr.real.p90 }}, middle {{ pr.real.median }}. Put in: {{ pr.invested }}.</title>
       {% for row in pr.bar.rows %}
-      <text class="range-bar__name" x="{{ pr.bar.zero_x }}" y="{{ row.label_y }}">{{ row.name }}</text>
+      <text class="range-bar__name" x="{{ pr.bar.name_x }}" y="{{ row.label_y }}" text-anchor="{{ pr.bar.name_anchor }}">{{ row.name }}</text>
       <rect class="range-bar__band range-bar__band--{{ loop.index }}" x="{{ row.x }}" y="{{ row.y }}" width="{{ row.w }}" height="{{ row.h }}"></rect>
       <line class="range-bar__median" x1="{{ row.median_x }}" x2="{{ row.median_x }}" y1="{{ row.y - 6 }}" y2="{{ row.y + row.h + 6 }}"></line>
       {% endfor %}

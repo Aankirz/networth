@@ -16,6 +16,7 @@ from networth import sim
 from networth.app.services import Services
 from networth.app.settings import Settings
 from networth.sim.data import Table
+from networth.web import plan_view
 from networth.web.routes import router, settings, sim_table
 from tests.test_links import SECRET, page_path
 from tests.test_onboarding import Chat, onboard
@@ -148,3 +149,20 @@ def test_the_user_page_still_works_without_the_table(chat: Chat) -> None:
     response = app_with(None, chat.store.path.parent).get(page_path(chat.store))
     assert response.status_code == 200
     assert "What history says about this plan" not in response.text
+
+
+def _range_with(invested: int, p10: int, p90: int) -> sim.PlanRange:
+    return sim.PlanRange(
+        targets_pct=(20, 70, 10), monthly_amount=1, years=1, fall_limit_pct=20, paths=1,
+        mean_block_months=12, invested=invested, nominal_p10=p10, nominal_median=p10,
+        nominal_p90=p90, real_p10=p10, real_median=p10, real_p90=p90, hit_limit_pct=0,
+        worst_fall_pct=0, worst_fall_rupees=0, recovery_months=0,
+        window_start=dt.date(2007, 10, 1), window_end=dt.date(2026, 9, 1), method_version="t",
+    )  # fmt: skip
+
+
+@pytest.mark.parametrize(("invested", "p10", "p90"), [(100, 300, 900), (800, 100, 900)])
+def test_bar_row_names_sit_away_from_the_invested_line(invested, p10, p90) -> None:
+    bar = plan_view.bar_geometry(_range_with(invested, p10, p90))
+    names_on_right = bar["name_anchor"] == "end"
+    assert names_on_right == (bar["invested_x"] < bar["width"] / 2)
