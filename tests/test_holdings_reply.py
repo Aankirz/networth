@@ -4,20 +4,23 @@ the numbers here are the screenshot's own: units, average cost, invested, price 
 
 from __future__ import annotations
 
+import dataclasses
 import json
 import re
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 from networth import guard
-from networth import holdings as nh
+from networth.bot import holdings_plan
 from networth.bot import holdings_words as words
 from networth.bot.message import plain
-from networth.holdings.lines import history_lines
+from networth.holdings.action import action_plan
 from networth.holdings.model import Bucket, Kind, bucket_for, from_json
-from networth.holdings.summary import summarize
+from networth.holdings.summary import short_money, summarize
 from networth.llm import WireHoldings
+from networth.ratings import View
 from tests.test_bot_holdings import (  # noqa: F401  fixed_table is an autouse fixture
     LANGS,
     FakeModels,
@@ -28,8 +31,8 @@ from tests.test_bot_holdings import (  # noqa: F401  fixed_table is an autouse f
     talk,
 )
 from tests.test_holdings import FIXTURES
+from tests.test_holdings import report as fixture_report
 from tests.test_onboarding import USER, Chat
-from tests.test_sim_web import TABLE
 
 OWNER = json.loads((FIXTURES / "groww_owner_vision.json").read_text())
 DISCLAIMER = re.compile(
@@ -124,33 +127,119 @@ def test_a_second_screenshot_adds_rows_without_duplicates(tmp_path) -> None:
     assert last(chat).body[0] == "This screenshot added 1. Already on the list, so updated: 1."
 
 
-def test_thats_everything_compares_with_the_plan_in_rupees(tmp_path) -> None:
-    chat = owner(tmp_path)
+def everything(tmp_path: Path, **kw: object) -> Chat:
+    chat = owner(tmp_path, **kw)
     photo(chat)
     chat.tap("hd:ok")
+    return chat
+
+
+def test_thats_everything_gives_an_action_plan_with_two_paths(tmp_path) -> None:
+    chat = everything(tmp_path)
     m = last(chat)
-    assert stored(chat).confirmed and m.title == "Saved." and m.footer == ""
+    assert stored(chat).confirmed and m.footer == ""
+    assert m.title == "Here is how to get to your Balanced plan."
     assert m.body == (
-        "Your plan is Balanced: about 20% in safe money (liquid, gilt, FD), 70% in broad index "
-        "funds and 10% in single shares or themes.",
+        "On plan, your ₹2.91 lakh would be about ₹58,100 in safe money (liquid, gilt, FD), "
+        "₹2.03 lakh in broad index funds and ₹29,100 in single shares or themes.",
         "Right now 100% is in single shares or themes.",
-        "The part furthest from your plan is single shares or themes: at your plan's 10% that "
-        "would be about ₹29,061, and right now it is ₹2.91 lakh. That's the part worth reading "
-        "about first.",
+        "Path A, rebalance now: trim about ₹2.62 lakh, weakest first, starting with Vishal "
+        "Nirmiti, Hero Motors and Swiggy. Then put about ₹2.03 lakh into a Nifty 50 index fund "
+        "or ETF (such as UTI Nifty 50 Index Fund or NIFTYBEES) and about ₹58,100 into a liquid "
+        "fund (such as LIQUIDBEES).",
+        "Path B, use new money: put your ₹1 lakh a month into the parts below plan, and you're "
+        "on plan in about 27 months with nothing trimmed.",
     )
     assert [(label, d) for label, d, _ in buttons(chat)] == [
-        ("Show my plan", "br:plan"), ("What would history say?", "hd:history")]  # fmt: skip
+        ("Rebalance now", "hd:rebal"), ("Use new money", "hd:newmoney"),
+        ("Why these?", "hd:why")]  # fmt: skip
 
 
-def test_what_would_history_say_gives_the_history_lines(tmp_path) -> None:
+def test_rebalance_now_lists_the_trims_weakest_first_and_the_tax(tmp_path) -> None:
+    chat = everything(tmp_path)
+    chat.tap("hd:rebal")
+    m = last(chat)
+    assert m.title == "Path A: rebalance now."
+    assert m.body[0].splitlines() == [
+        "Trim, weakest first:",
+        "1. Vishal Nirmiti: all of it, ₹7,881 (down 47%)",
+        "2. Hero Motors: all of it, ₹775 (down 29%)",
+        "3. Swiggy: all of it, ₹68,640 (down 23%)",
+        "4. Adani Green Energy: about ₹1.84 lakh of its ₹2.13 lakh (down 3%)",
+    ]
+    assert m.body[2] == (
+        "Tax: trimming these books a loss of about ₹33,600, Swiggy's ₹21,080 the biggest. A "
+        "booked loss can be set off against capital gains.")  # fmt: skip
+
+
+def test_use_new_money_counts_the_months_and_offers_show_me_now(tmp_path) -> None:
+    chat = everything(tmp_path)
+    chat.tap("hd:newmoney")
+    m = last(chat)
+    assert m.body == (
+        "Each month, put about ₹77,800 into a Nifty 50 index fund or ETF (such as UTI Nifty 50 "
+        "Index Fund or NIFTYBEES) and about ₹22,200 into a liquid fund (such as LIQUIDBEES).",
+        "At ₹1 lakh a month you're on plan in about 27 months, with nothing trimmed.",
+    )
+    assert [d for _, d, _ in buttons(chat)] == ["hd:now", "hd:why"]
+    chat.tap("hd:now")
+    text = plain(last(chat))
+    assert "1. Vishal Nirmiti: all of it, ₹7,881" in text and "about 27 months" in text
+    assert "Tax: trimming these books a loss" in text
+
+
+def test_why_these_explains_the_order_and_the_funds(tmp_path) -> None:
+    chat = everything(tmp_path)
+    chat.tap("hd:why")
+    text = plain(last(chat))
+    assert "lowest rating first, then the deepest loss" in text
+    assert "A Nifty 50 index fund holds the whole market" in text
+
+
+def test_ratings_put_the_weakest_rated_holding_first(tmp_path, monkeypatch) -> None:
+    views = {"Adani Green Energy": View.WEAK}
+    monkeypatch.setattr(holdings_plan, "rate", lambda q, sources: SimpleNamespace(
+        view=views.get(q, View.STRONG)))  # fmt: skip
     chat = owner(tmp_path)
+    chat.services = dataclasses.replace(chat.services, ratings=object())
     photo(chat)
     chat.tap("hd:ok")
-    chat.tap("hd:history")
-    report = nh.report_for(USER, chat.store, table=TABLE)
-    first, *rest = history_lines(report.history, "en")
-    assert last(chat).title == first and last(chat).body == tuple(rest)
-    assert last(chat).footer == ""
+    chat.tap("hd:rebal")
+    rows = last(chat).body[0].splitlines()
+    assert rows[1] == "1. Adani Green Energy: all of it, ₹2.13 lakh (rated Weak)"
+    assert rows[2] == "2. Vishal Nirmiti: all of it, ₹7,881 (rated Strong)", "then the loss"
+
+
+def test_a_plan_with_no_single_shares_says_new_money_alone_cant_get_there() -> None:
+    steady = dataclasses.replace(fixture_report(), plan_pct=(60, 40, 0))
+    assert action_plan(steady, monthly=100_000).months is None
+
+
+USD_ROWS = [
+    {"name": "Apple", "kind": "stock", "identifier": "AAPL", "currency": "USD", "units": 40.0,
+     "avg_cost": 150.0, "invested": 6000.0, "current_price": 230.0, "current_value": 9200.0,
+     "bought_on": ""},
+    {"name": "Tesla", "kind": "stock", "identifier": "TSLA", "currency": "USD", "units": 10.0,
+     "avg_cost": 300.0, "invested": 3000.0, "current_price": 250.0, "current_value": 2500.0,
+     "bought_on": ""},
+]  # fmt: skip
+
+
+def test_a_dollar_list_is_written_in_dollars_with_us_funds(tmp_path) -> None:
+    chat = owner(tmp_path, WireHoldings.model_validate({**OWNER, "rows": USD_ROWS}))
+    chat.store.save_profile(dataclasses.replace(chat.profile, currency="USD", monthly_amount=500))
+    photo(chat)
+    assert last(chat).title == "Got it. 2 holdings, worth $11,700 today."
+    chat.tap("hd:ok")
+    chat.tap("hd:now")
+    text = plain(last(chat))
+    assert "S&P 500 index fund or ETF (such as VOO)" in text and "SGOV" in text
+    assert "$500 a month" in text and "₹" not in text and "lakh" not in text
+
+
+def test_big_dollar_amounts_are_said_in_millions() -> None:
+    assert short_money(1_234_567, "USD") == "$1.2M" and short_money(12_400, "USD") == "$12,400"
+    assert short_money(12_000_000, "INR") == "₹1.2 crore"
 
 
 def test_somethings_wrong_fixes_a_holding_through_buttons_and_plain_words(tmp_path) -> None:
@@ -198,7 +287,8 @@ def _every_reply(tmp_path: Path, lang: str) -> list[str]:
                  lang=lang)  # fmt: skip
     start, sent = len(chat.bot.messages), len(chat.bot.sent)
     for step in ("photo", "hd:more", "photo", "hd:fix", "hd:pick:1", "say:huh", "say:15 shares",
-                 "hd:pick:2", "hd:kind:2:growth", "hd:ok", "hd:history", "say:/holdings",
+                 "hd:pick:2", "hd:kind:2:growth", "hd:ok", "hd:rebal", "hd:newmoney", "hd:now",
+                 "hd:why", "say:/holdings",
                  "say:what should I sell?"):  # fmt: skip
         if step == "photo":
             photo(chat)

@@ -159,17 +159,18 @@ def test_thats_everything_with_a_line_unplaced_asks_its_kind(chat: Chat) -> None
         "hd:place:3:safety", "hd:place:3:core", "hd:place:3:growth"]  # fmt: skip
     assert not stored(chat).confirmed
     chat.tap("hd:place:3:growth")
-    assert stored(chat).confirmed and last(chat).title == words.SAVED["en"]
+    assert stored(chat).confirmed
+    assert last(chat).title == words.PLAN_HEAD["en"].format(name="Balanced")
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_thats_everything_compares_with_the_plan(tmp_path, lang: str) -> None:
+def test_thats_everything_gives_the_action_plan(tmp_path, lang: str) -> None:
     chat = talk(tmp_path, lang=lang)
     confirm(chat)
     m = last(chat)
     assert stored(chat).confirmed
-    assert m.title == words.SAVED[lang] and m.footer == ""
-    assert [d for _, d, _ in buttons(chat)] == ["br:plan", "hd:history"]
+    assert m.title == words.PLAN_HEAD[lang].format(name="Balanced") and m.footer == ""
+    assert [d for _, d, _ in buttons(chat)] == ["hd:rebal", "hd:newmoney", "hd:why"]
 
 
 def test_holdings_from_the_report_are_unchanged_after_confirming(chat: Chat) -> None:

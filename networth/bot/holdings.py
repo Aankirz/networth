@@ -17,10 +17,10 @@ import datetime as dt
 import logging
 from typing import Final
 
-from networth import brief, chat, guard, holdings
+from networth import chat, guard, holdings
 from networth.app.services import Services
 from networth.app.store import Profile, Store
-from networth.bot import message
+from networth.bot import holdings_plan, message
 from networth.bot.holdings_words import (
     ADDED,
     ALL_SHARES,
@@ -33,7 +33,6 @@ from networth.bot.holdings_words import (
     FURTHEST,
     GOT_IT,
     GOT_ONE,
-    HISTORY,
     KIND_BUTTONS,
     MATCHES,
     NO_PRICE,
@@ -55,7 +54,6 @@ from networth.bot.holdings_words import (
     SEE_OF,
     SEND_MORE,
     SEND_NEXT,
-    SHOW_PLAN,
     SOME_SHARES,
     START_OVER,
     STARTED_OVER,
@@ -278,27 +276,6 @@ def _plan_name(store: Store, profile: Profile, lang: str) -> str:
     return plan_name(plan, lang) if plan else ""
 
 
-def _compared(store: Store, profile: Profile, services: Services) -> Reply:
-    lang = lang_of(profile.lang)
-    report = holdings.report_for(profile.user_id, store, prices=services.prices, history=False)
-    if report is None:
-        return Reply(say(SAVED, lang))
-    lines = comparison_lines(report, _plan_name(store, profile, lang), lang)
-    buttons = ((Button(say(SHOW_PLAN, lang), f"{brief.CALLBACK_PREFIX}:plan"),),
-               (Button(say(HISTORY, lang), f"{TAP_PREFIX}:history"),))  # fmt: skip
-    return Reply(Message(say(SAVED, lang), tuple(lines)), buttons)
-
-
-def _history(store: Store, profile: Profile, services: Services) -> Reply:
-    """What history says about a mix like the holdings, next to the saved plan."""
-    lang = lang_of(profile.lang)
-    report = holdings.report_for(profile.user_id, store)
-    if report is None:
-        return Reply(say(NO_HOLDINGS, lang))
-    first, *rest = history_lines(report.history, lang)
-    return Reply(Message(first, tuple(rest)))
-
-
 def _kind_buttons(n: int, verb: str, lang: str) -> Keyboard:
     return tuple((Button(say(KIND_BUTTONS[b], lang), f"{TAP_PREFIX}:{verb}:{n}:{b.value}"),)
                  for b in BUCKETS)  # fmt: skip
@@ -311,7 +288,9 @@ def _everything(store: Store, profile: Profile, h: Holdings, services: Services)
         ask = _say(WHAT_KIND, profile.lang, name=h.items[n - 1].name)
         return Reply(ask, _kind_buttons(n, "place", profile.lang or "en"))
     holdings.confirm_holdings(profile.user_id, store)
-    return _compared(store, profile, services)
+    return holdings_plan.plan_reply(store, profile, services, "overview") or Reply(
+        say(SAVED, profile.lang)
+    )
 
 
 def _which(h: Holdings, lang: str) -> Reply:
@@ -369,8 +348,9 @@ def _pending_tap(store: Store, profile: Profile, h: Holdings, services: Services
 def tapped(store: Store, profile: Profile, data: str, services: Services,
            now: dt.datetime) -> Reply:  # fmt: skip
     parts = data.split(":")[1:]
-    if parts == ["history"]:
-        return _guarded(_history(store, profile, services), services)
+    if parts and parts[0] in holdings_plan.ACTIONS:
+        reply = holdings_plan.plan_reply(store, profile, services, parts[0])
+        return _guarded(reply or Reply(say(NO_HOLDINGS, profile.lang)), services)
     h = _pending(store, profile)
     reply = _pending_tap(store, profile, h, services, parts) if h is not None and parts else None
     return _guarded(reply or Reply(say(NO_HOLDINGS, profile.lang)), services)

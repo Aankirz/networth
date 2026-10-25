@@ -632,3 +632,6 @@
 ## 2026-10-25 — Phase 13C review round 1
 - Valuation compares like with like: P/E, else P/S for a loss-maker, else P/B; peers without that measure are left out and each peer's value is shown.
 - Growth comes from Yahoo's annual statements (latest fiscal year against the one before) instead of the quarterly revenueGrowth field, which showed HDFC Bank at +81% against +5.2% in its statements. Report updated with the new live ratings. make check exit 0. Local commit only.
+
+## 2026-10-25 — holdings action plan after "That's everything"
+- networth/holdings/action.py (new): plan targets, trims weakest first (rating, then loss, then size), moves, tax booked, monthly split, months to plan. networth/bot/holdings_plan.py (new): overview with Path A and Path B, Rebalance now, Use new money with Show me now, Why these?; fund names per currency and language. Services.ratings feeds rate(). short_money says $1.2M. Tests with the owner fixture and a USD fixture.

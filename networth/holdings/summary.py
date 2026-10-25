@@ -22,6 +22,7 @@ from networth.web.fmt import western_grouping
 
 LAKH: Final = 100_000
 CRORE: Final = 10_000_000
+MILLION: Final = 1_000_000
 BIG_WORDS: Final = {
     "en": ("lakh", "crore"),
     "hi": ("लाख", "करोड़"),
@@ -110,10 +111,14 @@ def furthest(gaps: tuple[Gap, ...]) -> Gap | None:
 
 
 def short_money(n: int, currency: str, lang: str = "en") -> str:
-    """₹2.91 lakh, ₹1.2 crore or ₹68,640, as a person says it; $12,345 for dollars."""
+    """₹2.91 lakh, ₹1.2 crore or ₹68,640, as a person says it; $12,345 or $1.2M for dollars."""
     n = abs(n)
     if currency != "INR":
-        return f"${western_grouping(n)}"
+        return (
+            f"${f'{n / MILLION:.1f}'.rstrip('0').rstrip('.')}M"
+            if n >= MILLION
+            else (f"${western_grouping(n)}")
+        )
     lakh, crore = BIG_WORDS.get(lang, BIG_WORDS["en"])
     for size, word in ((CRORE, crore), (LAKH, lakh)):
         if n >= size:

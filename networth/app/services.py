@@ -31,6 +31,7 @@ from networth.holdings.snaptrade import SnapTrade
 from networth.keiki.client import KeikiApi
 from networth.keiki.mail import Mail
 from networth.llm import ChatModels, OpenAIModels
+from networth.ratings.sources import LiveSources, Sources
 from networth.watcher.pull import ExaSearch, NewsSearch
 from networth.watcher.store import Store as WatcherStore
 
@@ -56,6 +57,7 @@ class Services:
     prices: Prices | None = None  # current prices for holdings; None values them as read
     snaptrade: SnapTrade | None = None  # None builds one from the SnapTrade keys, if set
     site_url: str | None = None  # the dashboard site; page links go there when set
+    ratings: Sources | None = None  # rating data for the holdings action plan; None skips it
 
     @property
     def page_base(self) -> str | None:
@@ -105,6 +107,7 @@ class Services:
         base = cls(settings.data_dir, settings.public_url, link_secret=settings.link_secret,
                    mail=mail, keiki_email=settings.keiki_email,
                    prices=YahooPrices(), site_url=settings.site_url)  # fmt: skip
+        base = replace(base, ratings=LiveSources(base.watcher_db))
         try:
             cfg = load_config()
         except ConfigError as exc:

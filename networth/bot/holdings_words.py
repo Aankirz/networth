@@ -182,12 +182,6 @@ MATCHES: Final = {
     "hi": "आपकी होल्डिंग्स उसी तरह बँटी हैं जैसे आपका प्लान।",
     "hinglish": "Aapki holdings usi tarah bati hain jaise aapka plan.",
 }
-SHOW_PLAN: Final = {"en": "Show my plan", "hi": "मेरा प्लान दिखाएँ", "hinglish": "Mera plan dikhao"}
-HISTORY: Final = {
-    "en": "What would history say?",
-    "hi": "इतिहास क्या कहता है?",
-    "hinglish": "Itihaas kya kehta hai?",
-}
 BUCKET_WORDS: Final = {
     Bucket.GROWTH: {"en": "single shares or themes", "hi": "अलग शेयर या थीम",
                     "hinglish": "alag shares ya theme"},
@@ -206,3 +200,163 @@ NOT_A_PICK: Final = {
     "mix ke baare mein kya kehta hai.",
 }
 REMOVE_BUTTON: Final = {"en": "Remove it", "hi": "इसे हटा दो", "hinglish": "Ise hata do"}
+
+# --- the action plan after "That's everything" -----------------------------------------------
+PLAN_HEAD: Final = {
+    "en": "Here is how to get to your {name} plan.",
+    "hi": "आपके {name} प्लान तक ऐसे पहुँचा जा सकता है।",
+    "hinglish": "Aapke {name} plan tak aise pahuncha ja sakta hai.",
+}
+ON_PLAN: Final = {
+    "en": "On plan, your {total} would be about {parts}.",
+    "hi": "प्लान के हिसाब से आपके {total} में से लगभग {parts} होता।",
+    "hinglish": "Plan ke hisaab se aapke {total} mein se lagbhag {parts} hota.",
+}
+IN_PART: Final = {"en": "{amount} in {words}", "hi": "{amount} {words} में",
+                  "hinglish": "{amount} {words} mein"}  # fmt: skip
+INTO: Final = {"en": "about {amount} into {fund}", "hi": "लगभग {amount} {fund} में",
+               "hinglish": "lagbhag {amount} {fund} mein"}  # fmt: skip
+PATH_A: Final = {
+    "en": "Path A, rebalance now: trim about {amount}, weakest first, starting with {names}. "
+    "Then put {into}.",
+    "hi": "रास्ता A, अभी संतुलन: लगभग {amount} घटाकर, सबसे कमज़ोर से शुरू करके ({names})। फिर "
+    "{into} लगाया जा सकता है।",
+    "hinglish": "Raasta A, abhi santulan: lagbhag {amount} ghata kar, sabse kamzor se shuru "
+    "karke ({names}). Phir {into} lagaya ja sakta hai.",
+}
+PATH_B: Final = {
+    "en": "Path B, use new money: put your {monthly} a month into the parts below plan, and "
+    "you're on plan in about {months} months with nothing trimmed.",
+    "hi": "रास्ता B, नया पैसा: हर महीने के {monthly} प्लान से कम वाले हिस्सों में लगें, तो लगभग "
+    "{months} महीनों में आप प्लान पर होंगे, कुछ घटाए बिना।",
+    "hinglish": "Raasta B, naya paisa: har mahine ke {monthly} plan se kam wale hisson mein "
+    "lagaye jaayen, toh lagbhag {months} mahinon mein aap plan par honge, kuch ghataye bina.",
+}
+PATH_B_NEVER: Final = {
+    "en": "Path B, use new money: new money alone can't get there, because your plan has 0% in "
+    "{words}. Only trimming gets there.",
+    "hi": "रास्ता B, नया पैसा: सिर्फ़ नए पैसे से वहाँ नहीं पहुँचा जा सकता, क्योंकि आपके प्लान में "
+    "{words} 0% है। वहाँ सिर्फ़ घटाकर पहुँचा जा सकता है।",
+    "hinglish": "Raasta B, naya paisa: sirf naye paise se wahan nahin pahuncha ja sakta, kyunki "
+    "aapke plan mein {words} 0% hai. Wahan sirf ghata kar pahuncha ja sakta hai.",
+}
+PATH_B_NO_AMOUNT: Final = {
+    "en": "Path B, use new money: I don't have your monthly amount in {currency} yet, so I "
+    "can't count the months.",
+    "hi": "रास्ता B, नया पैसा: मेरे पास अभी {currency} में आपकी मासिक रकम नहीं है, इसलिए महीने "
+    "नहीं गिन सकता।",
+    "hinglish": "Raasta B, naya paisa: mere paas abhi {currency} mein aapki monthly rakam nahin "
+    "hai, isliye mahine nahin gin sakta.",
+}
+REBALANCE: Final = {"en": "Rebalance now", "hi": "अभी संतुलन", "hinglish": "Abhi santulan"}
+NEW_MONEY: Final = {"en": "Use new money", "hi": "नया पैसा", "hinglish": "Naya paisa"}
+WHY: Final = {"en": "Why these?", "hi": "ये क्यों?", "hinglish": "Yeh kyun?"}
+SHOW_NOW: Final = {"en": "Show me now", "hi": "अभी दिखाओ", "hinglish": "Abhi dikhao"}
+A_HEAD: Final = {"en": "Path A: rebalance now.", "hi": "रास्ता A: अभी संतुलन।",
+                 "hinglish": "Raasta A: abhi santulan."}  # fmt: skip
+B_HEAD: Final = {"en": "Path B: use new money.", "hi": "रास्ता B: नया पैसा।",
+                 "hinglish": "Raasta B: naya paisa."}  # fmt: skip
+TRIM_FIRST: Final = {"en": "Trim, weakest first:", "hi": "घटाने का क्रम, सबसे कमज़ोर पहले:",
+                     "hinglish": "Ghatane ka kram, sabse kamzor pehle:"}  # fmt: skip
+TRIM_ALL: Final = {
+    "en": "{n}. {name}: all of it, {amount}{note}",
+    "hi": "{n}. {name}: पूरा, {amount}{note}",
+    "hinglish": "{n}. {name}: poora, {amount}{note}",
+}
+TRIM_SOME: Final = {
+    "en": "{n}. {name}: about {amount} of its {value}{note}",
+    "hi": "{n}. {name}: इसके {value} में से लगभग {amount}{note}",
+    "hinglish": "{n}. {name}: iske {value} mein se lagbhag {amount}{note}",
+}
+DOWN_NOTE: Final = {"en": " (down {pct}%)", "hi": " ({pct}% नीचे)", "hinglish": " ({pct}% neeche)"}
+RATED_NOTE: Final = {"en": " (rated {view})", "hi": " (रेटिंग {view})",
+                     "hinglish": " (rating {view})"}  # fmt: skip
+THEN_PUT: Final = {"en": "Then put {into}.", "hi": "फिर {into} लगाया जा सकता है।",
+                   "hinglish": "Phir {into} lagaya ja sakta hai."}  # fmt: skip
+TAX_LOSS: Final = {
+    "en": "Tax: trimming these books a loss of about {amount}{biggest}. A booked loss can be set "
+    "off against capital gains.",
+    "hi": "टैक्स: इन्हें घटाने से लगभग {amount} का नुकसान दर्ज होता है{biggest}। दर्ज नुकसान को कैपिटल "
+    "गेन से घटाया जा सकता है।",
+    "hinglish": "Tax: inhe ghatane se lagbhag {amount} ka nuksaan darj hota hai{biggest}. Darj "
+    "nuksaan ko capital gains se ghataya ja sakta hai.",
+}
+TAX_GAIN: Final = {
+    "en": "Tax: trimming these books a gain of about {amount}, which is taxed as a capital gain.",
+    "hi": "टैक्स: इन्हें घटाने से लगभग {amount} का मुनाफ़ा दर्ज होता है, जिस पर कैपिटल गेन टैक्स लगता है।",
+    "hinglish": "Tax: inhe ghatane se lagbhag {amount} ka munafa darj hota hai, jis par capital "
+    "gains tax lagta hai.",
+}
+BIGGEST_LOSS: Final = {
+    "en": ", {name}'s {amount} the biggest",
+    "hi": ", सबसे बड़ा {name} का {amount}",
+    "hinglish": ", sabse bada {name} ka {amount}",
+}
+EACH_MONTH: Final = {"en": "Each month, put {into}.", "hi": "हर महीने {into} लगाया जा सकता है।",
+                     "hinglish": "Har mahine {into} lagaya ja sakta hai."}  # fmt: skip
+MONTHS: Final = {
+    "en": "At {monthly} a month you're on plan in about {months} months, with nothing trimmed.",
+    "hi": "हर महीने {monthly} से आप लगभग {months} महीनों में प्लान पर होंगे, कुछ घटाए बिना।",
+    "hinglish": "Har mahine {monthly} se aap lagbhag {months} mahinon mein plan par honge, kuch "
+    "ghataye bina.",
+}
+WHY_ORDER: Final = {
+    "en": "Weakest first means the lowest rating first, then the deepest loss, then the biggest "
+    "holding. Trimming those first keeps the strongest part of what you own.",
+    "hi": "सबसे कमज़ोर पहले का मतलब है: सबसे कम रेटिंग पहले, फिर सबसे गहरा नुकसान, फिर सबसे बड़ी "
+    "होल्डिंग। इन्हें पहले घटाने से आपकी सबसे मज़बूत होल्डिंग बची रहती है।",
+    "hinglish": "Sabse kamzor pehle ka matlab hai: sabse kam rating pehle, phir sabse gehra "
+    "nuksaan, phir sabse badi holding. Inhe pehle ghatane se aapki sabse mazboot holding bachi "
+    "rehti hai.",
+}
+WHY_INDEX: Final = {
+    "en": "{fund} holds the whole market in one fund, so no single company can sink it, and it "
+    "costs little to hold.",
+    "hi": "{fund} एक ही फ़ंड में पूरा बाज़ार रखता है, इसलिए कोई एक कंपनी उसे डुबा नहीं सकती, और इसे "
+    "रखने का खर्च कम है।",
+    "hinglish": "{fund} ek hi fund mein poora bazaar rakhta hai, isliye koi ek company use duba "
+    "nahin sakti, aur ise rakhne ka kharcha kam hai.",
+}
+WHY_SAFE: Final = {
+    "en": "{fund} keeps money steady and ready to use, for the share of your plan meant to stay "
+    "safe.",
+    "hi": "{fund} पैसे को स्थिर और काम के लिए तैयार रखता है, आपके प्लान के उस हिस्से के लिए जो सुरक्षित रहना है।",
+    "hinglish": "{fund} paise ko sthir aur kaam ke liye taiyaar rakhta hai, aapke plan ke us "
+    "hisse ke liye jo surakshit rehna hai.",
+}
+# What a part below plan is filled with, by the market the money is in, then as a sentence's
+# subject for "Why these?".
+FUNDS: Final = {
+    "INR": {
+        Bucket.SAFETY: {"en": "a liquid fund (such as LIQUIDBEES)",
+                        "hi": "लिक्विड फ़ंड (जैसे LIQUIDBEES)",
+                        "hinglish": "liquid fund (jaise LIQUIDBEES)"},
+        Bucket.CORE: {"en": "a Nifty 50 index fund or ETF (such as UTI Nifty 50 Index Fund or "
+                            "NIFTYBEES)",
+                      "hi": "निफ़्टी 50 इंडेक्स फ़ंड या ETF (जैसे UTI Nifty 50 Index Fund या NIFTYBEES)",
+                      "hinglish": "Nifty 50 index fund ya ETF (jaise UTI Nifty 50 Index Fund ya "
+                                  "NIFTYBEES)"},
+        Bucket.GROWTH: {"en": "single shares or a sector fund", "hi": "अलग शेयर या सेक्टर फ़ंड",
+                        "hinglish": "alag shares ya sector fund"},
+    },
+    "USD": {
+        Bucket.SAFETY: {"en": "a money market fund or a Treasury bill ETF (such as SGOV)",
+                        "hi": "मनी मार्केट फ़ंड या ट्रेज़री बिल ETF (जैसे SGOV)",
+                        "hinglish": "money market fund ya Treasury bill ETF (jaise SGOV)"},
+        Bucket.CORE: {"en": "an S&P 500 index fund or ETF (such as VOO)",
+                      "hi": "S&P 500 इंडेक्स फ़ंड या ETF (जैसे VOO)",
+                      "hinglish": "S&P 500 index fund ya ETF (jaise VOO)"},
+        Bucket.GROWTH: {"en": "single shares or a sector fund", "hi": "अलग शेयर या सेक्टर फ़ंड",
+                        "hinglish": "alag shares ya sector fund"},
+    },
+}  # fmt: skip
+FUND_KINDS: Final = {
+    "INR": {Bucket.SAFETY: {"en": "A liquid fund", "hi": "लिक्विड फ़ंड",
+                            "hinglish": "Liquid fund"},
+            Bucket.CORE: {"en": "A Nifty 50 index fund", "hi": "निफ़्टी 50 इंडेक्स फ़ंड",
+                          "hinglish": "Nifty 50 index fund"}},
+    "USD": {Bucket.SAFETY: {"en": "A money market fund", "hi": "मनी मार्केट फ़ंड",
+                            "hinglish": "Money market fund"},
+            Bucket.CORE: {"en": "An S&P 500 index fund", "hi": "S&P 500 इंडेक्स फ़ंड",
+                          "hinglish": "S&P 500 index fund"}},
+}  # fmt: skip
