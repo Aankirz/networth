@@ -339,3 +339,6 @@
 ## 2026-10-25 — Phase 5 results, findings and report
 - evals/results/: cached news, words (rerun after the fixture crash), trace and the one vault run; evals/words.py test user goal fixed to `growth`; evals/report.py adds the by-cutoff table.
 - docs/phases/phase-5-findings.md: 5 product changes with failing examples and file:line, none applied. docs/phases/phase-5-report.md: method, results, gaps, deviations, plan hash and spend ($1.22 of $15).
+
+## 2026-10-25 — Keep the measured spend on a clean clone
+- evals/__main__.py: with no data/llm_calls.jsonl, `make evals` keeps the spend from the cached summary instead of writing "not measured" over it.

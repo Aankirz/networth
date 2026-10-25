@@ -121,7 +121,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         WALKFORWARD_JSON.unlink(missing_ok=True)
     results = {"walkforward": walkforward_stage(), "vault": read_json(RESULTS / "vault.json")}
     results |= {name: paid_stage(name, name in rerun) for name in PAID}
-    results["spend_usd"] = round(spend.phase_usd(), 4) if spend.CALL_LOG.exists() else None
+    # A clean clone has no call log, so it keeps the spend the last run measured.
+    cached = (read_json(RESULTS / "summary.json") or {}).get("spend_usd")
+    results["spend_usd"] = round(spend.phase_usd(), 4) if spend.CALL_LOG.exists() else cached
     write_json(RESULTS / "summary.json", report.summary(results, dt.date.today()))
     report.write(results)
     return 0
