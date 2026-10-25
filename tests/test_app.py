@@ -88,7 +88,7 @@ def test_webhook_with_the_secret_stores_a_profile_at_the_first_step(
     assert post_update(app, text_update("/start"), SECRET) == (200, {"ok": True})
     profile = store.get_profile("tg:4242")
     assert profile is not None
-    assert (profile.step, profile.status) == (Step.GOAL, Status.ACTIVE)
+    assert (profile.step, profile.status) == (Step.LANG, Status.ACTIVE)
 
 
 def test_webhook_answers_200_even_when_handling_fails(store: Store) -> None:

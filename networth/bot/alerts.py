@@ -7,7 +7,8 @@ An Insight qualifies when its odds() row has at least alert_min_episodes episode
 weak signal, and its hit rate sits at least alert_min_gap from the normal rate. Each user gets
 at most one alert per event, in their own markets, claimed before it is sent so a rerun never
 sends it twice; a failed send releases its claim so the next run retries it. Paused, stopped
-and pull-only (alerts off) users get nothing.
+and pull-only (alerts off) users get nothing. The words are code-written in the user's language,
+with no model: one title, the history line, a calm reminder that the plan is theirs, the footer.
 """
 
 from __future__ import annotations
@@ -16,20 +17,37 @@ import logging
 from collections.abc import Iterable, Sequence
 from typing import Final
 
-from networth import brief
+from networth import brief, guard
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
+from networth.bot.message import FOOTER, Message, plain, say
+from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot
-from networth.chat.answer import Answer, deliver
+from networth.brief.lines import day_words, type_words
 from networth.config import ProductConfig
 from networth.engine.backtest import market_of
 from networth.watcher.store import Insight
-from networth.web import names
 
 log = logging.getLogger("networth.bot")
 
-ALERT_TASK: Final = "Tell a beginner, in a short chat message, about this rare market alert."
+TITLE: Final = {
+    "en": "A rare one: {title} on {day}, confirmed.",
+    "hi": "कभी-कभार आने वाला अलर्ट: {day} को {title} की पुष्टि हुई।",
+    "hinglish": "Kabhi-kabhaar aane wala alert: {day} ko {title} confirm hua.",
+}
+SHOCKS: Final = {
+    "en": "Shocks like this have happened before.",
+    "hi": "ऐसे झटके पहले भी आए हैं।",
+    "hinglish": "Aise jhatke pehle bhi aaye hain.",
+}
+YOURS: Final = {
+    "en": "History's counts are context, not a forecast. Your plan doesn't change unless you "
+    "change it.",
+    "hi": "इतिहास की गिनती सिर्फ़ संदर्भ है, कोई अनुमान नहीं। आपका प्लान तभी बदलता है जब आप उसे बदलते हैं।",
+    "hinglish": "History ki ginti sirf context hai, forecast nahin. Aapka plan tabhi badalta hai "
+    "jab aap use badalte hain.",
+}
 
 
 def qualifies(i: Insight, rules: ProductConfig) -> bool:
@@ -43,12 +61,14 @@ def event_key(i: Insight) -> str:
     return f"{i.type}:{i.event_date}"
 
 
-def alert_text(i: Insight) -> str:
+def alert_message(i: Insight, lang: str | None) -> Message:
     o = i.odds
     line = brief.odds_line(i.type, o, int(o["n_episodes"]), False)
-    return (f"A rare one. {names.TYPES[i.type].title}, {i.event_date:%b} {i.event_date.day}, "
-            f"confirmed.\n\n{line.words('en')}\n\nHistory's counts are context, not a "
-            "forecast. Your plan doesn't change unless you change it.")  # fmt: skip
+    title = say(TITLE, lang).format(title=type_words(i.type, lang).title,
+                                    day=day_words(i.event_date, lang))  # fmt: skip
+    body = (line.words(lang), *([say(SHOCKS, lang)] if i.type in brief.STRESS_TYPES else []),
+            say(YOURS, lang))  # fmt: skip
+    return Message(title, body, footer=say(FOOTER, lang))
 
 
 def wants_alerts(p: Profile) -> bool:
@@ -75,14 +95,15 @@ def run_alerts(
     sent = 0
     for p in (p for p in store.profiles() if rare and wants_alerts(p)):
         for i in for_user(p, rare):
-            text = alert_text(i)
+            m = alert_message(i, p.lang)
+            text = plain(m)
             if not store.claim_alert(p.user_id, event_key(i), now_month,
                                      rules.alert_max_per_month, text):  # fmt: skip
                 continue
             try:
-                reply = deliver(Answer(text, text, ALERT_TASK, kind="alert"), p.lang or "en",
-                                services)  # fmt: skip
-                sent += send(store, bot, p, reply, proactive=True, mail=services.mail)
+                guard.log_verdict(services.guard_log, "alert", "template",
+                                  guard.check(text, text))  # fmt: skip
+                sent += send(store, bot, p, Reply(m), proactive=True, mail=services.mail)
             except Exception:
                 store.release_alert(p.user_id, event_key(i))
                 log.exception("alert %s for %s failed", event_key(i), p.user_id)

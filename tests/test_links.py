@@ -15,6 +15,7 @@ from networth.app import links
 from networth.app.services import Services
 from networth.app.settings import Settings
 from networth.app.store import Step, Store
+from networth.bot.message import Link
 from networth.web.routes import router, settings
 from tests.test_onboarding import USER, Chat, onboard
 
@@ -86,17 +87,20 @@ def test_a_tampered_link_gets_the_friendly_404(chat: Chat, client) -> None:
 
 
 def test_plan_command_hands_out_a_working_link(chat: Chat, client) -> None:
-    chat.say("/plan")
-    reply = next(t for t in reversed(chat.bot.texts) if t.startswith("Your plan:"))
-    url = reply.rsplit(" ", 1)[-1]
+    url = page_link(chat)
     assert url.startswith("https://nw.example/u/")
     assert client.get(url.removeprefix("https://nw.example")).status_code == 200
 
 
-def plan_link(chat: Chat) -> str:
+def page_link(chat: Chat) -> str:
+    """The page link /plan sends, read from the message it built."""
     chat.say("/plan")
-    reply = next(t for t in reversed(chat.bot.texts) if t.startswith("Your plan:"))
-    return reply.rsplit(" ", 1)[-1].removeprefix("https://nw.example")
+    m = next(m for m in reversed(chat.bot.messages) if m.title == "Your plan")
+    return next(b.url for b in m.body if isinstance(b, Link))
+
+
+def plan_link(chat: Chat) -> str:
+    return page_link(chat).removeprefix("https://nw.example")
 
 
 def test_a_fresh_link_retires_every_older_one(chat: Chat, client) -> None:

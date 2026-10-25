@@ -158,7 +158,7 @@ def user_id_for(chat_id: int) -> str:
 
 def new_profile(chat_id: int, now: str) -> Profile:
     return Profile(
-        user_id=user_id_for(chat_id), channel=CHANNEL, chat_id=chat_id, step=Step.GOAL,
+        user_id=user_id_for(chat_id), channel=CHANNEL, chat_id=chat_id, step=Step.LANG,
         link_token=secrets.token_urlsafe(LINK_TOKEN_BYTES), created_at=now, updated_at=now,
     )  # fmt: skip
 
@@ -171,7 +171,7 @@ def email_user_id(address: str) -> str:
 
 def new_email_profile(address: str, now: str) -> Profile:
     return Profile(
-        user_id=email_user_id(address), channel=Channel.EMAIL, chat_id=0, step=Step.GOAL,
+        user_id=email_user_id(address), channel=Channel.EMAIL, chat_id=0, step=Step.LANG,
         link_token=secrets.token_urlsafe(LINK_TOKEN_BYTES), created_at=now, updated_at=now,
         deliver_to=Channel.EMAIL,
     )  # fmt: skip

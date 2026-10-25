@@ -72,8 +72,8 @@ def run_one(services: Services, store: Store, category: str, text: str, forwarde
                  "expected_lang": expected}  # fmt: skip
     try:
         intent = chat.classify(text, forwarded, services)
-        answer = chat.HANDLERS[intent](store, USER, text, services, NOW)
         lang = chat.reply_lang(text, USER)
+        answer = chat.HANDLERS[intent](store, USER, text, services, NOW, lang)
         reply = deliver(answer, lang, services)
     except Exception as exc:  # noqa: BLE001 - a crash is a result to report, not to hide
         return {**out, "error": f"{type(exc).__name__}: {exc}"}

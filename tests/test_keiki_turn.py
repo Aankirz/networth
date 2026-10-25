@@ -83,19 +83,23 @@ def test_a_new_contact_is_set_up_by_email_in_four_answers(tmp_path: Path) -> Non
     keiki = Keiki(tmp_path)
     keiki.say("Hello")
     assert keiki.last.startswith("Hi, I'm Networth.")
+    assert keiki.last.endswith("Reply with one of: English, हिंदी, Hinglish")
+    keiki.say("English")
     assert keiki.last.endswith("Reply with one of: A house, Retirement, Education, Just growing it")
-    for answer in ("retirement", "1 lakh", "5", "English"):
+    for answer in ("retirement", "1 lakh", "5"):
         keiki.say(answer)
     p = keiki.profile()
     assert (p.channel, p.chat_id, p.deliver_to, p.step) == ("email", 0, Channel.EMAIL, Step.DONE)
     assert (p.goal, p.monthly_amount, p.invest_day, p.lang) == ("retirement", 100_000, 5, "en")
-    assert keiki.last.startswith("You're set. I'll write on the 5th of each month")
+    assert keiki.last.startswith("You're set.\n\nI'll write on the 5th of each month")
+    assert keiki.last.endswith("Research, not advice.")
     assert ADDRESS not in p.user_id, "the address never becomes a user id in logs"
 
 
 def test_a_bad_answer_by_email_gets_a_retry_and_the_same_question(tmp_path: Path) -> None:
     keiki = Keiki(tmp_path)
     keiki.say("Hello")
+    keiki.say("English")
     keiki.say("house")
     keiki.say("lots")
     assert keiki.profile().step is Step.AMOUNT
@@ -106,7 +110,7 @@ def test_start_by_email_restarts_the_short_setup(tmp_path: Path) -> None:
     keiki = Keiki(tmp_path)
     set_up(keiki)
     keiki.say("/start")
-    assert keiki.profile().step is Step.GOAL
+    assert keiki.profile().step is Step.LANG
     assert keiki.last.startswith("Hi, I'm Networth.")
 
 

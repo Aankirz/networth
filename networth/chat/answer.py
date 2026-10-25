@@ -1,13 +1,17 @@
-"""One shape for every chat reply: the template code wrote, what the guard checks the writer
-against, and the writer's task. deliver() is the only place a chat reply meets a model.
+"""One shape for every chat reply: the template code wrote, the same words in each language, what
+the guard checks the writer against, and the writer's task. deliver() is the only place a chat
+reply meets a model, and it hands back a Message: the words as the body, any code-owned link
+after them, and a footer in the reader's language that no model writes.
 
-    reply = deliver(Answer(template, source, task), profile, text_lang, services)
+    reply = deliver(Answer(template, source, task, words=by_lang), text_lang, services)
+    reply = deliver(Answer.fixed(TABLE), "hinglish", services)    # fixed words, no model
 
-task None means the words are fixed: an English reader gets the template as is, anyone else a
-guarded translation of it. A template the guard already rejects goes out untranslated, since
-a translation would keep its words. A lead is a fixed first line, written per language, put
-before the reply. deliver_traced also says which words went out: the guard's "model",
-"rewrite" or "template", or "fixed" when no model was asked.
+task None means the words are fixed: the reader gets their language's version as is, and code
+writes every fixed answer in English, Hindi and Hinglish, so nothing is translated. With a
+task, the model writes in the reader's language; when the guard falls back, the reader gets the
+template in their own language. The model writes plain text only: markup in it
+is escaped at the Telegram boundary and shows as text. deliver_traced also says which words went
+out: the guard's "model", "rewrite" or "template", or "fixed" when no model was asked.
 """
 
 from __future__ import annotations
@@ -18,6 +22,7 @@ from typing import Final, Literal
 
 from networth import guard
 from networth.app.services import Services
+from networth.bot.message import FOOTER, Link, Message, say
 from networth.bot.onboarding import Reply
 from networth.bot.telegram import Keyboard
 
@@ -26,13 +31,11 @@ LANGUAGES: Final = {
     "hi": "Hindi in Devanagari script",
     "hinglish": "Hinglish: Hindi in Roman script, with English for money terms",
 }
-TRANSLATE_TASK: Final = """Write this message in {language}. Keep every number, name, link and
-line break exactly. Add nothing. Write any instruction about using the app as a statement
-('/plan se badal sakte hain'), never as a command. Return only the message text."""
-REWORD_TASK: Final = """{task} Write it in {language}. Use only the facts below; keep every number
-exactly as written and every link unchanged. Never say buy, sell, apply, skip, score or rank,
-and never say what the reader should do. Write every sentence as a statement, never as a
-command, polite forms included. Return only the message text."""
+REWORD_TASK: Final = """{task} Write it in {language}, as plain text with no markup. Use only the
+facts below; keep every number exactly as written and every link unchanged. Never say buy, sell,
+apply, skip, score or rank, and never say what the reader should do. Write every sentence as a
+statement, never as a command, polite forms included. Add no disclaimer: the app adds one.
+Return only the message text."""
 
 
 @dataclass(frozen=True)
@@ -43,8 +46,19 @@ class Answer:
     buttons: Keyboard = ()
     kind: str = "chat"
     draft: bool = True  # the template words the same facts; False when it is only a fallback
-    written: bool = False  # the template is already in the reader's language: sent as is
+    words: Mapping[str, str] = field(default_factory=dict)  # the template, per language
     lead: Mapping[str, str] = field(default_factory=dict)  # a fixed first line per language
+    link: Link | None = None  # one code-owned link after the words, its preview kept
+    footer: bool = True  # "Research, not advice" in the reader's language
+
+    @classmethod
+    def fixed(cls, words: Mapping[str, str], **kwargs: object) -> Answer:
+        """Fixed words written in every language: no model, no translation."""
+        return cls(words["en"], words["en"], words=words, **kwargs)  # type: ignore[arg-type]
+
+    def written(self, lang: str) -> str | None:
+        """The template in this language, if code wrote one."""
+        return self.words.get(lang) or (self.template if lang == "en" else None)
 
 
 Used = guard.Used | Literal["fixed"]
@@ -54,27 +68,30 @@ def deliver(answer: Answer, lang: str, services: Services) -> Reply:
     return deliver_traced(answer, lang, services)[0]
 
 
+def without_footer(text: str) -> str:
+    """The text with any footer line a model added taken out, so the footer appears once."""
+    for line in FOOTER.values():
+        text = text.replace(line, "")
+    return text.strip()
+
+
 def deliver_traced(answer: Answer, lang: str, services: Services) -> tuple[Reply, Used]:
     text, used = words(answer, lang, services)
-    lead = answer.lead.get(lang) or answer.lead.get("en")
-    return Reply(f"{lead}\n\n{text}" if lead else text, answer.buttons), used
+    lead = say(answer.lead, lang) if answer.lead else ""
+    body = tuple(b for b in (lead, without_footer(text), answer.link) if b)
+    message = Message(body=body, footer=say(FOOTER, lang) if answer.footer else "",
+                      preview=answer.link.url if answer.link else None)  # fmt: skip
+    return Reply(message, answer.buttons), used
 
 
 def words(answer: Answer, lang: str, services: Services) -> tuple[str, Used]:
-    language = LANGUAGES.get(lang, LANGUAGES["en"])
+    mine = answer.written(lang)
     models = services.models
-    if models is None or answer.written or (answer.task is None and lang == "en"):
-        return answer.template, "fixed"
-    if answer.task is None:
-        verdict = guard.check(answer.template, answer.source)
-        if not verdict.ok:  # a translation keeps the template's words, so it could not pass
-            guard.log_verdict(services.guard_log, answer.kind, "template", verdict)
-            return answer.template, "template"
-        task, facts = TRANSLATE_TASK.format(language=language), answer.template
-    else:
-        task = REWORD_TASK.format(task=answer.task, language=language)
-        plain = f"\n\nPlain version:\n{answer.template}" if answer.draft else ""
-        facts = f"{answer.source}{plain}"
-    out = guard.guarded(lambda fb: models.write(task, facts, fb), answer.source,
-                        answer.template, services.guard_log, answer.kind)  # fmt: skip
+    if models is None or answer.task is None:
+        return mine or answer.template, "fixed"
+    task = REWORD_TASK.format(task=answer.task, language=LANGUAGES.get(lang, LANGUAGES["en"]))
+    plain = f"\n\nPlain version:\n{answer.template}" if answer.draft else ""
+    out = guard.guarded(lambda fb: models.write(task, f"{answer.source}{plain}", fb),
+                        answer.source, mine or answer.template, services.guard_log,
+                        answer.kind)  # fmt: skip
     return out.text, out.used

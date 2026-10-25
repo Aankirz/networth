@@ -81,10 +81,10 @@ def test_link_gives_a_code_the_inbox_and_how_long_it_lasts(chat: Chat) -> None:
 def test_a_code_sent_by_email_links_that_contact_to_the_telegram_user(tmp_path, chat) -> None:
     keiki = Keiki(tmp_path, chat.services)
     keiki.say(f"my code is {link_code(chat)}", now=NOW)
-    assert keiki.last == LINKED
+    assert keiki.last == LINKED["en"]
     assert keiki.profile().user_id == USER
     keiki.say("/plan", now=NOW)
-    assert any(t.startswith("Your plan: Balanced.") for t in keiki.client.texts)
+    assert any(t.startswith("Your plan\n\nBalanced.") for t in keiki.client.texts)
 
 
 def test_a_code_works_only_once(tmp_path: Path, chat: Chat) -> None:
@@ -133,7 +133,7 @@ def test_an_email_profile_can_be_relinked_to_telegram(tmp_path: Path, chat: Chat
 
 def test_sendto_email_needs_a_linked_email(tmp_path: Path, chat: Chat) -> None:
     chat.say("/sendto email")
-    assert chat.bot.last.startswith("Link your email first")
+    assert chat.bot.last.startswith("Your email isn't linked yet")
     assert chat.profile.deliver_to == Channel.TELEGRAM
     Keiki(tmp_path, chat.services).say(link_code(chat), now=NOW)
     chat.say("/sendto email")

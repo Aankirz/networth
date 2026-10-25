@@ -43,7 +43,7 @@ def alerts(chat: Chat, *insights: Insight) -> int:
 
 def test_a_long_uneven_history_sends_one_alert(chat: Chat) -> None:
     assert alerts(chat, insight(9)) == 1
-    assert chat.bot.last.startswith("A rare one. RBI rate hike, Oct 9, confirmed.")
+    assert chat.bot.last.startswith("A rare one: RBI rate hike on Oct 9, confirmed.")
     assert "in 10 of 12 past RBI rate hikes" in chat.bot.last
 
 

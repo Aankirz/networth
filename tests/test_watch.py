@@ -46,10 +46,11 @@ def test_a_topic_maps_to_its_event_type_and_a_name_to_an_entity() -> None:
 def test_a_price_target_or_a_trade_trigger_is_refused() -> None:
     refused = parse_watch("tell me when HDFC hits 1800 so I can buy")
     assert refused == Refusal("HDFC")
-    assert refused.text == (
+    assert refused.text("en") == (
         "I don't watch prices or tell anyone when to trade. I can tell you when a confirmed "
-        "story about HDFC appears. Try: watch HDFC."
+        "story about HDFC appears: watch HDFC."
     )
+    assert refused.text("hinglish").startswith("Main prices")
     assert isinstance(parse_watch("alert me if Nifty crosses 25,000"), Refusal)
     assert isinstance(parse_watch("watch Reliance target price"), Refusal)
 
@@ -59,15 +60,19 @@ def test_nothing_to_watch_or_a_long_sentence_parses_to_none() -> None:
     assert parse_watch("let me know when anything at all big happens anywhere") is None
 
 
-def test_every_reply_passes_the_guards_word_rules() -> None:
-    replies = [watch.USAGE, watch.REFUSAL_GENERIC, watch.WATCHING_GENERIC, watch.NO_WATCHES,
-               watch.UNWATCH_USAGE, watch.WATCH_STOPPED, watch.at_cap(5), Refusal("HDFC").text,
-               *(watch.watching(t.label) for t in watch.TOPICS)]  # fmt: skip
+@pytest.mark.parametrize("lang", ["en", "hi", "hinglish"])
+def test_every_reply_passes_the_guards_word_rules(lang: str) -> None:
+    tables = (watch.USAGE, watch.NO_WATCHES, watch.UNWATCH_USAGE, watch.WATCH_STOPPED)
+    replies = [*(t[lang] for t in tables), watch.at_cap(5, lang), Refusal("HDFC").text(lang),
+               Refusal(None).text(lang), watch.watching("it", lang),
+               *(watch.watching(t.label, lang) for t in watch.TOPICS)]  # fmt: skip
     assert [r for r in replies if not guard.check(r, r).ok] == []
 
 
-def test_a_reply_quoting_words_the_guard_rejects_falls_back_to_fixed_words() -> None:
-    assert watch.watching("sure shot picks") == watch.WATCHING_GENERIC
+@pytest.mark.parametrize("lang", ["en", "hi", "hinglish"])
+def test_a_reply_quoting_words_the_guard_rejects_falls_back_to_fixed_words(lang: str) -> None:
+    fallback = watch.WATCHING[lang].format(label=watch.IT[lang])
+    assert watch.watching("sure shot picks", lang) == fallback
 
 
 @pytest.fixture
@@ -155,10 +160,10 @@ def test_a_confirmed_match_is_sent_once_and_not_on_the_next_run(chat: Chat) -> N
     chat.say("/watch RBI rate changes")
     story(chat, "s1", "RBI raises repo rate to 5.50%", type="rbi_hike")
     assert watches(chat) == 1
-    assert chat.bot.last.startswith(
-        "You asked me to watch RBI rate changes. The watcher confirmed it: RBI raises repo rate "
-        "to 5.50%.\nSource: rbi.org.in"
-    )
+    assert chat.bot.messages[-1].title == "Something you're watching: RBI rate changes."
+    assert ("The watcher confirmed it: RBI raises repo rate to 5.50%.\nSource: rbi.org.in"
+            in chat.bot.last)  # fmt: skip
+    assert chat.bot.last.endswith("Research, not advice.")
     assert watches(chat) == 0
 
 
@@ -185,7 +190,8 @@ def test_a_match_with_history_carries_the_engine_line_and_the_why_link(chat: Cha
     db.close()
     assert watches(chat) == 1
     assert "in 10 of 12 past RBI rate hikes" in chat.bot.last
-    assert chat.bot.last.endswith("Why: https://nw.example/why/rbi_hike/^NSEBANK")
+    assert "Why these counts?: https://nw.example/why/rbi_hike/^NSEBANK" in chat.bot.last
+    assert chat.bot.messages[-1].preview == "https://nw.example/why/rbi_hike/^NSEBANK"
 
 
 def test_no_more_than_four_watch_messages_a_month(chat: Chat) -> None:

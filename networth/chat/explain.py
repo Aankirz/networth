@@ -40,16 +40,27 @@ EXPLAIN_TASK: Final = """Explain the text below to a first-time investor, in a s
 message under 180 words. Say what it is, then the few numbers that matter and what each one
 means in plain words (use the glossary), then any risk or condition the text itself states.
 Give no opinion on whether it is good, and say nothing about what the reader should do."""
-NOT_EXPLAINED: Final = (
-    "I couldn't write a plain-words version I could check against what you sent, so I'm not "
-    "sending one. Try again in a few minutes."
-)
-CANT_FETCH: Final = (
-    "I couldn't open that link. Paste the text, or send a screenshot, and I'll explain it."
-)
-CANT_READ: Final = (
-    "I couldn't read the text in that image. Send a clearer screenshot, or paste the text."
-)
+NOT_EXPLAINED: Final = {
+    "en": "I couldn't write a plain-words version I could check against what you sent, so I'm "
+    "not sending one. You can send it again in a few minutes.",
+    "hi": "मैं इसका ऐसा आसान रूप नहीं लिख पाया जिसे आपके भेजे हुए से मिलाकर जाँच सकूँ, इसलिए "
+    "नहीं भेज रहा। कुछ मिनट बाद इसे फिर भेज सकते हैं।",
+    "hinglish": "Main iska aisa aasaan version nahin likh paaya jise aapke bheje hue se check "
+    "kar sakoon, isliye nahin bhej raha. Kuch minute baad ise phir bhej sakte hain.",
+}
+CANT_FETCH: Final = {
+    "en": "I couldn't open that link. If you paste the text or send a screenshot, I'll explain it.",
+    "hi": "मैं वह लिंक नहीं खोल पाया। अगर आप टेक्स्ट या स्क्रीनशॉट भेजते हैं, तो मैं उसे समझा दूँगा।",
+    "hinglish": "Main woh link nahin khol paaya. Agar aap text ya screenshot bhejte hain, toh "
+    "main use samjha doonga.",
+}
+CANT_READ: Final = {
+    "en": "I couldn't read the text in that image. If you send a clearer screenshot or paste "
+    "the text, I'll explain it.",
+    "hi": "मैं उस तस्वीर का टेक्स्ट नहीं पढ़ पाया। अगर आप साफ़ स्क्रीनशॉट या टेक्स्ट भेजते हैं, तो मैं उसे समझा दूँगा।",
+    "hinglish": "Main us image ka text nahin padh paaya. Agar aap saaf screenshot ya text "
+    "bhejte hain, toh main use samjha doonga.",
+}
 URL: Final = re.compile(r"https?://[^\s<>\"'()\[\]]+")
 # ponytail: a word and host list, not a classifier. Add a host when a new mail tracker shows up.
 SKIP_HOSTS: Final = (
@@ -124,16 +135,17 @@ def page_text(url: str, client: httpx2.Client | None = None) -> str:
 
 
 def explain_text(text: str) -> Answer:
-    return Answer(NOT_EXPLAINED, text[:SOURCE_CHARS], EXPLAIN_TASK, kind="explain", draft=False)
+    return Answer(NOT_EXPLAINED["en"], text[:SOURCE_CHARS], EXPLAIN_TASK, kind="explain",
+                  draft=False, words=NOT_EXPLAINED)  # fmt: skip
 
 
 def explain_link(url: str) -> Answer:
     try:
         text = page_text(url)
     except (Blocked, httpx2.HTTPError, UnicodeError):
-        return Answer(CANT_FETCH, CANT_FETCH)
+        return Answer.fixed(CANT_FETCH)
     if not text:
-        return Answer(CANT_FETCH, CANT_FETCH)
+        return Answer.fixed(CANT_FETCH)
     return explain_text(text)
 
 
@@ -145,9 +157,9 @@ def explain_message(text: str) -> Answer:
 
 def explain_image(image: bytes, services: Services) -> Answer:
     if services.models is None:
-        return Answer(CANT_READ, CANT_READ)
+        return Answer.fixed(CANT_READ)
     try:
         text = services.models.read_image(image, IMAGE_MIME)
     except (net.CallFailed, NoAnswer):
-        return Answer(CANT_READ, CANT_READ)
+        return Answer.fixed(CANT_READ)
     return explain_text(text)

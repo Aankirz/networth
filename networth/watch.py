@@ -18,6 +18,7 @@ from typing import Final
 
 from networth import guard
 from networth.app.store import WatchKind
+from networth.bot.message import say
 from networth.engine.model import EventType
 
 MAX_ENTITY_WORDS: Final = 5
@@ -68,22 +69,70 @@ LEAD: Final = re.compile(
 TAIL: Final = re.compile(r"(?:\s+(?:news|stocks?|shares|updates|for me|please))+$", re.IGNORECASE)
 EDGES: Final = " \t\n.,!?;:'\"“”"
 
-USAGE: Final = (
-    "Tell me what to watch, for example: watch RBI rate changes, or watch HDFC Bank. I'll "
-    "message you only when a confirmed story appears."
-)
-REFUSE_LEAD: Final = "I don't watch prices or tell anyone when to trade."
-REFUSAL_GENERIC: Final = (
-    f"{REFUSE_LEAD} I can tell you when a confirmed story about a company or an event "
-    "appears. Try: watch RBI rate changes."
-)
-WATCHING_GENERIC: Final = (
-    "Watching it. I'll stay quiet until the watcher confirms a story about it. "
-    "Type /watches to see or stop your watches."
-)
-NO_WATCHES: Final = "You have no watches. Try: watch RBI rate changes."
-UNWATCH_USAGE: Final = "Type /unwatch and a number from /watches, like /unwatch 1."
-WATCH_STOPPED: Final = "Stopped. That watch is off."
+USAGE: Final = {
+    "en": "Tell me what to watch, like: watch RBI rate changes, or watch HDFC Bank. I'll message "
+    "you only when a confirmed story appears.",
+    "hi": "किसी चीज़ पर नज़र रखने के लिए ऐसे लिख सकते हैं: watch RBI rate changes, या watch HDFC "
+    "Bank। पुष्ट ख़बर आने पर ही मैं आपको मैसेज करूँगा।",
+    "hinglish": "Kisi cheez par nazar rakhne ke liye aise likh sakte hain: watch RBI rate "
+    "changes, ya watch HDFC Bank. Confirmed story aane par hi main aapko message karoonga.",
+}
+REFUSE_LEAD: Final = {
+    "en": "I don't watch prices or tell anyone when to trade.",
+    "hi": "मैं कीमतों पर नज़र नहीं रखता, और न ही किसी को बताता हूँ कि कब ट्रेड करना है।",
+    "hinglish": "Main prices par nazar nahin rakhta, aur na hi kisi ko batata hoon ki kab trade "
+    "karna hai.",
+}
+REFUSE_OFFER: Final = {
+    "en": "I can tell you when a confirmed story about a company or an event appears. For "
+    "example: watch RBI rate changes.",
+    "hi": "किसी कंपनी या घटना के बारे में पुष्ट ख़बर आने पर मैं बता सकता हूँ। जैसे: watch RBI rate changes।",
+    "hinglish": "Kisi company ya event ke baare mein confirmed story aane par main bata sakta "
+    "hoon. Jaise: watch RBI rate changes.",
+}
+REFUSE_ENTITY: Final = {
+    "en": "I can tell you when a confirmed story about {entity} appears: watch {entity}.",
+    "hi": "{entity} के बारे में पुष्ट ख़बर आने पर मैं बता सकता हूँ: watch {entity}।",
+    "hinglish": "{entity} ke baare mein confirmed story aane par main bata sakta hoon: watch "
+    "{entity}.",
+}
+WATCHING: Final = {
+    "en": "Watching {label}. I'll stay quiet until the watcher confirms a story about it. "
+    "/watches shows your watches and stops them.",
+    "hi": "{label} पर नज़र है। जब तक वॉचर इसके बारे में किसी ख़बर की पुष्टि नहीं करता, मैं चुप "
+    "रहूँगा। /watches में आपकी सारी वॉच दिखती हैं, और वहीं से बंद होती हैं।",
+    "hinglish": "{label} par nazar hai. Jab tak watcher iske baare mein koi story confirm nahin "
+    "karta, main chup rahoonga. /watches mein aapki saari watches dikhti hain, aur wahin se band "
+    "hoti hain.",
+}
+IT: Final = {"en": "it", "hi": "इस", "hinglish": "is"}
+NO_WATCHES: Final = {
+    "en": "You aren't watching anything yet. For example: watch RBI rate changes.",
+    "hi": "अभी आप किसी चीज़ पर नज़र नहीं रख रहे। जैसे: watch RBI rate changes।",
+    "hinglish": "Abhi aap kisi cheez par nazar nahin rakh rahe. Jaise: watch RBI rate changes.",
+}
+UNWATCH_USAGE: Final = {
+    "en": "/unwatch and a number from /watches stops one, like /unwatch 1.",
+    "hi": "/watches में दिए नंबर के साथ /unwatch लिखने पर वॉच बंद होती है, जैसे /unwatch 1।",
+    "hinglish": "/watches wale number ke saath /unwatch likhne par watch band hoti hai, jaise "
+    "/unwatch 1.",
+}
+WATCH_STOPPED: Final = {
+    "en": "Stopped. That watch is off.",
+    "hi": "बंद कर दिया। वह वॉच अब बंद है।",
+    "hinglish": "Band kar diya. Woh watch ab band hai.",
+}
+AT_CAP: Final = {
+    "en": "You already have {cap} watches, the most I keep. /watches lets you stop one first.",
+    "hi": "आपकी पहले से {cap} वॉच हैं, जितनी मैं रखता हूँ। नई के लिए /watches से पहले कोई एक बंद कर सकते हैं।",
+    "hinglish": "Aapki pehle se {cap} watches hain, jitni main rakhta hoon. Nayi ke liye "
+    "/watches se pehle koi ek band kar sakte hain.",
+}
+STOPPED_LABEL: Final = {
+    "en": "Stopped watching {label}.",
+    "hi": "{label} पर नज़र रखना बंद किया।",
+    "hinglish": "{label} par nazar rakhna band kiya.",
+}
 
 
 @dataclass(frozen=True)
@@ -97,12 +146,12 @@ class WatchRequest:
 class Refusal:
     entity: str | None  # the name the user meant, offered back as a watch they can set
 
-    @property
-    def text(self) -> str:
+    def text(self, lang: str | None = "en") -> str:
+        generic = f"{say(REFUSE_LEAD, lang)} {say(REFUSE_OFFER, lang)}"
         if self.entity is None:
-            return REFUSAL_GENERIC
-        return safe(f"{REFUSE_LEAD} I can tell you when a confirmed story about {self.entity} "
-                    f"appears. Try: watch {self.entity}.", REFUSAL_GENERIC)  # fmt: skip
+            return generic
+        offer = say(REFUSE_ENTITY, lang).format(entity=self.entity)
+        return safe(f"{say(REFUSE_LEAD, lang)} {offer}", generic)
 
 
 def safe(text: str, fallback: str) -> str:
@@ -110,17 +159,17 @@ def safe(text: str, fallback: str) -> str:
     return text if guard.check(text, text).ok else fallback
 
 
-def watching(label: str) -> str:
-    return safe(f"Watching {label}. I'll stay quiet until the watcher confirms a story about "
-                "it. Type /watches to see or stop your watches.", WATCHING_GENERIC)  # fmt: skip
+def watching(label: str, lang: str | None = "en") -> str:
+    return safe(say(WATCHING, lang).format(label=label),
+                say(WATCHING, lang).format(label=say(IT, lang)))  # fmt: skip
 
 
-def at_cap(cap: int) -> str:
-    return f"You already have {cap} watches, the most I keep. Type /watches to stop one first."
+def at_cap(cap: int, lang: str | None = "en") -> str:
+    return say(AT_CAP, lang).format(cap=cap)
 
 
-def stopped(label: str) -> str:
-    return safe(f"Stopped watching {label}.", WATCH_STOPPED)
+def stopped(label: str, lang: str | None = "en") -> str:
+    return safe(say(STOPPED_LABEL, lang).format(label=label), say(WATCH_STOPPED, lang))
 
 
 def entity_of(text: str) -> str | None:
