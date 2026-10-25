@@ -1,0 +1,163 @@
+{
+ "sample": true,
+ "lang": "en",
+ "profile": {
+  "plan": "Balanced. 20% safety, 70% core, 10% growth",
+  "money": "₹1,00,000",
+  "day": "1st"
+ },
+ "news": {
+  "type": "news",
+  "items": [
+   {
+    "title": "RBI raises repo rate to 5.50%",
+    "day": "Oct 24",
+    "publishers": [
+     "livemint.com",
+     "businesstoday.in"
+    ]
+   },
+   {
+    "title": "Sample: a large bank reports a fall in bad loans",
+    "day": "Oct 21",
+    "publishers": [
+     "example.com"
+    ]
+   }
+  ],
+  "note": null
+ },
+ "history": {
+  "type": "history",
+  "rows": [
+   {
+    "type": "bank_stress",
+    "asset": "^NSEBANK",
+    "asset_name": "Indian banks (Nifty Bank)",
+    "sentence": "Indian banks (Nifty Bank) beat ^NSEI in 6 of 9 past bank stress episodes. Normal is 59%, so this is within normal ups and downs.",
+    "count": "6 of 9",
+    "rate": "67%",
+    "normal": "59%",
+    "weak": false,
+    "near_normal": true,
+    "bar": {
+     "hit": 66.7,
+     "normal": 59.1
+    },
+    "why_url": "https://nw.example/why/bank_stress/%5ENSEBANK"
+   },
+   {
+    "type": "bank_stress",
+    "asset": "^CNXIT",
+    "asset_name": "Indian IT (Nifty IT)",
+    "sentence": "Indian IT (Nifty IT) beat ^NSEI in 3 of 9 past bank stress episodes. Normal is 52%.",
+    "count": "3 of 9",
+    "rate": "33%",
+    "normal": "52%",
+    "weak": false,
+    "near_normal": false,
+    "bar": {
+     "hit": 33.3,
+     "normal": 52.4
+    },
+    "why_url": "https://nw.example/why/bank_stress/%5ECNXIT"
+   },
+   {
+    "type": "rbi_hike",
+    "asset": "^NSEI",
+    "asset_name": "The Nifty 50",
+    "sentence": "The Nifty 50 beat ^NSEI in 2 of 4 past RBI rate hikes. Normal is 55%. Only 4 past cases, too few to call a pattern.",
+    "count": "2 of 4",
+    "rate": "50%",
+    "normal": "55%",
+    "weak": true,
+    "near_normal": true,
+    "bar": {
+     "hit": 50.0,
+     "normal": 55.0
+    },
+    "why_url": "https://nw.example/why/rbi_hike/%5ENSEI"
+   }
+  ],
+  "note": null
+ },
+ "plan_range": {
+  "type": "plan_range",
+  "range": {
+   "plan": "Balanced. 20% safety, 70% core, 10% growth",
+   "monthly": "₹1,00,000",
+   "years": 5,
+   "invested": "₹60,00,000",
+   "nominal": {
+    "p10": "₹70,20,000",
+    "median": "₹1.02 Cr",
+    "p90": "₹1.48 Cr"
+   },
+   "real": {
+    "p10": "₹55,30,000",
+    "median": "₹79,90,000",
+    "p90": "₹1.16 Cr"
+   },
+   "fall_limit": "20%",
+   "hit_limit": "90%",
+   "worst_fall_pct": "21%",
+   "worst_fall_rupees": "₹8,07,000",
+   "recovery": "Getting back to the level before it took 7 months.",
+   "paths": "10,000",
+   "window": "January 2015 to December 2018",
+   "label": "This replays real past months. It is not a forecast. Your plan is your choice. Research, not advice.",
+   "bar": {
+    "rows": [
+     {
+      "series": "before",
+      "name": "Before inflation",
+      "x": 47.43,
+      "w": 52.57,
+      "median_x": 68.92,
+      "cases": [
+       {
+        "name": "Bad case",
+        "value": "₹70,20,000"
+       },
+       {
+        "name": "Middle case",
+        "value": "₹1.02 Cr"
+       },
+       {
+        "name": "Good case",
+        "value": "₹1.48 Cr"
+       }
+      ]
+     },
+     {
+      "series": "after",
+      "name": "After inflation",
+      "x": 37.36,
+      "w": 41.02,
+      "median_x": 53.99,
+      "cases": [
+       {
+        "name": "Bad case",
+        "value": "₹55,30,000"
+       },
+       {
+        "name": "Middle case",
+        "value": "₹79,90,000"
+       },
+       {
+        "name": "Good case",
+        "value": "₹1.16 Cr"
+       }
+      ]
+     }
+    ],
+    "invested_x": 40.54,
+    "invested_name": "What you put in",
+    "zero_label": "₹0"
+   }
+  },
+  "note": null
+ },
+ "holdings": null,
+ "footer": "Research, not advice."
+}

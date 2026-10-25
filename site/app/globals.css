@@ -1,0 +1,176 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The theme follows the system unless the reader picked one: html[data-theme] wins. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-graphite: var(--graphite);
+  --color-rule: var(--rule);
+  --color-link: var(--link);
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-card: var(--sheet);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--sheet);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--link);
+  --color-primary-foreground: var(--paper);
+  --color-secondary: var(--paper);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--paper);
+  --color-muted-foreground: var(--graphite);
+  --color-accent: var(--paper);
+  --color-accent-foreground: var(--ink);
+  --color-destructive: var(--ink);
+  --color-border: var(--rule);
+  --color-input: var(--rule);
+  --color-ring: var(--link);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --font-sans: var(--font-text);
+  --font-heading: var(--font-display);
+  --font-display: var(--font-display);
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --text-note: 0.875rem;
+  --text-body: 1rem;
+  --text-head: 1.375rem;
+  --text-display: clamp(2rem, 1.4rem + 2.4vw, 2.75rem);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: light;
+  --paper: oklch(96.1% 0.006 135);
+  --sheet: oklch(98.6% 0.004 135);
+  --ink: oklch(23.5% 0.028 245);
+  --graphite: oklch(45% 0.02 240);
+  --rule: oklch(88% 0.008 135);
+  --link: oklch(42% 0.1 250);
+  --chart-1: oklch(64.6% 0.222 41.116);
+  --chart-2: oklch(60% 0.118 184.704);
+  --chart-3: oklch(39.8% 0.07 227.392);
+  --radius: 8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: oklch(20.6% 0.016 235);
+    --sheet: oklch(24.4% 0.018 235);
+    --ink: oklch(92.8% 0.008 135);
+    --graphite: oklch(75% 0.015 220);
+    --rule: oklch(34% 0.016 235);
+    --link: oklch(80% 0.07 245);
+    --chart-1: oklch(48.8% 0.243 264.376);
+    --chart-2: oklch(69.6% 0.17 162.48);
+    --chart-3: oklch(76.9% 0.188 70.08);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: oklch(20.6% 0.016 235);
+  --sheet: oklch(24.4% 0.018 235);
+  --ink: oklch(92.8% 0.008 135);
+  --graphite: oklch(75% 0.015 220);
+  --rule: oklch(34% 0.016 235);
+  --link: oklch(80% 0.07 245);
+  --chart-1: oklch(48.8% 0.243 264.376);
+  --chart-2: oklch(69.6% 0.17 162.48);
+  --chart-3: oklch(76.9% 0.188 70.08);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html,
+  body {
+    overflow-x: clip;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-text), "Kohinoor Devanagari", "Noto Sans Devanagari", system-ui, sans-serif;
+    font-size: var(--text-body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), "Kohinoor Devanagari", "Noto Sans Devanagari", serif;
+    font-style: normal;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  a {
+    color: var(--link);
+    text-underline-offset: 0.2em;
+  }
+  :focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--link) 25%, transparent);
+  }
+}
+
+.figures {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The pencil line that draws while the server answers. */
+.pencil-draw {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: pencil-draw 1.6s var(--ease-out-quint) infinite;
+}
+
+@keyframes pencil-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.arrive {
+  animation: arrive 360ms var(--ease-out-quint) both;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pencil-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .arrive {
+    animation: none;
+  }
+}
