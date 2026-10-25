@@ -29,7 +29,7 @@ export function HoldingsView({ card, label }: { card: HoldingsCard; label?: stri
         {[["Put in", card.invested], ["Worth now", card.value], ["Gain or loss", card.gain], ["Return", card.ret]].map(([k, v]) => (
           <div key={k} className="min-w-0">
             <dt className="text-xs text-ink-3">{k}</dt>
-            <dd className="figure text-sm">{v}</dd>
+            <Total value={v} />
           </div>
         ))}
       </dl>
@@ -77,5 +77,16 @@ export function HoldingsView({ card, label }: { card: HoldingsCard; label?: stri
       {label && <p className="text-sm text-ink-3">{label}</p>}
       <p className="text-xs text-ink-3">Valued on {card.as_of}: {card.count} holdings.</p>
     </div>
+  );
+}
+
+/** The figure in mono; any words the server adds after it stay in the text face, smaller. */
+function Total({ value }: { value: string }) {
+  const [figure, ...words] = value.split(" ");
+  return (
+    <dd className="grid gap-0.5">
+      <span className="figure text-sm">{figure}</span>
+      {words.length > 0 && <span className="text-xs text-ink-3">{words.join(" ")}</span>}
+    </dd>
   );
 }

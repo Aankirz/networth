@@ -13,9 +13,9 @@ function Cases({ title, rows }: { title: string; rows: [string, string][] }) {
       <h4 className="text-xs text-ink-3">{title}</h4>
       <dl className="grid gap-1">
         {rows.map(([name, value]) => (
-          <div key={name} className="flex flex-wrap items-baseline justify-between gap-x-4">
-            <dt className="text-sm text-ink-2">{name}</dt>
-            <dd className="figure text-sm">{value}</dd>
+          <div key={name} className="flex items-baseline justify-between gap-x-4">
+            <dt className="min-w-0 text-sm text-ink-2">{name}</dt>
+            <dd className="figure shrink-0 text-right text-sm">{value}</dd>
           </div>
         ))}
       </dl>

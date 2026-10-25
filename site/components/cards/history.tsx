@@ -10,10 +10,12 @@ import type { HistoryCard, HistoryRow } from "@/lib/contract";
 function Row({ row }: { row: HistoryRow }) {
   return (
     <li className="grid gap-2">
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <div className="grid gap-1 sm:flex sm:items-baseline sm:justify-between sm:gap-x-4">
         <h4 className="text-sm font-medium">{row.asset_name}</h4>
-        <p className="figure text-sm text-ink-2">
-          <span className="text-ink">{row.count}</span> · normal {row.normal}
+        <p className="figure flex items-baseline gap-1.5 text-sm text-ink-2">
+          <span className="text-ink">{row.count}</span> ·
+          <svg width="3" height="11" viewBox="0 0 3 11" aria-hidden="true" className="self-center"><rect width="3" height="11" rx="1" fill="var(--accent-stroke)" /></svg>
+          normal {row.normal}
         </p>
       </div>
       <Sketch

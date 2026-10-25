@@ -43,6 +43,7 @@
   --pencil: oklch(90% 0.004 255);
   --pencil-soft: oklch(62% 0.006 255);
   --accent: oklch(88% 0.13 96);
+  --accent-stroke: var(--accent);
   --accent-ink: oklch(21% 0.03 96);
   --ring: oklch(88% 0.13 96);
   --scrim: oklch(10% 0.004 255 / 0.6);
@@ -64,6 +65,8 @@
   --pencil: oklch(28% 0.008 255);
   --pencil-soft: oklch(58% 0.008 255);
   --accent: oklch(89% 0.14 96);
+  /* On paper the highlighter is too pale for a thin line, so chart strokes use a deeper amber. */
+  --accent-stroke: oklch(68% 0.15 80);
   --accent-ink: oklch(21% 0.03 96);
   --ring: oklch(58% 0.14 75);
   --scrim: oklch(30% 0.006 255 / 0.35);
@@ -115,210 +118,213 @@
   }
 }
 
-/* Every figure the server sends is set in Geist Mono, tabular, so columns of money line up. */
-.figure {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-/* One quiet button vocabulary for the whole site. */
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  min-height: 2.25rem;
-  padding: 0 0.875rem;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: var(--raised);
-  color: var(--ink);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  white-space: nowrap;
-  text-decoration: none;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
-}
-.btn:hover {
-  background: var(--hover);
-  border-color: var(--line-strong);
-}
-.btn:active {
-  transform: translateY(1px) scale(0.985);
-}
-.btn:disabled {
-  opacity: 0.45;
-  pointer-events: none;
-}
-.btn-primary {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
-}
-.btn-primary:hover {
-  background: color-mix(in oklch, var(--ink) 88%, var(--bg));
-  border-color: color-mix(in oklch, var(--ink) 88%, var(--bg));
-}
-.btn-ghost {
-  background: transparent;
-  border-color: transparent;
-}
-.btn-ghost:hover {
-  background: var(--hover);
-  border-color: transparent;
-}
-.btn-icon {
-  width: 2.25rem;
-  padding: 0;
-}
-.btn svg {
-  width: 1rem;
-  height: 1rem;
-  flex: none;
-}
-
-/* A chip is something you can point at: a starter question, an @ mention, a / command. */
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  min-height: 2rem;
-  max-width: 100%;
-  padding: 0.25rem 0.75rem;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: transparent;
-  color: var(--ink-2);
-  font-size: var(--text-sm);
-  text-align: left;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    border-color var(--dur-fast) var(--ease-out),
-    background-color var(--dur-fast) var(--ease-out);
-}
-.chip:hover {
-  color: var(--ink);
-  border-color: var(--line-strong);
-  background: var(--raised);
-}
-.chip:active {
-  transform: scale(0.98);
-}
-.chip svg {
-  width: 0.875rem;
-  height: 0.875rem;
-  flex: none;
-}
-
-/* The highlighter: a mention in a sent question, the picked row in a picker. */
-.mark {
-  background: color-mix(in oklch, var(--accent) 22%, transparent);
-  color: var(--ink);
-  border-radius: 4px;
-  padding: 0 0.3em;
-}
-
-/* Pencil strokes draw in once, the first time a chart is seen. */
-.sketch path[data-draw] {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-.sketch.is-drawn path[data-draw] {
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset var(--dur-draw) var(--ease-out);
-  transition-delay: calc(var(--i, 0) * 70ms);
-}
-.sketch .mark-hit {
-  outline: none;
-}
-.sketch .mark-hit:hover path,
-.sketch .mark-hit:focus-visible path {
-  stroke: var(--accent);
-}
-.sketch .mark-hit:focus-visible rect[data-focus] {
-  stroke: var(--ring);
-}
-
-.arrive {
-  animation: arrive var(--dur) var(--ease-out) both;
-}
-@keyframes arrive {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+/* Component classes sit in a layer so Tailwind utilities such as md:hidden still win over them. */
+@layer components {
+  /* Every figure the server sends is set in Geist Mono, tabular, so columns of money line up. */
+  .figure {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
-}
 
-.thinking-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: thinking 1.4s var(--ease-out) infinite;
-}
-@keyframes thinking {
-  to {
-    stroke-dashoffset: -1;
+  /* One quiet button vocabulary for the whole site. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0 0.875rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: var(--raised);
+    color: var(--ink);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+    text-decoration: none;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
   }
-}
+  .btn:hover {
+    background: var(--hover);
+    border-color: var(--line-strong);
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.985);
+  }
+  .btn:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+  .btn-primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--bg);
+  }
+  .btn-primary:hover {
+    background: color-mix(in oklch, var(--ink) 88%, var(--bg));
+    border-color: color-mix(in oklch, var(--ink) 88%, var(--bg));
+  }
+  .btn-ghost {
+    background: transparent;
+    border-color: transparent;
+  }
+  .btn-ghost:hover {
+    background: var(--hover);
+    border-color: transparent;
+  }
+  .btn-icon {
+    width: 2.25rem;
+    padding: 0;
+  }
+  .btn svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  .sketch path[data-draw],
+  /* A chip is something you can point at: a starter question, an @ mention, a / command. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2rem;
+    max-width: 100%;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-align: left;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
+  .chip:hover {
+    color: var(--ink);
+    border-color: var(--line-strong);
+    background: var(--raised);
+  }
+  .chip:active {
+    transform: scale(0.98);
+  }
+  .chip svg {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex: none;
+  }
+
+  /* The highlighter: a mention in a sent question, the picked row in a picker. */
+  .mark {
+    background: color-mix(in oklch, var(--accent) 22%, transparent);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 0 0.3em;
+  }
+
+  /* Pencil strokes draw in once, the first time a chart is seen. */
+  .sketch path[data-draw] {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
   .sketch.is-drawn path[data-draw] {
     stroke-dashoffset: 0;
-    transition: none;
+    transition: stroke-dashoffset var(--dur-draw) var(--ease-out);
+    transition-delay: calc(var(--i, 0) * 70ms);
   }
-  .arrive,
+  .sketch .mark-hit {
+    outline: none;
+  }
+  .sketch .mark-hit:hover path,
+  .sketch .mark-hit:focus-visible path {
+    stroke: var(--accent);
+  }
+  .sketch .mark-hit:focus-visible rect[data-focus] {
+    stroke: var(--ring);
+  }
+
+  .arrive {
+    animation: arrive var(--dur) var(--ease-out) both;
+  }
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
   .thinking-line {
-    animation: none;
-    stroke-dashoffset: 0;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: thinking 1.4s var(--ease-out) infinite;
   }
-  .btn:active,
-  .chip:active {
-    transform: none;
+  @keyframes thinking {
+    to {
+      stroke-dashoffset: -1;
+    }
   }
-}
 
-/* A row in the sidebar: an icon, a few words, a quiet hover. */
-.side-item {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.625rem;
-  min-height: 2.125rem;
-  padding: 0.375rem 0.5rem;
-  border-radius: var(--radius-sm);
-  color: var(--ink-2);
-  font-size: var(--text-sm);
-  text-align: left;
-  text-decoration: none;
-  transition:
-    background-color var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-}
-.side-item:hover {
-  background: var(--hover);
-  color: var(--ink);
-}
-.side-item svg {
-  width: 1rem;
-  height: 1rem;
-  flex: none;
-}
-
-.canvas-in {
-  animation: canvas-in var(--dur) var(--ease-out) both;
-}
-@keyframes canvas-in {
-  from {
-    transform: translateX(24px);
-    opacity: 0;
+  @media (prefers-reduced-motion: reduce) {
+    .sketch path[data-draw],
+    .sketch.is-drawn path[data-draw] {
+      stroke-dashoffset: 0;
+      transition: none;
+    }
+    .arrive,
+    .thinking-line {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+    .btn:active,
+    .chip:active {
+      transform: none;
+    }
   }
-}
-@media (prefers-reduced-motion: reduce) {
+
+  /* A row in the sidebar: an icon, a few words, a quiet hover. */
+  .side-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.125rem;
+    padding: 0.375rem 0.5rem;
+    border-radius: var(--radius-sm);
+    color: var(--ink-2);
+    font-size: var(--text-sm);
+    text-align: left;
+    text-decoration: none;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  .side-item:hover {
+    background: var(--hover);
+    color: var(--ink);
+  }
+  .side-item svg {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+  }
+
   .canvas-in {
-    animation: none;
+    animation: canvas-in var(--dur) var(--ease-out) both;
+  }
+  @keyframes canvas-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .canvas-in {
+      animation: none;
+    }
   }
 }

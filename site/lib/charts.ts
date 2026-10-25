@@ -43,6 +43,8 @@ export function historyTable(rows: HistoryRow[]): Table {
 }
 
 const RANGE_TOP = 18;
+/** About how wide one 12px label character is, to keep labels inside the chart. */
+const LABEL_CHAR = 6.6;
 const RANGE_BOTTOM = 34;
 
 /**
@@ -89,7 +91,11 @@ export function rangeSpec(r: PlanRange, width: number, height: number): Spec {
     labels: [
       { x: originX, y: base + 18, text: r.bar.zero_label, figure: true },
       { x: originX + 2, y: investedY - 6, text: `${r.bar.invested_name} ${r.invested}`, figure: true, tone: "ink" },
-      ...r.bar.rows.map((row, i) => ({ x: colX(i), y: base + 18, text: row.name, anchor: "middle" as const })),
+      ...r.bar.rows.map((row, i) => {
+        // A centred name that would run past the right edge is set flush right instead.
+        const overflows = colX(i) + (row.name.length * LABEL_CHAR) / 2 > width - PAD;
+        return { x: overflows ? width - PAD : colX(i), y: base + 18, text: row.name, anchor: overflows ? ("end" as const) : ("middle" as const) };
+      }),
     ],
   };
 }

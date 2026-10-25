@@ -12,7 +12,7 @@ type Generator = {
   toPaths: (drawable: unknown) => { d: string; stroke: string; strokeWidth: number; fill?: string }[];
 };
 
-const TONE = { pencil: "var(--pencil)", soft: "var(--pencil-soft)", accent: "var(--accent)" } as const;
+const TONE = { pencil: "var(--pencil)", soft: "var(--pencil-soft)", accent: "var(--accent-stroke)" } as const;
 
 interface Drawn {
   d: string;
@@ -183,6 +183,11 @@ export function Sketch({ title, height, build, table, className }: SketchProps) 
                   x={l.x}
                   y={l.y}
                   textAnchor={l.anchor ?? "start"}
+                  // A halo in the page colour keeps a label readable where it crosses hatching.
+                  stroke="var(--halo, var(--bg))"
+                  strokeWidth={6}
+                  strokeLinejoin="round"
+                  paintOrder="stroke"
                   className={`${l.figure ? "figure" : ""} ${l.tone === "ink" ? "fill-ink" : "fill-ink-3"} text-[12px]`}
                 >
                   {l.text}
@@ -194,6 +199,7 @@ export function Sketch({ title, height, build, table, className }: SketchProps) 
         {active && spec && (
           <div
             role="presentation"
+            data-tip
             className="figure pointer-events-none absolute z-10 max-w-[16rem] -translate-x-1/2 -translate-y-full rounded-sm border border-line bg-raised px-2 py-1 text-xs text-ink shadow-lg"
             style={{
               left: Math.min(Math.max(active.box.x + active.box.w / 2, 64), spec.width - 64),

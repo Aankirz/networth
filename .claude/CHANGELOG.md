@@ -523,3 +523,9 @@
 - site/: commands fall back to the chat question they stand for while the API lacks the command route; a 404 no longer says "check your connection"; past chats get readable titles; the news timeline runs oldest to newest.
 - networth/web/api.py: command routes, mentions, track record; today's stories now carry the day they were first seen.
 - Removed the unused shadcn and base-ui dependencies, components.json and lib/utils.ts.
+
+## 2026-10-25 — Phase 10 slice 2: the charts and the canvas, checked in a browser
+- site/: chart labels get a halo in the surface colour so they read over hatching; range column names stay inside the chart at 320px; range case figures sit right-aligned; the holdings Return keeps its figure in mono and the server's words in text; history rows stack the same way on phones and show the accent tick as the key for "normal".
+- site/: on the light theme chart accents use a deeper amber stroke token (--accent-stroke), since the highlighter yellow vanished on paper.
+- site/: component CSS now sits in @layer components, so utilities like md:hidden win (the phone menu button was showing on desktop).
+- site/e2e: charts.spec.ts (tooltip on focus and hover, named marks, reduced motion, seeded strokes, fixed height) and canvas.spec.ts (pin docks and persists, phone sheet, sidebar links land on their section). Screenshots refreshed.

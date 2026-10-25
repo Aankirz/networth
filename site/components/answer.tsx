@@ -58,7 +58,7 @@ export function AnswerCard({ answer }: { answer: Answer }) {
     <article className="grid gap-4" data-card={card.type}>
       <MessageView message={message} />
       {shown.body && (
-        <section aria-label={shown.title} className="grid gap-4 rounded-lg border border-line bg-raised p-4 sm:p-5">
+        <section aria-label={shown.title} className="grid gap-4 rounded-lg border border-line bg-raised p-4 [--halo:var(--raised)] sm:p-5">
           <h3 className="flex items-center gap-2 text-sm font-medium text-ink-2">
             <Icon aria-hidden="true" className="size-4" />
             {shown.title}

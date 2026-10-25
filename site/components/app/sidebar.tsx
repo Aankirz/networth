@@ -56,12 +56,12 @@ export function Sidebar({ chats, current, hasHoldings, onNew, onSearch, onOpenCh
         ))}
       </nav>
 
-      <section aria-labelledby="library-title" className="grid min-h-0 gap-0.5">
+      <section aria-labelledby="library-title" className="grid min-h-0 min-w-0 gap-0.5">
         <h2 id="library-title" className="px-2 pb-1 text-xs font-normal text-ink-3">Your chats</h2>
         {chats.length === 0 && <p className="px-2 text-xs text-ink-3">Your chats stay in this browser.</p>}
-        <ul className="grid gap-0.5">
+        <ul className="grid min-w-0 gap-0.5">
           {chats.map((chat) => (
-            <li key={chat.id} className="group relative">
+            <li key={chat.id} className="group relative min-w-0">
               <button
                 type="button"
                 className={`side-item pr-9 ${chat.id === current ? "bg-hover text-ink" : ""}`}
