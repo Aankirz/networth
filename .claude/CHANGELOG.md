@@ -446,3 +446,9 @@
 
 ## 2026-10-25 — docs: drop the fixed push-access item from the 7B report
 - The 403 on push was fixed on the remote side, so the OWNER NEEDED line for it is removed.
+||||||| parent of a6f8d85 (feat: add the phase 8 Next.js site with the ledger and chat cards)
+
+## 2026-10-25 — feat: phase 8 web dashboard and chat
+- Added networth/web/api.py (JSON API for the site: dashboard and chat for /u tokens and the demo, guard, rate limits, CORS allowlist, length cap, text-free turn log), registered from routes.py with one import.
+- Added site/ (Next.js 16, shadcn/ui, Tailwind): /demo and /u/[token], cards per answer type, nonce CSP, light and dark, Playwright test against a mocked API, and a built-output check for verdict words, own figures and secrets.
+- Added the contract, design doc, screenshots, and tests/test_web_api*.py (32 new tests).

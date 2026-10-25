@@ -1,0 +1,39 @@
+{
+ "trace_id": "0e0bf1451c454489a4f501fccefddbf5",
+ "intent": "why",
+ "message": {
+  "title": "",
+  "body": [
+   {
+    "kind": "text",
+    "text": "Indian banks (Nifty Bank) beat ^NSEI in 6 of 9 past bank stress episodes. Normal is 59%, so this is within normal ups and downs."
+   }
+  ],
+  "detail": [],
+  "footer": "Research, not advice.",
+  "preview": null
+ },
+ "text": "Indian banks (Nifty Bank) beat ^NSEI in 6 of 9 past bank stress episodes. Normal is 59%, so this is within normal ups and downs.\n\nResearch, not advice.",
+ "card": {
+  "type": "history",
+  "rows": [
+   {
+    "type": "bank_stress",
+    "asset": "^NSEBANK",
+    "asset_name": "Indian banks (Nifty Bank)",
+    "sentence": "Indian banks (Nifty Bank) beat ^NSEI in 6 of 9 past bank stress episodes. Normal is 59%, so this is within normal ups and downs.",
+    "count": "6 of 9",
+    "rate": "67%",
+    "normal": "59%",
+    "weak": false,
+    "near_normal": true,
+    "bar": {
+     "hit": 66.7,
+     "normal": 59.1
+    },
+    "why_url": "https://nw.example/why/bank_stress/%5ENSEBANK"
+   }
+  ],
+  "note": null
+ }
+}

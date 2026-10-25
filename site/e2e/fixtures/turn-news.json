@@ -1,0 +1,38 @@
+{
+ "trace_id": "0e0bf1451c454489a4f501fccefddbf5",
+ "intent": "what_happened_today",
+ "message": {
+  "title": "",
+  "body": [
+   {
+    "kind": "text",
+    "text": "Confirmed in the 24 hours before my last news check (Oct 25, 11:49):\n• RBI raises repo rate to 5.50%. Reported by livemint.com, businesstoday.in."
+   }
+  ],
+  "detail": [],
+  "footer": "Research, not advice.",
+  "preview": null
+ },
+ "text": "Confirmed in the 24 hours before my last news check (Oct 25, 11:49):\n• RBI raises repo rate to 5.50%. Reported by livemint.com, businesstoday.in.\n\nResearch, not advice.",
+ "card": {
+  "type": "news",
+  "items": [
+   {
+    "title": "RBI raises repo rate to 5.50%",
+    "day": "Oct 24",
+    "publishers": [
+     "livemint.com",
+     "businesstoday.in"
+    ]
+   },
+   {
+    "title": "Sample: a large bank reports a fall in bad loans",
+    "day": "Oct 21",
+    "publishers": [
+     "example.com"
+    ]
+   }
+  ],
+  "note": null
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "trace_id": "0e0bf1451c454489a4f501fccefddbf5",
+ "intent": "other",
+ "message": {
+  "title": "",
+  "body": [
+   {
+    "kind": "text",
+    "text": "I can tell you what happened today, why a brief said what it said, and whether a tip you were sent is reported anywhere. You can also send me an IPO page, an article or a screenshot, and I'll explain it in plain words."
+   }
+  ],
+  "detail": [],
+  "footer": "Research, not advice.",
+  "preview": null
+ },
+ "text": "I can tell you what happened today, why a brief said what it said, and whether a tip you were sent is reported anywhere. You can also send me an IPO page, an article or a screenshot, and I'll explain it in plain words.\n\nResearch, not advice.",
+ "card": {
+  "type": "text"
+ }
+}
