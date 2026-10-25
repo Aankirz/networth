@@ -270,3 +270,6 @@
 
 ## 2026-10-25 — Phase 3B round 2 report
 - Report: held-out Jev table and decision, round 2 fixes table, VM news seeding, watcher trigger listing (Asia/Kolkata), guard rules, test count 426; decision-log rows (round 2 items 12, 17).
+
+## 2026-10-25 — Phase 3C spike
+- docs/phases/phase-3c-spike.md answers the six Keiki questions with redacted evidence, and records the first writes: agent 8d5b1d0c created, external push harness set, AgentMail inbox networth@agentmail.to connected.
