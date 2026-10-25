@@ -550,3 +550,6 @@
 - site/: Auth.js v5 with Google only (auth.ts, app/api/auth); /dashboard (sign in, the /weblink step, the user's own workspace), /privacy, an account button and menu in the landing header (Dashboard, Sign out, Forget me), and a footer Privacy link; server code signs a 60 s HMAC token for the API (lib/session.ts); CSP form-action allows accounts.google.com.
 - networth/: /weblink in the bot (the /link code store); web_logins table keyed by Google subject (erased by /erase); /api/web/{me,link,forget,dashboard,chat,command} behind networth/web/session.py token checks; NETWORTH_WEB_SECRET setting.
 - tests/test_web_api_auth.py, site/e2e/account*.spec.ts: 401s, code refusals, isolation, memory, forget and erase; docs/phases/phase-11-report.md and phase-11-shots/; contract doc gains the web routes and codes.
+
+## 2026-10-25 — Phase 12: holdings reply leads with the answer
+- networth: holdings reply now leads with worth, invested and gain, each share and a takeaway; count and merge across screenshots; plain-word fix flow; plan comparison in rupees on confirm; sell questions get plan gap and history; plain bucket words in LINES; gold and silver ETFs and gold funds are safe money (owner decision); owner Groww fixture and tests; make check exit 0.

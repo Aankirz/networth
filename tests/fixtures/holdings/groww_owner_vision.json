@@ -1,0 +1,55 @@
+{
+ "rows": [
+  {
+   "name": "Swiggy",
+   "kind": "stock",
+   "identifier": "",
+   "currency": "INR",
+   "units": 390.0,
+   "avg_cost": 230.05,
+   "invested": 89719.5,
+   "current_price": 176.0,
+   "current_value": 68640.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Vishal Nirmiti",
+   "kind": "stock",
+   "identifier": "",
+   "currency": "INR",
+   "units": 68.0,
+   "avg_cost": 220.0,
+   "invested": 14960.0,
+   "current_price": 115.9,
+   "current_value": 7881.2,
+   "bought_on": ""
+  },
+  {
+   "name": "Adani Green Energy",
+   "kind": "stock",
+   "identifier": "",
+   "currency": "INR",
+   "units": 180.0,
+   "avg_cost": 1217.9,
+   "invested": 219222.0,
+   "current_price": 1185.1,
+   "current_value": 213318.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Hero Motors",
+   "kind": "stock",
+   "identifier": "",
+   "currency": "INR",
+   "units": 7.0,
+   "avg_cost": 155.1,
+   "invested": 1085.7,
+   "current_price": 110.76,
+   "current_value": 775.32,
+   "bought_on": ""
+  }
+ ],
+ "unread": [],
+ "listed": 0,
+ "more_below": false
+}

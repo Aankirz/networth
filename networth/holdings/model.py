@@ -75,6 +75,9 @@ class Holdings:
     items: tuple[Holding, ...]
     confirmed: bool = False
     unread: tuple[str, ...] = ()  # what the reader saw but could not read, in its words
+    listed: int = 0  # how many holdings the app's own count says there are; 0 when not shown
+    more_below: bool = False  # the screenshot cut the list off
+    fixing: int = 0  # the 1-based line the user is correcting, 0 when none
     currency: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -95,11 +98,12 @@ SECTOR: Final = (
     r"auto|fmcg|consumption|realty|metal|defen[cs]e|manufacturing|semiconductor|nifty it"
 )
 # Checked in order on the lower-cased name; the first match places the holding. Debt words come
-# before sector words so "Banking & PSU Debt Fund" is safety, not a banking sector fund.
+# before sector words so "Banking & PSU Debt Fund" is safety, not a banking sector fund. Gold and
+# silver funds and ETFs are safe money, the owner's call.
 BUCKET_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
     (re.compile(rf"\b({pattern})\b"), bucket)
     for pattern, bucket in (
-        (r"liquid|overnight|money market|gilt|debt|bond|treasury|t-bill|fixed deposit|"
+        (r"liquid|overnight|money market|gilt|debt|bond|treasury|t-bill|fixed deposit|gold|silver|"
          r"ultra short|short duration|savings", Bucket.SAFETY),
         (SECTOR, Bucket.GROWTH),
         (r"small ?cap|mid ?cap|midcap|smallcap", Bucket.GROWTH),
@@ -114,7 +118,7 @@ BUCKET_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
 TICKER_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
     (re.compile(pattern), bucket)
     for pattern, bucket in (
-        (r"LIQUID|GILT|GSEC|SDL|EBBETF|BBETF|OVERNIGHT|MONEY", Bucket.SAFETY),
+        (r"LIQUID|GILT|GSEC|SDL|EBBETF|BBETF|OVERNIGHT|MONEY|GOLD|SILVER", Bucket.SAFETY),
         (r"BANK|BNK|BK|PHARMA|HEALTH|INFRA|PSU|CPSE|FMCG|CONSUM|AUTO|METAL|ENERGY|REALTY|^IT"
          r"|MIDCAP|MID150|SMALLCAP|SML|MON100|FANG", Bucket.GROWTH),
         (r"NIFTY|NIF50|SENSEX|JUNIOR|BEES|ETF", Bucket.CORE),
@@ -176,6 +180,7 @@ def to_json(holdings: Holdings) -> str:
         "user_id": holdings.user_id, "source": holdings.source.value,
         "as_of": holdings.as_of.isoformat(), "confirmed": holdings.confirmed,
         "unread": list(holdings.unread), "items": [item(h) for h in holdings.items],
+        "listed": holdings.listed, "more_below": holdings.more_below, "fixing": holdings.fixing,
     }, ensure_ascii=False)  # fmt: skip
 
 
@@ -197,4 +202,5 @@ def from_json(text: str) -> Holdings:
         for r in raw["items"]
     )
     return Holdings(raw["user_id"], Source(raw["source"]), dt.datetime.fromisoformat(raw["as_of"]),
-                    items, raw["confirmed"], tuple(raw["unread"]))  # fmt: skip
+                    items, raw["confirmed"], tuple(raw["unread"]), raw.get("listed", 0),
+                    raw.get("more_below", False), raw.get("fixing", 0))  # fmt: skip

@@ -83,4 +83,5 @@ def read_screenshot(
         main = max(CURRENCIES, key=lambda c: sum(h.currency == c for h in rows))
         unread += [f"{h.name}: in {h.currency}, not {main}" for h in rows if h.currency != main]
         rows = [h for h in rows if h.currency == main]
-    return Holdings(user_id, Source.SCREENSHOT, as_of, tuple(rows), unread=tuple(unread))
+    return Holdings(user_id, Source.SCREENSHOT, as_of, tuple(rows), unread=tuple(unread),
+                    listed=max(wire.listed, 0), more_below=wire.more_below)  # fmt: skip

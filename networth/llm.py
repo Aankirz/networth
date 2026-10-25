@@ -199,6 +199,8 @@ class WireHolding(BaseModel):
 class WireHoldings(BaseModel):
     rows: list[WireHolding]
     unread: list[str]  # each part of the table that could not be read, in a few words
+    listed: int  # how many holdings the app's own count or header says there are, 0 if none
+    more_below: bool  # the list is cut off: rows continue past the edge of the image
 
 
 GROUP_INSTRUCTIONS: Final = """You group news articles into stories. A story is one real-world
@@ -247,8 +249,10 @@ doesn't show. kind is one of stock, mutual_fund, etf, fd, bond, other, from what
 identifier is a ticker or ISIN only when one is printed. currency is INR for ₹ or Rs and USD
 for $. bought_on is YYYY-MM-DD only when a buy or start date is printed. Totals, headers and
 summary lines are not rows. List in unread anything that looks like a holding but is cut off,
-blurred or unreadable, in a few words each. If the image is not a holdings screen, answer no
-rows and say so in unread."""
+blurred or unreadable, in a few words each. listed is the number of holdings the app itself
+prints, such as "Holdings (22)", or 0 when no count is printed. more_below is true when the list
+plainly continues past the edge of the image, such as a row cut in half at the bottom. If the
+image is not a holdings screen, answer no rows and say so in unread."""
 
 
 NO_DASHES: Final = "Never use long dashes (— or –). Write short sentences instead."

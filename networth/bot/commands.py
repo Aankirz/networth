@@ -483,7 +483,7 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
         for reply in outcome.replies:
             turn.send(profile, reply)
         finished_setup(turn, before, profile)
-    elif (fixed := holdings_flow.typed_fix(turn.store, profile, text)) is not None:
+    elif (fixed := holdings_flow.typed_fix(turn.store, profile, text, turn.services)) is not None:
         turn.send(profile, fixed)
     else:
         turn.answer(profile, lambda: chat_reply(turn, profile, text, is_forward))

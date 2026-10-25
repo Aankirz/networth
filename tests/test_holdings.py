@@ -177,7 +177,10 @@ def test_the_mix_is_by_current_value() -> None:
 def test_the_gap_is_two_facts_with_no_advice_in_any_language() -> None:
     r = report()
     lines = holdings_lines(r, "en")
-    assert "Your plan says 10% growth. Your holdings are 53% growth." in lines
+    assert (
+        "Your plan says 10% single shares or themes. Your holdings are 53% single shares or themes."
+        in lines
+    )
     for lang in LANGS:
         for line in holdings_lines(r, lang):
             assert not guard.BANNED.search(line), line
@@ -261,64 +264,43 @@ def chat(tmp_path: Path) -> Chat:
     return chat
 
 
-def test_the_fake_groww_screenshot_becomes_a_prompt_listing_all_seven(chat: Chat) -> None:
-    prompt = nh.holdings_from_photo(USER, PNG, chat.store, reader=Recorded())
-    assert len(prompt.holdings.items) == 7
+def test_the_fake_groww_screenshot_is_read_in_full_and_waits_for_a_confirm(chat: Chat) -> None:
+    read = nh.holdings_from_photo(USER, PNG, chat.store, reader=Recorded())
     names = ("UTI Nifty 50 Index Fund", "HDFC Liquid Fund", "Parag Parikh", "Reliance",
              "Tata Motors", "Bank BeES", "Infosys")  # fmt: skip
-    listed = prompt.text.splitlines()
-    for n, name in enumerate(names, start=1):
-        assert any(line.startswith(f"{n}. ") and name in line for line in listed), name
-    assert "1. UTI Nifty 50 Index Fund Direct Growth: 1250 units, average cost ₹128.40" in (
-        prompt.text)  # fmt: skip
-    assert "Is line 3 safety, core or growth?" in prompt.text
-    assert "Is line 1" not in prompt.text
-    assert nh.HOW_TO_CONFIRM in prompt.text
-
-
-def test_an_unconfirmed_list_gets_no_report(chat: Chat) -> None:
-    nh.holdings_from_photo(USER, PNG, chat.store, reader=Recorded())
-    nh.fix_line(USER, chat.store, "3 growth")
-    assert nh.holdings_message(USER, chat.store, table=TABLE) is None
-    assert nh.holdings_source(USER, chat.store, table=TABLE) == ""
+    assert [n for n in names for x in read.holdings.items if n in x.name] == list(names)
+    assert (read.added, read.same) == (7, 0)
+    assert read.holdings.unplaced == (3,) and not read.holdings.confirmed
 
 
 def test_fixing_and_confirming_the_list(chat: Chat) -> None:
     nh.holdings_from_photo(USER, PNG, chat.store, reader=Recorded())
-    assert nh.confirm_holdings(USER, chat.store) == "Is line 3 safety, core or growth?"
+    assert nh.confirm_holdings(USER, chat.store) is None, "line 3 has no kind yet"
     assert nh.fix_line(USER, chat.store, "what should I sell") is None
     assert nh.fix_line(USER, chat.store, "9 units 3") is None
     nh.fix_line(USER, chat.store, "3 growth")
     nh.fix_line(USER, chat.store, "2 units 15")
     nh.fix_line(USER, chat.store, "4 cost 2,500")
-    prompt = nh.fix_line(USER, chat.store, "7 drop")
-    assert prompt is not None and len(prompt.holdings.items) == 6
-    assert "2. HDFC Liquid Fund Direct Growth: 15 units" in prompt.text
-    assert "4. Reliance Industries: 40 units, average cost ₹2,500.00 (growth)" in prompt.text
-    assert nh.confirm_holdings(USER, chat.store) == nh.CONFIRMED
+    h = nh.fix_line(USER, chat.store, "7 drop")
+    assert h is not None and len(h.items) == 6
+    assert h.items[1].units == 15 and h.items[3].avg_cost == 2500
+    confirmed = nh.confirm_holdings(USER, chat.store)
+    assert confirmed is not None and confirmed.confirmed
     message = nh.holdings_message(USER, chat.store, table=TABLE)
     assert message is not None and "Infosys" not in message and LABEL in message
-    nh.fix_line(USER, chat.store, "1 units 1000")
-    assert nh.holdings_message(USER, chat.store, table=TABLE) is None, "a fix needs a re-confirm"
+    assert nh.fix_line(USER, chat.store, "1 units 1000") is None, "a confirmed list is kept"
 
 
-def test_confirm_with_nothing_pending_asks_for_a_screenshot(chat: Chat) -> None:
-    assert nh.confirm_holdings(USER, chat.store) == nh.NOTHING_PENDING
-
-
-@pytest.mark.parametrize("lang", LANGS)
-def test_the_holdings_message_is_in_the_asked_language(chat: Chat, lang: str) -> None:
-    chat.store.save_holdings(USER, to_json(fixture_holdings()))
-    message = nh.holdings_message(USER, chat.store, table=TABLE, lang=lang)
-    assert message is not None and message.endswith(nh.LINES[lang]["label"])
+def test_confirm_with_nothing_pending_confirms_nothing(chat: Chat) -> None:
+    assert nh.confirm_holdings(USER, chat.store) is None
 
 
 def test_explain_a_holding_in_plain_words(chat: Chat) -> None:
     chat.store.save_holdings(USER, to_json(fixture_holdings()))
     about = nh.explain_holding(USER, 2, chat.store)
     assert about is not None
-    assert about.startswith("Safety is money meant to stay steady")
-    assert "2. HDFC Liquid Fund Direct Growth (safety)" in about
+    assert about.startswith("Safe money is meant to stay steady")
+    assert "2. HDFC Liquid Fund Direct Growth (safe money (liquid, gilt, FD))" in about
     assert not guard.ADVICE.search(about) and not guard.BANNED.search(about)
     assert nh.explain_holding(USER, 8, chat.store) is None
 
@@ -418,7 +400,10 @@ def test_the_page_shows_the_report_the_mix_bar_and_the_label(chat: Chat) -> None
     page, words = response.text, text(response.text)
     assert DISCLAIMER in page and LABEL in words
     assert '<svg viewBox="0 0 400' in page and 'role="img"' in page and "<title" in page
-    assert "Your plan says 10% growth. Your holdings are 53% growth." in words
+    assert (
+        "Your plan says 10% single shares or themes. Your holdings are 53% single shares or themes."
+        in words
+    )
     assert "Parag Parikh Flexi Cap Fund Direct Growth" in words and "₹5,73,660" in words
     assert not WEB_BANNED.search(page) and not guard.BANNED.search(words)
 

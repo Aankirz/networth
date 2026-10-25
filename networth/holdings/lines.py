@@ -59,15 +59,15 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "price_none": "not shown, so it is valued at what it cost",
         "screenshot": "screenshot",
         "snaptrade": "broker",
-        "safety": "safety",
-        "core": "core",
-        "growth": "growth",
-        "about_safety": "Safety is money meant to stay steady: fixed deposits, liquid and debt "
-        "funds.",
-        "about_core": "Core is broad-market money: index funds and ETFs that hold many large "
-        "companies.",
-        "about_growth": "Growth is money that rises and falls more: single stocks, mid and "
-        "small cap funds and sector funds.",
+        "safety": "safe money (liquid, gilt, FD)",
+        "core": "broad index funds",
+        "growth": "single shares or themes",
+        "about_safety": "Safe money is meant to stay steady: fixed deposits, liquid, gilt and debt "
+        "funds, and gold.",
+        "about_core": "Broad index funds hold the whole market: index funds and ETFs with many "
+        "large companies.",
+        "about_growth": "Single shares or themes rise and fall more: single company shares, mid "
+        "and small cap funds and sector funds.",
     },
     "hi": {
         "head": "आपके पास क्या है, {date} की कीमत पर: {count} होल्डिंग्स।",
@@ -106,12 +106,13 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "price_none": "नहीं दिखी, इसलिए लागत पर गिना गया",
         "screenshot": "स्क्रीनशॉट",
         "snaptrade": "ब्रोकर",
-        "safety": "सेफ़्टी",
-        "core": "कोर",
-        "growth": "ग्रोथ",
-        "about_safety": "सेफ़्टी वह पैसा है जो स्थिर रहने के लिए है: एफ़डी, लिक्विड और डेट फ़ंड।",
-        "about_core": "कोर पूरे बाज़ार वाला पैसा है: इंडेक्स फ़ंड और ईटीएफ़, जिनमें कई बड़ी कंपनियाँ होती हैं।",
-        "about_growth": "ग्रोथ वह पैसा है जो ज़्यादा ऊपर नीचे होता है: अलग अलग शेयर, मिड और "
+        "safety": "सुरक्षित पैसा (लिक्विड, गिल्ट, FD)",
+        "core": "ब्रॉड इंडेक्स फ़ंड",
+        "growth": "अलग शेयर या थीम",
+        "about_safety": "सुरक्षित पैसा स्थिर रहने के लिए है: एफ़डी, लिक्विड, गिल्ट और डेट फ़ंड, और सोना।",
+        "about_core": "ब्रॉड इंडेक्स फ़ंड पूरे बाज़ार वाला पैसा है: इंडेक्स फ़ंड और ईटीएफ़, जिनमें "
+        "कई बड़ी कंपनियाँ होती हैं।",
+        "about_growth": "अलग शेयर या थीम वाला पैसा ज़्यादा ऊपर नीचे होता है: अलग अलग शेयर, मिड और "
         "स्मॉल कैप फ़ंड, और सेक्टर फ़ंड।",
     },
     "hinglish": {
@@ -154,15 +155,15 @@ LINES: Final[Mapping[str, Mapping[str, str]]] = {
         "price_none": "nahin dikhi, isliye cost par gina gaya",
         "screenshot": "screenshot",
         "snaptrade": "broker",
-        "safety": "safety",
-        "core": "core",
-        "growth": "growth",
-        "about_safety": "Safety woh paisa hai jo sthir rehne ke liye hai: FD, liquid aur debt "
-        "fund.",
-        "about_core": "Core poore bazaar wala paisa hai: index fund aur ETF, jinmein kai badi "
-        "companies hoti hain.",
-        "about_growth": "Growth woh paisa hai jo zyada upar neeche hota hai: alag alag shares, "
-        "mid aur small cap fund, aur sector fund.",
+        "safety": "safe paisa (liquid, gilt, FD)",
+        "core": "broad index funds",
+        "growth": "alag shares ya theme",
+        "about_safety": "Safe paisa sthir rehne ke liye hai: FD, liquid, gilt aur debt fund, aur "
+        "sona.",
+        "about_core": "Broad index funds poore bazaar wala paisa hai: index fund aur ETF, jinmein "
+        "kai badi companies hoti hain.",
+        "about_growth": "Alag shares ya theme wala paisa zyada upar neeche hota hai: alag alag "
+        "shares, mid aur small cap fund, aur sector fund.",
     },
 }
 PRICE_KEYS: Final = {

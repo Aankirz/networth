@@ -1,6 +1,7 @@
-"""Holdings on Telegram end to end: a screenshot becomes a list to check, Looks right gives the
-report, a fix or a cancel changes the stored list, /holdings and a holdings question in chat.
-No network: the vision answer is the recorded one for groww_fake.png and prices are a fake."""
+"""Holdings on Telegram end to end: a screenshot becomes its worth and a list to check,
+That's everything compares it with the plan, a fix or a start over changes the stored list,
+/holdings and a holdings question in chat. No network: the vision answer is the recorded one
+for groww_fake.png and prices are a fake."""
 
 from __future__ import annotations
 
@@ -11,9 +12,11 @@ from pathlib import Path
 
 import pytest
 
+from networth import guard
 from networth import holdings as nh
 from networth.app.services import Services
 from networth.bot import holdings as flow
+from networth.bot import holdings_words as words
 from networth.bot.message import FOOTER, Message, plain
 from networth.chat import explain
 from networth.holdings.model import from_json
@@ -117,28 +120,18 @@ def confirm(chat: Chat) -> None:
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_a_photo_becomes_a_confirm_prompt_listing_all_seven(tmp_path: Path, lang: str) -> None:
+def test_a_photo_leads_with_the_worth_and_asks_if_that_is_everything(tmp_path, lang) -> None:
     chat = talk(tmp_path, lang=lang)
     photo(chat)
     m = last(chat)
-    assert m.title == flow.TITLE[lang] and m.footer == ""
-    rows = m.body[0].splitlines()
-    assert len(rows) == 7
-    for n, (row, name) in enumerate(zip(rows, NAMES, strict=True), start=1):
-        assert row.startswith(f"{n}. ") and name in row
-    assert flow.WHICH_BUCKET[lang].format(n=3) in plain(m)
-    assert [d for _, d, _ in buttons(chat)] == ["hd:ok", "hd:fix", "hd:cancel"]
+    assert m.title.startswith(words.GOT_IT[lang].split("{")[0]) and m.footer == ""
+    rows = next(b for b in m.body if NAMES[0] in b).splitlines()
+    assert len(rows) == 7 and all(any(name in row for row in rows) for name in NAMES)
+    assert plain(m).endswith(words.EVERYTHING[lang])
+    assert [d for _, d, _ in buttons(chat)] == ["hd:ok", "hd:more", "hd:fix"]
     assert [label for label, _, _ in buttons(chat)] == [
-        flow.LOOKS_RIGHT[lang], flow.FIX_A_LINE[lang], flow.CANCEL[lang]]  # fmt: skip
+        words.THATS_ALL[lang], words.SEND_MORE[lang], words.WRONG[lang]]  # fmt: skip
     assert stored(chat) is not None and not stored(chat).confirmed
-
-
-def test_the_english_rows_carry_units_cost_and_bucket(chat: Chat) -> None:
-    photo(chat)
-    text = plain(last(chat))
-    assert "1. UTI Nifty 50 Index Fund Direct Growth: 1250 units, average cost ₹128.40 (core)" in (
-        text)  # fmt: skip
-    assert "3. Parag Parikh Flexi Cap Fund Direct Growth: 800 units, average cost ₹68.50\n" in text
 
 
 def test_a_picture_that_is_not_holdings_goes_to_explain_and_keeps_the_list(tmp_path) -> None:
@@ -158,54 +151,46 @@ def test_a_picture_that_is_not_holdings_stores_nothing(tmp_path: Path) -> None:
     assert chat.store.holdings_data(USER) is None
 
 
-def test_looks_right_with_a_line_unplaced_asks_again(chat: Chat) -> None:
+def test_thats_everything_with_a_line_unplaced_asks_its_kind(chat: Chat) -> None:
     photo(chat)
     chat.tap("hd:ok")
-    assert last(chat).title == flow.TITLE["en"] and not stored(chat).confirmed
+    assert chat.bot.last == words.WHAT_KIND["en"].format(name=stored(chat).items[2].name)
+    assert [d for _, d, _ in buttons(chat)] == [
+        "hd:place:3:safety", "hd:place:3:core", "hd:place:3:growth"]  # fmt: skip
+    assert not stored(chat).confirmed
+    chat.tap("hd:place:3:growth")
+    assert stored(chat).confirmed and last(chat).title == words.SAVED["en"]
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_looks_right_gives_the_report_with_every_holdings_line(tmp_path, lang: str) -> None:
+def test_thats_everything_compares_with_the_plan(tmp_path, lang: str) -> None:
     chat = talk(tmp_path, lang=lang)
     confirm(chat)
-    m, lines = last(chat), expected_lines(chat, lang)
+    m = last(chat)
     assert stored(chat).confirmed
-    assert m.title == lines[0] and m.footer == FOOTER[lang]
-    text = plain(m)
-    for line in lines[:-1]:
-        assert line in text, line
-    phrase = flow.SENTENCE_END.split(nh.LINES[lang]["label"])[-1]
-    assert lines[-1].removesuffix(phrase).strip() in text
-    assert text.count(phrase) == (1 if phrase == FOOTER[lang] else 0)
-    assert text.endswith(FOOTER[lang])
+    assert m.title == words.SAVED[lang] and m.footer == FOOTER[lang]
+    assert [d for _, d, _ in buttons(chat)] == ["br:plan", "hd:history"]
 
 
-def test_a_typed_fix_shows_the_prompt_again_and_is_not_sent_to_chat(chat: Chat) -> None:
+def test_holdings_from_the_report_are_unchanged_after_confirming(chat: Chat) -> None:
+    confirm(chat)
+    chat.say("/holdings")
+    m, lines = last(chat), expected_lines(chat, "en")
+    assert m.title == lines[0] and all(line in plain(m) for line in lines[:-1])
+
+
+def test_the_old_typed_fix_still_works_and_is_not_sent_to_chat(chat: Chat) -> None:
     photo(chat)
     chat.say("2 units 15")
-    assert "2. HDFC Liquid Fund Direct Growth: 15 units" in plain(last(chat))
     assert stored(chat).items[1].units == 15
+    assert last(chat).title.startswith("Got it.")
 
 
-def test_fix_then_looks_right_reports(chat: Chat) -> None:
-    photo(chat)
-    chat.say("3 growth")
-    assert flow.WHICH_BUCKET["en"].format(n=3) not in plain(last(chat))
-    chat.tap("hd:ok")
-    assert last(chat).title == expected_lines(chat, "en")[0]
-
-
-def test_fix_a_line_explains_the_format(chat: Chat) -> None:
-    photo(chat)
-    chat.tap("hd:fix")
-    assert chat.bot.last == flow.HOW_TO_FIX["en"]
-
-
-def test_cancel_leaves_nothing_stored(chat: Chat) -> None:
+def test_start_over_leaves_nothing_stored(chat: Chat) -> None:
     photo(chat)
     chat.tap("hd:cancel")
     assert chat.store.holdings_data(USER) is None
-    assert chat.bot.last == flow.CANCELLED["en"]
+    assert chat.bot.last == words.STARTED_OVER["en"]
 
 
 def test_a_tap_with_nothing_pending_asks_for_a_screenshot(chat: Chat) -> None:
@@ -255,16 +240,17 @@ def test_holdings_before_setup_asks_to_finish(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_what_should_i_sell_gets_the_decline_and_the_report(tmp_path, lang: str) -> None:
+def test_what_should_i_sell_gets_the_plan_gap_and_history_not_a_pick(tmp_path, lang) -> None:
     chat = talk(tmp_path, lang=lang)
     confirm(chat)
-    chat.services = dataclasses.replace(chat.services, models=None)
     chat.say("What should I sell?")
-    m, lines = last(chat), expected_lines(chat, lang)
+    m, report = last(chat), nh.report_for(USER, chat.store, table=TABLE)
     text = plain(m)
-    assert text.startswith(nh.LINES[lang]["decline"])
-    assert all(line in text for line in lines[1:-1])
-    assert m.footer == FOOTER[lang] and text.endswith(FOOTER[lang])
+    assert text.startswith(words.NOT_A_PICK[lang])
+    assert all(line in text for line in flow.comparison_lines(report, "Balanced", lang))
+    assert all(line in text for line in nh.lines.history_lines(report.history, lang))
+    assert guard.check(text, text).ok
+    assert m.footer == FOOTER[lang] and text.count(FOOTER[lang]) == 1
 
 
 def test_a_hinglish_portfolio_question_is_answered_in_hinglish(tmp_path: Path) -> None:
@@ -277,20 +263,20 @@ def test_a_hinglish_portfolio_question_is_answered_in_hinglish(tmp_path: Path) -
     assert "Research, advice nahin." not in plain(last(chat))
 
 
-def test_an_advice_draft_from_the_writer_falls_back_to_the_decline(tmp_path: Path) -> None:
+def test_a_sell_question_never_reaches_the_writer(tmp_path: Path) -> None:
     models = FakeModels(intent="holdings", writes=["You should sell Tata Motors."] * 2)
     chat = talk(tmp_path, models)
     confirm(chat)
     chat.say("What should I sell?")
     text = plain(last(chat))
-    assert text.startswith(nh.LINES["en"]["decline"]) and "Tata Motors" in text
+    assert text.startswith(words.NOT_A_PICK["en"]) and len(models.writes) == 2
     assert "sell" not in text.lower() and text.count(FOOTER["en"]) == 1
 
 
 def test_a_fix_typed_after_confirming_goes_to_chat_and_keeps_the_list(chat: Chat) -> None:
     confirm(chat)
     chat.say("1 growth")
-    assert stored(chat).confirmed and last(chat).title != flow.TITLE["en"]
+    assert stored(chat).confirmed and not last(chat).title.startswith("Got it.")
 
 
 def test_a_dollar_list_keeps_every_line_in_its_place(chat: Chat) -> None:

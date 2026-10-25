@@ -1,14 +1,18 @@
 """Holdings: what a user already owns, read from a screenshot, confirmed by them, and reported
 as facts next to their own saved plan. Nothing here recommends, ranks or scores.
 
-    prompt = holdings_from_photo(user_id, image_bytes, store, reader=models)  # unconfirmed
-    prompt = fix_line(user_id, store, "2 units 15")     # None when it isn't a fix
-    reply = confirm_holdings(user_id, store)            # confirmed, or the bucket question
+    read = holdings_from_photo(user_id, image_bytes, store, reader=models)  # unconfirmed
+    h = start_fix(user_id, store, 2)                    # line 2 is the one being corrected
+    h = correct(user_id, store, "15 shares")            # None when the words aren't a fix
+    h = fix_line(user_id, store, "2 units 15")          # the old typed syntax, kept as a fallback
+    h = confirm_holdings(user_id, store)                # None while a line has no bucket
     text = holdings_message(user_id, store)             # the /holdings reply, None until confirmed
     text = explain_holding(user_id, 3, store)           # one holding in plain words
     text = holdings_answer(user_id, "what should I sell", store, models, log_path=guard_log)
 
-The bot wires these to a photo handler, the confirm reply and /holdings. The image is passed
+A second screenshot adds to a list still waiting for its confirm: a holding already on it (the
+same ticker, else the same name) is updated, never listed twice. The bot wires these to a photo
+handler, the confirm buttons and /holdings. The image is passed
 to the reader and dropped: it is never written to disk or a log. Only the holdings list is
 stored, and /stop deletes it (Store.save_profile). The broker link, snaptrade_link(user_id,
 store), is networth.holdings.snaptrade's, re-exported here.
@@ -24,9 +28,8 @@ from typing import Final, Protocol
 
 from networth import guard
 from networth.app.store import Store
-from networth.holdings.lines import LINES, explain_lines, holdings_lines, lang_of, unit_money
-from networth.holdings.lines import units as units_text
-from networth.holdings.model import Bucket, Holdings, from_json, to_json
+from networth.holdings.lines import LINES, explain_lines, holdings_lines, lang_of
+from networth.holdings.model import Bucket, Holding, Holdings, from_json, to_json
 from networth.holdings.prices import Prices, price_holdings
 from networth.holdings.reader import HoldingsReader, read_screenshot
 from networth.holdings.report import HoldingsReport, holdings_report
@@ -38,12 +41,16 @@ FIX: Final = re.compile(
     r"^\s*(\d+)\s+(?:(units?|cost)\s+(\d[\d,]*(?:\.\d+)?)|(safety|core|growth|drop))\s*$",
     re.IGNORECASE,
 )
-HOW_TO_CONFIRM: Final = (
-    "Reply yes if this is right, or fix a line, e.g. 2 units 15, 2 cost 450, 2 growth, 2 drop."
+NUMBER: Final = r"(\d[\d,]*(?:\.\d+)?)"
+SHARES: Final = re.compile(rf"{NUMBER}\s*(?:shares?|units?|qty|शेयर|यूनिट)", re.IGNORECASE)
+AVERAGE: Final = re.compile(
+    rf"(?:avg|average|cost|price|औसत|लागत)\D{{0,8}}{NUMBER}|{NUMBER}\s*(?:avg|average)",
+    re.IGNORECASE,
 )
-UNREADABLE: Final = "A clearer screenshot of the holdings screen helps."
-NOTHING_PENDING: Final = "Send a screenshot of your holdings first, and I'll read it."
-CONFIRMED: Final = "Saved. Type /holdings to see what you hold and what history says about it."
+REMOVE: Final = re.compile(r"\b(?:remove|delete|drop|hatao|hata do|nikalo|nikal do)\b|हटा",
+                           re.IGNORECASE)  # fmt: skip
+BARE: Final = re.compile(rf"^\s*{NUMBER}\s*$")
+SPACES: Final = re.compile(r"\s+")
 ANSWER_TASK: Final = (
     "The user asked a question about their own holdings. Answer only with facts from the "
     "report below: what they hold, its value, gain and return, their mix next to their saved "
@@ -58,8 +65,9 @@ LANGUAGES: Final = {"en": "English", "hi": "Hindi, in Devanagari", "hinglish": "
 
 
 __all__ = [
-    "ConfirmPrompt", "confirm_holdings", "explain_holding", "fix_line", "holdings_answer",
-    "holdings_from_photo", "holdings_message", "holdings_source", "report_for", "snaptrade_link",
+    "Read", "confirm_holdings", "correct", "explain_holding", "fix_line", "holdings_answer",
+    "holdings_from_photo", "holdings_message", "holdings_source", "pending", "place", "report_for",
+    "snaptrade_link", "start_fix",
 ]  # fmt: skip
 
 
@@ -68,10 +76,12 @@ class Writer(Protocol):
 
 
 @dataclass(frozen=True)
-class ConfirmPrompt:
-    text: str
+class Read:
+    """The list after a screenshot, and what this screenshot added to a list already waiting."""
+
     holdings: Holdings
-    unread: tuple[str, ...]
+    added: int
+    same: int  # rows already on the list, updated in place
 
 
 def _pending(user_id: str, store: Store) -> Holdings | None:
@@ -79,20 +89,30 @@ def _pending(user_id: str, store: Store) -> Holdings | None:
     return from_json(data) if data else None
 
 
-def _prompt(h: Holdings) -> ConfirmPrompt:
-    if not h.items:
-        lines = ["I couldn't read any holdings in that screenshot."]
-    else:
-        lines = ["Here is what I read:"]
-        lines += [f"{n}. {x.name}: {units_text(x.units)} units, average cost "
-                  f"{unit_money(x.avg_cost, x.currency)}"
-                  + (f" ({x.bucket.value})" if x.bucket else "")
-                  for n, x in enumerate(h.items, start=1)]  # fmt: skip
-    if h.unread:
-        lines.append(f"Not read: {'; '.join(h.unread)}.")
-    lines += [f"Is line {n} safety, core or growth?" for n in h.unplaced]
-    lines.append(HOW_TO_CONFIRM if h.items else UNREADABLE)
-    return ConfirmPrompt("\n".join(lines), h, h.unread)
+def pending(user_id: str, store: Store) -> Holdings | None:
+    """The stored list while it waits for the user's confirm, else None."""
+    h = _pending(user_id, store)
+    return h if h is not None and not h.confirmed else None
+
+
+def _key(x: Holding) -> str:
+    return (x.identifier or SPACES.sub(" ", x.name)).strip().lower()
+
+
+def _merged(before: Holdings | None, read: Holdings) -> Read:
+    """read alone, or read added to a list still waiting for its confirm."""
+    if before is None or before.confirmed or not read.items or before.currency != read.currency:
+        return Read(read, len(read.items), 0)
+    items, at = list(before.items), {_key(x): i for i, x in enumerate(before.items)}
+    for x in read.items:
+        if _key(x) in at:
+            items[at[_key(x)]] = x
+        else:
+            at[_key(x)] = len(items)
+            items.append(x)
+    same = len(before.items) + len(read.items) - len(items)
+    merged = dataclasses.replace(read, items=tuple(items), listed=max(before.listed, read.listed))
+    return Read(merged, len(read.items) - same, same)
 
 
 def holdings_from_photo(
@@ -102,15 +122,23 @@ def holdings_from_photo(
     *,
     reader: HoldingsReader,
     prices: Prices | None = None,
-) -> ConfirmPrompt:
-    """Read, price what resolves, save unconfirmed, and ask the user to check the list."""
+) -> Read:
+    """Read, price what resolves, add to any list still waiting, and save it unconfirmed. An
+    image with no holdings in it changes nothing stored."""
     profile = store.get_profile(user_id)
     h = read_screenshot(image_bytes, lang_of(profile.lang if profile else None),
                         reader=reader, user_id=user_id)  # fmt: skip
     if prices is not None:
         h = price_holdings(h, prices)
+    read = _merged(pending(user_id, store), h)
+    if read.holdings.items:
+        store.save_holdings(user_id, to_json(read.holdings))
+    return read
+
+
+def _save(user_id: str, store: Store, h: Holdings) -> Holdings:
     store.save_holdings(user_id, to_json(h))
-    return _prompt(h)
+    return h
 
 
 def _fixed(h: Holdings, m: re.Match[str]) -> Holdings | None:
@@ -129,29 +157,78 @@ def _fixed(h: Holdings, m: re.Match[str]) -> Holdings | None:
             return None
         field = "avg_cost" if what == "cost" else "units"
         items[n - 1] = dataclasses.replace(items[n - 1], **{field: number})
-    return dataclasses.replace(h, items=tuple(items), confirmed=False)
+    return dataclasses.replace(h, items=tuple(items), confirmed=False, fixing=0)
 
 
-def fix_line(user_id: str, store: Store, text: str) -> ConfirmPrompt | None:
-    """ "2 units 15", "2 cost 450", "2 growth" or "2 drop". None with no list, or not a fix."""
-    h, m = _pending(user_id, store), FIX.match(text)
-    if h is None or m is None:
+def fix_line(user_id: str, store: Store, text: str) -> Holdings | None:
+    """The old typed syntax, "2 units 15", "2 cost 450", "2 growth" or "2 drop", kept as a
+    fallback; the user is never shown it. None with no list waiting, or not a fix."""
+    h, m = pending(user_id, store), FIX.match(text)
+    fixed = _fixed(h, m) if h is not None and m is not None else None
+    return _save(user_id, store, fixed) if fixed is not None else None
+
+
+def start_fix(user_id: str, store: Store, n: int) -> Holdings | None:
+    """Line n is the one the user is correcting; their next words say how."""
+    h = pending(user_id, store)
+    if h is None or not 1 <= n <= len(h.items):
         return None
-    fixed = _fixed(h, m)
-    if fixed is None:
+    return _save(user_id, store, dataclasses.replace(h, fixing=n))
+
+
+def _number(text: str) -> float | None:
+    number = float(text.replace(",", ""))
+    return number if number > 0 else None
+
+
+def _corrected(x: Holding, text: str) -> Holding | None | bool:
+    """The holding with the change in the words, False to remove it, None when unclear."""
+    if REMOVE.search(text):
+        return False
+    if (m := AVERAGE.search(text)) and (cost := _number(m.group(1) or m.group(2))):
+        x = dataclasses.replace(x, avg_cost=cost)
+        text = text[: m.start()] + text[m.end() :]
+        changed = True
+    else:
+        changed = False
+    if (m := SHARES.search(text) or BARE.match(text)) and (count := _number(m.group(1))):
+        return dataclasses.replace(x, units=count)
+    return x if changed else None
+
+
+def correct(user_id: str, store: Store, text: str) -> Holdings | None:
+    """The line being corrected, changed by plain words: "15 shares", "average 450" or "remove
+    it". None when no line is being corrected or the words don't say a change."""
+    h = pending(user_id, store)
+    if h is None or not 1 <= h.fixing <= len(h.items):
         return None
-    store.save_holdings(user_id, to_json(fixed))
-    return _prompt(fixed)
+    changed = _corrected(h.items[h.fixing - 1], text)
+    if changed is None:
+        return None
+    items = list(h.items)
+    if changed is False:
+        del items[h.fixing - 1]
+    else:
+        items[h.fixing - 1] = changed
+    return _save(user_id, store, dataclasses.replace(h, items=tuple(items), fixing=0))
 
 
-def confirm_holdings(user_id: str, store: Store) -> str:
-    h = _pending(user_id, store)
-    if h is None or not h.items:
-        return NOTHING_PENDING
-    if h.unplaced:
-        return "\n".join(f"Is line {n} safety, core or growth?" for n in h.unplaced)
-    store.save_holdings(user_id, to_json(dataclasses.replace(h, confirmed=True)))
-    return CONFIRMED
+def place(user_id: str, store: Store, n: int, bucket: Bucket) -> Holdings | None:
+    """The user says what kind line n is."""
+    h = pending(user_id, store)
+    if h is None or not 1 <= n <= len(h.items):
+        return None
+    items = list(h.items)
+    items[n - 1] = dataclasses.replace(items[n - 1], bucket=bucket)
+    return _save(user_id, store, dataclasses.replace(h, items=tuple(items), fixing=0))
+
+
+def confirm_holdings(user_id: str, store: Store) -> Holdings | None:
+    """The list, confirmed; None with no list waiting or a line still without a bucket."""
+    h = pending(user_id, store)
+    if h is None or not h.items or h.unplaced:
+        return None
+    return _save(user_id, store, dataclasses.replace(h, confirmed=True, fixing=0))
 
 
 def _table(table: Table | None) -> Table | None:

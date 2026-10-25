@@ -13,7 +13,7 @@ import pytest
 
 from networth import guard
 from networth.app.store import Status, user_id_for
-from networth.bot import commands
+from networth.bot import commands, holdings_words
 from networth.bot import holdings as flow
 from networth.bot.message import FOOTER, LANGS, Message, plain
 from networth.holdings import snaptrade
@@ -149,7 +149,7 @@ def test_a_group_tap_is_answered_and_creates_no_profile(tmp_path: Path) -> None:
 def test_an_image_sent_as_a_document_is_read_like_a_photo(chat: Chat) -> None:
     photo(chat, document={"file_id": "doc-1", "mime_type": "image/png"})
     assert chat.bot.downloads[-1] == "doc-1"
-    assert last(chat).title == flow.TITLE["en"]
+    assert last(chat).title.startswith("Got it.")
 
 
 def test_a_pdf_document_is_not_an_image(chat: Chat) -> None:
@@ -168,10 +168,11 @@ def test_the_image_is_never_written_or_logged(tmp_path: Path, caplog) -> None:
     before = _files(tmp_path, repo_data, Path.cwd() / "data")
     caplog.set_level(logging.DEBUG)
     photo(chat)
-    assert last(chat).title == flow.TITLE["en"], "the photo was read"
+    assert last(chat).title.startswith("Got it."), "the photo was read"
     after = _files(tmp_path, repo_data, Path.cwd() / "data")
     new = {p.name for p in set(after) - set(before)}
-    assert all(name.startswith(chat.store.path.name) for name in new), new
+    assert all(name.startswith(chat.store.path.name) or name == chat.services.guard_log.name
+               for name in new), new  # fmt: skip
     encoded = base64.b64encode(PNG)
     for path, content in after.items():
         if after[path] != before.get(path):
@@ -201,9 +202,28 @@ def prompt(chat: Chat) -> Message:
     return last(chat)
 
 
-WITH_FOOTER = {"report": report, "holdings answer": answer}
-WITHOUT_FOOTER = {"confirm prompt": prompt, "no holdings": "NO_HOLDINGS", "cancelled": "CANCELLED",
-                  "how to fix": "HOW_TO_FIX", "us only": "US_ONLY", "not yet": "NOT_YET",
+def compared(chat: Chat) -> Message:
+    confirm(chat)
+    return last(chat)
+
+
+def what_should_it_be(chat: Chat) -> Message:
+    photo(chat)
+    chat.tap("hd:fix")
+    chat.tap("hd:pick:2")
+    return last(chat)
+
+
+def not_caught(chat: Chat) -> Message:
+    what_should_it_be(chat)
+    chat.say("hmm")
+    return last(chat)
+
+
+WITH_FOOTER = {"report": report, "holdings answer": answer, "plan comparison": compared}
+WITHOUT_FOOTER = {"summary": prompt, "no holdings": "NO_HOLDINGS", "started over": "STARTED_OVER",
+                  "which one": "WHICH", "what should it be": what_should_it_be,
+                  "not caught": not_caught, "us only": "US_ONLY", "not yet": "NOT_YET",
                   "link lead": "LINK_LEAD"}  # fmt: skip
 
 
@@ -223,6 +243,10 @@ def test_the_report_and_answer_end_with_one_footer(tmp_path, kind: str, lang: st
 def test_prompts_and_acks_carry_no_footer(tmp_path, kind: str, lang: str) -> None:
     build = WITHOUT_FOOTER[kind]
     chat = talk(tmp_path, lang=lang)
-    m = build(chat) if callable(build) else Message(body=(getattr(flow, build)[lang],))
+    if callable(build):
+        m = build(chat)
+    else:
+        words = getattr(flow, build, None) or getattr(holdings_words, build)
+        m = Message(body=(words[lang],))
     assert m.footer == "" and not any(f in plain(m) for f in FOOTERS)
     check_language(m, lang)
