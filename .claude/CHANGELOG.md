@@ -301,3 +301,6 @@
 
 ## 2026-10-25 — Verify Keiki turn signatures
 - networth/keiki/verify.py trusts a pushed turn only on a valid Ed25519 signature (Keiki's JWKS, refetched at most once a minute on an unknown kid) or, when KEIKI_SIGNING_SECRET is set, a valid HMAC; stale (over 5 minutes), unsigned and unknown-kid requests get a reason. Adds the cryptography dependency (Phase 3C unit 1).
+
+## 2026-10-25 — Keiki wire, clients and email outbox
+- networth/keiki/wire.py parses pushed turns into frozen KeikiTurn/Other and strips quoted mail; client.py answers a turn (messages, complete) and sends notices; render.py turns buttons into plain email lines; mail.py queues proactive email in a new outbox table and flushes it on the contact's next turn. Store gains contacts and outbox; Settings reads KEIKI_API_KEY, KEIKI_AGENT_ID, KEIKI_SIGNING_SECRET, KEIKI_EMAIL; Services gains mail and keiki_email (Phase 3C unit 1).

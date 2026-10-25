@@ -1,4 +1,5 @@
-"""Fake Keiki: a signing key of our own, a JWKS that publishes it, and signed turn requests."""
+"""Fake Keiki: a signing key of our own, a JWKS that publishes it, signed turn requests, a
+turn client that records what it was asked to send, and a notice API."""
 
 from __future__ import annotations
 
@@ -6,6 +7,7 @@ import base64
 import hashlib
 import hmac
 import json
+from dataclasses import dataclass, field
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
@@ -46,3 +48,48 @@ def hmac_headers(body: bytes, *, t: int = NOW, secret: str = HMAC_SECRET) -> dic
 
 def body(payload: dict) -> bytes:
     return json.dumps(payload).encode()
+
+
+AGENT = "agent-test"
+ADDRESS = "asha@example.com"
+TURN_URL = "https://onkeiki.example/api/v1/harness/turns/t1"
+
+
+def turn_payload(*texts: str, turn_id: str = "t1", address: str = ADDRESS,
+                 **extra: object) -> dict:  # fmt: skip
+    return {
+        "type": "keiki.turn", "turnId": turn_id, "agentId": AGENT, "conversationId": address,
+        "channel": "agentmail", "messages": [{"text": t, "messageId": f"m{i}"}
+                                             for i, t in enumerate(texts)],
+        "heldBack": False, "quietLoop": False,
+        "keiki": {"apiBase": "https://onkeiki.example/api/v1", "turnUrl": TURN_URL},
+        **extra,
+    }  # fmt: skip
+
+
+@dataclass
+class FakeTurnClient:
+    sent: list[tuple[str, str]] = field(default_factory=list)  # (text, idempotency key)
+    completed: list[tuple[str, str | None]] = field(default_factory=list)
+    fail_send: bool = False
+
+    def send(self, text: str, idempotency_key: str) -> None:
+        if self.fail_send:
+            raise ConnectionError("keiki is down")
+        self.sent.append((text, idempotency_key))
+
+    def complete(self, status: str, error: str | None = None) -> None:
+        self.completed.append((status, error))
+
+    @property
+    def texts(self) -> list[str]:
+        return [text for text, _ in self.sent]
+
+
+@dataclass
+class FakeApi:
+    notices: list[tuple[str, str]] = field(default_factory=list)
+
+    def notice(self, phone: str, text: str) -> str:
+        self.notices.append((phone, text))
+        return "queued"

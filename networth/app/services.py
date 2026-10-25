@@ -5,6 +5,7 @@ the news search and the public URL for links.
 
 Without an OPENAI_API_KEY or EXA_API_KEY the server still runs: models and search are None, so
 every reply falls back to its plain template and tip checks say they can't search right now.
+Without KEIKI_API_KEY and KEIKI_AGENT_ID, mail is None and proactive email is not sent.
 """
 
 from __future__ import annotations
@@ -13,12 +14,15 @@ import datetime as dt
 import logging
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Final
 
 from networth.app.settings import RATES_DB, Settings
+from networth.app.store import Store
 from networth.config import Config, ConfigError, load_config
+from networth.keiki.client import KeikiApi
+from networth.keiki.mail import Mail
 from networth.llm import ChatModels, OpenAIModels
 from networth.watcher.pull import ExaSearch, NewsSearch
 from networth.watcher.store import Store as WatcherStore
@@ -39,6 +43,8 @@ class Services:
     cfg: Config | None = None
     env: Mapping[str, str] = field(default_factory=dict)  # read by Jev for its gateway keys
     link_secret: str | None = None  # signs /u/{token} links
+    mail: Mail | None = None  # proactive email through Keiki
+    keiki_email: str | None = None  # the inbox address /link replies name
 
     @property
     def rates_db(self) -> Path:
@@ -69,12 +75,17 @@ class Services:
 
     @classmethod
     def from_settings(cls, settings: Settings) -> Services:
+        mail = None
+        if settings.keiki_api_key and settings.keiki_agent_id:
+            mail = Mail(Store(settings.data_dir),
+                        KeikiApi(settings.keiki_api_key, settings.keiki_agent_id))  # fmt: skip
+        base = cls(settings.data_dir, settings.public_url, link_secret=settings.link_secret,
+                   mail=mail, keiki_email=settings.keiki_email)  # fmt: skip
         try:
             cfg = load_config()
         except ConfigError as exc:
             log.warning("models off, templates only: %s", exc)
-            return cls(settings.data_dir, settings.public_url, link_secret=settings.link_secret)
+            return base
         call_log = settings.data_dir / CALL_LOG
-        return cls(settings.data_dir, settings.public_url, OpenAIModels(cfg, call_log),
-                   ExaSearch(cfg, call_log), cfg, dict(os.environ),
-                   settings.link_secret)  # fmt: skip
+        return replace(base, models=OpenAIModels(cfg, call_log), search=ExaSearch(cfg, call_log),
+                       cfg=cfg, env=dict(os.environ))  # fmt: skip
