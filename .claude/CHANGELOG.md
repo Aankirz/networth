@@ -409,3 +409,8 @@
 ## 2026-10-25 — shadcn-look web charts (phase 3E addition)
 - New networth/web/static/charts.css holds shadcn's published chart tokens (light and dark) and one series-to-token map. The plan-range bar and the what-if strip now draw rounded bars, thin gridlines, 12px muted labels, an HTML legend and CSS-only tooltips on focusable, labelled marks.
 - Chart geometry is now percent across and pixels down, so text, corners and dots keep their size from 320px to 1440px. New `_chart.html` macros, a `/static/charts.css` route and tests/test_charts.py. Before and after shots are in docs/phases/phase-3e-shots/.
+
+## 2026-10-25 — fix: brief news line reads as one sentence, why links escape the asset
+- An event type mid-sentence is lower-case ("bank stress", not "Bank stress"); RBI and US keep their capitals.
+- Stress months say "shocks like this have happened before" once; the plan line right after it carries "you have a plan", so the brief no longer says it twice.
+- Every /why/ link in a message escapes the asset ("%5ENSEBANK") through one names.why_path helper.

@@ -122,8 +122,9 @@ def test_no_lean_words_or_colour_marks_and_the_guard_passes(lang: str) -> None:
 
 def test_stress_news_names_the_feeling_and_never_promises() -> None:
     m = event_brief(events=(BANKS,)).message("en")
-    assert m.body[0] == ("A rough stretch in the news: Bank stress on Oct 14. Shocks like this "
-                         "have happened before, and you planned for one.")  # fmt: skip
+    assert m.body[0] == ("A rough stretch in the news: bank stress on Oct 14. Shocks like this "
+                         "have happened before.")  # fmt: skip
+    assert m.body[1].startswith("Months like this are why you have a plan."), "said once"
     assert "Aise jhatke pehle bhi aaye hain" in event_brief(events=(BANKS,)).message(
         "hinglish").body[0]  # fmt: skip
 
@@ -156,7 +157,7 @@ def test_buttons_are_friendlier_and_keep_their_callback_data() -> None:
     labels = [(b.label, b.data or b.url) for row in keyboard for b in row]
     assert labels == [
         ("Theek hai", "br:ok"), ("Mera plan", "br:plan"),
-        ("Yeh counts kyun?", "https://nw.example/why/rbi_hike/^NSEBANK"),
+        ("Yeh counts kyun?", "https://nw.example/why/rbi_hike/%5ENSEBANK"),
         ("Har sector", "https://nw.example/scoreboard/rbi_hike"),
         ("Mera page", "https://p"), ("Meri range", "br:range"),
     ]  # fmt: skip

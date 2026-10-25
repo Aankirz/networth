@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Final
+from urllib.parse import quote
 
 from networth.engine.model import EraName, EventType
 
@@ -121,6 +122,11 @@ SCOREBOARD_GROUPS: Final[dict[str, list[tuple[str, ...]]]] = {
         ("JETS", "XLRE"),
     ],
 }
+
+
+def why_path(type: str, asset: str) -> str:
+    """/why/<type>/<asset>, with the asset escaped: index symbols start with "^"."""
+    return f"/why/{type}/{quote(asset, safe='')}"
 
 
 def asset_name(asset: str) -> str:

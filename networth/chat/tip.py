@@ -27,6 +27,7 @@ from networth.engine.model import Region
 from networth.llm import ArticleBrief, Classified, StoryForJudge
 from networth.watcher import classify, group, pull
 from networth.watcher.store import Article, Confirmed
+from networth.web import names
 
 log = logging.getLogger("networth.chat")
 
@@ -136,7 +137,7 @@ def _answer(verdict: Callable[[str], str], claim: str, line: Line | None = None,
     words = {lang: write(lang) for lang in LANGS}
     link = None
     if line is not None and services is not None and services.public_url:
-        url = f"{services.public_url}/why/{line.type}/{line.asset}"
+        url = f"{services.public_url}{names.why_path(line.type, line.asset)}"
         link = Link(say(EVERY_CASE, lang), url)
     return Answer(words["en"], words["en"], None if signals else TIP_TASK, kind="tip",
                   words=words, link=link)  # fmt: skip

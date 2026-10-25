@@ -205,7 +205,7 @@ def named_type(text: str, services: Services) -> str | None:
 def why_link(line: Line, services: Services, label: Mapping[str, str], lang: str) -> Link | None:
     if not services.public_url:
         return None
-    return Link(say(label, lang), f"{services.public_url}/why/{line.type}/{line.asset}")
+    return Link(say(label, lang), f"{services.public_url}{names.why_path(line.type, line.asset)}")
 
 
 def history_words(line: Line) -> dict[str, str]:
