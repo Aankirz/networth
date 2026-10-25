@@ -497,3 +497,6 @@
 
 ## 2026-10-25 — /link_broker out of help and the command list
 - Owner dropped SnapTrade: removed /link_broker from HELP_COMMANDS (en/hi/hinglish) and COMMAND_LIST; the typed command and snaptrade calls stay. Tests updated.
+
+## 2026-10-25 — report command list without link_broker
+- docs/phases/phase-9-report.md BotFather list matches COMMAND_LIST.

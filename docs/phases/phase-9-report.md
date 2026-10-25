@@ -94,7 +94,6 @@ watch - Hear once when a confirmed story about something appears
 watches - See or stop your watches
 unwatch - Stop a watch by its number
 link - A code to use Networth by email too
-link_broker - Link a US broker, read-only
 sendto - Where briefs and alerts go: email or telegram
 pause - Pause briefs and alerts
 resume - Turn briefs and alerts back on
