@@ -396,3 +396,6 @@
 ## 2026-10-25 — Phase 3C: never fetch footer or opt-out links, read link codes past footers
 - Live, a Mailtrack opt-out link in an email footer was fetched by the explain path. explain.fetchable now refuses trackers and unsubscribe, opt-out, tracking and redirect links at every hop, and user_link picks only a fetchable link, for Telegram and Keiki alike.
 - strip_quoted cuts signatures, Outlook and Mailtrack footers and two-line Gmail quote headers. A link code is a lone six-digit token on a short line near the top.
+
+## 2026-10-25 — Phase 3C: drop Keiki's email header line so /brief by email is a command
+- Live trace c79c227e showed each email text starts with "[Email from Name <addr>; subject=…; message_id=<…>]", so "/brief" was read as chat. strip_quoted drops that line; fixtures carry it, and a live-shape test checks the email brief equals Telegram's.
