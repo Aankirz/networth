@@ -25,6 +25,7 @@ from networth.bot.holdings_words import (
     ADDED,
     ALL_SHARES,
     AND,
+    BOTH_SHARES,
     BUCKET_WORDS,
     CHANGED,
     DOWN,
@@ -168,7 +169,9 @@ def _rows(s: Summary, lang: str) -> str:
 
 def _takeaway(s: Summary, lang: str) -> str:
     if s.shares == s.count:
-        kinds = say(ONE_SHARE, lang) if s.count == 1 else _say(ALL_SHARES, lang, count=s.count)
+        kinds = {1: say(ONE_SHARE, lang), 2: say(BOTH_SHARES, lang)}.get(
+            s.count, _say(ALL_SHARES, lang, count=s.count)
+        )
     else:
         kinds = _say(SOME_SHARES, lang, shares=s.shares, count=s.count) if s.shares else ""
     top = s.items[0]

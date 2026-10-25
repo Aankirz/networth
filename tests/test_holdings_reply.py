@@ -215,26 +215,32 @@ def test_a_plan_with_no_single_shares_says_new_money_alone_cant_get_there() -> N
     assert action_plan(steady, monthly=100_000).months is None
 
 
-USD_ROWS = [
-    {"name": "Apple", "kind": "stock", "identifier": "AAPL", "currency": "USD", "units": 40.0,
-     "avg_cost": 150.0, "invested": 6000.0, "current_price": 230.0, "current_value": 9200.0,
-     "bought_on": ""},
-    {"name": "Tesla", "kind": "stock", "identifier": "TSLA", "currency": "USD", "units": 10.0,
-     "avg_cost": 300.0, "invested": 3000.0, "current_price": 250.0, "current_value": 2500.0,
-     "bought_on": ""},
-]  # fmt: skip
+US = json.loads((FIXTURES / "us_holdings_vision.json").read_text())
 
 
-def test_a_dollar_list_is_written_in_dollars_with_us_funds(tmp_path) -> None:
-    chat = owner(tmp_path, WireHoldings.model_validate({**OWNER, "rows": USD_ROWS}))
+def test_a_us_user_sees_dollars_and_voo_never_rupees(tmp_path) -> None:
+    chat = owner(tmp_path, WireHoldings.model_validate(US))
     chat.store.save_profile(dataclasses.replace(chat.profile, currency="USD", monthly_amount=500))
     photo(chat)
-    assert last(chat).title == "Got it. 2 holdings, worth $11,700 today."
+    m = last(chat)
+    assert m.title == "Got it. 2 holdings, worth $11,700 today."
+    assert m.body[:3] == (
+        "You put in $9,000, so you're up $2,700 (30%).",
+        "Apple: $9,200, 79% of this\nTesla: $2,500, 21%",
+        "Both are single company shares. Apple alone is 79% of this money.",
+    )
     chat.tap("hd:ok")
+    assert last(chat).body[0] == (
+        "On plan, your $11,700 would be about $2,300 in safe money (cash, Treasury bills, money "
+        "market), $8,200 in broad index funds and $1,200 in single shares or themes.")  # fmt: skip
+    assert "Then put about $8,200 into an S&P 500 index fund or ETF (such as VOO)" in (
+        last(chat).body[2])  # fmt: skip
+    chat.tap("hd:newmoney")
+    assert last(chat).body[1] == (
+        "At $500 a month you're on plan in about 211 months, with nothing trimmed.")  # fmt: skip
     chat.tap("hd:now")
     text = plain(last(chat))
-    assert "S&P 500 index fund or ETF (such as VOO)" in text and "SGOV" in text
-    assert "$500 a month" in text and "₹" not in text and "lakh" not in text
+    assert "₹" not in text and "lakh" not in text and "Nifty" not in text and "gilt" not in text
 
 
 def test_big_dollar_amounts_are_said_in_millions() -> None:

@@ -635,3 +635,6 @@
 
 ## 2026-10-25 — holdings action plan after "That's everything"
 - networth/holdings/action.py (new): plan targets, trims weakest first (rating, then loss, then size), moves, tax booked, monthly split, months to plan. networth/bot/holdings_plan.py (new): overview with Path A and Path B, Rebalance now, Use new money with Show me now, Why these?; fund names per currency and language. Services.ratings feeds rate(). short_money says $1.2M. Tests with the owner fixture and a USD fixture.
+
+## 2026-10-25 — USD holdings fixture and the phase 12 report
+- tests/fixtures/holdings/us_holdings_vision.json and test: a US user sees dollars, VOO, SGOV and US safe-money words; "Both are" for two holdings; docs/phases/phase-12-report.md lists the follow-ups and gate exit codes.

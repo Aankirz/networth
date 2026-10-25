@@ -1,0 +1,31 @@
+{
+ "rows": [
+  {
+   "name": "Apple",
+   "kind": "stock",
+   "identifier": "AAPL",
+   "currency": "USD",
+   "units": 40.0,
+   "avg_cost": 150.0,
+   "invested": 6000.0,
+   "current_price": 230.0,
+   "current_value": 9200.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Tesla",
+   "kind": "stock",
+   "identifier": "TSLA",
+   "currency": "USD",
+   "units": 10.0,
+   "avg_cost": 300.0,
+   "invested": 3000.0,
+   "current_price": 250.0,
+   "current_value": 2500.0,
+   "bought_on": ""
+  }
+ ],
+ "unread": [],
+ "listed": 0,
+ "more_below": false
+}

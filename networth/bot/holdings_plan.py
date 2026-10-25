@@ -44,6 +44,7 @@ from networth.bot.holdings_words import (
     PLAN_HEAD,
     RATED_NOTE,
     REBALANCE,
+    SAFE_USD,
     SHOW_NOW,
     TAX_GAIN,
     TAX_LOSS,
@@ -97,7 +98,8 @@ class Words:
         return short_money(n, self.plan.currency, self.lang)
 
     def bucket(self, b: Bucket) -> str:
-        return say(BUCKET_WORDS[b], self.lang)
+        usd = b is Bucket.SAFETY and self.plan.currency == "USD"
+        return say(SAFE_USD if usd else BUCKET_WORDS[b], self.lang)
 
     def into(self, moves: tuple) -> str:
         return _joined([_say(INTO, self.lang, amount=self.money(m.amount),

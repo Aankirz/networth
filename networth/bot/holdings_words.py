@@ -360,3 +360,14 @@ FUND_KINDS: Final = {
             Bucket.CORE: {"en": "An S&P 500 index fund", "hi": "S&P 500 इंडेक्स फ़ंड",
                           "hinglish": "S&P 500 index fund"}},
 }  # fmt: skip
+# Safe money as a US user knows it: no gilts or FDs there.
+SAFE_USD: Final = {
+    "en": "safe money (cash, Treasury bills, money market)",
+    "hi": "सुरक्षित पैसा (कैश, ट्रेज़री बिल, मनी मार्केट)",
+    "hinglish": "safe paisa (cash, Treasury bills, money market)",
+}
+BOTH_SHARES: Final = {
+    "en": "Both are single company shares.",
+    "hi": "दोनों अलग अलग कंपनियों के शेयर हैं।",
+    "hinglish": "Dono alag alag companies ke shares hain.",
+}
