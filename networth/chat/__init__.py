@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 from networth import memory
 from networth.app.services import Services
 from networth.app.store import Profile, Store
-from networth.bot import watches
+from networth.bot import holdings, watches
 from networth.bot.onboarding import Reply
 from networth.chat import explain, jev, tip, today
 from networth.chat.answer import Answer, Used, deliver, deliver_traced
@@ -35,6 +35,7 @@ class Intent(StrEnum):
     PLAN_QUESTION = "plan_question"
     PLAN_RANGE = "plan_range"
     WATCH = "watch"
+    HOLDINGS = "holdings"
     OTHER = "other"
 
 
@@ -61,6 +62,10 @@ CRITERIA: Final[dict[str, str]] = {
     Intent.WATCH: (
         "asks to be told when something happens, or to watch or track a topic, event or company"
     ),
+    Intent.HOLDINGS: (
+        "asks about their own holdings, investments or portfolio: how they are doing, what "
+        "they own, or what to do with them"
+    ),
     Intent.OTHER: "anything else: greetings, thanks, unrelated questions",
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"
@@ -77,6 +82,17 @@ PHRASES: Final = (
     (("watch", "tell me if", "tell me when", "let me know when", "alert me"), Intent.WATCH),
     (("what happened", "aaj market", "news today", "kya hua"), Intent.WHAT_HAPPENED_TODAY),
     (("why",), Intent.WHY),
+    (
+        (
+            "portfolio",
+            "my investments",
+            "my holdings",
+            "investments doing",
+            "what should i sell",
+            "should i sell",
+        ),
+        Intent.HOLDINGS,
+    ),
     (
         ("could my plan", "plan become", "how bad can a fall", "how far can my plan", "my range"),
         Intent.PLAN_RANGE,
@@ -154,6 +170,9 @@ HANDLERS: Final[dict[Intent, Handler]] = {
     ),
     Intent.PLAN_RANGE: lambda store, p, text, s, now, lang: today.plan_range(store, p, lang),
     Intent.WATCH: watch_answer,
+    Intent.HOLDINGS: lambda store, p, text, s, now, lang: holdings.chat_answer(
+        store, p, text, s, lang
+    ),
     Intent.OTHER: lambda store, p, text, s, now, lang: today.scope(),
 }
 
