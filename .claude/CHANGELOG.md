@@ -452,3 +452,6 @@
 - Added networth/web/api.py (JSON API for the site: dashboard and chat for /u tokens and the demo, guard, rate limits, CORS allowlist, length cap, text-free turn log), registered from routes.py with one import.
 - Added site/ (Next.js 16, shadcn/ui, Tailwind): /demo and /u/[token], cards per answer type, nonce CSP, light and dark, Playwright test against a mocked API, and a built-output check for verdict words, own figures and secrets.
 - Added the contract, design doc, screenshots, and tests/test_web_api*.py (32 new tests).
+
+## 2026-10-25 — fix: phase 8 chat carries the phase 7B holdings intent
+- After rebasing onto 7B, the contract test caught the new holdings intent. The API now answers it with the asker's holdings card (a text card when none), and the contract and site types list it.

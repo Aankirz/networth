@@ -10,6 +10,7 @@ export type Intent =
   | "plan_question"
   | "plan_range"
   | "watch"
+  | "holdings"
   | "other";
 
 export interface ChatRequest {

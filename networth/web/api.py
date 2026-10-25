@@ -356,6 +356,9 @@ CARDS: Final[Mapping[chat.Intent, CardBuilder]] = {
     },
     chat.Intent.WHY: lambda f: why_card(f.reply, f.asker.profile, f.services, f.lang),
     chat.Intent.PLAN_RANGE: lambda f: plan_range_card(f.asker.store, f.asker.profile, f.table),
+    chat.Intent.HOLDINGS: lambda f: (
+        holdings_card(f.asker.store, f.asker.profile, f.table) or {"type": "text"}
+    ),
 }  # every other intent is a text card: the message itself
 
 
