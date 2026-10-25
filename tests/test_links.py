@@ -90,3 +90,8 @@ def test_plan_command_hands_out_a_working_link(chat: Chat, client) -> None:
     url = reply.rsplit(" ", 1)[-1]
     assert url.startswith("https://nw.example/u/")
     assert client.get(url.removeprefix("https://nw.example")).status_code == 200
+
+
+@pytest.mark.parametrize("token", ["abc.².sig", "abc.1999999999.sïg", "äbc.1999999999.sig"])
+def test_a_non_ascii_link_gets_the_friendly_404_not_a_500(client, token: str) -> None:
+    assert client.get(f"/u/{token}").status_code == 404

@@ -29,6 +29,8 @@ def sign(link_token: str, secret: str, now: dt.datetime) -> str:
 
 
 def verify(token: str, secret: str, now: dt.datetime) -> str | None:
+    if not token.isascii():  # str.isdigit takes "²" and compare_digest raises on non-ASCII
+        return None
     link_token, _, rest = token.partition(".")
     expires, _, signature = rest.partition(".")
     if not (link_token and expires.isdigit() and signature):

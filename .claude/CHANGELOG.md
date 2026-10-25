@@ -243,3 +243,6 @@
 
 ## 2026-10-25 — Hourly cap on paid chat answers
 - product.chat_max_per_hour = 20; Store.claim_answer counts a rolling hour in one transaction; past the cap Turn.answer sends a polite note and runs no paid call (round 2 item 5).
+
+## 2026-10-25 — Non-ASCII link tokens get a 404
+- links.verify rejects non-ASCII tokens before isdigit and compare_digest, which gave a 500 (round 2 item 6).
