@@ -683,3 +683,6 @@
 
 ## 2026-10-25 — sector board drops calendar releases
 - networth/sectors: scheduled releases (auctions, data releases, statistical reports) never attach to a move; only the story's own headline counts; bare "RBI" and "deposit" no longer match Bank; a move with no story says "No confirmed news behind this move."
+
+## 2026-10-25 — sector board keeps foreign stories off Indian sectors
+- networth/sectors: a story must name India, an Indian company or regulator, or the sector's global driver (crude for Energy; steel, aluminium, copper prices, iron ore or LME for Metal); Ebola, US tariff and US housing stories no longer attach.

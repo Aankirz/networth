@@ -18,17 +18,22 @@ def test_each_sector_has_its_moves_source_and_page() -> None:
 
 
 def test_stories_match_by_word_or_event_type_newest_first_at_most_three() -> None:
-    stories = (seen("RBI holds repo rate", "2026-10-20"), seen("Banks rally", "2026-10-22"),
-               seen("Lender fined", "2026-10-21"), seen("Bank stress", "2026-10-19", "bank_stress"),
+    stories = (seen("RBI holds repo rate", "2026-10-20"), seen("Indian banks rally", "2026-10-22"),
+               seen("RBI fines a lender", "2026-10-21"),
+               seen("US bank stress", "2026-10-19", "bank_stress"),
                seen("Fitness app launches", "2026-10-23"))  # fmt: skip
     got = stories_for(BY_KEY["bank"], stories)
-    assert [s.title for s in got] == ["Banks rally", "Lender fined", "RBI holds repo rate"]
+    assert [s.title for s in got] == [
+        "Indian banks rally",
+        "RBI fines a lender",
+        "RBI holds repo rate",
+    ]
 
 
 def test_it_matches_the_capital_word_only() -> None:
-    stories = (seen("IT stocks slide on visa curbs"), seen("Why it matters for markets"))
+    stories = (seen("Indian IT stocks slide on visa curbs"), seen("Why it matters for markets"))
     assert [s.title for s in stories_for(BY_KEY["it"], stories)] == [
-        "IT stocks slide on visa curbs"
+        "Indian IT stocks slide on visa curbs"
     ]
 
 
@@ -65,3 +70,17 @@ def test_only_the_story_s_own_headline_counts() -> None:
     s = seen("RBI intervention to support the rupee")
     s = s.__class__(s.title, (s.title, "Oil prices climb"), s.day, s.publishers, s.type)
     assert stories_for(BY_KEY["energy"], (s,)) == []
+
+
+def test_foreign_stories_stay_off_indian_sectors_unless_they_name_its_global_driver() -> None:
+    pairs = (("pharma", seen("Cross-border Ebola outbreak in Africa", type_="pandemic")),
+             ("metal", seen("Changes to U.S. tariffs on Canadian products", type_="tariff")),
+             ("realty", seen("U.S. housing affordability measures")))  # fmt: skip
+    for key, story in pairs:
+        assert stories_for(BY_KEY[key], (story,)) == [], key
+    oil = seen("Global oil supply risks from a potential U.S.-Iran war", type_="oil_supply")
+    assert stories_for(BY_KEY["energy"], (oil,)) == [oil]
+    steel = seen("Steel prices slide as China exports surge")
+    assert stories_for(BY_KEY["metal"], (steel,)) == [steel]
+    local = seen("RBI acts on a Puducherry bank")
+    assert stories_for(BY_KEY["bank"], (local,)) == [local]

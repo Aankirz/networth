@@ -34,6 +34,7 @@ class Sector:
     ticker: str  # Yahoo's symbol for the NSE index, checked live 2026-10-25
     words: tuple[str, ...]  # matched as whole words; short all-caps words match case
     types: tuple[str, ...] = ()  # watcher event types this sector moves on
+    drivers: tuple[str, ...] = ()  # global prices that move it with no Indian name in the story
 
 
 SECTORS: Final = (
@@ -49,9 +50,10 @@ SECTORS: Final = (
     Sector("fmcg", "FMCG", "^CNXFMCG", ("FMCG", "consumer goods", "rural demand", "Hindustan "
            "Unilever", "Nestle", "ITC"), ()),
     Sector("metal", "Metal", "^CNXMETAL", ("metal", "metals", "steel", "aluminium", "copper",
-           "iron ore", "Hindalco", "JSW"), ("tariff",)),
+           "iron ore", "Hindalco", "JSW"), ("tariff",),
+           ("steel prices", "aluminium prices", "copper prices", "iron ore", "LME")),
     Sector("energy", "Energy", "^CNXENERGY", ("oil", "crude", "OPEC", "gas", "Reliance", "ONGC",
-           "power", "fuel"), ("oil_supply",)),
+           "power", "fuel"), ("oil_supply",), ("crude", "oil", "OPEC", "Brent")),
     Sector("realty", "Realty", "^CNXREALTY", ("real estate", "realty", "housing", "property",
            "DLF", "home loan"), ("rbi_hike", "rbi_cut")),
     Sector("psu", "PSU", "^CNXPSE", ("PSU", "PSUs", "public sector", "state-run", "disinvestment"),
@@ -68,6 +70,11 @@ RELEASE: Final = re.compile(
     r"|\b(data|report|release|survey)$",
     re.I,
 )
+# What makes a story Indian: the country, its regulators and markets, its listed names.
+INDIA: Final = ("India", "Indian", "RBI", "SEBI", "IRDAI", "NSE", "BSE", "Nifty", "Sensex",
+                "rupee", "GST", "Infosys", "TCS", "Wipro", "HCLTech", "Maruti", "Mahindra",
+                "Tata", "Hindustan Unilever", "ITC", "Hindalco", "JSW", "Reliance", "ONGC",
+                "DLF", "Adani", "HDFC", "ICICI", "SBI", "Kotak", "Axis Bank")  # fmt: skip
 NO_NEWS: Final = "No confirmed news behind this move."
 
 
@@ -76,10 +83,15 @@ def _pattern(word: str) -> re.Pattern[str]:
     return re.compile(rf"(?<![\w-]){re.escape(word)}(?![\w-])", flags)
 
 
+def _names(words: Sequence[str], text: str) -> bool:
+    return any(_pattern(w).search(text) for w in words)
+
+
 def stories_for(sector: Sector, stories: Sequence[Seen]) -> list[Seen]:
-    pats = [_pattern(w) for w in sector.words]
+    """A US board would pass its own local names in place of INDIA; there is none yet."""
     hit = [s for s in stories if not RELEASE.search(s.title)
-           and (s.type in sector.types or any(p.search(s.title) for p in pats))]  # fmt: skip
+           and (s.type in sector.types or _names(sector.words, s.title))
+           and (_names(INDIA, s.title) or _names(sector.drivers, s.title))]  # fmt: skip
     return sorted(hit, key=lambda s: s.day, reverse=True)[:MAX_STORIES]
 
 
