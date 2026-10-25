@@ -82,7 +82,7 @@ def run_alerts(
             try:
                 reply = deliver(Answer(text, text, ALERT_TASK, kind="alert"), p.lang or "en",
                                 services)  # fmt: skip
-                sent += send(store, bot, p, reply, proactive=True)
+                sent += send(store, bot, p, reply, proactive=True, mail=services.mail)
             except Exception:
                 store.release_alert(p.user_id, event_key(i))
                 log.exception("alert %s for %s failed", event_key(i), p.user_id)

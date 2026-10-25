@@ -4,9 +4,11 @@
     run_daily(store, bot, services, now)               # every user whose investing day is today
 
 The brief row is claimed before anything is sent, so a schedule that fires twice never sends
-a second brief the same day. A compose or send that fails releases the claim, so the next try
-sends it. Asking /brief again that day resends the stored text without another model call,
-unless a news check has finished since it was written; then the brief is written afresh.
+a second brief the same day. The claim is per user, not per channel, so a person who gets
+briefs by email gets one a day across Telegram and email. A compose or send that fails
+releases the claim, so the next try sends it. Asking /brief again that day resends the stored
+text without another model call, unless a news check has finished since it was written; then
+the brief is written afresh.
 """
 
 from __future__ import annotations
@@ -86,7 +88,7 @@ def send_brief(
             return send(store, bot, profile, Reply(last[1]))
     try:
         reply, used = compose_reply(profile, store, services, today)
-        sent = send(store, bot, profile, reply, proactive=proactive)
+        sent = send(store, bot, profile, reply, proactive=proactive, mail=services.mail)
     except Exception:
         store.release_brief(profile.user_id, day)
         raise

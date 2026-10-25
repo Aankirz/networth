@@ -6,7 +6,8 @@
 Tables: profiles (one per chat), plans (one per user, rewritten on change), messages (every
 text in and out), briefs (one per user per investing day) and alerts (one per user per event).
 contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn;
-keiki_turns holds every turn id answered.
+keiki_turns holds every turn id answered; link_codes holds the single-use codes that tie an
+email contact to a Telegram user.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -32,6 +33,8 @@ DB_NAME: Final = "networth.sqlite"
 INDIA_TZ: Final = "Asia/Kolkata"
 US_TZ: Final = "America/New_York"
 LINK_TOKEN_BYTES: Final = 16
+LINK_CODE_DIGITS: Final = 6
+LINK_CODE_TRIES: Final = 5
 US_STOCKS: Final = "us_stocks"
 ALL_MARKETS: Final = ("in", "us")
 
@@ -186,6 +189,10 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "address": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "linked_at": "TEXT NOT NULL",
     },
     "keiki_turns": {"turn_id": "TEXT PRIMARY KEY", "seen_at": "TEXT NOT NULL"},
+    "link_codes": {
+        "code": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "expires_at": "TEXT NOT NULL",
+        "used_at": "TEXT",
+    },
     "outbox": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
@@ -414,6 +421,40 @@ class Store:
                     tuple(json.loads(r["numbers_used"])), r["sent_at"])
             for r in rows
         ]  # fmt: skip
+
+    def new_link_code(self, user_id: str, now: dt.datetime, ttl: dt.timedelta) -> str:
+        """A fresh 6-digit code for this user. Their older unused codes stop working, and every
+        expired code is cleared so the space stays free."""
+        now_utc = now.astimezone(dt.UTC)
+        expires = (now_utc + ttl).isoformat()
+        for _ in range(LINK_CODE_TRIES):
+            code = f"{secrets.randbelow(10**LINK_CODE_DIGITS):0{LINK_CODE_DIGITS}d}"
+            with self._connect() as conn:
+                conn.execute("DELETE FROM link_codes WHERE expires_at <= ? OR "
+                             "(user_id = ? AND used_at IS NULL)",
+                             (now_utc.isoformat(), user_id))  # fmt: skip
+                cursor = conn.execute(
+                    "INSERT OR IGNORE INTO link_codes (code, user_id, expires_at) VALUES (?, ?, ?)",
+                    (code, user_id, expires),
+                )
+            if cursor.rowcount == 1:
+                return code
+        raise RuntimeError("no free link code")
+
+    def redeem_link_code(self, code: str, now: dt.datetime) -> str | None:
+        """The user id behind an unexpired, unused code, which is used up in the same
+        transaction. None for any other code."""
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            row = conn.execute(
+                "SELECT user_id FROM link_codes WHERE code = ? AND used_at IS NULL "
+                "AND expires_at > ?",
+                (code, now.astimezone(dt.UTC).isoformat()),
+            ).fetchone()
+            if row is None:
+                return None
+            conn.execute("UPDATE link_codes SET used_at = ? WHERE code = ?", (now_iso(), code))
+        return row["user_id"]
 
     def contact_user(self, address: str) -> str | None:
         with self._connect() as conn:
