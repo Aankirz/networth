@@ -297,3 +297,7 @@
 
 ## 2026-10-25 — Phase 6 report v2
 - Report updated for method v2: sources with the OECD splices and rejected ids, window 2007-10..2026-09 (228 months), v1 vs v2 table, new sample and guard-checked lines, label size check, gate counts.
+||||||| parent of 19df1a7 (feat: verify Keiki turn signatures with Ed25519 or HMAC)
+
+## 2026-10-25 — Verify Keiki turn signatures
+- networth/keiki/verify.py trusts a pushed turn only on a valid Ed25519 signature (Keiki's JWKS, refetched at most once a minute on an unknown kid) or, when KEIKI_SIGNING_SECRET is set, a valid HMAC; stale (over 5 minutes), unsigned and unknown-kid requests get a reason. Adds the cryptography dependency (Phase 3C unit 1).
