@@ -1,4 +1,4 @@
-# Phase 6 · Plan range method (v1)
+# Phase 6 · Plan range method (v2)
 
 This file fixes every choice before the first full run. The report cites the commit that added it. A change to any rule below bumps `METHOD_VERSION` in `networth/sim/config.py` and gets a dated line at the bottom.
 
@@ -8,8 +8,8 @@ This file fixes every choice before the first full run. The report cites the com
 |---|---|---|---|
 | Core | Nifty 50, price index, `^NSEI` | Yahoo Finance, https://finance.yahoo.com/quote/%5ENSEI/history/ | The brief names it. NSE's total-return series (https://www.niftyindices.com/reports/historical-data) has no scriptable free endpoint: its JSON API answered 401 to a plain request on 2026-10-25. So the price index is used and **dividends are left out**. Nifty 50 dividends have run near 1 to 1.5% a year, so the core range is conservative by about that much. |
 | Growth | Nifty Midcap 50, price index, `^NSEMDCP50` | Yahoo Finance, https://finance.yahoo.com/quote/%5ENSEMDCP50/history/ . Index owner: NSE Indices, https://www.niftyindices.com/indices/equity/broad-based-indices/nifty-midcap-50 | The only broad, citable Indian mid or small cap index with free monthly history back to 2007. Nifty Midcap 150 (`NIFTYMIDCAP150.NS`) starts in 2019 on Yahoo, and Nifty Midcap 100 (`NIFTY_MIDCAP_100.NS`) carries one row. It is a price index, so dividends are left out here too. |
-| Safety | 3-month interbank rate for India, `INDIR3TIB01STM`, % a year, monthly | FRED (OECD MEI), https://fred.stlouisfed.org/series/INDIR3TIB01STM | A short rate close to what FDs and liquid funds earn. FRED has no monthly Indian 91-day T-bill series (`INTGSTINM193N` does not exist). Starts 2011-11. |
-| Inflation | India CPI Combined, official year-on-year % | MoSPI eSankhyiki via `networth/engine/macro.py` (`data/macro/IN_CPI.csv`), https://api.mospi.gov.in/api/cpi | The brief names it. Starts 2012-01. |
+| Safety | 3-month interbank rate for India, `INDIR3TIB01STM`, % a year, monthly, from 2011-11. **Before 2011-11 (v2):** the OECD MEI short-term rate for India, `INDLOCOSTORSTM`, which is the overnight call money rate, 1999-04 to 2023-12. | FRED (OECD MEI), https://fred.stlouisfed.org/series/INDIR3TIB01STM and https://fred.stlouisfed.org/series/INDLOCOSTORSTM | A short rate close to what FDs and liquid funds earn. FRED has no monthly Indian 91-day T-bill series (`INTGSTINM193N` does not exist). Where both exist, the call rate averages 0.29 points below the 3-month rate (146 overlapping months). It spikes in stress months (18.6% in 2008-10), which overstates what FDs and liquid funds earned in those few months. FRED's `IRSTCI01INM156N` was rejected: it reads a flat 6.0% from 2006 to 2011, which is RBI's bank rate of the time, not a market rate. |
+| Inflation | India CPI Combined, official year-on-year %, from 2012-01. **Before 2012-01 (v2):** the OECD all-items CPI for India, `INDCPIALLMINMEI`, index 2015=100, 1957-01 to 2025-03. | MoSPI eSankhyiki via `networth/engine/macro.py` (`data/macro/IN_CPI.csv`), https://api.mospi.gov.in/api/cpi , and FRED (OECD MEI), https://fred.stlouisfed.org/series/INDCPIALLMINMEI | The brief names MoSPI. Where both exist, OECD year-on-year runs 0.1 points above MoSPI's on average (157 months). |
 
 Yahoo ticker histories were checked with `yfinance` on 2026-10-25. The FRED ids were checked against the FRED series API on the same day.
 
@@ -17,13 +17,14 @@ Yahoo ticker histories were checked with `yfinance` on 2026-10-25. The FRED ids 
 
 - **Equity (core, growth).** Daily closes from Yahoo. The month's return is the last close of the month over the last close of the month before, minus 1.
 - **Safety.** The rate `r` for month m is FRED's monthly value in % a year. The month's return is `(1 + r/100)^(1/12) − 1`.
-- **Inflation.** MoSPI publishes year-on-year %, not an index level. The month's inflation is `(1 + yoy/100)^(1/12) − 1`, an even spread of the year-on-year figure. Over a year of resampled months this lands close to the true price change. It smooths single-month swings, which only matters for the real range by a little. MoSPI has no print for 2020-04 and 2020-05. Those two months take the straight line between 2020-03 and 2020-06.
+- **Inflation before 2012-01.** The OECD index's month-on-month change.
+- **Inflation from 2012-01.** MoSPI publishes year-on-year %, not an index level. The month's inflation is `(1 + yoy/100)^(1/12) − 1`, an even spread of the year-on-year figure. Over a year of resampled months this lands close to the true price change. It smooths single-month swings, which only matters for the real range by a little. MoSPI has no print for 2020-04 and 2020-05. Those two months take the straight line between 2020-03 and 2020-06.
 
 ## Data window
 
 The window is every whole calendar month in which all four series have a value, from the first such month to the last complete month. No gaps are allowed inside it, other than the two CPI months filled above. The table builder fails loudly if it finds one. The report states the first and last month.
 
-On the data seen while choosing sources, this is about 2012-01 to 2026-09. **It leaves out 2008.** The worst fall in the window is the 2020 COVID crash. So the share of paths that hit a fall limit is likely on the low side. The report says this in plain words.
+Each bucket with two series uses the later one from its first month and the earlier one only before it. In v1 the window was 2012-01 to 2026-09 and left out 2008. With the v2 early series, every bucket reaches back past 2007-10, so the window starts where the equity indices do, at about 2007-10. That brings in the 2008 crash.
 
 ## Resampling
 
@@ -62,3 +63,4 @@ INR only. A plan in USD gets "Rupee plans only for now."
 ## Changes
 
 - 2026-10-25: v1.
+- 2026-10-25: v2. Review asked for the longest window every bucket has. v1 started in 2012 only because MoSPI CPI and the 3-month interbank rate start late, which left the 2008 crash out of "what a fall felt like". v2 adds the OECD India CPI (`INDCPIALLMINMEI`) before 2012-01 and the OECD short-term rate (`INDLOCOSTORSTM`) before 2011-11. Both were checked against the FRED series API on 2026-10-25. Nothing else changed. Recorded before the v2 table was built or run.
