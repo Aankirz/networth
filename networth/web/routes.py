@@ -405,3 +405,8 @@ def plan_range_page(
     r = sim.simulate(targets, q.amount, sim.horizon_years(q.years), q.plan.max_drop_ok, table)
     return _page(request, "plan_range.html", form=_plan_form(q),
                  pr=plan_view.plan_range_view(r, plan_line(q.plan)))  # fmt: skip
+
+
+# The JSON API for the Next.js site adds its routes to this router when it loads. Imported last,
+# because it reads the settings and the sim table above.
+import networth.web.api  # noqa: E402, F401
