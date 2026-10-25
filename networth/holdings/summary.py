@@ -2,7 +2,6 @@
 Pure; no IO.
 
     s = summarize(holdings)        # value, invested, gain, each holding's rupees and share
-    gaps = plan_gaps(report)       # each bucket in rupees: at the plan's percentage and now
     short_money(291000, "INR", "en")   # "₹2.91 lakh"
 
 Every number comes from the stored list: units times the screenshot's price, units times the
@@ -14,8 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from networth.holdings.model import BUCKETS, Bucket, Holding, Holdings, Kind
-from networth.holdings.report import HoldingsReport
+from networth.holdings.model import Holding, Holdings, Kind
 from networth.holdings.returns import invested
 from networth.sim import rupees
 from networth.web.fmt import western_grouping
@@ -54,15 +52,6 @@ class Summary:
     more_below: bool
 
 
-@dataclass(frozen=True)
-class Gap:
-    bucket: Bucket
-    plan_pct: int
-    held_pct: int
-    plan_value: int  # the plan's percentage of today's total
-    held_value: int
-
-
 def _value(h: Holding) -> float | None:
     return h.units * h.price if h.price else None
 
@@ -93,21 +82,6 @@ def summarize(h: Holdings) -> Summary:
     pct = round(100 * gain / cost) if gain is not None and cost > 0 else None
     return Summary(h.currency, len(items), ordered, total, cost, gain, pct, unpriced,
                    sum(x.kind is Kind.STOCK for x in h.items), h.listed, h.more_below)  # fmt: skip
-
-
-def plan_gaps(report: HoldingsReport) -> tuple[Gap, ...]:
-    """Each bucket, in the safety, core, growth order: the plan's share of today's total in
-    rupees, and what is there now."""
-    held = {b: sum(r.value for r in report.rows if r.bucket is b) for b in BUCKETS}
-    pcts = zip(BUCKETS, report.plan_pct, report.held_pct, strict=True)
-    return tuple(Gap(b, plan, now, round(report.value * plan / 100), held[b])
-                 for b, plan, now in pcts)  # fmt: skip
-
-
-def furthest(gaps: tuple[Gap, ...]) -> Gap | None:
-    """The bucket furthest from the plan in rupees; None when every bucket matches it."""
-    gap = max(gaps, key=lambda g: abs(g.held_value - g.plan_value))
-    return gap if gap.held_value != gap.plan_value else None
 
 
 def short_money(n: int, currency: str, lang: str = "en") -> str:

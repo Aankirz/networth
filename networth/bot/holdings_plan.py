@@ -29,11 +29,15 @@ from networth.bot.holdings_words import (
     EACH_MONTH,
     FUND_KINDS,
     FUNDS,
+    GAP_LINE,
+    GAP_OVER,
+    GAP_UNDER,
     IN_PART,
     INTO,
     MATCHES,
     MONTHS,
     NEW_MONEY,
+    NO_VIEW,
     NOW_IS,
     NOW_PART,
     ON_PLAN,
@@ -52,6 +56,9 @@ from networth.bot.holdings_words import (
     TRIM_ALL,
     TRIM_FIRST,
     TRIM_SOME,
+    VIEW_HEAD,
+    VIEW_ROW,
+    VIEW_WORDS,
     WHY,
     WHY_INDEX,
     WHY_ORDER,
@@ -62,9 +69,9 @@ from networth.bot.onboarding import Reply, plan_name
 from networth.bot.telegram import Button, Keyboard
 from networth.holdings.action import ActionPlan, Trim, action_plan
 from networth.holdings.model import BUCKETS, Bucket, Holdings, Kind, from_json
-from networth.holdings.report import HoldingsReport
+from networth.holdings.report import HoldingsReport, Row
 from networth.holdings.summary import short_money
-from networth.ratings import View, rate
+from networth.ratings import Driver, Rating, View, rate
 
 log = logging.getLogger("networth.bot")
 
@@ -215,7 +222,8 @@ def _detail(action: str, w: Words, report: HoldingsReport, name: str) -> Reply:
     )
 
 
-Rater = Callable[[str], View | None]
+Rater = Callable[[str], Rating | None]
+WEAKEST_FIRST: Final = (View.AVOID, View.WEAK, View.NEUTRAL, View.POSITIVE, View.STRONG)
 
 
 def _rater(services: Services) -> Rater | None:
@@ -223,21 +231,22 @@ def _rater(services: Services) -> Rater | None:
     if sources is None:
         return None
 
-    def view(query: str) -> View | None:
+    def rating(query: str) -> Rating | None:
         try:
-            return rate(query, sources=sources).view
-        except Exception:  # a holding the rating sources can't find is ordered by its loss
+            return rate(query, sources=sources)
+        except Exception:  # a holding the rating sources can't find is shown without a view
             log.info("no rating for a holding", exc_info=True)
             return None
 
-    return view
+    return rating
 
 
-def _views(h: Holdings, rater: Rater | None) -> dict[str, View]:
+def _ratings(h: Holdings, services: Services) -> dict[str, Rating]:
+    rater = _rater(services)
     if rater is None:
         return {}
     found = {x.name: rater(x.identifier or x.name) for x in h.items if x.kind in RATED_KINDS}
-    return {name: v for name, v in found.items() if v is not None}
+    return {name: r for name, r in found.items() if r is not None}
 
 
 def _monthly(profile: Profile, currency: str) -> int | None:
@@ -252,9 +261,64 @@ def plan_reply(store: Store, profile: Profile, services: Services, action: str) 
     if report is None or data is None or saved is None:
         return None
     lang = profile.lang or "en"
-    views = _views(from_json(data), _rater(services))
+    views = {name: r.view for name, r in _ratings(from_json(data), services).items()}
     plan = action_plan(report, _monthly(profile, report.currency), views)
     if plan.on_plan:
         return Reply(say(MATCHES, lang))
     w, name = Words(plan, lang), plan_name(saved, lang)
     return _overview(w, report, name) if action == "overview" else _detail(action, w, report, name)
+
+
+def _top(r: Rating) -> Driver | None:
+    """The driver that moved the score most: its weight times its distance from the middle."""
+    return max(r.drivers, key=lambda d: d.weight * abs(d.score - 50), default=None)
+
+
+def _view_row(name: str, r: Rating | None, lang: str) -> str:
+    top = _top(r) if r is not None else None
+    if r is None or top is None:
+        return _say(NO_VIEW, lang, name=name)
+    return _say(
+        VIEW_ROW,
+        lang,
+        name=name,
+        view=say(VIEW_WORDS[r.view.value], lang),
+        points=r.score,
+        label=top.label,
+        value=top.value,
+        source=top.source.name,
+    )
+
+
+def _gap_line(w: Words, name: str) -> str:
+    p, lang = w.plan, w.lang
+    parts = [_say(GAP_OVER if p.held[b] > p.targets[b] else GAP_UNDER, lang,
+                  amount=w.money(abs(p.held[b] - p.targets[b])), words=w.bucket(b))
+             for b in BUCKETS if abs(p.held[b] - p.targets[b]) >= ROUND_TO]  # fmt: skip
+    return (
+        _say(GAP_LINE, lang, name=name, parts=_joined(parts, lang)) if parts else say(MATCHES, lang)
+    )
+
+
+def view_answer(store: Store, profile: Profile, services: Services,
+                lang: str) -> tuple[str, Keyboard] | None:  # fmt: skip
+    """Networth's view on each holding, weakest first, then the plan gap in money, with the
+    action plan's buttons. None without a confirmed list or a saved plan."""
+    report = holdings.report_for(profile.user_id, store, history=False)
+    data, saved = store.holdings_data(profile.user_id), store.get_plan(profile.user_id)
+    if report is None or data is None or saved is None:
+        return None
+    rated = _ratings(from_json(data), services)
+
+    def order(row: Row) -> tuple[int, int]:
+        r = rated.get(row.name)
+        return (WEAKEST_FIRST.index(r.view), r.score) if r else (len(WEAKEST_FIRST), 0)
+
+    rows = [
+        _view_row(row.name, rated.get(row.name), lang) for row in sorted(report.rows, key=order)
+    ]
+    plan = action_plan(report, _monthly(profile, report.currency))
+    gap = _gap_line(Words(plan, lang), plan_name(saved, lang))
+    keys: Keyboard = ((_button(REBALANCE, "rebal", lang), _button(NEW_MONEY, "newmoney", lang)),
+                      (_button(WHY, "why", lang),))  # fmt: skip
+    return "\n".join([say(VIEW_HEAD, lang), *rows, gap]), keys

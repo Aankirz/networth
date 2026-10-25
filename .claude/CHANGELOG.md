@@ -638,3 +638,9 @@
 
 ## 2026-10-25 — USD holdings fixture and the phase 12 report
 - tests/fixtures/holdings/us_holdings_vision.json and test: a US user sees dollars, VOO, SGOV and US safe-money words; "Both are" for two holdings; docs/phases/phase-12-report.md lists the follow-ups and gate exit codes.
+
+## 2026-10-25 — Sell question shows the Networth view per holding
+- "What should I sell?" / "kya bechna chahiye" after holdings lists each holding's rate() view, score and top driver with its source, weakest first, then the plan gap in money. Removed the old not-a-pick copy and unused plan_gaps/furthest/Gap.
+
+## 2026-10-25 — Rebased the sell view onto 13A
+- Rebased onto 13A local work; kept 13A's Hindi/Hinglish sell phrases in chat routing (they cover mine) and pointed 13A's sell test at the per-holding view.

@@ -316,17 +316,46 @@ def test_no_holdings_reply_has_an_internal_word_or_the_old_syntax(tmp_path, lang
         assert guard.check(text, text).ok, (text, guard.check(text, text).problems)
 
 
-def test_what_should_i_sell_gets_the_gap_and_history_never_a_pick(tmp_path) -> None:
-    chat = owner(tmp_path)
+YAHOO = SimpleNamespace(name="Yahoo Finance")
+
+
+def _fake_rate(q: str, sources: object) -> SimpleNamespace:
+    """Swiggy rated Weak, Hero Motors not found, the rest Positive. Momentum moves each most."""
+    if q == "Hero Motors":
+        raise LookupError(q)
+    weak = q == "Swiggy"
+    return SimpleNamespace(view=View.WEAK if weak else View.POSITIVE, score=38 if weak else 64,
+        drivers=(SimpleNamespace(label="Growth", value="Revenue +24% a year", score=70,
+                                 weight=0.2, source=YAHOO),
+                 SimpleNamespace(label="Momentum", value="down 31% in a year", score=20,
+                                 weight=0.3, source=YAHOO)))  # fmt: skip
+
+
+@pytest.mark.parametrize("lang, question", [("en", "Which of these should I sell?"),
+                                            ("hinglish", "kya bechna chahiye")])  # fmt: skip
+def test_a_sell_question_gets_each_view_weakest_first_then_the_gap(
+    tmp_path, monkeypatch, lang, question
+) -> None:
+    monkeypatch.setattr(holdings_plan, "rate", _fake_rate)
+    chat = owner(tmp_path, lang=lang)
+    chat.services = dataclasses.replace(chat.services, ratings=object())
     photo(chat)
     chat.tap("hd:ok")
-    chat.say("Which of these should I sell?")
-    text = plain(last(chat))
-    assert text.startswith(words.NOT_A_PICK["en"])
-    assert "The part furthest from your plan is single shares or themes" in text
-    assert "₹29,061" in text and guard.check(text, text).ok
-    for name in ("Swiggy", "Vishal Nirmiti", "Adani Green Energy", "Hero Motors"):
-        assert name not in text
+    chat.say(question)
+    lines = plain(last(chat)).splitlines()
+    assert lines[0] == words.VIEW_HEAD[lang]
+    assert [line.split(":")[0] for line in lines[1:5]] == [
+        "Swiggy",
+        "Vishal Nirmiti",
+        "Adani Green Energy",
+        "Hero Motors",
+    ]
+    view = words.VIEW_WORDS["Weak"][lang]
+    assert lines[1].startswith(f"Swiggy: {view}, 38/100.")
+    assert "Momentum, down 31% in a year (Yahoo Finance)" in lines[1]
+    assert lines[4] == words.NO_VIEW[lang].format(name="Hero Motors")
+    assert "₹2.62 lakh" in lines[5] and "₹2.03 lakh" in lines[5] and "₹58,100" in lines[5]
+    assert all(guard.check(t, t).ok for t in lines)
 
 
 @pytest.mark.parametrize("name, kind, ticker", [

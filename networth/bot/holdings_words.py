@@ -152,13 +152,6 @@ KIND_BUTTONS: Final = {
                     "hinglish": "Safe paisa (liquid, gilt, FD)"},
 }  # fmt: skip
 SAVED: Final = {"en": "Saved.", "hi": "सेव हो गया।", "hinglish": "Save ho gaya."}
-PLAN_IS: Final = {
-    "en": "Your plan is {name}: about {parts}.",
-    "hi": "आपका प्लान {name} है: लगभग {parts}।",
-    "hinglish": "Aapka plan {name} hai: lagbhag {parts}.",
-}
-PLAN_PART: Final = {"en": "{pct}% in {words}", "hi": "{pct}% {words} में",
-                    "hinglish": "{pct}% {words} mein"}  # fmt: skip
 AND: Final = {"en": " and ", "hi": " और ", "hinglish": " aur "}
 NOW_IS: Final = {
     "en": "Right now {parts}.",
@@ -167,16 +160,6 @@ NOW_IS: Final = {
 }
 NOW_PART: Final = {"en": "{pct}% is in {words}", "hi": "{pct}% {words} में है",
                    "hinglish": "{pct}% {words} mein hai"}  # fmt: skip
-FURTHEST: Final = {
-    "en": "The part furthest from your plan is {words}: at your plan's {plan_pct}% that would "
-    "be about {plan_value}, and right now it is {held_value}. That's the part worth reading "
-    "about first.",
-    "hi": "आपके प्लान से सबसे ज़्यादा दूर {words} हैं: प्लान के {plan_pct}% पर यह लगभग "
-    "{plan_value} होता, और अभी {held_value} है। पढ़ने की शुरुआत इसी हिस्से से की जा सकती है।",
-    "hinglish": "Aapke plan se sabse zyada door {words} hain: plan ke {plan_pct}% par yeh "
-    "lagbhag {plan_value} hota, aur abhi {held_value} hai. Padhne ki shuruaat isi hisse se ki ja "
-    "sakti hai.",
-}
 MATCHES: Final = {
     "en": "Your holdings are split the way your plan is.",
     "hi": "आपकी होल्डिंग्स उसी तरह बँटी हैं जैसे आपका प्लान।",
@@ -190,15 +173,6 @@ BUCKET_WORDS: Final = {
     Bucket.SAFETY: {"en": "safe money (liquid, gilt, FD)", "hi": "सुरक्षित पैसा (लिक्विड, गिल्ट, FD)",
                     "hinglish": "safe paisa (liquid, gilt, FD)"},
 }  # fmt: skip
-NOT_A_PICK: Final = {
-    "en": "I don't pick holdings or say what to do with them. Here is "
-    "how your holdings sit next to your plan, and what history says about a mix like this.",
-    "hi": "मैं होल्डिंग्स नहीं चुनता, न यह बताता हूँ कि इनका क्या करना है। यह रहा कि "
-    "आपकी होल्डिंग्स आपके प्लान के मुकाबले कैसी हैं, और इतिहास ऐसे मिश्रण के बारे में क्या कहता है।",
-    "hinglish": "Main holdings nahin chunta, na yeh batata hoon ki inka kya karna hai. "
-    "Yeh raha ki aapki holdings aapke plan ke muqable kaisi hain, aur itihaas aise "
-    "mix ke baare mein kya kehta hai.",
-}
 REMOVE_BUTTON: Final = {"en": "Remove it", "hi": "इसे हटा दो", "hinglish": "Ise hata do"}
 
 # --- the action plan after "That's everything" -----------------------------------------------
@@ -371,3 +345,37 @@ BOTH_SHARES: Final = {
     "hi": "दोनों अलग अलग कंपनियों के शेयर हैं।",
     "hinglish": "Dono alag alag companies ke shares hain.",
 }
+# --- "What should I sell?": Networth's view on each holding, then the plan gap ---------------
+VIEW_HEAD: Final = {
+    "en": "Networth's view on each holding, weakest first:",
+    "hi": "हर होल्डिंग पर Networth की राय, सबसे कमज़ोर पहले:",
+    "hinglish": "Har holding par Networth ki raay, sabse kamzor pehle:",
+}
+VIEW_ROW: Final = {
+    "en": "{name}: {view}, {points}/100. Top reason: {label}, {value} ({source}).",
+    "hi": "{name}: {view}, {points}/100। सबसे बड़ी वजह: {label}, {value} ({source})।",
+    "hinglish": "{name}: {view}, {points}/100. Sabse badi wajah: {label}, {value} ({source}).",
+}
+NO_VIEW: Final = {
+    "en": "{name}: no Networth view yet, as I couldn't find its data.",
+    "hi": "{name}: अभी Networth की राय नहीं है, इसका डेटा नहीं मिला।",
+    "hinglish": "{name}: abhi Networth ki raay nahin hai, iska data nahin mila.",
+}
+VIEW_WORDS: Final = {
+    "Strong": {"en": "Strong", "hi": "मज़बूत", "hinglish": "Mazboot"},
+    "Positive": {"en": "Positive", "hi": "अच्छा", "hinglish": "Achha"},
+    "Neutral": {"en": "Neutral", "hi": "ठीक-ठाक", "hinglish": "Theek-thaak"},
+    "Weak": {"en": "Weak", "hi": "कमज़ोर", "hinglish": "Kamzor"},
+    "Avoid": {"en": "Avoid", "hi": "बचने लायक", "hinglish": "Bachne layak"},
+}
+GAP_LINE: Final = {
+    "en": "Against your {name} plan: {parts}.",
+    "hi": "आपके {name} प्लान के मुकाबले: {parts}।",
+    "hinglish": "Aapke {name} plan ke muqable: {parts}.",
+}
+GAP_OVER: Final = {"en": "about {amount} above plan in {words}",
+                   "hi": "{words} में प्लान से लगभग {amount} ज़्यादा",
+                   "hinglish": "{words} mein plan se lagbhag {amount} zyada"}  # fmt: skip
+GAP_UNDER: Final = {"en": "about {amount} below plan in {words}",
+                    "hi": "{words} में प्लान से लगभग {amount} कम",
+                    "hinglish": "{words} mein plan se lagbhag {amount} kam"}  # fmt: skip

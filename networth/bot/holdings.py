@@ -24,26 +24,17 @@ from networth.bot import holdings_plan, message
 from networth.bot.holdings_words import (
     ADDED,
     ALL_SHARES,
-    AND,
     BOTH_SHARES,
-    BUCKET_WORDS,
     CHANGED,
     DOWN,
     EVEN,
     EVERYTHING,
-    FURTHEST,
     GOT_IT,
     GOT_ONE,
     KIND_BUTTONS,
-    MATCHES,
     NO_PRICE,
-    NOT_A_PICK,
     NOT_CAUGHT,
-    NOW_IS,
-    NOW_PART,
     ONE_SHARE,
-    PLAN_IS,
-    PLAN_PART,
     PUT_IN,
     REMOVE_BUTTON,
     REMOVED,
@@ -68,14 +59,13 @@ from networth.bot.holdings_words import (
     WRONG,
 )
 from networth.bot.message import Message, say
-from networth.bot.onboarding import Reply, plan_name
+from networth.bot.onboarding import Reply
 from networth.bot.telegram import Button, Keyboard
 from networth.chat.answer import Answer
 from networth.holdings import lines as hl
-from networth.holdings.lines import history_lines, holdings_lines, lang_of
+from networth.holdings.lines import holdings_lines, lang_of
 from networth.holdings.model import BUCKETS, Bucket, Holdings
-from networth.holdings.report import HoldingsReport
-from networth.holdings.summary import Summary, furthest, plan_gaps, short_money, summarize
+from networth.holdings.summary import Summary, short_money, summarize
 
 log = logging.getLogger("networth.bot")
 
@@ -248,37 +238,6 @@ def typed_fix(store: Store, profile: Profile, text: str,
     return _guarded(summary_reply(after, profile.lang, lead), services)
 
 
-def _joined(parts: list[str], lang: str) -> str:
-    return parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + say(AND, lang) + parts[-1]
-
-
-def _bucket(b: Bucket, lang: str) -> str:
-    return say(BUCKET_WORDS[b], lang)
-
-
-def comparison_lines(report: HoldingsReport, plan: str, lang: str) -> list[str]:
-    """The plan and the holdings in plain words, then the part furthest from the plan in
-    rupees, as something to read about."""
-    c = report.currency
-    planned = [_say(PLAN_PART, lang, pct=p, words=_bucket(b, lang))
-               for b, p in zip(BUCKETS, report.plan_pct, strict=True) if p]  # fmt: skip
-    held = [_say(NOW_PART, lang, pct=p, words=_bucket(b, lang))
-            for b, p in zip(BUCKETS, report.held_pct, strict=True) if p]  # fmt: skip
-    gap = furthest(plan_gaps(report))
-    far = say(MATCHES, lang)
-    if gap is not None:
-        far = _say(FURTHEST, lang, words=_bucket(gap.bucket, lang), plan_pct=gap.plan_pct,
-                   plan_value=short_money(gap.plan_value, c, lang),
-                   held_value=short_money(gap.held_value, c, lang))  # fmt: skip
-    now = [_say(NOW_IS, lang, parts=_joined(held, lang))] if held else []
-    return [_say(PLAN_IS, lang, name=plan, parts=_joined(planned, lang)), *now, far]
-
-
-def _plan_name(store: Store, profile: Profile, lang: str) -> str:
-    plan = store.get_plan(profile.user_id)
-    return plan_name(plan, lang) if plan else ""
-
-
 def _kind_buttons(n: int, verb: str, lang: str) -> Keyboard:
     return tuple((Button(say(KIND_BUTTONS[b], lang), f"{TAP_PREFIX}:{verb}:{n}:{b.value}"),)
                  for b in BUCKETS)  # fmt: skip
@@ -381,27 +340,20 @@ def report_reply(store: Store, profile: Profile, services: Services, now: dt.dat
     return _guarded(Reply(message_, buttons), services)
 
 
-def _pick_question(store: Store, profile: Profile, lang: str) -> str | None:
-    """A "what should I sell" question gets the plan gap and history in fixed words, never a
-    pick and never the model."""
-    report = holdings.report_for(profile.user_id, store)
-    if report is None:
-        return None
-    gap = comparison_lines(report, _plan_name(store, profile, lang), lang)
-    return "\n".join([say(NOT_A_PICK, lang), *gap, *history_lines(report.history, lang)])
-
-
 def chat_answer(store: Store, profile: Profile, text: str, services: Services,
                 lang: str) -> Answer:  # fmt: skip
     """A holdings question in chat: the guarded answer, or with no models the decline and the
-    report. A buy or sell question gets the plan gap and history. Never a footer."""
+    report. A buy or sell question gets the view on each holding and the plan gap."""
     chosen = lang_of(lang)
     report = holdings.report_for(profile.user_id, store)
     if report is None:
         return Answer.fixed(NO_HOLDINGS, footer=False)
-    if guard.BANNED.search(text) or guard.ADVICE.search(text):  # asks for a pick
-        words = _pick_question(store, profile, chosen) or ""
-        guard.log_verdict(services.guard_log, "holdings", "template", guard.check(words, words))
+    if guard.BANNED.search(text) or guard.ADVICE.search(text):  # asks what to sell or buy
+        viewed = holdings_plan.view_answer(store, profile, services, chosen)
+        if viewed is not None:
+            words, keys = viewed
+            return Answer.fixed({"en": words, chosen: words}, buttons=keys)
+        words = "\n".join(holdings_lines(report, chosen))
     elif services.models is None:
         words = "\n".join([hl.LINES[chosen]["decline"], *holdings_lines(report, chosen)])
     else:

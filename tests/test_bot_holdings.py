@@ -241,16 +241,15 @@ def test_holdings_before_setup_asks_to_finish(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("lang", LANGS)
-def test_what_should_i_sell_gets_the_plan_gap_and_history_not_a_pick(tmp_path, lang) -> None:
+def test_what_should_i_sell_without_ratings_says_so_for_each_holding(tmp_path, lang) -> None:
     chat = talk(tmp_path, lang=lang)
     confirm(chat)
     chat.say("What should I sell?")
-    m, report = last(chat), nh.report_for(USER, chat.store, table=TABLE)
+    m = last(chat)
     text = plain(m)
-    assert text.startswith(words.NOT_A_PICK[lang])
-    assert all(line in text for line in flow.comparison_lines(report, "Balanced", lang))
-    assert all(line in text for line in nh.lines.history_lines(report.history, lang))
-    assert guard.check(text, text).ok
+    assert text.startswith(words.VIEW_HEAD[lang])
+    no_view = words.NO_VIEW[lang].format(name="Infosys")
+    assert no_view in text and guard.check(text, text).ok
     assert m.footer == "" and not DISCLAIMER.search(text)
 
 
@@ -269,7 +268,7 @@ def test_a_sell_question_never_reaches_the_writer(tmp_path: Path) -> None:
     confirm(chat)
     chat.say("What should I sell?")
     text = plain(last(chat))
-    assert text.startswith(words.NOT_A_PICK["en"]) and len(models.writes) == 2
+    assert text.startswith(words.VIEW_HEAD["en"]) and len(models.writes) == 2
     assert "sell" not in text.lower() and not DISCLAIMER.search(text)
 
 
@@ -296,7 +295,7 @@ def test_a_dollar_list_keeps_every_line_in_its_place(chat: Chat) -> None:
     ("kya bechna chahiye", "hinglish"), ("मुझे क्या बेचना चाहिए?", "hi"),
     ("Kaunsa fund kharidna chahiye?", "hinglish"),
 ])  # fmt: skip
-def test_a_hindi_or_hinglish_sell_question_without_models_gets_the_plan_gap(
+def test_a_hindi_or_hinglish_sell_question_without_models_gets_the_view(
     tmp_path, question: str, lang: str
 ) -> None:
     """P9: with no model the phrase rules must send these to the holdings path, not explain."""
@@ -305,6 +304,5 @@ def test_a_hindi_or_hinglish_sell_question_without_models_gets_the_plan_gap(
     chat.services = dataclasses.replace(chat.services, models=None)
     chat.say(question)
     text = plain(last(chat))
-    assert text.startswith(words.NOT_A_PICK[lang])
-    report = nh.report_for(USER, chat.store, table=TABLE)
-    assert all(line in text for line in flow.comparison_lines(report, "Balanced", lang))
+    assert text.startswith(words.VIEW_HEAD[lang])
+    assert words.NO_VIEW[lang].format(name="Infosys") in text
