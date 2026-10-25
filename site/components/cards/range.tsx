@@ -54,7 +54,7 @@ export function RangeView({ card, label }: { card: PlanRangeCard; label?: string
           ]}
         />
         <Cases
-          title="The same range after inflation, in today's rupees"
+          title="The same range after inflation, in today's money"
           rows={[
             ["A bad case", r.real.p10],
             ["The middle case", r.real.median],
