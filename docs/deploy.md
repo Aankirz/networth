@@ -11,6 +11,7 @@ One container serves the bot webhook, `/health` and the web pages. Its state is 
 - On boot, if `PUBLIC_URL` is set, the app calls Telegram `setWebhook` with `PUBLIC_URL/telegram/webhook` and the secret. A Telegram update to a sleeping agent wakes it in about a second.
 - `GET /schedules` publishes the scheduled jobs, and `POST /chat` runs the one Maritime delivers (see Schedules below).
 - `GET /u/{token}` is a user's own page, signed with `LINK_SIGNING_SECRET`.
+- `POST /keiki/turn` takes signed Keiki turns for email (see Keiki below). An unsigned or stale request gets 401.
 
 ## Once, by the owner
 
@@ -106,6 +107,56 @@ maritime exec networth ls /data --json                    # networth.sqlite appe
 ```
 
 Then send `/start` to @networth_professor_bot. After setup, `/brief` sends this month's brief (once per day; a repeat resends the same text), and free text, forwards, links and photos get chat answers.
+
+## Keiki: email and the external harness (Phase 3C)
+
+Keiki carries email to and from the same server. Keiki never writes a user-facing word. Its agent runs on the **external harness**, so every inbound email becomes a signed `POST /keiki/turn` to this container. The server answers 202, runs the same intent, handler and guard as Telegram, and sends the exact text back through Keiki's turn API. Sources: https://onkeiki.com/docs/external-harness.md and https://onkeiki.com/docs/partner-deployments.md, read on 2026-10-25.
+
+What exists in the Keiki org (ids, not secrets):
+
+| Resource | Id |
+| --- | --- |
+| Agent `Networth` (deployment `external_ref: networth`) | `8d5b1d0c-2f0d-42a2-ad0c-e78cabf929c2` |
+| Harness | `external`, mode `push`, `dispatchUrl https://api.maritime.sh/a/eeaab0d3-f621-4548-b8c8-6a5fe0e8f0ea/keiki/turn`, `timeoutMs 600000` |
+| Email channel | `agentmail`, region `us`, inbox `networth@agentmail.to`, channel id `3ef1287d-8979-41c4-b838-e468d017e95f` |
+
+To recreate them from scratch (org-wide key with `*` scope in `KEIKI_API_KEY`), in this order, so no Keiki-hosted model ever has a channel to answer on:
+
+```bash
+K="Authorization: Bearer $KEIKI_API_KEY"; J='Content-Type: application/json'
+curl -s -X POST https://onkeiki.com/api/v1/developer/deployments -H "$K" -H "$J" \
+  -d '{"external_ref":"networth","agent":{"name":"Networth","model":"google/gemini-3.8-flash","system_prompt":"unused: external harness"}}'
+curl -s -X PATCH https://onkeiki.com/api/v1/developer/config -H "$K" -H "$J" \
+  -d '{"agent_id":"<agent-id>","harness":"external","harness_config":{"mode":"push","dispatchUrl":"https://api.maritime.sh/a/<maritime-agent-id>/keiki/turn","timeoutMs":600000}}'
+curl -s -X POST https://onkeiki.com/api/v1/developer/deployments -H "$K" -H "$J" \
+  -d '{"external_ref":"networth","agent":{},"channels":[{"type":"agentmail","region":"us","mode":"create","username":"networth"}]}'
+```
+
+The `dispatchUrl` must be the `api.maritime.sh/a/<id>` address. Keiki follows no redirects and rejects plain HTTP.
+
+Env vars (names only; values from `.env`):
+
+```bash
+maritime agents env set <agent-id> KEIKI_API_KEY=... KEIKI_AGENT_ID=8d5b1d0c-2f0d-42a2-ad0c-e78cabf929c2 --secret
+maritime agents env set <agent-id> KEIKI_EMAIL=networth@agentmail.to
+# optional, only if the HMAC signature is turned on (see Rotate below)
+maritime agents env set <agent-id> KEIKI_SIGNING_SECRET=whsec_... --secret
+```
+
+How a turn is trusted: the server checks `Keiki-Signature-Ed25519` against Keiki's public keys at https://onkeiki.com/.well-known/keiki-turn-keys.json (cached, refetched on an unknown `kid`). With `KEIKI_SIGNING_SECRET` set it also accepts a valid HMAC `Keiki-Signature`. Anything unsigned, signed with an unknown key, more than 5 minutes off, or for another agent id gets 401. A repeated turn id answers 200 and runs nothing.
+
+Rotate:
+- The Ed25519 key is Keiki's. When Keiki rotates it, the new `kid` appears in the key set and the server refetches it. Nothing to do.
+- The HMAC secret: `curl -s -X POST -H "$K" https://onkeiki.com/api/v1/developer/agents/<agent-id>/harness/signing-secret` returns a new `whsec_...` once. Set it with `maritime agents env set <agent-id> KEIKI_SIGNING_SECRET=... --secret`, then restart the agent. Until the restart, Ed25519 still verifies every turn.
+- The API key: `curl -s -X POST -H "$K" https://onkeiki.com/api/v1/keys/<key-id>/rotate` returns the new key once; the old one stops at once. Update `.env` and `KEIKI_API_KEY` on Maritime.
+
+Check it after a deploy:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://api.maritime.sh/a/<agent-id>/keiki/turn -d '{}'   # 401 unsigned
+```
+
+Then email `networth@agentmail.to` from your own address. `data/keiki_turns.jsonl` on the VM gets one line per turn (turn id, intent, guard verdict, cost; never message text), and `GET https://onkeiki.com/api/v1/traces?limit=5` shows Keiki's side of the same turns.
 
 ## Local development
 

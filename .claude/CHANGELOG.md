@@ -322,3 +322,6 @@
 
 ## 2026-10-25 — Answer a first email before setup
 - networth/keiki/turn.py: a stranger's first email that asks something gets its answer, then the short setup; a greeting gets the setup only. A /link code is only read from a short message, so a six-digit number inside a question never redeems one.
+
+## 2026-10-25 — Deploy doc: Keiki
+- docs/deploy.md gains the Keiki section: resource ids, how to recreate them in a safe order, the KEIKI_* env var names, how turns are trusted, and how to rotate the HMAC secret and the API key.
