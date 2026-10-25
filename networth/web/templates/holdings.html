@@ -23,7 +23,7 @@
         <td class="num" data-label="Average cost">{{ r.avg_cost }}</td>
         <td class="num" data-label="Put in">{{ r.invested }}</td>
         <td class="num" data-label="Worth now">{{ r.value }}</td>
-        <td class="num holdings__gain--{{ r.lean }}" data-label="Gain or loss">{{ r.gain }}</td>
+        <td class="num holdings__gain--{{ r.direction }}" data-label="Gain or loss">{{ r.gain }}</td>
         <td class="holdings__ret" data-label="Return">{{ r.ret }}</td>
       </tr>
       {% endfor %}

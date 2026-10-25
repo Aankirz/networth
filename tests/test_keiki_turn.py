@@ -299,7 +299,7 @@ def test_an_email_with_a_mailtrack_footer_is_explained_without_fetching(
     set_up(keiki)
     keiki.say(IPO_TEXT + MAILTRACK_FOOTER + GMAIL_QUOTE)
     assert fetched == []
-    assert keiki.last == GOOD_EXPLANATION
+    assert keiki.last == f"{GOOD_EXPLANATION}\n\nResearch, not advice."
 
 
 def test_two_email_threads_from_one_sender_are_one_user(tmp_path: Path) -> None:
