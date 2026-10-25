@@ -5,6 +5,13 @@ Telegram does. docs/phases/phase-8-contract.md is the contract; site/lib/contrac
     GET  /api/demo/dashboard          POST /api/demo/chat
     POST /api/u/{token}/command       POST /api/demo/command   {"name": "brief", "lang"?: "hi"}
     GET  /api/track-record
+    GET  /api/web/me                  POST /api/web/link   {"code": "123456"}
+    POST /api/web/forget              GET  /api/web/dashboard
+    POST /api/web/chat                POST /api/web/command
+
+The /api/web routes are for a visitor signed in with Google on the site. Each needs the site's
+short-lived signed token (networth.web.session) and answers 401 without one. A Google account
+reaches a user only after a /weblink code from the bot ties the two together.
 
 A command answers with the message Telegram sends for the same slash command, built by the bot's
 own entry points, and never changes the profile: /plan shows the plan without asking to edit it.
@@ -70,7 +77,7 @@ from networth.keiki.turn import TURN_LOCK, cost_between
 from networth.sim.data import Table
 from networth.watcher.store import Confirmed
 from networth.watcher.store import Store as WatcherStore
-from networth.web import holdings_view, plan_view, routes
+from networth.web import holdings_view, plan_view, routes, session
 from networth.web.fmt import percent, western_grouping
 from networth.web.names import TYPES, asset_name, why_path
 from networth.web.routes import BAD_LINK, rates_db, settings, sim_table
@@ -772,6 +779,104 @@ def demo_command(request: Request, body: CommandIn, cfg: Config, services: Svc,
 @router.get("/track-record", dependencies=[Origin])
 def track_record_route(request: Request, db: Annotated[Path, Depends(rates_db)]) -> Response:
     return cors(JSONResponse(track_record(db)), request)
+
+
+# Signed in with Google ----------------------------------------------------------------------
+
+WEB_CONTACT_PREFIX: Final = "google:"  # link-code misses are counted per Google account
+CODE_SHAPE: Final = re.compile(r"\d{6}")
+SIGNED_OUT: Final = {"en": "Your sign-in has run out. Sign in again to go on."}
+NOT_LINKED: Final = {"en": "Send /weblink to @networth_professor_bot and type the code here."}
+BAD_CODE: Final = {
+    "en": "That code didn't work. A code works once and only for 10 minutes. Send /weblink to "
+    "the bot for a new one."
+}
+
+
+class CodeIn(BaseModel):
+    code: str = Field(max_length=32)
+
+
+def signed_in(request: Request, cfg: Settings) -> session.WebVisitor | None:
+    return session.verify(request.headers.get("authorization"), cfg.web_secret,
+                          dt.datetime.now(dt.UTC))  # fmt: skip
+
+
+def linked_user(store: Store, visitor: session.WebVisitor) -> Asker | None:
+    """The user this Google account was tied to, while that user is still with us."""
+    user_id = store.user_for_web_login(visitor.subject)
+    profile = store.get_profile(user_id) if user_id else None
+    if profile is None or profile.status is Status.STOPPED or profile.user_id == DEMO_USER:
+        return None
+    return Asker(store, profile, sample=False)
+
+
+def web_asker(request: Request, cfg: Settings) -> Asker | Response:
+    """The signed-in, linked visitor's user, or the 401 or 403 that says why not."""
+    visitor = signed_in(request, cfg)
+    if visitor is None:
+        return error(401, "signed_out", SIGNED_OUT, "en", request)
+    asker = linked_user(Store(cfg.data_dir), visitor)
+    return asker or error(403, "not_linked", NOT_LINKED, "en", request)
+
+
+@router.get("/web/me", dependencies=[Origin])
+def web_me(request: Request, cfg: Config) -> Response:
+    visitor = signed_in(request, cfg)
+    if visitor is None:
+        return error(401, "signed_out", SIGNED_OUT, "en", request)
+    linked = linked_user(Store(cfg.data_dir), visitor) is not None
+    return cors(JSONResponse({"linked": linked, "name": visitor.name}), request)
+
+
+@router.post("/web/link", dependencies=[Origin])
+def web_link(request: Request, body: CodeIn, cfg: Config) -> Response:
+    """A /weblink code ties this Google account to the bot user who asked for it. A used, expired
+    or wrong code gets the same plain refusal, and misses count towards the hourly limit."""
+    visitor = signed_in(request, cfg)
+    if visitor is None:
+        return error(401, "signed_out", SIGNED_OUT, "en", request)
+    code = re.sub(r"\s", "", body.code)
+    store = Store(cfg.data_dir)
+    contact = WEB_CONTACT_PREFIX + visitor.subject
+    user_id = store.redeem_link_code(code, dt.datetime.now(dt.UTC), contact) if (
+        CODE_SHAPE.fullmatch(code)) else None  # fmt: skip
+    if user_id is None or user_id == DEMO_USER:
+        return error(400, "bad_code", BAD_CODE, "en", request)
+    store.bind_web_login(visitor.subject, user_id, visitor.name)
+    return cors(JSONResponse({"linked": True, "name": visitor.name}), request)
+
+
+@router.post("/web/forget", dependencies=[Origin])
+def web_forget(request: Request, cfg: Config) -> Response:
+    """ "Forget me on the web": the Google link goes; the bot user and their data stay."""
+    visitor = signed_in(request, cfg)
+    if visitor is None:
+        return error(401, "signed_out", SIGNED_OUT, "en", request)
+    Store(cfg.data_dir).forget_web_login(visitor.subject)
+    return cors(JSONResponse({"linked": False}), request)
+
+
+@router.get("/web/dashboard", dependencies=[Origin])
+def web_dashboard(request: Request, cfg: Config, services: Svc, table: SimTable) -> Response:
+    asker = web_asker(request, cfg)
+    if isinstance(asker, Response):
+        return asker
+    return cors(JSONResponse(dashboard(asker, services, table, dt.datetime.now(dt.UTC))), request)
+
+
+@router.post("/web/chat", dependencies=[Origin])
+def web_chat(request: Request, body: ChatIn, cfg: Config, services: Svc,
+             table: SimTable) -> Response:  # fmt: skip
+    asker = web_asker(request, cfg)
+    return asker if isinstance(asker, Response) else answer(asker, body, services, table, request)
+
+
+@router.post("/web/command", dependencies=[Origin])
+def web_command(request: Request, body: CommandIn, cfg: Config, services: Svc,
+                table: SimTable) -> Response:  # fmt: skip
+    asker = web_asker(request, cfg)
+    return asker if isinstance(asker, Response) else command(asker, body, services, table, request)
 
 
 pages.include_router(router)

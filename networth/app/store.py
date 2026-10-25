@@ -11,6 +11,8 @@ email contact to a Telegram user, and link_misses the codes a contact got wrong,
 stops after a few; watches are standing per-user requests, and watch_hits holds
 one row per watch per confirmed story it matched, claimed before the message goes out;
 asked_terms holds glossary terms a user asked about, until a brief brings one back.
+web_logins ties a Google account (by its subject id, never the email) to a user after a /weblink
+code; /erase and "Forget me" on the site remove it.
 turns holds each user's rolling chat window (networth.chat.talk keeps its caps): pruned on every
 write and gone when the user stops.
 holdings holds one user's holdings list as networth.holdings writes it (never an image), and
@@ -254,6 +256,10 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
         "sent_at": "TEXT",
+    },
+    "web_logins": {
+        "subject": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "name": "TEXT NOT NULL",
+        "linked_at": "TEXT NOT NULL",
     },
     "turns": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
@@ -669,6 +675,24 @@ class Store:
                 (user_id, f"{SLACK_CONTACT_PREFIX}%"),
             ).fetchone()
         return row["address"] if row else None
+
+    def bind_web_login(self, subject: str, user_id: str, name: str) -> None:
+        """Point a Google account at a user, replacing whoever it pointed at before."""
+        self._upsert("web_logins", {"subject": subject, "user_id": user_id, "name": name,
+                                    "linked_at": now_iso()})  # fmt: skip
+
+    def user_for_web_login(self, subject: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT user_id FROM web_logins WHERE subject = ?", (subject,)
+            ).fetchone()
+        return row["user_id"] if row else None
+
+    def forget_web_login(self, subject: str) -> bool:
+        """True when a link was there to remove."""
+        with self._connect() as conn:
+            cursor = conn.execute("DELETE FROM web_logins WHERE subject = ?", (subject,))
+        return cursor.rowcount > 0
 
     def queue_mail(self, user_id: str, address: str, text: str) -> int:
         with self._connect() as conn:

@@ -14,6 +14,17 @@ The Python server on Maritime is the truth layer. The Next.js site in `site/` re
 | `POST /api/demo/command` | anyone, rate-limited per visitor like the demo chat | `CommandTurn` |
 | `GET /api/track-record` | anyone | `TrackRecord` |
 
+Phase 11 adds the signed-in routes under `/api/web/`. Each one needs `Authorization: Bearer v1.<payload>.<mac>`, a token the site mints for one minute after it checks the Auth.js session, signed with `NETWORTH_WEB_SECRET` (`networth/web/session.py`). The user is whoever that Google subject is linked to; a user id in a body is never read.
+
+| Route | Who | Returns |
+|---|---|---|
+| `GET /api/web/me` | any signed-in Google account | `{linked, name}` |
+| `POST /api/web/link` | the same, with `{code}` from `/weblink` | `{linked, name}` |
+| `POST /api/web/forget` | the same | `{linked: false}` |
+| `GET /api/web/dashboard` | a linked account | `Dashboard` |
+| `POST /api/web/chat` | a linked account | `ChatTurn` |
+| `POST /api/web/command` | a linked account | `CommandTurn` |
+
 The server is `networth/web/api.py`. The TypeScript below is the source of truth for the shape. `site/lib/contract.ts` is a byte-for-byte copy of the block, and `tests/test_web_api_contract.py` checks three things. The file equals the block. Every interface's field names equal the keys the real API returns. Every card type the server can send is declared here.
 
 ## Rules every field follows
@@ -35,6 +46,9 @@ The server is `networth/web/api.py`. The TypeScript below is the source of truth
 |---|---|---|
 | 200 | | A dashboard or a chat turn |
 | 403 | `forbidden_origin` | A browser `Origin` not in `NETWORTH_WEB_ORIGINS` |
+| 400 | `bad_code` | A `/weblink` code that is wrong, used or past its 10 minutes |
+| 401 | `signed_out` | A `/api/web/` call with a missing, forged or stale token |
+| 403 | `not_linked` | A signed-in Google account not linked to a bot user yet |
 | 404 | `not_found` | A token that is unsigned, expired, unknown or the demo user's. Same as `/u/{token}`. |
 | 413 | `too_long` | `text` over 4096 characters |
 | 422 | | A body that is not `ChatRequest` or `CommandRequest` (FastAPI's validation shape) |
@@ -331,7 +345,7 @@ export interface TrackRecord {
   stats: Stat[];
 }
 
-export type ErrorCode = "forbidden_origin" | "not_found" | "too_long" | "rate_limited" | "failed";
+export type ErrorCode = "forbidden_origin" | "not_found" | "too_long" | "rate_limited" | "failed" | "signed_out" | "not_linked" | "bad_code";
 
 export interface ApiError {
   error: ErrorCode;

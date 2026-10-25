@@ -106,6 +106,7 @@ HELP_COMMANDS: Final = {
     "/pause pause briefs and alerts\n/resume turn them back on\n/stop stop all messages\n"
     "/erase delete everything I have about you\n"
     "/start set up again or see your answers\n/link a code to use me by email too\n"
+    "/weblink a code to sign in on the Networth site\n"
     "/sendto email or /sendto telegram, where briefs and alerts go\n"
     "/watch something, to hear once when a confirmed story about it appears\n"
     "/watches see or stop your watches\n/unwatch 1 stop a watch by its number\n"
@@ -116,6 +117,7 @@ HELP_COMMANDS: Final = {
     "/pause ब्रीफ़ और अलर्ट रोकना\n/resume उन्हें फिर से चालू करना\n/stop सारे मैसेज बंद करना\n"
     "/erase आपके बारे में मेरे पास जो कुछ है, सब मिटाना\n"
     "/start फिर से सेटअप, या अपने जवाब देखना\n/link ईमेल पर भी इस्तेमाल के लिए कोड\n"
+    "/weblink Networth साइट पर साइन इन के लिए कोड\n"
     "/sendto email या /sendto telegram, ब्रीफ़ और अलर्ट किस जगह आते हैं\n"
     "/watch किसी चीज़ पर, उसकी पुष्ट ख़बर आने पर एक बार सुनने के लिए\n"
     "/watches अपनी वॉच देखना या बंद करना\n/unwatch 1 नंबर से कोई वॉच बंद करना\n"
@@ -128,6 +130,7 @@ HELP_COMMANDS: Final = {
     "/erase aapke baare mein mere paas jo kuch hai, sab mitana\n"
     "/start phir se setup, ya apne jawab dekhna\n"
     "/link email par bhi use karne ke liye code\n"
+    "/weblink Networth site par sign in ke liye code\n"
     "/sendto email ya /sendto telegram, briefs aur alerts kis jagah aate hain\n"
     "/watch kisi cheez par, uski confirmed story aane par ek baar sunne ke liye\n"
     "/watches apni watches dekhna ya band karna\n/unwatch 1 number se koi watch band karna\n"
@@ -183,6 +186,15 @@ LINK_CODE: Final = {
     "sakte hain. Yeh ek hi baar chalta hai. Uske baad aapka plan, language aur jo aapne bahar "
     "rakha, woh wahan bhi lagu hoga.",
 }
+WEBLINK_CODE: Final = {
+    "en": "Your code is {code}. Type it on {where} within {minutes} minutes, after signing in "
+    "with Google. It works once.",
+    "hi": "आपका कोड {code} है। Google से साइन इन करके इसे {minutes} मिनट के अंदर {where} पर लिख "
+    "सकते हैं। यह एक ही बार चलता है।",
+    "hinglish": "Aapka code {code} hai. Google se sign in karke ise {minutes} minute ke andar "
+    "{where} par likh sakte hain. Yeh ek hi baar chalta hai.",
+}
+SITE_WORDS: Final = {"en": "the Networth site", "hi": "Networth साइट", "hinglish": "Networth site"}
 DESTINATIONS: Final = {"email": Channel.EMAIL, "telegram": Channel.TELEGRAM}
 DESTINATION_NAMES: Final = {
     Channel.EMAIL: {"en": "your email", "hi": "आपके ईमेल", "hinglish": "aapke email"},
@@ -249,6 +261,7 @@ COMMAND_LIST: Final = (
     ("watches", "See or stop your watches"),
     ("unwatch", "Stop a watch by its number"),
     ("link", "A code to use Networth by email too"),
+    ("weblink", "A code to sign in on the Networth site"),
     ("sendto", "Where briefs and alerts go: email or telegram"),
     ("pause", "Pause briefs and alerts"),
     ("resume", "Turn briefs and alerts back on"),
@@ -767,6 +780,26 @@ def cmd_link(turn: Turn, profile: Profile, args: str) -> None:
                                                             minutes=minutes)))  # fmt: skip
 
 
+def cmd_weblink(turn: Turn, profile: Profile, args: str) -> None:
+    """A single-use code that ties a Google sign-in on the site to this Telegram profile. It
+    comes from the same store as /link, with the same life and the same guessing limit."""
+    cfg = turn.services.cfg
+    lang = profile.lang
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(say(FINISH_FIRST, lang)))
+    elif profile.channel == Channel.EMAIL:
+        turn.send(profile, Reply(say(LINK_ON_TELEGRAM, lang)))
+    elif cfg is None:
+        turn.send(profile, Reply(say(UNAVAILABLE, lang)))
+    else:
+        minutes = cfg.product.link_code_minutes
+        code = turn.store.new_link_code(profile.user_id, turn.clock, dt.timedelta(minutes=minutes))
+        site = turn.services.site_url
+        where = f"{site}/dashboard" if site else say(SITE_WORDS, lang)
+        turn.send(profile, Reply(say(WEBLINK_CODE, lang).format(code=code, where=where,
+                                                               minutes=minutes)))  # fmt: skip
+
+
 def reachable(turn: Turn, profile: Profile, channel: Channel) -> bool:
     if channel is Channel.EMAIL:
         return turn.store.contact_for(profile.user_id) is not None
@@ -813,6 +846,7 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/erase": cmd_erase,
     "/help": cmd_help,
     "/link": cmd_link,
+    "/weblink": cmd_weblink,
     "/sendto": cmd_sendto,
     "/watch": cmd_watch,
     "/watches": cmd_watches,

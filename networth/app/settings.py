@@ -47,6 +47,7 @@ class Settings:
     keiki_signing_secret: str | None = None  # KEIKI_SIGNING_SECRET, the optional HMAC
     keiki_email: str | None = None  # KEIKI_EMAIL, the inbox address /link tells users to write to
     site_url: str | None = None  # NETWORTH_SITE_URL, where page links point; None is our own /u
+    web_secret: str | None = None  # NETWORTH_WEB_SECRET, shared with the site to sign sign-ins
 
     @property
     def rates_db(self) -> Path:
@@ -71,4 +72,5 @@ class Settings:
             keiki_signing_secret=env.get("KEIKI_SIGNING_SECRET") or None,
             keiki_email=env.get("KEIKI_EMAIL") or None,
             site_url=env.get("NETWORTH_SITE_URL", "").rstrip("/") or None,
+            web_secret=env.get("NETWORTH_WEB_SECRET") or None,
         )
