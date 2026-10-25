@@ -71,7 +71,7 @@ The direction is "the ledger and the friend beside it", written up in `docs/phas
 
 ## Preview URL
 
-**Not deployed. OWNER NEEDED.**
+**Live preview:** https://networth-l05e1qqm5-aankirzs-projects.vercel.app/demo (target preview, behind Vercel Authentication). See "What happened on Vercel" below. The section that follows was the original OWNER NEEDED request, kept for the record.
 
 - The Aankirz Vercel connector was not available in the session that finished this phase.
 - The local Vercel CLI is logged into a different account (team Simbian, user `claude-marketing-team-8513`). I did not deploy with it.
@@ -98,17 +98,27 @@ Then set `NETWORTH_WEB_ORIGINS` on Maritime to the production origin and the pre
 
 The demo profile is created on the first demo call. To reset it: `uv run python -m networth.web.api reset-demo`.
 
+### What happened on Vercel
+
+- **The project.** It is `networth` in `aankirzs-projects` (`prj_8XCYQpjz5itLlABMXeveU0P0Uqrl`). It was created with `vercel project add`, so no Git repo is connected. `NETWORTH_API_URL` is set for Preview only. `site/vercel.json` pins the Next.js framework, because the project was created with the "Other" preset. `site/.vercelignore` keeps `.env*` (including the `.env.local` OIDC token that `vercel link` writes) and build output out of uploads.
+- **The first deploy went to production.** The builder ran `vercel deploy` without `--prod`, but the CLI made it a production deployment anyway, because it was the new project's first deploy. That deployment is `networth-dcfke2r2b-aankirzs-projects.vercel.app`, aliased to `networth-eight-pied.vercel.app`. `NETWORTH_API_URL` exists only for Preview, so the server had no API URL there. `lib/api.ts` answers 503 before making a request, and every page shows "Networth can't load this page right now". It is not a code bug, and it is left in place for the owner.
+- **Real previews.** Every later deploy uses `vercel deploy --target preview`.
+- **Preview protection.** Previews sit behind Vercel Authentication, which stays on. Judges therefore need the production URL for `/demo`. That needs `NETWORTH_API_URL` set for Production and the deploy below.
+
 ## Production deploy command
 
 OWNER NEEDED, after the preview checks out:
 
 ```sh
-cd site && vercel deploy --prod --scope aankirzs-projects
+cd site
+vercel env add NETWORTH_API_URL production   # the same Maritime agent URL
+vercel deploy --prod --scope aankirzs-projects
 ```
 
 ## Known gaps
 
-- **No live preview yet.** See above. The site has only been run against `e2e/mock-api.mjs`.
+- **Production is broken until it is redeployed.** See "What happened on Vercel".
+- **`/u` 404s for real users.** This is a server bug the phase 7B builder is fixing. The site's `/u/[token]` page works against the mock.
 - **The plan range on Maritime.** If `data/sim/returns.csv` is missing on Maritime, plan range cards show the server's "not ready" note. It is built with `uv run python -m networth.sim.data`.
 - **Chrome is English only.** Answers come in English, Hindi or Hinglish. The site's headings and table labels (copied from the server's English templates) are English only, and so are the server's own `/u` pages.
 - **The demo's per-visitor cap lives in memory.** It resets when the server restarts. The 120-an-hour cap in the store is the real limit on spend.

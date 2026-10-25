@@ -464,3 +464,6 @@
 
 ## 2026-10-25 — fix: phase 8 chat follows the newest turn
 - The chat panel now scrolls the newest question into view when it is asked and again when its answer lands, and a status region reads the answer's plain text to screen readers instead of the whole card. Playwright covers it. Added site/vercel.json (pins Next.js) and site/.vercelignore (keeps .env* and build output out of uploads).
+
+## 2026-10-25 — docs: phase 8 report records the Vercel project and previews
+- Noted that the project's first deploy (dcfke2r2b) went to production without --prod and shows the error page because NETWORTH_API_URL is Preview only; recorded the live preview URL, preview protection and the production steps.
