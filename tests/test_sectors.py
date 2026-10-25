@@ -42,3 +42,26 @@ def test_the_board_shows_its_news_and_says_when_the_watcher_is_missing() -> None
     assert "advice" not in text.lower()
     blind = board(FakeSources(stories=None), NOW)
     assert "aren't available" in blind["note"]
+
+
+def test_scheduled_releases_are_never_the_news_behind_a_move() -> None:
+    calendar = (seen("Indian Treasury bill auction"), seen("RBI money supply data release"),
+                seen("U.S. commercial bank assets and liabilities report"))  # fmt: skip
+    assert stories_for(BY_KEY["bank"], calendar) == []
+    policy = seen("RBI cuts repo rate by 25 basis points")
+    assert stories_for(BY_KEY["bank"], (*calendar, policy)) == [policy]
+
+
+def test_a_move_with_no_story_says_so() -> None:
+    card = board(FakeSources(stories=(seen("Indian Treasury bill auction"),)), NOW)
+    bank = next(r for r in card["rows"] if r["key"] == "bank")
+    assert bank["stories"] == []
+    assert "Bank" in plain(board_message(card)) and "No confirmed news behind this move." in plain(
+        board_message(card)
+    )
+
+
+def test_only_the_story_s_own_headline_counts() -> None:
+    s = seen("RBI intervention to support the rupee")
+    s = s.__class__(s.title, (s.title, "Oil prices climb"), s.day, s.publishers, s.type)
+    assert stories_for(BY_KEY["energy"], (s,)) == []

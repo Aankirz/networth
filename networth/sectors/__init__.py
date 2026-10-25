@@ -37,8 +37,9 @@ class Sector:
 
 
 SECTORS: Final = (
-    Sector("bank", "Bank", "^NSEBANK", ("bank", "banks", "banking", "lender", "lenders", "RBI",
-           "repo", "NPA", "deposit"), ("bank_stress", "rbi_hike", "rbi_cut")),
+    Sector("bank", "Bank", "^NSEBANK", ("bank", "banks", "banking", "lender", "lenders",
+           "repo rate", "rate cut", "rate hike", "CRR", "NPA"),
+           ("bank_stress", "rbi_hike", "rbi_cut")),
     Sector("it", "IT", "^CNXIT", ("IT", "software", "Infosys", "TCS", "Wipro", "HCLTech",
            "outsourcing", "H-1B"), ()),
     Sector("pharma", "Pharma", "^CNXPHARMA", ("pharma", "drug", "drugmaker", "USFDA", "FDA",
@@ -60,6 +61,14 @@ SECTORS: Final = (
            ()),
 )  # fmt: skip
 BY_KEY: Final = {s.key: s for s in SECTORS}
+# ponytail: a word list for calendar items, not a model. Use the judge's own label if it gets one.
+RELEASE: Final = re.compile(
+    r"\b(auctions?|data releases?|releases? of|money supply|assets and liabilities|"
+    r"statistic(?:s|al)|calendar|PMI|CPI|WPI|GDP data|payrolls|minutes of)\b"
+    r"|\b(data|report|release|survey)$",
+    re.I,
+)
+NO_NEWS: Final = "No confirmed news behind this move."
 
 
 def _pattern(word: str) -> re.Pattern[str]:
@@ -69,8 +78,8 @@ def _pattern(word: str) -> re.Pattern[str]:
 
 def stories_for(sector: Sector, stories: Sequence[Seen]) -> list[Seen]:
     pats = [_pattern(w) for w in sector.words]
-    hit = [s for s in stories if (s.type in sector.types)
-           or any(p.search(t) for t in s.titles for p in pats)]  # fmt: skip
+    hit = [s for s in stories if not RELEASE.search(s.title)
+           and (s.type in sector.types or any(p.search(s.title) for p in pats))]  # fmt: skip
     return sorted(hit, key=lambda s: s.day, reverse=True)[:MAX_STORIES]
 
 
@@ -133,6 +142,8 @@ def board_message(card: dict, public_url: str | None = None) -> Message:
                 f"{r['month']} this month")  # fmt: skip
         for s in r["stories"]:
             line += f"\n   · {s['title']} ({', '.join(s['publishers'][:2])})"
+        if not r["stories"]:
+            line += f"\n   · {NO_NEWS}"
         lines.append(line)
     body: list = ["\n".join(lines)]
     if card["note"]:

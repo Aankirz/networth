@@ -679,3 +679,7 @@
 
 ## 2026-10-25 — the guard lets Networth's view through, still blocks invented numbers
 - networth/guard.py: BANNED split into HYPE (always blocked) and VIEW_WORDS; check/guarded take view=True for stock_view answers, which skips view words and advice phrasing but still checks every number. answer.py: Answer.view and VIEW_TASK. Tests in tests/test_markets.py.
+||||||| parent of 1f7cf53 (fix: sector board attaches only real news, never calendar releases)
+
+## 2026-10-25 — sector board drops calendar releases
+- networth/sectors: scheduled releases (auctions, data releases, statistical reports) never attach to a move; only the story's own headline counts; bare "RBI" and "deposit" no longer match Bank; a move with no story says "No confirmed news behind this move."

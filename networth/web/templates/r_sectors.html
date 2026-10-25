@@ -10,7 +10,7 @@
       {% for s in rows %}<tr>
         <td data-label="Sector"><a href="/r/sector-{{ s.key }}">{{ s.name }}</a></td>
         <td data-label="Day">{{ s.day }}</td><td data-label="Week">{{ s.week }}</td><td data-label="Month">{{ s.month }}</td>
-        <td data-label="The news behind it">{% for n in s.stories %}{{ n.title }} ({{ n.publishers[:2]|join(', ') }}, {{ n.day }}){% if not loop.last %}<br>{% endif %}{% else %}No confirmed story this week{% endfor %}</td>
+        <td data-label="The news behind it">{% for n in s.stories %}{{ n.title }} ({{ n.publishers[:2]|join(', ') }}, {{ n.day }}){% if not loop.last %}<br>{% endif %}{% else %}No confirmed news behind this move.{% endfor %}</td>
       </tr>{% endfor %}
     </tbody>
   </table>
