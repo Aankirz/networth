@@ -125,10 +125,14 @@ def test_plan_question_ends_by_pointing_at_plan_command(tmp_path: Path, cfg) -> 
     assert chat.bot.last.endswith("Type /plan to change it.")
 
 
+def jev_on(cfg: config.Config) -> config.Config:
+    return replace(cfg, product=replace(cfg.product, use_jev_for_intent=True))
+
+
 def test_confident_jev_pick_wins_and_the_model_is_not_asked(tmp_path, cfg, monkeypatch) -> None:
     monkeypatch.setattr(jev, "choose", lambda *a, **k: jev.Pick("other", 0.9, 800))
     models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value)
-    chat = talk(tmp_path, cfg, models)
+    chat = talk(tmp_path, jev_on(cfg), models)
     chat.say("hi there")
     assert chat.bot.last.startswith(ROUTED[Intent.OTHER])
     assert models.picks == []
@@ -137,7 +141,7 @@ def test_confident_jev_pick_wins_and_the_model_is_not_asked(tmp_path, cfg, monke
 def test_unsure_jev_pick_falls_back_to_the_model(tmp_path, cfg, monkeypatch) -> None:
     monkeypatch.setattr(jev, "choose", lambda *a, **k: jev.Pick("other", 0.4, 800))
     models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value)
-    chat = talk(tmp_path, cfg, models)
+    chat = talk(tmp_path, jev_on(cfg), models)
     chat.say("hi there")
     assert chat.bot.last.startswith(ROUTED[Intent.WHAT_HAPPENED_TODAY])
     assert len(models.picks) == 1
@@ -252,3 +256,11 @@ def test_a_stopped_user_gets_no_chat_answer(tmp_path: Path, cfg) -> None:
     chat.send_photo("big")
     assert len(chat.bot.sent) == sent
     assert CHAT == chat.profile.chat_id
+
+
+def test_jev_is_not_asked_when_config_turns_it_off(tmp_path, cfg, monkeypatch) -> None:
+    asked: list[str] = []
+    monkeypatch.setattr(jev, "choose", lambda *a, **k: asked.append("jev"))
+    chat = talk(tmp_path, cfg, FakeChatModels(Intent.OTHER.value))
+    chat.say("hi there")
+    assert asked == [] and chat.bot.last.startswith(ROUTED[Intent.OTHER])

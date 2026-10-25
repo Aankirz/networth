@@ -93,10 +93,11 @@ max_judge_calls_per_cycle = 40  # about $0.006 a call, measured 2026-10-25
 event_max_age_days = 7
 
 [product]
-# Jev picks the chat intent only while its accuracy on the labelled set in
-# evals/intent_accuracy.py is at least the cheap model's. Below the confidence, on an error or
-# past the deadline, the cheap model decides.
-use_jev_for_intent = true
+# Jev picks the chat intent only while its accuracy on the held-out set
+# (uv run python -m evals.intent_accuracy heldout) is at least the cheap model's. On 2026-10-25
+# it was 23/24 against 24/24, so it is off. When on: below the confidence, on an error or past
+# the deadline, the cheap model decides.
+use_jev_for_intent = false
 jev_min_confidence = 0.7
 jev_deadline_s = 4
 # A rare alert needs at least 8 independent past episodes (PRODUCT.md) and a gap of 15 points

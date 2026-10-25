@@ -1,0 +1,271 @@
+{
+  "summary": {
+    "set": "heldout",
+    "jev_deadline_s": 4.0,
+    "production": {
+      "correct": 24,
+      "total": 24
+    },
+    "jev": {
+      "correct": 23,
+      "total": 24,
+      "accuracy": 0.9583333333333334,
+      "median_ms": 379.5,
+      "max_ms": 1094
+    },
+    "model": {
+      "correct": 24,
+      "total": 24,
+      "accuracy": 1.0,
+      "median_ms": 1230.0,
+      "max_ms": 2734
+    },
+    "jev_confident": {
+      "floor": 0.7,
+      "n": 22,
+      "correct": 22
+    }
+  },
+  "rows": [
+    {
+      "text": "anything important in the markets since morning?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 1094,
+      "model": "what_happened_today",
+      "model_ms": 2734,
+      "production": "what_happened_today"
+    },
+    {
+      "text": "Sensex aaj upar gaya ya neeche?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 779,
+      "model": "what_happened_today",
+      "model_ms": 1226,
+      "production": "what_happened_today"
+    },
+    {
+      "text": "आज की बड़ी खबरें बताओ",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 366,
+      "model": "what_happened_today",
+      "model_ms": 1363,
+      "production": "what_happened_today"
+    },
+    {
+      "text": "What's the latest on the Fed?",
+      "label": "what_happened_today",
+      "jev": "what_happened_today",
+      "jev_confidence": 1.0,
+      "jev_ms": 374,
+      "model": "what_happened_today",
+      "model_ms": 1199,
+      "production": "what_happened_today"
+    },
+    {
+      "text": "how come the brief mentioned tariffs?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 0.98,
+      "jev_ms": 339,
+      "model": "why",
+      "model_ms": 1274,
+      "production": "why"
+    },
+    {
+      "text": "normal 59% matlab kya, yeh number kahan se?",
+      "label": "why",
+      "jev": "explain_this",
+      "jev_confidence": 0.54,
+      "jev_ms": 383,
+      "model": "why",
+      "model_ms": 1120,
+      "production": "why"
+    },
+    {
+      "text": "यह आंकड़ा किस आधार पर है?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 0.99,
+      "jev_ms": 409,
+      "model": "why",
+      "model_ms": 1363,
+      "production": "why"
+    },
+    {
+      "text": "what's the source for that line about IT stocks?",
+      "label": "why",
+      "jev": "why",
+      "jev_confidence": 0.99,
+      "jev_ms": 397,
+      "model": "why",
+      "model_ms": 1035,
+      "production": "why"
+    },
+    {
+      "text": "Forwarded as received: LIC policy holders will get 20% bonus from Diwali",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 373,
+      "model": "tip_check",
+      "model_ms": 1242,
+      "production": "tip_check"
+    },
+    {
+      "text": "Paytm band ho raha hai kal se, sab paisa nikalo jaldi!!",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 819,
+      "model": "tip_check",
+      "model_ms": 1876,
+      "production": "tip_check"
+    },
+    {
+      "text": "Heard Reliance is announcing a bonus issue tomorrow, true?",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 420,
+      "model": "tip_check",
+      "model_ms": 1145,
+      "production": "tip_check"
+    },
+    {
+      "text": "सरकार ने म्यूचुअल फंड पर नया टैक्स लगा दिया, क्या यह सच है?",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 369,
+      "model": "tip_check",
+      "model_ms": 1160,
+      "production": "tip_check"
+    },
+    {
+      "text": "HDFC Bank merger with ICICI confirmed, WhatsApp pe aaya",
+      "label": "tip_check",
+      "jev": "tip_check",
+      "jev_confidence": 1.0,
+      "jev_ms": 390,
+      "model": "tip_check",
+      "model_ms": 939,
+      "production": "tip_check"
+    },
+    {
+      "text": "Zentech Labs Ltd IPO. Price band ₹410-432. Lot 34 shares. Issue opens Nov 3. Anchor portion 60% of QIB. Listing on BSE and NSE.",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 0.56,
+      "jev_ms": 382,
+      "model": "explain_this",
+      "model_ms": 1151,
+      "production": "explain_this"
+    },
+    {
+      "text": "what does 'offer for sale' mean in an IPO?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 360,
+      "model": "explain_this",
+      "model_ms": 1288,
+      "production": "explain_this"
+    },
+    {
+      "text": "NAV aur expense ratio samjha do",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 414,
+      "model": "explain_this",
+      "model_ms": 1180,
+      "production": "explain_this"
+    },
+    {
+      "text": "https://www.moneycontrol.com/news/business/ipo/zentech-labs-ipo-details-123.html",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 0.94,
+      "jev_ms": 391,
+      "model": "explain_this",
+      "model_ms": 1234,
+      "production": "explain_this"
+    },
+    {
+      "text": "बोनस शेयर क्या होता है?",
+      "label": "explain_this",
+      "jev": "explain_this",
+      "jev_confidence": 1.0,
+      "jev_ms": 377,
+      "model": "explain_this",
+      "model_ms": 1047,
+      "production": "explain_this"
+    },
+    {
+      "text": "am I down for the 25th or the 1st?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 0.81,
+      "jev_ms": 560,
+      "model": "plan_question",
+      "model_ms": 1024,
+      "production": "plan_question"
+    },
+    {
+      "text": "mera monthly amount kitna set hai?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 1.0,
+      "jev_ms": 350,
+      "model": "plan_question",
+      "model_ms": 1306,
+      "production": "plan_question"
+    },
+    {
+      "text": "what's my risk setting?",
+      "label": "plan_question",
+      "jev": "plan_question",
+      "jev_confidence": 0.99,
+      "jev_ms": 352,
+      "model": "plan_question",
+      "model_ms": 1038,
+      "production": "plan_question"
+    },
+    {
+      "text": "good morning",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 356,
+      "model": "other",
+      "model_ms": 1268,
+      "production": "other"
+    },
+    {
+      "text": "can you book me a cab?",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 371,
+      "model": "other",
+      "model_ms": 1931,
+      "production": "other"
+    },
+    {
+      "text": "ok samajh gaya, thanks",
+      "label": "other",
+      "jev": "other",
+      "jev_confidence": 1.0,
+      "jev_ms": 372,
+      "model": "other",
+      "model_ms": 1416,
+      "production": "other"
+    }
+  ]
+}
