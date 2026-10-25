@@ -237,7 +237,7 @@ export interface TrackRecord {
   stats: Stat[];
 }
 
-export type ErrorCode = "forbidden_origin" | "not_found" | "too_long" | "rate_limited" | "failed";
+export type ErrorCode = "forbidden_origin" | "not_found" | "too_long" | "rate_limited" | "failed" | "signed_out" | "not_linked" | "bad_code";
 
 export interface ApiError {
   error: ErrorCode;

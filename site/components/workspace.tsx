@@ -5,6 +5,8 @@ import { Shell } from "@/components/app/shell";
 import { Mark } from "@/components/mark";
 import { MessageView } from "@/components/message";
 import { getDashboard, type Scope } from "@/lib/api";
+import { ME_TOKEN } from "@/lib/chat";
+import { accountKey } from "@/lib/session";
 
 function Unavailable({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +20,12 @@ function Unavailable({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** One page for both routes: the chat is home, and the dashboard opens from it. */
+function tokenOf(scope: Scope): string | null {
+  if (scope.kind === "me") return ME_TOKEN;
+  return scope.kind === "user" ? scope.token : null;
+}
+
+/** One page for every route: the chat is home, and the dashboard opens from it. */
 export async function Workspace({ scope, ask = null }: { scope: Scope; ask?: string | null }) {
   const result = await getDashboard(scope);
   if (!result.ok && result.status === 404) notFound();
@@ -29,5 +36,6 @@ export async function Workspace({ scope, ask = null }: { scope: Scope; ask?: str
       </Unavailable>
     );
   }
-  return <Shell board={result.data} token={scope.kind === "user" ? scope.token : null} ask={ask} />;
+  const account = scope.kind === "me" ? accountKey(scope.visitor) : null;
+  return <Shell board={result.data} token={tokenOf(scope)} ask={ask} account={account} dashboardFirst={scope.kind === "me"} />;
 }

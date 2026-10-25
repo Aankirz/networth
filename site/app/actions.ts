@@ -4,7 +4,9 @@ import { createHash } from "node:crypto";
 import { headers } from "next/headers";
 
 import { plausibleToken, postChat, postCommand, type Result, type Scope } from "@/lib/api";
-import type { ChatRequest, ChatTurn, CommandName, CommandTurn, Lang } from "@/lib/contract";
+import { ME_TOKEN } from "@/lib/chat";
+import type { ApiError, ChatRequest, ChatTurn, CommandName, CommandTurn, Lang } from "@/lib/contract";
+import { signedIn } from "@/lib/session";
 
 const MAX_TEXT = 4096;
 const LANGS: ReadonlySet<string> = new Set<Lang>(["en", "hi", "hinglish"]);
@@ -30,9 +32,21 @@ async function visitor(): Promise<string | null> {
   return ip ? createHash("sha256").update(ip).digest("hex").slice(0, 32) : null;
 }
 
-/** Anyone can call a server action with any body, so every field is checked here. */
-function scopeOf(token: unknown): Scope | null {
+const SIGNED_OUT: ApiError = {
+  error: "signed_out",
+  message: { title: "", body: [{ kind: "text", text: "Your sign-in has run out. Sign in again to go on." }], detail: [], footer: "", preview: null },
+};
+
+/**
+ * Anyone can call a server action with any body, so every field is checked here. A signed-in
+ * chat sends only ME_TOKEN: who it is comes from this server's own session, never the body.
+ */
+async function scopeOf(token: unknown): Promise<Scope | "signed_out" | null> {
   if (token === null) return { kind: "demo" };
+  if (token === ME_TOKEN) {
+    const visitor = await signedIn();
+    return visitor ? { kind: "me", visitor } : "signed_out";
+  }
   return typeof token === "string" && plausibleToken(token) ? { kind: "user", token } : null;
 }
 
@@ -41,10 +55,9 @@ function langOf(lang: unknown): Lang | undefined | false {
   return typeof lang === "string" && LANGS.has(lang) ? (lang as Lang) : false;
 }
 
-function parseAsk(input: unknown): { scope: Scope; request: ChatRequest } | null {
+function parseAsk(input: unknown, scope: Scope | null): { scope: Scope; request: ChatRequest } | null {
   const i = input as Partial<AskInput> | null;
   if (!i || typeof i.text !== "string" || !i.text.trim()) return null;
-  const scope = scopeOf(i.token);
   const lang = langOf(i.lang);
   if (!scope || lang === false) return null;
   if (i.forwarded !== undefined && typeof i.forwarded !== "boolean") return null;
@@ -54,7 +67,9 @@ function parseAsk(input: unknown): { scope: Scope; request: ChatRequest } | null
 }
 
 export async function ask(input: AskInput): Promise<Result<ChatTurn>> {
-  const parsed = parseAsk(input);
+  const scope = await scopeOf((input as Partial<AskInput> | null)?.token);
+  if (scope === "signed_out") return { ok: false, status: 401, error: SIGNED_OUT };
+  const parsed = parseAsk(input, scope);
   if (!parsed) return { ok: false, status: 400, error: null };
   return postChat(parsed.scope, parsed.request, parsed.scope.kind === "demo" ? await visitor() : null);
 }
@@ -70,7 +85,8 @@ const ASKS: Record<CommandName, string> = {
 
 export async function command(input: CommandInput): Promise<Result<CommandTurn | ChatTurn>> {
   const i = input as Partial<CommandInput> | null;
-  const scope = scopeOf(i?.token);
+  const scope = await scopeOf(i?.token);
+  if (scope === "signed_out") return { ok: false, status: 401, error: SIGNED_OUT };
   const lang = langOf(i?.lang);
   if (!i || !scope || lang === false || typeof i.name !== "string" || !COMMANDS.has(i.name)) {
     return { ok: false, status: 400, error: null };

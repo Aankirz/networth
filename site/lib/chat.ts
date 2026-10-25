@@ -2,6 +2,8 @@ import type { ApiError, Card, CommandName, Mention, Message } from "@/lib/contra
 
 export const MAX_TEXT = 4096;
 export const BOT_URL = "https://t.me/networth_professor_bot";
+/** What the chat sends as its token when the visitor is signed in; the server reads who from the session. */
+export const ME_TOKEN = "me";
 
 /** What `/` can run. Server commands answer exactly as Telegram does; the rest are handled here. */
 export type CommandRun =
@@ -25,7 +27,7 @@ export const COMMANDS: readonly CommandSpec[] = [
 ];
 
 /** Commands that change a Telegram chat, so the web points to the bot instead of running them. */
-const TELEGRAM_ONLY = new Set(["start", "stop", "pause", "resume", "link", "sendto", "watch", "watches", "unwatch"]);
+const TELEGRAM_ONLY = new Set(["start", "stop", "pause", "resume", "link", "weblink", "sendto", "watch", "watches", "unwatch"]);
 
 export function findCommand(text: string): CommandSpec | null {
   const name = text.trim().split(/\s+/)[0]?.replace(/^\//, "").split("@")[0]?.toLowerCase() ?? "";

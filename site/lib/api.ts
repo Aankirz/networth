@@ -1,11 +1,12 @@
 import "server-only";
 
 import type { ApiError, ChatRequest, ChatTurn, CommandRequest, CommandTurn, Dashboard, Message, TrackRecord } from "@/lib/contract";
+import { webToken, type WebVisitor } from "@/lib/session";
 
 // The one place the site talks to the Python server. NETWORTH_API_URL is a server-only
 // variable: it is never read in a client component and never prefixed NEXT_PUBLIC_.
 
-export type Scope = { kind: "demo" } | { kind: "user"; token: string };
+export type Scope = { kind: "demo" } | { kind: "user"; token: string } | { kind: "me"; visitor: WebVisitor };
 
 export type Result<T> =
   | { ok: true; data: T }
@@ -28,9 +29,17 @@ export function plausibleToken(token: string): boolean {
 type Route = "dashboard" | "chat" | "command";
 
 function path(scope: Scope, route: Route): string {
+  if (scope.kind === "me") return `/api/web/${route}`;
   return scope.kind === "demo"
     ? `/api/demo/${route}`
     : `/api/u/${encodeURIComponent(scope.token)}/${route}`;
+}
+
+/** A signed-in visitor's request carries a fresh signed token; null when it can't be signed. */
+function signedHeaders(scope: Scope): Record<string, string> | null {
+  if (scope.kind !== "me") return {};
+  const token = webToken(scope.visitor);
+  return token ? { Authorization: `Bearer ${token}` } : null;
 }
 
 function isMessage(value: unknown): value is Message {
@@ -75,20 +84,27 @@ function isTurn(body: unknown): body is ChatTurn {
   return !!t && typeof t.trace_id === "string" && isMessage(t.message) && !!t.card;
 }
 
-export function getDashboard(scope: Scope): Promise<Result<Dashboard>> {
-  return call(path(scope, "dashboard"), { method: "GET" }, DASHBOARD_TIMEOUT_MS, isDashboard);
+const UNSIGNED: Result<never> = { ok: false, status: 503, error: null };
+
+export async function getDashboard(scope: Scope): Promise<Result<Dashboard>> {
+  const headers = signedHeaders(scope);
+  if (!headers) return UNSIGNED;
+  return call(path(scope, "dashboard"), { method: "GET", headers }, DASHBOARD_TIMEOUT_MS, isDashboard);
 }
 
-export function postChat(
+export async function postChat(
   scope: Scope,
   request: ChatRequest,
   visitor: string | null,
 ): Promise<Result<ChatTurn>> {
-  return call(path(scope, "chat"), post(request, visitor), CHAT_TIMEOUT_MS, isTurn);
+  const init = post(request, visitor, scope);
+  return init ? call(path(scope, "chat"), init, CHAT_TIMEOUT_MS, isTurn) : UNSIGNED;
 }
 
-function post(body: object, visitor: string | null): RequestInit {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+function post(body: object, visitor: string | null, scope: Scope): RequestInit | null {
+  const signed = signedHeaders(scope);
+  if (!signed) return null;
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...signed };
   if (visitor) headers["X-Networth-Visitor"] = visitor;
   return { method: "POST", headers, body: JSON.stringify(body) };
 }
@@ -98,12 +114,13 @@ function isCommandTurn(body: unknown): body is CommandTurn {
   return !!t && typeof t.command === "string" && isMessage(t.message) && !!t.card;
 }
 
-export function postCommand(
+export async function postCommand(
   scope: Scope,
   request: CommandRequest,
   visitor: string | null,
 ): Promise<Result<CommandTurn>> {
-  return call(path(scope, "command"), post(request, visitor), CHAT_TIMEOUT_MS, isCommandTurn);
+  const init = post(request, visitor, scope);
+  return init ? call(path(scope, "command"), init, CHAT_TIMEOUT_MS, isCommandTurn) : UNSIGNED;
 }
 
 function isTrackRecord(body: unknown): body is TrackRecord {
@@ -114,3 +131,28 @@ function isTrackRecord(body: unknown): body is TrackRecord {
 export function getTrackRecord(): Promise<Result<TrackRecord>> {
   return call("/api/track-record", { method: "GET" }, DASHBOARD_TIMEOUT_MS, isTrackRecord);
 }
+
+// Signed in with Google -----------------------------------------------------------------------
+
+export interface WebAccount {
+  linked: boolean;
+  name: string;
+}
+
+function isAccount(body: unknown): body is WebAccount {
+  const a = body as WebAccount | null;
+  return !!a && typeof a.linked === "boolean";
+}
+
+function accountCall(visitor: WebVisitor, route: "me" | "link" | "forget", body?: object): Promise<Result<WebAccount>> {
+  const signed = signedHeaders({ kind: "me", visitor });
+  if (!signed) return Promise.resolve(UNSIGNED);
+  const init: RequestInit = body
+    ? { method: "POST", headers: { "Content-Type": "application/json", ...signed }, body: JSON.stringify(body) }
+    : { method: route === "me" ? "GET" : "POST", headers: signed };
+  return call(`/api/web/${route}`, init, DASHBOARD_TIMEOUT_MS, isAccount);
+}
+
+export const getAccount = (visitor: WebVisitor) => accountCall(visitor, "me");
+export const linkAccount = (visitor: WebVisitor, code: string) => accountCall(visitor, "link", { code });
+export const forgetAccount = (visitor: WebVisitor) => accountCall(visitor, "forget");

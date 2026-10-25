@@ -14,7 +14,8 @@ export function proxy(request: NextRequest) {
     "connect-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    // Sign in posts to our own server action, which redirects the form on to Google.
+    "form-action 'self' https://accounts.google.com",
     "frame-ancestors 'none'",
     ...(dev ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");

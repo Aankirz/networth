@@ -59,6 +59,10 @@ export interface ShellProps {
   token: string | null;
   /** A question to ask on arrival, from the landing page. */
   ask?: string | null;
+  /** A signed-in visitor's account, so their saved chats stay apart from anyone else's. */
+  account?: string | null;
+  /** Open with the dashboard showing, as /dashboard does. */
+  dashboardFirst?: boolean;
 }
 
 const ARRIVAL = "arrival";
@@ -70,13 +74,13 @@ function opening(ask: string | null): Chat {
   return reduce(newChat(), { type: "asked", entry: { id: ARRIVAL, asked, outcome: { kind: "waiting" } } });
 }
 
-export function Shell({ board, token, ask = null }: ShellProps) {
-  const scope = token ? "user" : "demo";
+export function Shell({ board, token, ask = null, account = null, dashboardFirst = false }: ShellProps) {
+  const scope = account ? `me:${account}` : token ? "user" : "demo";
   const [chat, dispatch] = useReducer(reduce, ask, opening);
   const [stored, setStored] = useState<Chat[]>([]);
   const [lang, setLang] = useState<Lang>(board.lang);
   const [drawer, setDrawer] = useState(false);
-  const [canvas, setCanvas] = useState<{ open: boolean; focus: Section | null }>({ open: false, focus: null });
+  const [canvas, setCanvas] = useState<{ open: boolean; focus: Section | null }>({ open: dashboardFirst, focus: null });
   const [pinned, setPinned] = useState(false);
   const wide = useWide();
   const field = useRef<HTMLTextAreaElement>(null);

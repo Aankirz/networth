@@ -9,6 +9,7 @@ import { InView } from "@/components/landing/in-view";
 import { LiveRange } from "@/components/landing/live";
 import { BriefMock, ChatMock, DashboardMock, EmailMock } from "@/components/landing/mocks";
 import { StepIcon } from "@/components/landing/step-icons";
+import { AccountButton } from "@/components/account/account-button";
 import { Mark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BOT_URL } from "@/lib/chat";
@@ -63,9 +64,10 @@ function Feature({ id, title, more, children, className = "py-20 sm:py-28" }: { 
 function Nav() {
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-[color-mix(in_oklch,var(--bg)_86%,transparent)] backdrop-blur-md">
-      <nav aria-label="Main" className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4">
+      <nav aria-label="Main" className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-4 max-sm:gap-3">
         <Link href="/" className="flex items-center gap-2 text-sm font-semibold no-underline">
-          <Mark className="size-5" /> Networth
+          {/* A phone keeps the mark alone so Sign in fits beside Try the demo. */}
+          <Mark className="size-5" /> <span className="max-sm:sr-only">Networth</span>
         </Link>
         <ul className="mx-auto flex items-center gap-6 text-sm text-ink-2 max-md:hidden">
           <li><a href="#how" className="no-underline hover:text-ink">How it works</a></li>
@@ -75,6 +77,7 @@ function Nav() {
         <div className="flex items-center gap-2 max-md:ml-auto">
           <ThemeToggle compact />
           <Link href="/demo" className="btn btn-primary no-underline">Try the demo</Link>
+          <AccountButton />
         </div>
       </nav>
     </header>
@@ -198,6 +201,7 @@ function Footer() {
         <span className="flex gap-6">
           <Link href="/demo" className="no-underline hover:text-ink">Demo</Link>
           <a href={BOT_URL} rel="noopener" target="_blank" className="no-underline hover:text-ink">Telegram bot</a>
+          <Link href="/privacy" className="no-underline hover:text-ink">Privacy</Link>
         </span>
       </div>
     </footer>

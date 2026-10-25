@@ -7,14 +7,14 @@ import type { Chat } from "@/lib/chat";
 const MAX_CHATS = 20;
 const MAX_ENTRIES = 40;
 
-const keyOf = (scope: "demo" | "user"): string => `nw-chats:${scope}`;
+const keyOf = (scope: string): string => `nw-chats:${scope}`;
 
 function isChat(value: unknown): value is Chat {
   const c = value as Chat | null;
   return !!c && typeof c.id === "string" && typeof c.title === "string" && Array.isArray(c.entries);
 }
 
-export function loadChats(scope: "demo" | "user"): Chat[] {
+export function loadChats(scope: string): Chat[] {
   try {
     const raw = localStorage.getItem(keyOf(scope));
     const parsed: unknown = raw ? JSON.parse(raw) : [];
@@ -31,7 +31,7 @@ export function withChat(chat: Chat, all: Chat[]): Chat[] {
   return settled.length ? [{ ...chat, entries: settled }, ...others].slice(0, MAX_CHATS) : others;
 }
 
-export function saveChats(scope: "demo" | "user", chats: Chat[]): void {
+export function saveChats(scope: string, chats: Chat[]): void {
   try {
     localStorage.setItem(keyOf(scope), JSON.stringify(chats));
   } catch {
@@ -39,7 +39,7 @@ export function saveChats(scope: "demo" | "user", chats: Chat[]): void {
   }
 }
 
-export function forgetChat(scope: "demo" | "user", id: string, all: Chat[]): Chat[] {
+export function forgetChat(scope: string, id: string, all: Chat[]): Chat[] {
   const next = all.filter((c) => c.id !== id);
   saveChats(scope, next);
   return next;
