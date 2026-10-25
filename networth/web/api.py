@@ -563,7 +563,11 @@ def run_turn(asker: Asker, body: ChatIn, services: Services, table: Table | None
     if not asker.sample:
         asker.store.log_message(profile.user_id, "in", body.text)
         asker.store.log_message(profile.user_id, "out", plain(message))
-    card = card_for(intent, TurnFacts(asker, message, lang, services, table, now))
+    card = (
+        dict(reply.card)
+        if reply.card
+        else card_for(intent, TurnFacts(asker, message, lang, services, table, now))
+    )
     return {"trace_id": trace_id, "intent": intent.value, "message": message_json(message),
             "text": plain(message), "card": card}  # fmt: skip
 

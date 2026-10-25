@@ -35,6 +35,7 @@ class Reply:
 
     message: Message | str
     buttons: Keyboard = ()
+    card: Mapping[str, object] | None = None  # a market answer's chart data (contract cards)
 
     def __post_init__(self) -> None:
         if isinstance(self.message, str):

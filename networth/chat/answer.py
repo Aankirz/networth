@@ -50,6 +50,7 @@ class Answer:
     words: Mapping[str, str] = field(default_factory=dict)  # the template, per language
     lead: Mapping[str, str] = field(default_factory=dict)  # a fixed first line per language
     link: Link | None = None  # one code-owned link after the words, its preview kept
+    card: Mapping[str, object] | None = None  # a market answer's typed card, for charts
     footer: bool = (
         True  # ponytail: ignored, no footer since 2026-10-25; bot/holdings still passes it
     )
@@ -81,7 +82,7 @@ def deliver_traced(answer: Answer, lang: str, services: Services) -> tuple[Reply
     lead = say(answer.lead, lang) if answer.lead else ""
     body = tuple(b for b in (lead, without_disclaimer(text), answer.link) if b)
     message = Message(body=body, preview=answer.link.url if answer.link else None)
-    return Reply(message, answer.buttons), used
+    return Reply(message, answer.buttons, answer.card), used
 
 
 def words(answer: Answer, lang: str, services: Services) -> tuple[str, Used]:

@@ -32,7 +32,7 @@ from networth.app.store import Profile, Store
 from networth.bot import holdings, watches
 from networth.bot.message import Message
 from networth.bot.onboarding import Reply
-from networth.chat import dashboard, explain, jev, talk, tip, today
+from networth.chat import dashboard, explain, jev, markets, talk, tip, today
 from networth.chat.answer import Answer, Used, deliver, deliver_traced
 from networth.chat.talk import Said, Talk
 
@@ -80,6 +80,17 @@ CRITERIA: Final[dict[str, str]] = {
     Intent.HOLDINGS: (
         "asks about their own holdings, investments or portfolio: how they are doing, what "
         "they own, or what to do with them"
+    ),
+    Intent.PRICE: "asks the price, level or day's move of a named stock, ETF or index",
+    Intent.PRICE_HISTORY: (
+        "asks how a named stock or index has done over years, its returns or long-run history"
+    ),
+    Intent.POSITION: (
+        'types a holding of a named stock with a quantity and a price, such as "I hold 390 at 230"'
+    ),
+    Intent.COMPARE: "asks to compare two or more named stocks or indices",
+    Intent.STOCK_VIEW: (
+        "asks for a view on a named stock: get in, get out, hold, add, or how good it is"
     ),
     Intent.OTHER: (
         "anything else: greetings, thanks, general questions about how money, investing or "
@@ -180,6 +191,34 @@ def watch_answer(store: Store, profile: Profile, text: str, services: Services,
     return Answer(reply, reply, kind="watch", words={lang: reply})
 
 
+NAME_IT: Final = {
+    "en": "Which stock or index? A name such as Swiggy, Tesla or Nifty 50 works.",
+    "hi": "कौन सा शेयर या इंडेक्स? Swiggy, Tesla या Nifty 50 जैसा नाम लिख सकते हैं।",
+    "hinglish": "Kaunsa share ya index? Swiggy, Tesla ya Nifty 50 jaisa naam likh sakte hain.",
+}
+MarketAnswer = Callable[..., Answer]
+MARKET: Final[dict[str, MarketAnswer]] = {
+    "price": lambda found, text, p, lang: markets.price(found, p, lang),
+    "price_history": markets.price_history,
+    "position": markets.position,
+    "compare": markets.compare,
+    "stock_view": markets.stock_view,
+}
+
+
+def market_answer(intent: Intent) -> Handler:
+    """A market intent the classifier picked: the names in the text, or a question for one."""
+
+    def answer(store: Store, p: Profile, text: str, s: Services, now: dt.datetime,
+               lang: str) -> Answer:  # fmt: skip
+        found = markets._found(text, p.currency)  # noqa: SLF001 - the shared cached lookup
+        if not found:
+            return Answer.fixed(NAME_IT, kind="market")
+        return MARKET[intent.value](found, text, p, lang)
+
+    return answer
+
+
 def local_date(p: Profile, now: dt.datetime) -> dt.date:
     return now.astimezone(ZoneInfo(p.tz)).date()
 
@@ -202,6 +241,16 @@ HANDLERS: Final[dict[Intent, Handler]] = {
     Intent.HOLDINGS: lambda store, p, text, s, now, lang: holdings.chat_answer(
         store, p, text, s, lang
     ),
+    **{
+        i: market_answer(i)
+        for i in (
+            Intent.PRICE,
+            Intent.PRICE_HISTORY,
+            Intent.POSITION,
+            Intent.COMPARE,
+            Intent.STOCK_VIEW,
+        )
+    },
     Intent.OTHER: lambda store, p, text, s, now, lang: today.scope(),
 }
 
@@ -235,6 +284,10 @@ def build(
         lang = reply_lang(text, profile)
         answer = dashboard.dashboard(profile, services, now, lang)
         return Built(answer, Intent.OTHER, lang, Talk.DASHBOARD)
+    if not is_forward and (routed := markets.route(text, profile.currency)):
+        name, found = routed
+        lang = reply_lang(text, profile)
+        return Built(MARKET[name](found, text, profile, lang), Intent(name), lang, Intent(name))
     if talk.follows_up(text, is_forward, window, now, services.models):
         last = talk.last_exchange(window)
         before = reply_lang(last.asked.text, profile) if last else profile.lang

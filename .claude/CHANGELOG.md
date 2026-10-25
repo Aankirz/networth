@@ -603,3 +603,6 @@
 
 ## 2026-10-25 — Phase 13A: market data module
 - networth/market.py: quotes (last close, day change, 52-week range), multi-year history, returns, worst falls, index and name lookup (NSE first for rupee readers) from Yahoo Finance via yfinance, no key. tests/test_market.py with a fake source.
+
+## 2026-10-25 — market answers: price, history, holding, compare, Networth's read
+- networth/chat/markets.py routes named-stock questions before the classifier and answers from Yahoo Finance with the source and date, plus typed cards; the web API sends the reply's own card; tests in tests/test_markets.py.

@@ -177,3 +177,28 @@ def no_real_sim_table(monkeypatch: pytest.MonkeyPatch) -> None:
         raise MissingSeries("no table in tests")
 
     monkeypatch.setattr(sim, "load_table", missing)
+
+
+class OfflineMarket:
+    """networth.market's source in every test: knows nothing, so no test reaches Yahoo."""
+
+    def closes(self, symbol: str, years: float) -> pd.Series:
+        return pd.Series(dtype=float)
+
+    def info(self, symbol: str) -> dict:
+        return {}
+
+    def search(self, text: str) -> list[dict]:
+        return []
+
+
+@pytest.fixture(autouse=True)
+def offline_market(monkeypatch):
+    from networth import market
+    from networth.chat import markets
+
+    monkeypatch.setattr(market, "Yahoo", OfflineMarket)
+    monkeypatch.setattr(markets, "rated", lambda symbol: None)
+    markets._found.cache_clear()
+    yield
+    markets._found.cache_clear()
