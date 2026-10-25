@@ -18,6 +18,7 @@ from __future__ import annotations
 import base64
 import datetime as dt
 import json
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -212,6 +213,15 @@ READ_IMAGE_TASK: Final = """Transcribe every piece of text in this image, in rea
 exactly as written: names, numbers, dates, labels and their values. Keep each label next to its
 value ("Price band: ₹95 to ₹100"). Do not explain, summarise or add anything that is not
 written in the image."""
+
+
+NO_DASHES: Final = "Never use long dashes (— or –). Write short sentences instead."
+LONG_DASH: Final = re.compile(r"\s*(—|(?<!\d)–|–(?!\d))\s*")
+
+
+def undash(text: str) -> str:
+    """Long dashes the writer used anyway become a comma; a range like ₹410–432 stays."""
+    return LONG_DASH.sub(", ", text)
 
 
 def voice() -> str:
@@ -420,10 +430,11 @@ class OpenAIModels:
         prompt = facts if feedback is None else (
             f"{facts}\n\nYour last draft was blocked: {feedback}. Write it again without that."
         )  # fmt: skip
-        wire = self._parse(Role.WRITER, "write", f"{voice()}\n\n{task}", prompt, _WireText)
+        instructions = f"{voice()}\n\n{task}\n\n{NO_DASHES}"
+        wire = self._parse(Role.WRITER, "write", instructions, prompt, _WireText)
         if wire is None or not wire.text.strip():
             raise NoAnswer("writer gave no text")
-        return wire.text.strip()
+        return undash(wire.text.strip())
 
     def read_image(self, image: bytes, mime: str) -> str:
         url = f"data:{mime};base64,{base64.b64encode(image).decode()}"

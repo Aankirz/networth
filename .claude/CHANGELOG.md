@@ -222,3 +222,12 @@
 
 ## 2026-10-25 — Phase 3B docs and decision log
 - Updated docs/deploy.md (model and Jev env vars, push_rates.sh and the 80 KB upload limit, schedules, /brief). Wrote docs/phases/phase-3b-report.md (built, live samples, guard rules, cost, Jev table, OWNER NEEDED, gaps, deviations). Committed docs/phases/phase-3b-decisions.tsv (17 rows).
+
+## 2026-10-25 — Phase 3B review round 1
+- Owner deployed 3B (65ab6449); live routes 200, schedules listed. Wrote docs/phases/phase-3b-round2-gaps.md (12 gaps: guard bypasses, glossary advice, /chat auth, rate limit, lost briefs/alerts, held-out Jev eval) and sent it to the builder.
+
+## 2026-10-25 — Phase 3B live Telegram review
+- Live checks on deploy 65ab6449: explain-this and /u pass; brief, today and why empty because the VM has no watcher data. Appended items 13-17 to docs/phases/phase-3b-round2-gaps.md and sent to builder.
+
+## 2026-10-25 — Guard hardening and no long dashes
+- guard.py: numbers glued to Rs/INR and fullwidth digits, number words, NFKC and zero-width stripping, spaced-out letters, should/recommend, Devanagari चाहिए करें कीजिए, Hinglish imperatives, score and rank banned. llm.write tells the writer not to use long dashes and replaces any that come through. Review round 2 items 1, 2, 16.

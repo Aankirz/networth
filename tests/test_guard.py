@@ -104,3 +104,61 @@ def test_a_writer_that_raises_falls_back_to_the_template(tmp_path: Path) -> None
 
     out = guard.guarded(broken, SOURCE, TEMPLATE, tmp_path / "g.jsonl", "brief")
     assert (out.text, out.used) == (TEMPLATE, "template")
+
+
+@pytest.mark.parametrize("text", ["Rs5000 gain typical", "Rs.5000 gain typical",
+                                  "INR5000 gain typical", "５０００ gain typical"])  # fmt: skip
+def test_a_number_glued_to_a_currency_or_fullwidth_is_still_checked(text: str) -> None:
+    assert "number 5000 is not in the source" in guard.check(text, SOURCE).problems
+
+
+@pytest.mark.parametrize("text", ["Banks rose fifty percent of the time",
+                                  "Banks beat the Nifty half the time",
+                                  "Prices doubled twice", "seventy-five past hikes"])  # fmt: skip
+def test_number_words_must_be_in_the_source(text: str) -> None:
+    source = "Banks beat the market in 14 of 22 past hikes (normal 56%)."
+    assert any(p.startswith("number word") for p in guard.check(text, source).problems)
+
+
+def test_number_words_the_source_backs_pass() -> None:
+    source = "Retail quota: 50%. Depends on three suppliers. Twenty-two past hikes."
+    assert guard.check("Half the shares, three suppliers, twenty-two hikes.", source).ok
+
+
+@pytest.mark.parametrize("text", [
+    "Investors should hold banks",
+    "I recommend banks",
+    "आपको निवेश करना चाहिए",
+    "Abhi daal dein",
+    "s e l l now",
+    "b​uy now",
+    "Lambe time tak ruko, ghabrao mat",
+    "Thoda ruk jaiye aur dekhiye",
+    "Paisa nikaal lo",
+    "Yeh fund sabse acha score karta hai",
+    "Banks rank first",
+    "Abhi invest kijiye",
+    "कृपया निवेश करें",
+])  # fmt: skip
+def test_advice_and_ranking_in_any_spelling_is_blocked(text: str) -> None:
+    assert not guard.check(text, text).ok
+
+
+# Live replies from 2026-10-25 (docs/phases/phase-3b-report.md) with the text they came from.
+LIVE = json.loads((Path(__file__).parent / "fixtures" / "guard_live.json").read_text("utf-8"))
+
+
+@pytest.mark.parametrize("case", LIVE)
+def test_normal_brief_why_explain_and_hinglish_replies_still_pass(case: dict) -> None:
+    assert guard.check(case["reply"], case["source"]).problems == ()
+
+
+@pytest.mark.parametrize(("text", "want"), [
+    ("Yeh simple hota—but asli", "Yeh simple hota, but asli"),
+    ("IPO hai — company ka", "IPO hai, company ka"),
+    ("Price band ₹410–432", "Price band ₹410–432"),
+])  # fmt: skip
+def test_long_dashes_from_the_writer_become_commas_but_ranges_stay(text: str, want: str) -> None:
+    from networth.llm import undash
+
+    assert undash(text) == want
