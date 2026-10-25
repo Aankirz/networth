@@ -443,3 +443,6 @@
 
 ## 2026-10-25 — docs: phase 7B report
 - Added docs/phases/phase-7b-report.md: flows, samples in three languages, the BotFather command list, tests, deviations, known gaps and OWNER NEEDED items (push access, deploy, BotFather, Bank BeES bucket, SnapTrade keys).
+
+## 2026-10-25 — docs: drop the fixed push-access item from the 7B report
+- The 403 on push was fixed on the remote side, so the OWNER NEEDED line for it is removed.
