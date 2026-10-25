@@ -74,13 +74,6 @@ ROUGH: Final = {
     "hi": "ख़बरों में एक मुश्किल दौर: {events}। ऐसे झटके पहले भी आए हैं।",
     "hinglish": "News mein ek mushkil daur: {events}. Aise jhatke pehle bhi aaye hain.",
 }
-ROUGH_PLANNED: Final = {
-    "en": "A rough stretch in the news: {events}. Shocks like this have happened before, and "
-    "you planned for one.",
-    "hi": "ख़बरों में एक मुश्किल दौर: {events}। ऐसे झटके पहले भी आए हैं, और आपने इनके लिए प्लान बनाया है।",
-    "hinglish": "News mein ek mushkil daur: {events}. Aise jhatke pehle bhi aaye hain, aur "
-    "aapne inke liye plan banaya hai.",
-}
 NOTHING_NEW: Final = {
     "en": "No confirmed news this month matched anything in our history. Nothing needs your "
     "attention.",
@@ -141,6 +134,14 @@ class Event:
     odds: tuple[engine.OddsJSON, ...]  # the exact odds() dicts from its news-first Insights
 
 
+def mid_sentence(title: str, lang: str) -> str:
+    """A type title as it reads after a colon: "oil supply shock", but "RBI rate hike" keeps its
+    capitals, and Devanagari has no case."""
+    if lang == "hi" or len(title) < 2 or not title[1].islower():
+        return title
+    return title[0].lower() + title[1:]
+
+
 @dataclass(frozen=True)
 class Brief:
     """Everything the brief says, as data; message() words it in one language."""
@@ -183,11 +184,11 @@ class Brief:
         if not self.events:
             return say(NOTHING_NEW, lang)
         named = "; ".join(
-            say(EVENT_ON, lang).format(title=type_words(e.type, lang).title,
+            say(EVENT_ON, lang).format(title=mid_sentence(type_words(e.type, lang).title, lang),
                                        day=day_words(e.event_date, lang))
             for e in self.events[:MAX_NEWS_EVENTS])  # fmt: skip
         if any(e.type in STRESS_TYPES for e in self.events[:MAX_NEWS_EVENTS]):
-            return say(ROUGH_PLANNED if self.plan else ROUGH, lang).format(events=named)
+            return say(ROUGH, lang).format(events=named)
         return say(NEWS, lang).format(events=named)
 
     def _built_for(self, lang: str) -> str:
@@ -300,7 +301,7 @@ def buttons(b: Brief, lang: str | None, public_url: str | None,
     if b.lead is not None and public_url:
         lead = b.lead
         rows.append((Button(say(BUTTONS["why"], lang), "",
-                            f"{public_url}/why/{lead.type}/{lead.asset}"),
+                            public_url + names.why_path(lead.type, lead.asset)),
                      Button(say(BUTTONS["board"], lang), "",
                             f"{public_url}/scoreboard/{lead.type}")))  # fmt: skip
     mine = (Button(say(BUTTONS["page"], lang), "", page_url),) if page_url else ()

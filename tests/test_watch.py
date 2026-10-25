@@ -190,8 +190,8 @@ def test_a_match_with_history_carries_the_engine_line_and_the_why_link(chat: Cha
     db.close()
     assert watches(chat) == 1
     assert "in 10 of 12 past RBI rate hikes" in chat.bot.last
-    assert "Why these counts?: https://nw.example/why/rbi_hike/^NSEBANK" in chat.bot.last
-    assert chat.bot.messages[-1].preview == "https://nw.example/why/rbi_hike/^NSEBANK"
+    assert "Why these counts?: https://nw.example/why/rbi_hike/%5ENSEBANK" in chat.bot.last
+    assert chat.bot.messages[-1].preview == "https://nw.example/why/rbi_hike/%5ENSEBANK"
 
 
 def test_no_more_than_four_watch_messages_a_month(chat: Chat) -> None:

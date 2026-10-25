@@ -32,6 +32,7 @@ from networth.engine.backtest import market_of
 from networth.llm import Classified
 from networth.watcher.store import Confirmed, Insight, Story
 from networth.watcher.store import Store as WatcherStore
+from networth.web import names
 
 log = logging.getLogger("networth.bot")
 
@@ -207,7 +208,9 @@ def watch_message(w: Watch, seen: Seen, insight: Insight | None, public_url: str
         line = brief.odds_line(insight.type, o, int(o["n_episodes"]), bool(o["weak_signal"]))
         body.append(f"{line.words(lang)}\n{say(CONTEXT, lang)}")
         if public_url:
-            link = Link(say(WHY_COUNTS, lang), f"{public_url}/why/{insight.type}/{insight.asset}")
+            link = Link(
+                say(WHY_COUNTS, lang), public_url + names.why_path(insight.type, insight.asset)
+            )
             body.append(link)
     return Message(say(WATCHED, lang).format(label=w.label), tuple(body),
                    footer=say(FOOTER, lang), preview=link.url if link else None)  # fmt: skip

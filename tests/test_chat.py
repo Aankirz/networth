@@ -402,8 +402,8 @@ def test_a_why_question_naming_an_event_type_answers_from_the_engine(
     o = odds.odds("rbi_hike", "^NSEBANK", db=web_db)
     assert chat.bot.last.startswith("Here's what history counted after news like this:")
     assert f"in {o['n_hits']} of {o['n_episodes']} past RBI rate hikes" in chat.bot.last
-    assert "Every past case: https://nw.example/why/rbi_hike/^NSEBANK" in chat.bot.last
-    assert chat.bot.messages[-1].preview == "https://nw.example/why/rbi_hike/^NSEBANK"
+    assert "Every past case: https://nw.example/why/rbi_hike/%5ENSEBANK" in chat.bot.last
+    assert chat.bot.messages[-1].preview == "https://nw.example/why/rbi_hike/%5ENSEBANK"
 
 
 def test_a_hyped_fake_tip_leads_with_the_verdict_and_quotes_the_hype(tmp_path, cfg) -> None:
