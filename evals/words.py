@@ -35,7 +35,7 @@ NOW: Final = dt.datetime(2026, 10, 25, 10, 0, tzinfo=ZoneInfo(INDIA_TZ))
 STAMP: Final = NOW.isoformat()
 USER: Final = Profile(
     "tg:5005", "telegram", 5005, Step.DONE, "evals", STAMP, STAMP, Status.ACTIVE, INDIA_TZ,
-    lang="en", invest_day=1, goal="wealth", horizon_years=10, drop_comfort=20,
+    lang="en", invest_day=1, goal="growth", horizon_years=10, drop_comfort=20,
     monthly_amount=100000, currency="INR",
 )  # fmt: skip
 PLAN: Final = Plan(USER.user_id, "balanced", {"safety": 20, "core": 70, "growth": 10}, 20, STAMP)

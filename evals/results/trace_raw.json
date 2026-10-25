@@ -1,0 +1,3286 @@
+{
+ "run_at": "2026-10-25T06:56:50+00:00",
+ "messages": [
+  {
+   "kind": "brief",
+   "type": "rbi_hike",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news in one line. The RBI raised interest rates on Oct 20.\n\nWhat history shows after months like this:\n⚪ Indian banks (Nifty Bank) did better than the Nifty 50 in 14 of 22 past RBI rate hikes (normal: 56%).\n⚪ The Nifty 50 rose in 12 of 22 past RBI rate hikes (normal: 58%).\n⚪ Indian IT (Nifty IT) did better than the Nifty 50 in 10 of 22 past RBI rate hikes (normal: 54%).\n⚪ US banks and finance (XLF) did better than the S&P 500 in 10 of 24 past RBI rate hikes (normal: 46%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. These history counts are context. The plan is always your choice.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. RBI rate hike on Oct 20.\n\nWhere history leans after months like this:\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 14 of 22 past RBI rate hikes (normal: 56%).\n⚪ The Nifty 50 rose in 12 of 22 past RBI rate hikes (normal: 58%).\n⚪ Indian IT (Nifty IT) beat the Nifty 50 in 10 of 22 past RBI rate hikes (normal: 54%).\n⚪ US banks and finance (XLF) beat the S&P 500 in 10 of 24 past RBI rate hikes (normal: 46%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(rbi_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(rbi_hike).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "compare(rbi_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(rbi_hike,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(rbi_hike,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(rbi_hike).n_episodes",
+     "kind": "engine",
+     "value": "24"
+    },
+    {
+     "path": "compare(rbi_hike,XLF).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(rbi_hike,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(rbi_hike,XLK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(rbi_hike,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(rbi_hike,XLE).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_hike,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "rbi_cut",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. RBI cut interest rates on Oct 20.\n\nWhat history shows after months like this:\n⚪ Indian banks (Nifty Bank) did better than the Nifty 50 in 13 of 26 past RBI rate cuts (normal: 56%).\n⚪ The Nifty 50 went up in 14 of 26 past RBI rate cuts (normal: 58%).\n🔴 Indian IT (Nifty IT) did better than the Nifty 50 in 8 of 26 past RBI rate cuts (normal: 54%).\n⚪ US banks and finance (XLF) did better than the S&P 500 in 14 of 26 past RBI rate cuts (normal: 46%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. These history counts are context. The plan is always your choice.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. RBI rate cut on Oct 20.\n\nWhere history leans after months like this:\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 13 of 26 past RBI rate cuts (normal: 56%).\n⚪ The Nifty 50 rose in 14 of 26 past RBI rate cuts (normal: 58%).\n🔴 Indian IT (Nifty IT) beat the Nifty 50 in 8 of 26 past RBI rate cuts (normal: 54%).\n⚪ US banks and finance (XLF) beat the S&P 500 in 14 of 26 past RBI rate cuts (normal: 46%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(rbi_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(rbi_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(rbi_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(rbi_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(rbi_cut,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "compare(rbi_cut,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(rbi_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(rbi_cut,XLF).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_cut,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(rbi_cut,XLK).n_hits",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(rbi_cut,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(rbi_cut,XLE).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_cut,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "union_budget",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news in one line. Union Budget on Oct 20.\n\nWhat history shows after months like this:\n⚪ The Nifty 50 went up in 8 of 13 past Union Budgets (normal: 58%).\n🟢 Indian infrastructure (Nifty Infra) did better than the Nifty 50 in 8 of 13 past Union Budgets (normal: 46%).\n🟢 Indian banks (Nifty Bank) did better than the Nifty 50 in 9 of 13 past Union Budgets (normal: 56%).\n⚪ Indian IT (Nifty IT) did better than the Nifty 50 in 6 of 13 past Union Budgets (normal: 54%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. These history counts are context. The plan is always your choice.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Union Budget on Oct 20.\n\nWhere history leans after months like this:\n⚪ The Nifty 50 rose in 8 of 13 past Union Budgets (normal: 58%).\n🟢 Indian infrastructure (Nifty Infra) beat the Nifty 50 in 8 of 13 past Union Budgets (normal: 46%).\n🟢 Indian banks (Nifty Bank) beat the Nifty 50 in 9 of 13 past Union Budgets (normal: 56%).\n⚪ Indian IT (Nifty IT) beat the Nifty 50 in 6 of 13 past Union Budgets (normal: 54%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(union_budget,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(union_budget,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(union_budget,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(union_budget).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(union_budget,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(union_budget,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(union_budget,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(union_budget,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(union_budget).n_episodes",
+     "kind": "engine",
+     "value": "21"
+    },
+    {
+     "path": "compare(union_budget,XLF).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(union_budget,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(union_budget,XLK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(union_budget,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(union_budget,XLE).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(union_budget,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "inr_shock",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news in one line. The rupee fell sharply on Oct 20.\n\nWhat history shows after months like this:\n🔴 The dollar in rupees (USD/INR) did better than the Nifty 50 in 2 of 10 past sharp rupee falls (normal: 46%).\n🟢 The Nifty 50 rose in 8 of 10 past sharp rupee falls (normal: 58%).\n🟢 Indian banks (Nifty Bank) did better than the Nifty 50 in 7 of 10 past sharp rupee falls (normal: 56%).\n🔴 Indian IT (Nifty IT) did better than the Nifty 50 in 2 of 10 past sharp rupee falls (normal: 54%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts give context. The plan is always your choice.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Sharp rupee fall on Oct 20.\n\nWhere history leans after months like this:\n🔴 The dollar in rupees (USD/INR) beat the Nifty 50 in 2 of 10 past sharp rupee falls (normal: 46%).\n🟢 The Nifty 50 rose in 8 of 10 past sharp rupee falls (normal: 58%).\n🟢 Indian banks (Nifty Bank) beat the Nifty 50 in 7 of 10 past sharp rupee falls (normal: 56%).\n🔴 Indian IT (Nifty IT) beat the Nifty 50 in 2 of 10 past sharp rupee falls (normal: 54%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(inr_shock,INR=X).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "odds(inr_shock,INR=X).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "odds(inr_shock,INR=X).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(inr_shock).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(inr_shock,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(inr_shock,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(inr_shock,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "compare(inr_shock,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(inr_shock).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(inr_shock,XLF).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(inr_shock,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(inr_shock,XLK).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(inr_shock,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(inr_shock,XLE).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "compare(inr_shock,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "fed_hike",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. The US Fed raised rates on Oct 20.\n\nWhere history leans after months like this:\n🔴 The S&P 500 (SPY) rose after 25 of 44 past US Fed rate hikes (normal: 67%).\n⚪ The Nasdaq 100 (QQQ) did better than the S&P 500 after 24 of 44 past US Fed rate hikes (normal: 55%).\n🟢 Long US government bonds (TLT) did better than the S&P 500 after 20 of 38 past US Fed rate hikes (normal: 40%).\n⚪ Indian banks (Nifty Bank) did better than the Nifty 50 after 12 of 21 past US Fed rate hikes (normal: 56%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. These past counts are context. The plan is always your choice.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. US Fed rate hike on Oct 20.\n\nWhere history leans after months like this:\n🔴 The S&P 500 (SPY) rose in 25 of 44 past US Fed rate hikes (normal: 67%).\n⚪ The Nasdaq 100 (QQQ) beat the S&P 500 in 24 of 44 past US Fed rate hikes (normal: 55%).\n🟢 Long US government bonds (TLT) beat the S&P 500 in 20 of 38 past US Fed rate hikes (normal: 40%).\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 12 of 21 past US Fed rate hikes (normal: 56%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(fed_hike,SPY).n_hits",
+     "kind": "engine",
+     "value": "25"
+    },
+    {
+     "path": "odds(fed_hike,SPY).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "odds(fed_hike,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).n_hits",
+     "kind": "engine",
+     "value": "24"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "odds(fed_hike,TLT).n_hits",
+     "kind": "engine",
+     "value": "20"
+    },
+    {
+     "path": "odds(fed_hike,TLT).n_episodes",
+     "kind": "engine",
+     "value": "38"
+    },
+    {
+     "path": "odds(fed_hike,TLT).baseline",
+     "kind": "engine",
+     "value": "40%"
+    },
+    {
+     "path": "compare(fed_hike).n_episodes",
+     "kind": "engine",
+     "value": "21"
+    },
+    {
+     "path": "compare(fed_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(fed_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(fed_hike,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_hike,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(fed_hike).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "compare(fed_hike,XLF).n_hits",
+     "kind": "engine",
+     "value": "18"
+    },
+    {
+     "path": "compare(fed_hike,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(fed_hike,XLK).n_hits",
+     "kind": "engine",
+     "value": "23"
+    },
+    {
+     "path": "compare(fed_hike,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(fed_hike,XLE).n_hits",
+     "kind": "engine",
+     "value": "29"
+    },
+    {
+     "path": "compare(fed_hike,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "fed_cut",
+   "lang": "hinglish",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nIs mahine ki news, ek line mein. US Fed ne Oct 20 ko rate cut kiya.\n\nAise mahino ke baad history kis taraf jhukti hai:\n🔴 Pichhle US Fed rate cuts mein S&P 500 (SPY) 26 mein se 14 baar badha (normal: 67%).\n⚪ Pichhle US Fed rate cuts mein Nasdaq 100 (QQQ), S&P 500 se 26 mein se 15 baar aage raha (normal: 55%).\n🟢 Pichhle US Fed rate cuts mein long US government bonds (TLT), S&P 500 se 20 mein se 11 baar aage rahe (normal: 40%).\n⚪ Pichhle US Fed rate cuts mein Indian banks (Nifty Bank), Nifty 50 se 18 mein se 11 baar aage rahe (normal: 56%).\n\nAapka plan. Aapne Balanced chuna hai. 20% safety, 70% core, 10% growth. History ke counts sirf context hain. Plan hamesha aapki choice hai.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. US Fed rate cut on Oct 20.\n\nWhere history leans after months like this:\n🔴 The S&P 500 (SPY) rose in 14 of 26 past US Fed rate cuts (normal: 67%).\n⚪ The Nasdaq 100 (QQQ) beat the S&P 500 in 15 of 26 past US Fed rate cuts (normal: 55%).\n🟢 Long US government bonds (TLT) beat the S&P 500 in 11 of 20 past US Fed rate cuts (normal: 40%).\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 11 of 18 past US Fed rate cuts (normal: 56%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(fed_cut,SPY).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(fed_cut,SPY).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(fed_cut,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).n_hits",
+     "kind": "engine",
+     "value": "15"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "odds(fed_cut,TLT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(fed_cut,TLT).n_episodes",
+     "kind": "engine",
+     "value": "20"
+    },
+    {
+     "path": "odds(fed_cut,TLT).baseline",
+     "kind": "engine",
+     "value": "40%"
+    },
+    {
+     "path": "compare(fed_cut).n_episodes",
+     "kind": "engine",
+     "value": "18"
+    },
+    {
+     "path": "compare(fed_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(fed_cut,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(fed_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(fed_cut,XLF).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(fed_cut,XLK).n_hits",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(fed_cut,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(fed_cut,XLE).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(fed_cut,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "tariff",
+   "lang": "hinglish",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nIs mahine ki news, ek line mein. Oct 20 ko tariff move hua.\n\nAise mahino ke baad history kis taraf ishara karti hai:\n🔴 Pichhle 12 tariff moves mein S&P 500 (SPY) 5 mein upar gaya (normal: 67%).\n🔴 Pichhle 12 tariff moves mein US industrials (XLI) ne S&P 500 ko 4 baar beat kiya (normal: 49%).\n⚪ Pichhle 11 tariff moves mein Nifty 50 6 mein upar gaya (normal: 58%).\n🟢 Pichhle 11 tariff moves mein Indian banks (Nifty Bank) ne Nifty 50 ko 9 baar beat kiya (normal: 56%).\n\nAapka plan. Aapne Balanced chuna. 20% safety, 70% core, 10% growth. History ke counts sirf context hain. Plan hamesha aapki choice hai.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Tariff move on Oct 20.\n\nWhere history leans after months like this:\n🔴 The S&P 500 (SPY) rose in 5 of 12 past tariff moves (normal: 67%).\n🔴 US industrials (XLI) beat the S&P 500 in 4 of 12 past tariff moves (normal: 49%).\n⚪ The Nifty 50 rose in 6 of 11 past tariff moves (normal: 58%).\n🟢 Indian banks (Nifty Bank) beat the Nifty 50 in 9 of 11 past tariff moves (normal: 56%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(tariff,SPY).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "odds(tariff,SPY).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(tariff,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(tariff,XLI).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(tariff,XLI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(tariff,XLI).baseline",
+     "kind": "engine",
+     "value": "49%"
+    },
+    {
+     "path": "odds(tariff,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(tariff,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(tariff,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(tariff).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(tariff,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(tariff,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(tariff,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(tariff).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(tariff,XLF).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(tariff,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(tariff,XLK).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(tariff,XLE).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "oil_supply",
+   "lang": "hinglish",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nIs mahine ki news, ek line mein. Oct 20 ko oil supply shock hua.\n\nAise mahino ke baad history kis taraf jhukti hai:\n⚪ Pichhle 12 oil supply shocks mein Brent crude oil ne 6 baar S&P 500 se behtar kiya (normal: 49%).\n⚪ Pichhle 17 oil supply shocks mein US energy (XLE) ne 7 baar S&P 500 se behtar kiya (normal: 46%).\n⚪ Pichhle 11 oil supply shocks mein US airlines (JETS) ne 5 baar S&P 500 se behtar kiya (normal: 45%).\n⚪ Pichhle 12 oil supply shocks mein Nifty 50 7 baar badha (normal: 58%).\n\nAapka plan. Aapne Balanced chuna hai. 20% safety, 70% core, 10% growth. History ke counts sirf context hain. Plan hamesha aapki choice hai.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Oil supply shock on Oct 20.\n\nWhere history leans after months like this:\n⚪ Brent crude oil beat the S&P 500 in 6 of 12 past oil supply shocks (normal: 49%).\n⚪ US energy (XLE) beat the S&P 500 in 7 of 17 past oil supply shocks (normal: 46%).\n⚪ US airlines (JETS) beat the S&P 500 in 5 of 11 past oil supply shocks (normal: 45%).\n⚪ The Nifty 50 rose in 7 of 12 past oil supply shocks (normal: 58%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(oil_supply,BZ=F).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(oil_supply,BZ=F).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(oil_supply,BZ=F).baseline",
+     "kind": "engine",
+     "value": "49%"
+    },
+    {
+     "path": "odds(oil_supply,XLE).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "odds(oil_supply,XLE).n_episodes",
+     "kind": "engine",
+     "value": "17"
+    },
+    {
+     "path": "odds(oil_supply,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "odds(oil_supply,JETS).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "odds(oil_supply,JETS).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(oil_supply,JETS).baseline",
+     "kind": "engine",
+     "value": "45%"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(oil_supply).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(oil_supply,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(oil_supply,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(oil_supply,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(oil_supply).n_episodes",
+     "kind": "engine",
+     "value": "17"
+    },
+    {
+     "path": "compare(oil_supply,XLF).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(oil_supply,XLK).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(oil_supply,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(oil_supply,XLE).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "bank_stress",
+   "lang": "hi",
+   "text": "निवेश का दिन, Oct 25. ₹1,00,000 तैयार है.\n\nइस महीने की खबर, एक पंक्ति में. Oct 20 को बैंकों पर दबाव.\n\nऐसे महीनों के बाद इतिहास किस ओर झुकता है:\n🔴 US banks and finance (XLF) ने पिछले bank stress के 11 मौकों में से 4 में S&P 500 से बेहतर किया (सामान्य: 48%).\n⚪ Indian banks (Nifty Bank) ने पिछले bank stress के 9 मौकों में से 6 में Nifty 50 से बेहतर किया (सामान्य: 59%).\n🔴 Indian IT (Nifty IT) ने पिछले bank stress के 9 मौकों में से 3 में Nifty 50 से बेहतर किया (सामान्य: 52%).\n🟢 US tech (XLK) ने पिछले bank stress के 11 मौकों में से 8 में S&P 500 से बेहतर किया (सामान्य: 57%).\n\nआपकी योजना. आपने Balanced चुना है. 20% सुरक्षा, 70% मुख्य हिस्सा, 10% वृद्धि. इतिहास के आंकड़े सिर्फ संदर्भ हैं. योजना हमेशा आपकी पसंद है.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Bank stress on Oct 20.\n\nWhere history leans after months like this:\n🔴 US banks and finance (XLF) beat the S&P 500 in 4 of 11 past bank stress episodes (normal: 48%).\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 6 of 9 past bank stress episodes (normal: 59%).\n🔴 Indian IT (Nifty IT) beat the Nifty 50 in 3 of 9 past bank stress episodes (normal: 52%).\n🟢 US tech (XLK) beat the S&P 500 in 8 of 11 past bank stress episodes (normal: 57%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(bank_stress,XLF).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(bank_stress,XLF).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(bank_stress,XLF).baseline",
+     "kind": "engine",
+     "value": "48%"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "59%"
+    },
+    {
+     "path": "compare(bank_stress).n_episodes",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(bank_stress,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(bank_stress,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "59%"
+    },
+    {
+     "path": "compare(bank_stress,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "3"
+    },
+    {
+     "path": "compare(bank_stress,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "52%"
+    },
+    {
+     "path": "compare(bank_stress).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(bank_stress,XLF).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(bank_stress,XLF).baseline",
+     "kind": "engine",
+     "value": "48%"
+    },
+    {
+     "path": "compare(bank_stress,XLK).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "compare(bank_stress,XLK).baseline",
+     "kind": "engine",
+     "value": "57%"
+    },
+    {
+     "path": "compare(bank_stress,XLE).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(bank_stress,XLE).baseline",
+     "kind": "engine",
+     "value": "51%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "military_conflict",
+   "lang": "hi",
+   "text": "निवेश का दिन, Oct 25. ₹1,00,000 तैयार है.\n\nइस महीने की खबर, एक लाइन में. Oct 20 को सैन्य संघर्ष.\n\nऐसे महीनों के बाद इतिहास का रुझान:\n⚪ S&P 500 (SPY) पिछले 16 सैन्य संघर्षों में से 12 के बाद बढ़ा (सामान्य: 67%).\n⚪ Nifty 50 पिछले 12 सैन्य संघर्षों में से 8 के बाद बढ़ा (सामान्य: 58%).\n🔴 डॉलर में सोना (GLD), पिछले 12 सैन्य संघर्षों में से 4 के बाद S&P 500 से बेहतर रहा (सामान्य: 46%).\n⚪ भारतीय बैंक (Nifty Bank), पिछले 12 सैन्य संघर्षों में से 7 के बाद Nifty 50 से बेहतर रहे (सामान्य: 56%).\n\nआपकी योजना. आपने Balanced चुना है. 20% सुरक्षा, 70% मुख्य हिस्सा, 10% वृद्धि. इतिहास के ये आंकड़े केवल संदर्भ हैं. योजना हमेशा आपकी पसंद है.",
+   "used": "model",
+   "template": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news, in one line. Military conflict on Oct 20.\n\nWhere history leans after months like this:\n⚪ The S&P 500 (SPY) rose in 12 of 16 past military conflicts (normal: 67%).\n⚪ The Nifty 50 rose in 8 of 12 past military conflicts (normal: 58%).\n🔴 Gold in dollars (GLD) beat the S&P 500 in 4 of 12 past military conflicts (normal: 46%).\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 7 of 12 past military conflicts (normal: 56%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. History's counts are context. The plan is always your choice.",
+   "fields": [
+    {
+     "path": "odds(military_conflict,SPY).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,SPY).n_episodes",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "odds(military_conflict,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "odds(military_conflict,GLD).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(military_conflict,GLD).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,GLD).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(military_conflict).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(military_conflict,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(military_conflict,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(military_conflict,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(military_conflict,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(military_conflict).n_episodes",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(military_conflict,XLF).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(military_conflict,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(military_conflict,XLK).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(military_conflict,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(military_conflict,XLE).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(military_conflict,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    },
+    {
+     "path": "profile.monthly_amount",
+     "kind": "profile",
+     "value": "₹1,00,000"
+    },
+    {
+     "path": "profile.plan",
+     "kind": "profile",
+     "value": "Balanced. 20% safety, 70% core, 10% growth"
+    },
+    {
+     "path": "brief.today",
+     "kind": "profile",
+     "value": "Oct 25"
+    },
+    {
+     "path": "event.event_date",
+     "kind": "event",
+     "value": "Oct 20"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "rbi_hike",
+   "lang": "en",
+   "text": "After RBI rate hikes, Indian banks, tracked by Nifty Bank, beat the Nifty 50 in 14 of 22 past cases. Normally, they beat it 56% of the time. This is a count from history, not a forecast.",
+   "used": "model",
+   "template": "What history shows after RBI rate hikes:\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 14 of 22 past RBI rate hikes (normal: 56%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(rbi_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "odds(rbi_hike,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(rbi_hike).n_episodes",
+     "kind": "engine",
+     "value": "22"
+    },
+    {
+     "path": "compare(rbi_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(rbi_hike,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(rbi_hike,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(rbi_hike).n_episodes",
+     "kind": "engine",
+     "value": "24"
+    },
+    {
+     "path": "compare(rbi_hike,XLF).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(rbi_hike,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(rbi_hike,XLK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(rbi_hike,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(rbi_hike,XLE).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_hike,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "rbi_cut",
+   "lang": "en",
+   "text": "After RBI rate cuts, Indian banks, tracked by Nifty Bank, beat the Nifty 50 in 13 of 26 past cases. Normally, they beat it 56% of the time.\n\nThat is history, not a forecast.",
+   "used": "model",
+   "template": "What history shows after RBI rate cuts:\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 13 of 26 past RBI rate cuts (normal: 56%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(rbi_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(rbi_cut,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(rbi_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(rbi_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(rbi_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(rbi_cut,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "compare(rbi_cut,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(rbi_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(rbi_cut,XLF).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_cut,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(rbi_cut,XLK).n_hits",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(rbi_cut,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(rbi_cut,XLE).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "compare(rbi_cut,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "union_budget",
+   "lang": "en",
+   "text": "After past Union Budgets, the Nifty 50 rose in 8 of 13 cases. In a normal period, it rose 58% of the time.\n\nThis is a count of what happened before, not a forecast.",
+   "used": "model",
+   "template": "What history shows after Union Budgets:\n⚪ The Nifty 50 rose in 8 of 13 past Union Budgets (normal: 58%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(union_budget,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(union_budget,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(union_budget,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "odds(union_budget,^CNXINFRA).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(union_budget).n_episodes",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(union_budget,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(union_budget,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(union_budget,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(union_budget,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(union_budget).n_episodes",
+     "kind": "engine",
+     "value": "21"
+    },
+    {
+     "path": "compare(union_budget,XLF).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(union_budget,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(union_budget,XLK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(union_budget,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(union_budget,XLE).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(union_budget,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "inr_shock",
+   "lang": "en",
+   "text": "After sharp rupee falls, USD/INR beat the Nifty 50 in 2 of 10 past episodes. In normal periods, it did so 46% of the time.\n\nThis is a count of what happened in the past, not a forecast.",
+   "used": "model",
+   "template": "What history shows after sharp rupee falls:\n🔴 The dollar in rupees (USD/INR) beat the Nifty 50 in 2 of 10 past sharp rupee falls (normal: 46%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(inr_shock,INR=X).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "odds(inr_shock,INR=X).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "odds(inr_shock,INR=X).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "odds(inr_shock,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(inr_shock).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(inr_shock,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(inr_shock,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(inr_shock,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "compare(inr_shock,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(inr_shock).n_episodes",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(inr_shock,XLF).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(inr_shock,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(inr_shock,XLK).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(inr_shock,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(inr_shock,XLE).n_hits",
+     "kind": "engine",
+     "value": "2"
+    },
+    {
+     "path": "compare(inr_shock,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "fed_hike",
+   "lang": "en",
+   "text": "After past US Fed rate hikes, the S&P 500 (SPY) rose in 25 of 44 cases. In normal periods, it rose 67% of the time.\n\nThis is a count from history, not a forecast.",
+   "used": "model",
+   "template": "What history shows after US Fed rate hikes:\n🔴 The S&P 500 (SPY) rose in 25 of 44 past US Fed rate hikes (normal: 67%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(fed_hike,SPY).n_hits",
+     "kind": "engine",
+     "value": "25"
+    },
+    {
+     "path": "odds(fed_hike,SPY).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "odds(fed_hike,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).n_hits",
+     "kind": "engine",
+     "value": "24"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "odds(fed_hike,QQQ).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "odds(fed_hike,TLT).n_hits",
+     "kind": "engine",
+     "value": "20"
+    },
+    {
+     "path": "odds(fed_hike,TLT).n_episodes",
+     "kind": "engine",
+     "value": "38"
+    },
+    {
+     "path": "odds(fed_hike,TLT).baseline",
+     "kind": "engine",
+     "value": "40%"
+    },
+    {
+     "path": "compare(fed_hike).n_episodes",
+     "kind": "engine",
+     "value": "21"
+    },
+    {
+     "path": "compare(fed_hike,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(fed_hike,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(fed_hike,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_hike,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(fed_hike).n_episodes",
+     "kind": "engine",
+     "value": "44"
+    },
+    {
+     "path": "compare(fed_hike,XLF).n_hits",
+     "kind": "engine",
+     "value": "18"
+    },
+    {
+     "path": "compare(fed_hike,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(fed_hike,XLK).n_hits",
+     "kind": "engine",
+     "value": "23"
+    },
+    {
+     "path": "compare(fed_hike,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(fed_hike,XLE).n_hits",
+     "kind": "engine",
+     "value": "29"
+    },
+    {
+     "path": "compare(fed_hike,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "fed_cut",
+   "lang": "hinglish",
+   "text": "Fed rate cut ke baad S&P 500 (SPY) 26 past episodes mein se 14 mein upar gaya. Normal periods mein yeh 67% baar upar gaya.\n\nMatlab, rate cuts ke baad ka record normal se kam strong raha hai. Yeh sirf past ka count hai, forecast nahi.",
+   "used": "model",
+   "template": "What history shows after US Fed rate cuts:\n🔴 The S&P 500 (SPY) rose in 14 of 26 past US Fed rate cuts (normal: 67%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(fed_cut,SPY).n_hits",
+     "kind": "engine",
+     "value": "14"
+    },
+    {
+     "path": "odds(fed_cut,SPY).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(fed_cut,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).n_hits",
+     "kind": "engine",
+     "value": "15"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "odds(fed_cut,QQQ).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "odds(fed_cut,TLT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(fed_cut,TLT).n_episodes",
+     "kind": "engine",
+     "value": "20"
+    },
+    {
+     "path": "odds(fed_cut,TLT).baseline",
+     "kind": "engine",
+     "value": "40%"
+    },
+    {
+     "path": "compare(fed_cut).n_episodes",
+     "kind": "engine",
+     "value": "18"
+    },
+    {
+     "path": "compare(fed_cut,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(fed_cut,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(fed_cut).n_episodes",
+     "kind": "engine",
+     "value": "26"
+    },
+    {
+     "path": "compare(fed_cut,XLF).n_hits",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(fed_cut,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(fed_cut,XLK).n_hits",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(fed_cut,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(fed_cut,XLE).n_hits",
+     "kind": "engine",
+     "value": "13"
+    },
+    {
+     "path": "compare(fed_cut,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "tariff",
+   "lang": "hinglish",
+   "text": "Tariff moves ke baad, Nifty 50 11 pichhle maukon mein se 6 baar upar gaya. Normal period mein yeh 58% tha.\n\nYeh sirf history ka count hai, forecast nahi.",
+   "used": "model",
+   "template": "What history shows after tariff moves:\n⚪ The Nifty 50 rose in 6 of 11 past tariff moves (normal: 58%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(tariff,SPY).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "odds(tariff,SPY).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(tariff,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(tariff,XLI).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(tariff,XLI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(tariff,XLI).baseline",
+     "kind": "engine",
+     "value": "49%"
+    },
+    {
+     "path": "odds(tariff,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(tariff,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(tariff,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(tariff).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(tariff,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(tariff,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(tariff,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(tariff).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(tariff,XLF).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(tariff,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(tariff,XLK).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(tariff,XLE).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(tariff,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "oil_supply",
+   "lang": "hinglish",
+   "text": "Oil supply shock ke baad, Nifty 50 12 pichhle maukon mein se 7 mein upar gaya (normal: 58%).\n\nYeh sirf past ka count hai, future ka forecast nahi.",
+   "used": "model",
+   "template": "What history shows after oil supply shocks:\n⚪ The Nifty 50 rose in 7 of 12 past oil supply shocks (normal: 58%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(oil_supply,BZ=F).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(oil_supply,BZ=F).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(oil_supply,BZ=F).baseline",
+     "kind": "engine",
+     "value": "49%"
+    },
+    {
+     "path": "odds(oil_supply,XLE).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "odds(oil_supply,XLE).n_episodes",
+     "kind": "engine",
+     "value": "17"
+    },
+    {
+     "path": "odds(oil_supply,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "odds(oil_supply,JETS).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "odds(oil_supply,JETS).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(oil_supply,JETS).baseline",
+     "kind": "engine",
+     "value": "45%"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(oil_supply,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "compare(oil_supply).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(oil_supply,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(oil_supply,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(oil_supply,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(oil_supply).n_episodes",
+     "kind": "engine",
+     "value": "17"
+    },
+    {
+     "path": "compare(oil_supply,XLF).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(oil_supply,XLK).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(oil_supply,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(oil_supply,XLE).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(oil_supply,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "bank_stress",
+   "lang": "hi",
+   "text": "बैंक तनाव के बाद के 9 पिछले मौकों में, भारतीय बैंक शेयरों का सूचकांक Nifty Bank, Nifty 50 से 6 बार बेहतर रहा। सामान्य समय में यह 59% रहा है।\n\nयह बस इतिहास में हुई घटनाओं की गिनती है, भविष्य का अनुमान नहीं।",
+   "used": "model",
+   "template": "What history shows after bank stress episodes:\n⚪ Indian banks (Nifty Bank) beat the Nifty 50 in 6 of 9 past bank stress episodes (normal: 59%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(bank_stress,XLF).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(bank_stress,XLF).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "odds(bank_stress,XLF).baseline",
+     "kind": "engine",
+     "value": "48%"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).n_episodes",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "odds(bank_stress,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "59%"
+    },
+    {
+     "path": "compare(bank_stress).n_episodes",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(bank_stress,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "6"
+    },
+    {
+     "path": "compare(bank_stress,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "59%"
+    },
+    {
+     "path": "compare(bank_stress,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "3"
+    },
+    {
+     "path": "compare(bank_stress,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "52%"
+    },
+    {
+     "path": "compare(bank_stress).n_episodes",
+     "kind": "engine",
+     "value": "11"
+    },
+    {
+     "path": "compare(bank_stress,XLF).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(bank_stress,XLF).baseline",
+     "kind": "engine",
+     "value": "48%"
+    },
+    {
+     "path": "compare(bank_stress,XLK).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "compare(bank_stress,XLK).baseline",
+     "kind": "engine",
+     "value": "57%"
+    },
+    {
+     "path": "compare(bank_stress,XLE).n_hits",
+     "kind": "engine",
+     "value": "5"
+    },
+    {
+     "path": "compare(bank_stress,XLE).baseline",
+     "kind": "engine",
+     "value": "51%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "military_conflict",
+   "lang": "hi",
+   "text": "पिछले सैन्य संघर्षों के बाद Nifty 50, 12 में से 8 बार बढ़ा। सामान्य समय में बढ़ने की दर 58% रही है।\n\nयह सिर्फ पिछले अनुभवों की गिनती है, भविष्य का अनुमान नहीं।",
+   "used": "model",
+   "template": "What history shows after military conflicts:\n⚪ The Nifty 50 rose in 8 of 12 past military conflicts (normal: 58%).\nThat is a count of what happened, not a forecast.",
+   "fields": [
+    {
+     "path": "odds(military_conflict,SPY).n_hits",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,SPY).n_episodes",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "odds(military_conflict,SPY).baseline",
+     "kind": "engine",
+     "value": "67%"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).n_hits",
+     "kind": "engine",
+     "value": "8"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,^NSEI).baseline",
+     "kind": "engine",
+     "value": "58%"
+    },
+    {
+     "path": "odds(military_conflict,GLD).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "odds(military_conflict,GLD).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "odds(military_conflict,GLD).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(military_conflict).n_episodes",
+     "kind": "engine",
+     "value": "12"
+    },
+    {
+     "path": "compare(military_conflict,^NSEBANK).n_hits",
+     "kind": "engine",
+     "value": "7"
+    },
+    {
+     "path": "compare(military_conflict,^NSEBANK).baseline",
+     "kind": "engine",
+     "value": "56%"
+    },
+    {
+     "path": "compare(military_conflict,^CNXIT).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(military_conflict,^CNXIT).baseline",
+     "kind": "engine",
+     "value": "54%"
+    },
+    {
+     "path": "compare(military_conflict).n_episodes",
+     "kind": "engine",
+     "value": "16"
+    },
+    {
+     "path": "compare(military_conflict,XLF).n_hits",
+     "kind": "engine",
+     "value": "9"
+    },
+    {
+     "path": "compare(military_conflict,XLF).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "compare(military_conflict,XLK).n_hits",
+     "kind": "engine",
+     "value": "10"
+    },
+    {
+     "path": "compare(military_conflict,XLK).baseline",
+     "kind": "engine",
+     "value": "55%"
+    },
+    {
+     "path": "compare(military_conflict,XLE).n_hits",
+     "kind": "engine",
+     "value": "4"
+    },
+    {
+     "path": "compare(military_conflict,XLE).baseline",
+     "kind": "engine",
+     "value": "46%"
+    },
+    {
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name",
+     "value": "A Nifty 50 index fund (NIFTYBEES)"
+    },
+    {
+     "path": "name:The Nasdaq 100 (QQQ)",
+     "kind": "name",
+     "value": "The Nasdaq 100 (QQQ)"
+    },
+    {
+     "path": "name:The Nifty 50",
+     "kind": "name",
+     "value": "The Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 index",
+     "kind": "name",
+     "value": "The S&P 500 index"
+    },
+    {
+     "path": "name:The S&P 500 with dividends",
+     "kind": "name",
+     "value": "The S&P 500 with dividends"
+    },
+    {
+     "path": "name:the Nifty 50",
+     "kind": "name",
+     "value": "the Nifty 50"
+    },
+    {
+     "path": "name:The S&P 500 (SPY)",
+     "kind": "name",
+     "value": "The S&P 500 (SPY)"
+    },
+    {
+     "path": "name:the S&P 500",
+     "kind": "name",
+     "value": "the S&P 500"
+    },
+    {
+     "path": "name:the US market (1926 data)",
+     "kind": "name",
+     "value": "the US market (1926 data)"
+    }
+   ]
+  }
+ ],
+ "cost_usd": 0.1008
+}

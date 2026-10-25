@@ -59,6 +59,20 @@ def calibration_table(rows: Sequence[Mapping]) -> str:
     )  # fmt: skip
 
 
+def by_cutoff_table(w: Mapping) -> str:
+    """Leaning statements per cutoff: how many, and how their later episodes went."""
+    rows = []
+    for cutoff in w["cutoffs"]:
+        for lean in ("leans-up", "leans-down"):
+            group = [s for s in w["scored"] if s["cutoff"] == cutoff and not s["weak"]
+                     and s["lean"] == lean]  # fmt: skip
+            outs = [o for s in group for o in s["outcomes"]]
+            rows.append((cutoff, LEAN_WORDS[lean], len(group),
+                         ratio(sum(o["hit"] for o in outs), len(outs)),
+                         len({o["episode_id"] for o in outs})))  # fmt: skip
+    return table(["Cutoff", "Lean", "Statements", "Later hits", "Distinct episodes"], rows)
+
+
 def walkforward_md(w: Mapping) -> str:
     rows = sorted(w["per_row"], key=lambda r: (r["type"], r["asset"]))
     per_row = table(
@@ -76,6 +90,7 @@ def walkforward_md(w: Mapping) -> str:
         f"{w['statements']} statements, {sum(len(s['outcomes']) for s in w['scored'])} later "
         f"episode scores over {len(distinct)} distinct episodes.",
         "**By stated lean**\n\n" + lean_table(w["by_lean"]),
+        "**Leaning statements by cutoff**\n\n" + by_cutoff_table(w),
         "**Calibration (strong statements)**\n\n" + calibration_table(w["calibration"]),
         f"**Every row with at least 8 episodes before 2022 ({len(rows)} rows)**\n\n" + per_row,
     ])  # fmt: skip

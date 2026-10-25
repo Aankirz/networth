@@ -57,9 +57,75 @@
    ]
   }
  },
- "vault": null,
- "news_judge": null,
- "no_advice": null,
- "number_trace": null,
- "spend_usd": 0
+ "vault": {
+  "plan_commit": "72ac7798fb3a73e6bf556f90d36c34e422ac1613",
+  "run_at": "2026-10-25T07:08:27+00:00",
+  "leans": {
+   "toward": {
+    "statements": 34,
+    "episodes": 208,
+    "later_rate": 0.4471,
+    "stated_rate": 0.6603,
+    "baseline": 0.4907,
+    "held": 13,
+    "judged": 34
+   },
+   "against": {
+    "statements": 26,
+    "episodes": 139,
+    "later_rate": 0.6043,
+    "stated_rate": 0.2921,
+    "baseline": 0.4867,
+    "held": 10,
+    "judged": 26
+   }
+  },
+  "buckets": [
+   {
+    "bucket": "50-60%",
+    "episodes": 458,
+    "happened": 239,
+    "happened_rate": 0.5218,
+    "stated_mean": 0.5484,
+    "baseline_mean": 0.5113
+   },
+   {
+    "bucket": "60-70%",
+    "episodes": 264,
+    "happened": 117,
+    "happened_rate": 0.4432,
+    "stated_mean": 0.6443,
+    "baseline_mean": 0.5145
+   },
+   {
+    "bucket": "70%+",
+    "episodes": 130,
+    "happened": 58,
+    "happened_rate": 0.4462,
+    "stated_mean": 0.7622,
+    "baseline_mean": 0.5394
+   }
+  ]
+ },
+ "news_judge": {
+  "stories": 63,
+  "events": 29,
+  "precision": 0.9667,
+  "recall": 1.0,
+  "tp": 29,
+  "fp": 1,
+  "fn": 0
+ },
+ "no_advice": {
+  "messages": 86,
+  "passed": 78,
+  "pass_rate": 0.907,
+  "advice_or_score_free": 81
+ },
+ "number_trace": {
+  "messages": 20,
+  "numbers": 198,
+  "trace_rate": 1.0
+ },
+ "spend_usd": 1.2206
 }

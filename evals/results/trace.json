@@ -1,0 +1,223 @@
+{
+ "messages": 20,
+ "errors": 0,
+ "numbers": 198,
+ "unmapped": [],
+ "engine": 125,
+ "event": 8,
+ "profile": 35,
+ "name": 30,
+ "figures": 168,
+ "trace_rate": 1.0,
+ "messages_fully_traced": 20,
+ "used": {
+  "model": 20
+ },
+ "shown": [
+  {
+   "kind": "brief",
+   "type": "rbi_hike",
+   "lang": "en",
+   "text": "Investing day, Oct 25. ₹1,00,000 ready.\n\nThis month's news in one line. The RBI raised interest rates on Oct 20.\n\nWhat history shows after months like this:\n⚪ Indian banks (Nifty Bank) did better than the Nifty 50 in 14 of 22 past RBI rate hikes (normal: 56%).\n⚪ The Nifty 50 rose in 12 of 22 past RBI rate hikes (normal: 58%).\n⚪ Indian IT (Nifty IT) did better than the Nifty 50 in 10 of 22 past RBI rate hikes (normal: 54%).\n⚪ US banks and finance (XLF) did better than the S&P 500 in 10 of 24 past RBI rate hikes (normal: 46%).\n\nYour plan. You chose Balanced. 20% safety, 70% core, 10% growth. These history counts are context. The plan is always your choice.",
+   "mapping": [
+    {
+     "number": 10.0,
+     "path": "compare(rbi_hike,^CNXIT).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 12.0,
+     "path": "odds(rbi_hike,^NSEI).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 14.0,
+     "path": "odds(rbi_hike,^NSEBANK).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 20.0,
+     "path": "event.event_date",
+     "kind": "event"
+    },
+    {
+     "number": 22.0,
+     "path": "odds(rbi_hike,^NSEBANK).n_episodes",
+     "kind": "engine"
+    },
+    {
+     "number": 24.0,
+     "path": "compare(rbi_hike).n_episodes",
+     "kind": "engine"
+    },
+    {
+     "number": 25.0,
+     "path": "brief.today",
+     "kind": "profile"
+    },
+    {
+     "number": 46.0,
+     "path": "compare(rbi_hike,XLF).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 50.0,
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name"
+    },
+    {
+     "number": 54.0,
+     "path": "compare(rbi_hike,^CNXIT).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 56.0,
+     "path": "odds(rbi_hike,^NSEBANK).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 58.0,
+     "path": "odds(rbi_hike,^NSEI).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 70.0,
+     "path": "profile.plan",
+     "kind": "profile"
+    },
+    {
+     "number": 500.0,
+     "path": "name:The S&P 500 index",
+     "kind": "name"
+    },
+    {
+     "number": 100000.0,
+     "path": "profile.monthly_amount",
+     "kind": "profile"
+    }
+   ]
+  },
+  {
+   "kind": "brief",
+   "type": "bank_stress",
+   "lang": "hi",
+   "text": "निवेश का दिन, Oct 25. ₹1,00,000 तैयार है.\n\nइस महीने की खबर, एक पंक्ति में. Oct 20 को बैंकों पर दबाव.\n\nऐसे महीनों के बाद इतिहास किस ओर झुकता है:\n🔴 US banks and finance (XLF) ने पिछले bank stress के 11 मौकों में से 4 में S&P 500 से बेहतर किया (सामान्य: 48%).\n⚪ Indian banks (Nifty Bank) ने पिछले bank stress के 9 मौकों में से 6 में Nifty 50 से बेहतर किया (सामान्य: 59%).\n🔴 Indian IT (Nifty IT) ने पिछले bank stress के 9 मौकों में से 3 में Nifty 50 से बेहतर किया (सामान्य: 52%).\n🟢 US tech (XLK) ने पिछले bank stress के 11 मौकों में से 8 में S&P 500 से बेहतर किया (सामान्य: 57%).\n\nआपकी योजना. आपने Balanced चुना है. 20% सुरक्षा, 70% मुख्य हिस्सा, 10% वृद्धि. इतिहास के आंकड़े सिर्फ संदर्भ हैं. योजना हमेशा आपकी पसंद है.",
+   "mapping": [
+    {
+     "number": 3.0,
+     "path": "compare(bank_stress,^CNXIT).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 4.0,
+     "path": "odds(bank_stress,XLF).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 6.0,
+     "path": "odds(bank_stress,^NSEBANK).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 8.0,
+     "path": "compare(bank_stress,XLK).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 9.0,
+     "path": "odds(bank_stress,^NSEBANK).n_episodes",
+     "kind": "engine"
+    },
+    {
+     "number": 10.0,
+     "path": "profile.plan",
+     "kind": "profile"
+    },
+    {
+     "number": 11.0,
+     "path": "odds(bank_stress,XLF).n_episodes",
+     "kind": "engine"
+    },
+    {
+     "number": 20.0,
+     "path": "event.event_date",
+     "kind": "event"
+    },
+    {
+     "number": 25.0,
+     "path": "brief.today",
+     "kind": "profile"
+    },
+    {
+     "number": 48.0,
+     "path": "odds(bank_stress,XLF).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 50.0,
+     "path": "name:A Nifty 50 index fund (NIFTYBEES)",
+     "kind": "name"
+    },
+    {
+     "number": 52.0,
+     "path": "compare(bank_stress,^CNXIT).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 57.0,
+     "path": "compare(bank_stress,XLK).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 59.0,
+     "path": "odds(bank_stress,^NSEBANK).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 70.0,
+     "path": "profile.plan",
+     "kind": "profile"
+    },
+    {
+     "number": 500.0,
+     "path": "name:The S&P 500 index",
+     "kind": "name"
+    },
+    {
+     "number": 100000.0,
+     "path": "profile.monthly_amount",
+     "kind": "profile"
+    }
+   ]
+  },
+  {
+   "kind": "why",
+   "type": "fed_cut",
+   "lang": "hinglish",
+   "text": "Fed rate cut ke baad S&P 500 (SPY) 26 past episodes mein se 14 mein upar gaya. Normal periods mein yeh 67% baar upar gaya.\n\nMatlab, rate cuts ke baad ka record normal se kam strong raha hai. Yeh sirf past ka count hai, forecast nahi.",
+   "mapping": [
+    {
+     "number": 14.0,
+     "path": "odds(fed_cut,SPY).n_hits",
+     "kind": "engine"
+    },
+    {
+     "number": 26.0,
+     "path": "odds(fed_cut,SPY).n_episodes",
+     "kind": "engine"
+    },
+    {
+     "number": 67.0,
+     "path": "odds(fed_cut,SPY).baseline",
+     "kind": "engine"
+    },
+    {
+     "number": 500.0,
+     "path": "name:The S&P 500 index",
+     "kind": "name"
+    }
+   ]
+  }
+ ],
+ "cost_usd": 0.1008
+}
