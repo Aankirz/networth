@@ -535,3 +535,6 @@
 - site/components/landing/: ask.tsx (the question box) and live.tsx (streamed, cached-per-request demo pieces that say "waking up" when the server is asleep).
 - site/: /demo asks a ?q= question on arrival and drops it from the URL; hidden chart tables sit in an sr-only wrapper (a table ignores sr-only's width, which widened the body at 320px); Geist Mono loads without a preload.
 - site/e2e: landing.spec.ts; overflow checks read body.scrollWidth too; landing screenshots at 320 and 1440, dark and light.
+
+## 2026-10-25 — fix: an unknown / command says it doesn't exist
+- site/: /link_broker left the bot's command list (P9 7f41489), so it leaves the web's bot-only set; a / command that is neither a web command nor a bot one now says "There's no /name" instead of pointing at the bot, on screen and in the announcement.

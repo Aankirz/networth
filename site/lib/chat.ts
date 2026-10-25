@@ -25,7 +25,7 @@ export const COMMANDS: readonly CommandSpec[] = [
 ];
 
 /** Commands that change a Telegram chat, so the web points to the bot instead of running them. */
-const TELEGRAM_ONLY = new Set(["start", "stop", "pause", "resume", "link", "link_broker", "sendto", "watch", "watches", "unwatch"]);
+const TELEGRAM_ONLY = new Set(["start", "stop", "pause", "resume", "link", "sendto", "watch", "watches", "unwatch"]);
 
 export function findCommand(text: string): CommandSpec | null {
   const name = text.trim().split(/\s+/)[0]?.replace(/^\//, "").split("@")[0]?.toLowerCase() ?? "";
@@ -109,7 +109,7 @@ export function reduce(chat: Chat, action: Action): Chat {
 }
 
 /** What a screen reader hears for the newest turn: the server's plain text, never the whole card. */
-export function announcement(entry: Entry | undefined, words: { thinking: string; unreachable: string; telegram: (n: string) => string; opened: string }): string {
+export function announcement(entry: Entry | undefined, words: { thinking: string; unreachable: string; telegram: (n: string) => string; unknown: (n: string) => string; opened: string }): string {
   if (!entry) return "";
   const { outcome } = entry;
   switch (outcome.kind) {
@@ -120,7 +120,7 @@ export function announcement(entry: Entry | undefined, words: { thinking: string
     case "failed":
       return outcome.error ? plainOf(outcome.error.message) : words.unreachable;
     case "telegram":
-      return words.telegram(outcome.name);
+      return isTelegramOnly(outcome.name) ? words.telegram(outcome.name) : words.unknown(outcome.name);
     case "opened":
       return words.opened;
   }

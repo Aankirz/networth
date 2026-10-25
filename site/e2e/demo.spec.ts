@@ -39,6 +39,14 @@ test("a telegram-only command gets one kind line", async ({ page }) => {
   await expect(page.locator("[data-state='telegram']")).toContainText("/watch works in the Telegram bot");
 });
 
+test("a command that doesn't exist says so instead of pointing at the bot", async ({ page }) => {
+  await page.goto("/demo");
+  const field = page.getByRole("combobox", { name: "Your question" });
+  await field.fill("/frobnicate");
+  await field.press("Enter");
+  await expect(page.locator("[data-state='unknown']")).toContainText("There's no /frobnicate");
+});
+
 test("a command the API can't serve yet still gets an answer", async ({ page }) => {
   await page.goto("/demo");
   const field = page.getByRole("combobox", { name: "Your question" });

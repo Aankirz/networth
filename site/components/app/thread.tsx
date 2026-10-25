@@ -5,13 +5,14 @@ import { AlertCircle, Forward, LayoutPanelLeft, RotateCcw, Send } from "lucide-r
 
 import { AnswerCard } from "@/components/answer";
 import { Footer, MessageView } from "@/components/message";
-import { BOT_URL, type Entry, type Outcome } from "@/lib/chat";
+import { BOT_URL, isTelegramOnly, type Entry, type Outcome } from "@/lib/chat";
 
 export const WORDS = {
   thinking: "Checking",
   unreachable: "Networth didn't answer just now. Check your connection and ask again.",
   missing: "This one isn't ready on the web yet. Ask it in your own words, or try it in the Telegram bot.",
   telegram: (name: string) => `/${name} works in the Telegram bot, where your chat lives.`,
+  unknown: (name: string) => `There's no /${name}. Type / to see the commands that work here.`,
   opened: "The dashboard is open.",
 };
 
@@ -89,7 +90,10 @@ export function Thread({ entries, newestRef, onRetry, onOpenCanvas }: ThreadProp
           {entry.outcome.kind === "waiting" && <Thinking />}
           {entry.outcome.kind === "answer" && <AnswerCard answer={entry.outcome.answer} />}
           {entry.outcome.kind === "failed" && <Failed outcome={entry.outcome} onRetry={() => onRetry(entry)} />}
-          {entry.outcome.kind === "telegram" && (
+          {entry.outcome.kind === "telegram" && !isTelegramOnly(entry.outcome.name) && (
+            <p className="text-ink-2" data-state="unknown">{WORDS.unknown(entry.outcome.name)}</p>
+          )}
+          {entry.outcome.kind === "telegram" && isTelegramOnly(entry.outcome.name) && (
             <p className="text-ink-2" data-state="telegram">
               {WORDS.telegram(entry.outcome.name)}{" "}
               <a href={BOT_URL} rel="noopener" target="_blank" className="underline">Open the bot</a>
