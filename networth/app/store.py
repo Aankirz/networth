@@ -5,6 +5,7 @@
 
 Tables: profiles (one per chat), plans (one per user, rewritten on change), messages (every
 text in and out), briefs (one per user per investing day) and alerts (one per user per event).
+contacts maps a Keiki conversation to our user; outbox holds email waiting for a Keiki turn.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -90,6 +91,15 @@ class Plan:
 
 
 @dataclass(frozen=True)
+class OutMail:
+    id: int
+    user_id: str
+    address: str
+    text: str
+    created_at: str
+
+
+@dataclass(frozen=True)
 class Message:
     id: int
     user_id: str
@@ -144,6 +154,14 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
     "alerts": {
         "user_id": "TEXT NOT NULL", "event_key": "TEXT NOT NULL", "month": "TEXT NOT NULL",
         "text": "TEXT NOT NULL", "sent_at": "TEXT NOT NULL",
+    },
+    "contacts": {
+        "address": "TEXT PRIMARY KEY", "user_id": "TEXT NOT NULL", "linked_at": "TEXT NOT NULL",
+    },
+    "outbox": {
+        "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
+        "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
+        "sent_at": "TEXT",
     },
 }  # fmt: skip
 
@@ -358,6 +376,48 @@ class Store:
                     tuple(json.loads(r["numbers_used"])), r["sent_at"])
             for r in rows
         ]  # fmt: skip
+
+    def contact_user(self, address: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT user_id FROM contacts WHERE address = ?", (address,)
+            ).fetchone()
+        return row["user_id"] if row else None
+
+    def bind_contact(self, address: str, user_id: str) -> None:
+        """Point a Keiki conversation at a user, replacing whoever it pointed at before."""
+        self._upsert("contacts", {"address": address, "user_id": user_id, "linked_at": now_iso()})
+
+    def contact_for(self, user_id: str) -> str | None:
+        """The user's newest bound Keiki conversation, if any."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT address FROM contacts WHERE user_id = ? "
+                "ORDER BY linked_at DESC, rowid DESC LIMIT 1",
+                (user_id,),
+            ).fetchone()
+        return row["address"] if row else None
+
+    def queue_mail(self, user_id: str, address: str, text: str) -> int:
+        with self._connect() as conn:
+            cursor = conn.execute(
+                "INSERT INTO outbox (user_id, address, text, created_at) VALUES (?, ?, ?, ?)",
+                (user_id, address, text, now_iso()),
+            )
+        return int(cursor.lastrowid or 0)
+
+    def pending_mail(self, address: str) -> list[OutMail]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM outbox WHERE address = ? AND sent_at IS NULL ORDER BY id",
+                (address,),
+            ).fetchall()
+        return [OutMail(r["id"], r["user_id"], r["address"], r["text"], r["created_at"])
+                for r in rows]  # fmt: skip
+
+    def mark_mail_sent(self, mail_id: int) -> None:
+        with self._connect() as conn:
+            conn.execute("UPDATE outbox SET sent_at = ? WHERE id = ?", (now_iso(), mail_id))
 
     def _upsert(self, table: str, row: Mapping[str, object]) -> None:
         names = ", ".join(f'"{n}"' for n in row)

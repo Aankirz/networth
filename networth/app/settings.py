@@ -42,6 +42,10 @@ class Settings:
     webhook_secret: str | None
     public_url: str | None
     link_secret: str | None = None  # LINK_SIGNING_SECRET, signs /u/{token} links
+    keiki_api_key: str | None = None  # KEIKI_API_KEY, for notices that start an email turn
+    keiki_agent_id: str | None = None  # KEIKI_AGENT_ID; a turn for any other agent is refused
+    keiki_signing_secret: str | None = None  # KEIKI_SIGNING_SECRET, the optional HMAC
+    keiki_email: str | None = None  # KEIKI_EMAIL, the inbox address /link tells users to write to
 
     @property
     def rates_db(self) -> Path:
@@ -61,4 +65,8 @@ class Settings:
             webhook_secret=env.get("TELEGRAM_WEBHOOK_SECRET") or None,
             public_url=public_url,
             link_secret=env.get("LINK_SIGNING_SECRET") or None,
+            keiki_api_key=env.get("KEIKI_API_KEY") or None,
+            keiki_agent_id=env.get("KEIKI_AGENT_ID") or None,
+            keiki_signing_secret=env.get("KEIKI_SIGNING_SECRET") or None,
+            keiki_email=env.get("KEIKI_EMAIL") or None,
         )
