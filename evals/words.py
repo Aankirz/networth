@@ -4,9 +4,11 @@ for advice or a score, for numbers not in its source, and for language.
     raw = run(services, store)       # paid: the pipeline and the judge's grade per message
     scores = score(raw)              # offline: grades (b) and (c) recomputed, pass rates
 
-The pipeline is the three calls networth.chat.respond makes (classify, the intent's handler,
-deliver), made here so the Answer.source the guard checked is kept. Whether the template went
-out is read from the guard log rows the message appended.
+The pipeline is the three calls networth.chat.respond makes (build, deliver, remember), made
+here so the Answer.source the guard checked is kept. A thread's earlier messages run through
+the same calls first, so the graded reply reads their memory. Every message and every thread
+gets a user id of its own, fresh each run, so memory never leaks between cases. Whether the
+template went out is read from the guard log rows the graded message appended.
 """
 
 from __future__ import annotations
@@ -14,8 +16,10 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import uuid
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Final
 from zoneinfo import ZoneInfo
@@ -23,7 +27,7 @@ from zoneinfo import ZoneInfo
 from pydantic import BaseModel
 
 from evals import spend
-from evals.words_set import MESSAGES
+from evals.words_set import MESSAGES, THREADS
 from networth import chat, guard
 from networth.app.services import Services
 from networth.app.store import INDIA_TZ, Plan, Profile, Status, Step, Store
@@ -64,32 +68,50 @@ def grade(models: OpenAIModels, message: str, reply: str) -> dict:
     return wire.model_dump() if wire else {"error": "no parsed grade"}
 
 
-def run_one(services: Services, store: Store, category: str, text: str, forwarded: bool,
-            expected: str) -> dict:  # fmt: skip
-    guard_start = len(_lines(services.guard_log))
+def fresh_user(store: Store, user_id: str) -> Profile:
+    profile = replace(USER, user_id=user_id)
+    store.save_profile(profile)
+    store.save_plan(replace(PLAN, user_id=user_id))
+    return profile
+
+
+def one_turn(services: Services, store: Store, profile: Profile, text: str,
+             forwarded: bool) -> tuple[chat.Built, str]:  # fmt: skip
     spend.check()
+    built = chat.build(store, profile, text, forwarded, services, NOW)
+    reply = deliver(built.answer, built.lang, services)
+    chat.remember(store, profile, text, reply, built.label, NOW)
+    return built, reply.text
+
+
+def run_one(services: Services, store: Store, profile: Profile, category: str, text: str,
+            forwarded: bool, expected: str, thread: Sequence[str] = ()) -> dict:  # fmt: skip
     out: dict = {"category": category, "message": text, "forwarded": forwarded,
-                 "expected_lang": expected}  # fmt: skip
+                 "expected_lang": expected, "thread": list(thread)}  # fmt: skip
     try:
-        intent = chat.classify(text, forwarded, services)
-        lang = chat.reply_lang(text, USER)
-        answer = chat.HANDLERS[intent](store, USER, text, services, NOW, lang)
-        reply = deliver(answer, lang, services)
+        for before in thread:
+            one_turn(services, store, profile, before, False)
+        guard_start = len(_lines(services.guard_log))
+        built, reply = one_turn(services, store, profile, text, forwarded)
     except Exception as exc:  # noqa: BLE001 - a crash is a result to report, not to hide
         return {**out, "error": f"{type(exc).__name__}: {exc}"}
     verdicts = _lines(services.guard_log)[guard_start:]
     used = verdicts[-1]["attempt"] if verdicts else "fixed"
-    return {**out, "intent": intent.value, "reply_lang": lang, "reply": reply.text,
-            "source": answer.source, "task": answer.task, "used": used,
+    answer = built.answer
+    return {**out, "intent": built.intent.value, "label": built.label, "reply_lang": built.lang,
+            "reply": reply, "source": answer.source, "task": answer.task, "used": used,
             "guard": [{"attempt": v["attempt"], "problems": v["problems"]} for v in verdicts],
-            "grade": grade(services.models, text, reply.text)}  # fmt: skip
+            "grade": grade(services.models, text, reply)}  # fmt: skip
 
 
 def run(services: Services, store: Store) -> dict:
-    store.save_profile(USER)
-    store.save_plan(PLAN)
+    run_id = uuid.uuid4().hex[:8]
     start = len(spend.rows())
-    rows = [run_one(services, store, *m) for m in MESSAGES]
+    rows = [run_one(services, store, fresh_user(store, f"evals:{run_id}:m{i}"), *m)
+            for i, m in enumerate(MESSAGES)]  # fmt: skip
+    for i, (category, thread, text, forwarded, expected) in enumerate(THREADS):
+        profile = fresh_user(store, f"evals:{run_id}:t{i}")
+        rows.append(run_one(services, store, profile, category, text, forwarded, expected, thread))
     calls = spend.since(start)
     return {"run_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"), "rows": rows,
             "cost_usd": round(sum(c["cost_usd"] or 0 for c in calls), 4),
@@ -127,8 +149,8 @@ def score(raw: Mapping) -> dict:
         c["pass"] += r["pass"]
         for k in ("advice_ok", "numbers_ok", "lang_ok"):
             c[k] += r["checks"][k]
-    fields = ("category", "message", "forwarded", "expected_lang", "intent", "reply_lang",
-              "used", "reply", "guard", "grade", "checks", "error")  # fmt: skip
+    fields = ("category", "thread", "message", "forwarded", "expected_lang", "intent", "label",
+              "reply_lang", "used", "reply", "guard", "grade", "checks", "error")  # fmt: skip
     return {"messages": len(rows), "passed": sum(r["pass"] for r in graded),
             "by_category": {k: dict(v) for k, v in cats.items()},
             "by_grade": {k: sum(r["checks"][k] for r in graded)

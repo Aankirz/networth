@@ -3,6 +3,12 @@
     intent = classify(text, is_forward, services)
     reply = respond(store, profile, text, is_forward, services, now)
     reply, intent, used = respond_traced(store, profile, text, is_forward, services, now)
+    built = build(store, profile, text, is_forward, services, now)   # the Answer, not yet sent
+
+respond_traced is build, deliver_traced, then remember: the exchange joins the user's window
+(networth.chat.talk). build reads the window first: a follow-up to the last answer, then
+classify; an OTHER pick (and a short "should I" read as EXPLAIN_THIS) is refined into a Talk
+kind, which still reports Intent.OTHER, because the site's contract pins Intent.
 
 The pick is a typed Jev Choice when config says Jev measured at least as accurate as the cheap
 model (evals/intent_accuracy.py), and Jev answered above its confidence floor in time. In every
@@ -14,6 +20,7 @@ from __future__ import annotations
 import datetime as dt
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Final
 from zoneinfo import ZoneInfo
@@ -22,9 +29,11 @@ from networth import memory
 from networth.app.services import Services
 from networth.app.store import Profile, Store
 from networth.bot import holdings, watches
+from networth.bot.message import Message
 from networth.bot.onboarding import Reply
-from networth.chat import explain, jev, tip, today
+from networth.chat import explain, jev, talk, tip, today
 from networth.chat.answer import Answer, Used, deliver, deliver_traced
+from networth.chat.talk import Said, Talk
 
 
 class Intent(StrEnum):
@@ -66,7 +75,10 @@ CRITERIA: Final[dict[str, str]] = {
         "asks about their own holdings, investments or portfolio: how they are doing, what "
         "they own, or what to do with them"
     ),
-    Intent.OTHER: "anything else: greetings, thanks, unrelated questions",
+    Intent.OTHER: (
+        "anything else: greetings, thanks, general questions about how money, investing or "
+        "markets work, whether to put money into something, unrelated questions"
+    ),
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"
 STATE: Final = "{kind} to a market-news assistant: {text!r}"
@@ -102,8 +114,10 @@ PHRASES: Final = (
 
 
 def reply_lang(text: str, profile: Profile) -> str:
-    """Hindi when they write in Devanagari, Hinglish when they write Hindi in Roman letters,
-    otherwise the language they chose at setup."""
+    """The language they ask for outright, else Hindi when they write in Devanagari, Hinglish
+    when they write Hindi in Roman letters, otherwise the language they chose at setup."""
+    if asked := talk.asked_lang(text):
+        return asked
     if DEVANAGARI.search(text):
         return "hi"
     words = set(re.findall(r"[a-z]+", text.lower()))
@@ -184,19 +198,70 @@ def respond(
     return respond_traced(store, profile, text, is_forward, services, now)[0]
 
 
-def respond_traced(
+@dataclass(frozen=True)
+class Built:
+    answer: Answer
+    intent: Intent  # what the site sees: every Talk kind is Intent.OTHER
+    lang: str
+    label: str  # the Intent or Talk value the turn is stored under
+
+
+def build(
     store: Store, profile: Profile, text: str, is_forward: bool, services: Services,
     now: dt.datetime,
-) -> tuple[Reply, Intent, Used]:  # fmt: skip
-    """The reply, the intent that answered, and which words went out."""
+) -> Built:  # fmt: skip
+    """The answer and how it was picked. Reads the window; writes only asked terms."""
+    window = talk.window(store, profile.user_id, now)
+
+    def said(lang: str) -> Said:
+        return Said(profile, text, window, services, now, lang)
+
+    if talk.follows_up(text, is_forward, window, now, services.models):
+        last = talk.last_exchange(window)
+        before = reply_lang(last.asked.text, profile) if last else profile.lang
+        lang = reply_lang(text, replace(profile, lang=before))
+        return Built(talk.follow_up(said(lang)), Intent.OTHER, lang, Talk.FOLLOW_UP)
     intent = classify(text, is_forward, services)
     short = len(text) <= MAX_TERM_QUESTION
     if intent is Intent.EXPLAIN_THIS and short and not explain.URL.search(text):
         store.add_asked_terms(profile.user_id, memory.asked_terms(text), now.isoformat())
     lang = reply_lang(text, profile)
-    answer = HANDLERS[intent](store, profile, text, services, now, lang)
-    reply, used = deliver_traced(answer, lang, services)
-    return reply, intent, used
+    kind = None
+    if intent is Intent.OTHER:
+        kind = talk.kind_of(text, services.models)
+    elif intent is Intent.EXPLAIN_THIS and short and not is_forward and talk.is_should_i(text):
+        kind = Talk.SHOULD_I
+    if kind is not None:
+        return Built(talk.TALK[kind](said(lang)), Intent.OTHER, lang, kind)
+    asked = text
+    if intent is Intent.PLAN_QUESTION and (last := talk.live_exchange(window, now)):
+        # "what about my plan then?" names its event type only through the last answer
+        asked = f"{text}\n\n{talk.clip(last.answered.text)}"
+    answer = HANDLERS[intent](store, profile, asked, services, now, lang)
+    return Built(answer, intent, lang, intent)
+
+
+def sent_words(reply: Reply) -> str:
+    """The body as the reader saw it, without the footer or any link."""
+    m = reply.message
+    assert isinstance(m, Message), "Reply wraps a plain string in a Message"
+    return "\n\n".join(b for b in m.body if isinstance(b, str))
+
+
+def remember(store: Store, profile: Profile, text: str, reply: Reply, label: str,
+             now: dt.datetime) -> None:  # fmt: skip
+    talk.remember(store, profile.user_id, text, sent_words(reply), label, now)
+
+
+def respond_traced(
+    store: Store, profile: Profile, text: str, is_forward: bool, services: Services,
+    now: dt.datetime,
+) -> tuple[Reply, Intent, Used]:  # fmt: skip
+    """The reply, the intent that answered, and which words went out."""
+    built = build(store, profile, text, is_forward, services, now)
+    reply, used = deliver_traced(built.answer, built.lang, services)
+    remember(store, profile, text, reply, built.label, now)
+    return reply, built.intent, used
 
 
 def respond_image(profile: Profile, image: bytes, services: Services) -> Reply:

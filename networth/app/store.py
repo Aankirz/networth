@@ -11,6 +11,8 @@ email contact to a Telegram user, and link_misses the codes a contact got wrong,
 stops after a few; watches are standing per-user requests, and watch_hits holds
 one row per watch per confirmed story it matched, claimed before the message goes out;
 asked_terms holds glossary terms a user asked about, until a brief brings one back.
+turns holds each user's rolling chat window (networth.chat.talk keeps its caps): pruned on every
+write and gone when the user stops.
 holdings holds one user's holdings list as networth.holdings writes it (never an image), and
 snaptrade_users the SnapTrade user secret behind a broker link; both go when the user stops.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
@@ -150,6 +152,14 @@ class Message:
     sent_at: str
 
 
+@dataclass(frozen=True)
+class ChatTurn:
+    role: Literal["user", "bot"]
+    text: str  # the user's words, or the bot's sent body without the footer
+    intent: str  # the Intent or Talk value that answered
+    at: str  # ISO time, UTC
+
+
 def now_iso() -> str:
     return dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
 
@@ -245,6 +255,11 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
         "sent_at": "TEXT",
     },
+    "turns": {
+        "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
+        "role": "TEXT NOT NULL CHECK (role IN ('user', 'bot'))", "text": "TEXT NOT NULL",
+        "intent": "TEXT NOT NULL", "at": "TEXT NOT NULL",
+    },
 }  # fmt: skip
 
 
@@ -257,6 +272,7 @@ def migrate(conn: sqlite3.Connection) -> None:
             if name not in present:
                 conn.execute(f'ALTER TABLE {table} ADD COLUMN "{name}" {decl}')
     conn.execute("CREATE INDEX IF NOT EXISTS messages_user ON messages (user_id, id)")
+    conn.execute("CREATE INDEX IF NOT EXISTS turns_user ON turns (user_id, id)")
     conn.execute("CREATE UNIQUE INDEX IF NOT EXISTS briefs_user_day ON briefs (user_id, day)")
     conn.execute(
         "CREATE UNIQUE INDEX IF NOT EXISTS alerts_user_event ON alerts (user_id, event_key)"
@@ -267,7 +283,7 @@ def migrate(conn: sqlite3.Connection) -> None:
 
 
 KEPT_ON_SAVE: Final = ("user_id", "link_token")
-FORGOTTEN_ON_STOP: Final = ("holdings", "snaptrade_users")
+FORGOTTEN_ON_STOP: Final = ("holdings", "snaptrade_users", "turns")
 
 
 def _profile_row(p: Profile) -> dict[str, object]:
@@ -331,7 +347,8 @@ class Store:
     def save_profile(self, profile: Profile) -> None:
         """Insert, or update every column but link_token, which only new_link_token changes,
         so a turn holding an older copy of the profile never revives a retired link. Saving a
-        stopped profile deletes the user's holdings and broker link in the same transaction."""
+        stopped profile deletes the user's holdings, broker link and chat window in the same
+        transaction."""
         row = _profile_row(profile)
         names = ", ".join(f'"{n}"' for n in row)
         marks = ", ".join("?" for _ in row)
@@ -700,6 +717,30 @@ class Store:
     def delete_snaptrade_user(self, user_id: str) -> None:
         with self._connect() as conn:
             conn.execute("DELETE FROM snaptrade_users WHERE user_id = ?", (user_id,))
+
+    def add_turns(self, user_id: str, turns: Sequence[ChatTurn], keep: int, since: str) -> None:
+        """Insert the turns, then drop this user's rows older than since or past the newest
+        keep, in one transaction, so a rerun converges on the same window."""
+        with self._connect() as conn:
+            conn.executemany(
+                "INSERT INTO turns (user_id, role, text, intent, at) VALUES (?, ?, ?, ?, ?)",
+                [(user_id, t.role, t.text, t.intent, t.at) for t in turns],
+            )
+            conn.execute(
+                "DELETE FROM turns WHERE user_id = ? AND (at < ? OR id NOT IN "
+                "(SELECT id FROM turns WHERE user_id = ? ORDER BY id DESC LIMIT ?))",
+                (user_id, since, user_id, keep),
+            )
+
+    def recent_turns(self, user_id: str, since: str, limit: int) -> list[ChatTurn]:
+        """This user's newest turns at or after since, oldest first."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT role, text, intent, at FROM turns WHERE user_id = ? AND at >= ? "
+                "ORDER BY id DESC LIMIT ?",
+                (user_id, since, limit),
+            ).fetchall()
+        return [ChatTurn(r["role"], r["text"], r["intent"], r["at"]) for r in reversed(rows)]
 
     def _upsert(self, table: str, row: Mapping[str, object]) -> None:
         names = ", ".join(f'"{n}"' for n in row)

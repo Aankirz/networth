@@ -473,3 +473,6 @@
 
 ## 2026-10-25 — docs: phase 9 brief and conversation design
 - Added the phase 9 brief and docs/phases/phase-9-design.md: the per-user turn window (8 turns, 24 hours), the Talk routing table under Intent.OTHER (the web contract pins Intent), and the site link and menu button plan.
+
+## 2026-10-25 — feat: phase 9 slice 1, the bot holds a conversation
+- networth/chat/talk.py and a turns table: a per-user window of 8 turns over 24 hours, deleted on /stop. Follow-ups resolve against the last answer, open money questions get guarded writer answers (a fixed IPO explainer underneath), small talk and off-topic get fixed kind lines, "should I" gets the decline then the facts, in three languages. respond_traced keeps its signature, so Telegram, Keiki and web gain it unchanged. 20 conversational eval threads added to the words eval.

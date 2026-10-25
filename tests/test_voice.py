@@ -10,6 +10,7 @@ lacks.
 
 from __future__ import annotations
 
+import datetime as dt
 import html as htmllib
 import importlib
 import re
@@ -27,7 +28,7 @@ from networth.bot import commands, onboarding
 from networth.bot.alerts import alert_message
 from networth.bot.message import FOOTER, LANGS, Message, plain
 from networth.bot.telegram import html
-from networth.chat import explain, tip, today
+from networth.chat import explain, talk, tip, today
 from networth.chat.answer import Answer, deliver
 from networth.keiki import onboard as email_onboard
 from tests.test_alerts import insight
@@ -41,7 +42,8 @@ MODULES = (
     "networth.bot.alerts", "networth.bot.briefs", "networth.bot.commands", "networth.bot.holdings",
     "networth.bot.onboarding", "networth.bot.watches", "networth.brief",
     "networth.brief.lines", "networth.chat", "networth.chat.answer", "networth.chat.explain",
-    "networth.chat.tip", "networth.chat.today", "networth.keiki.onboard", "networth.keiki.turn",
+    "networth.chat.talk", "networth.chat.tip", "networth.chat.today", "networth.keiki.onboard",
+    "networth.keiki.turn",
     "networth.memory", "networth.sim", "networth.watch",
 )  # fmt: skip
 HYPE: Final = re.compile(
@@ -186,6 +188,14 @@ def email_done(chat: Chat, lang: str) -> Message:
     return email_onboard.done_message(replace(chat.profile, lang=lang))
 
 
+def should_i(chat: Chat, lang: str) -> Message:
+    s = talk.Said(chat.profile, "Should I apply for the LIC IPO?", (), chat.services,
+                  dt.datetime.now(dt.UTC), lang)  # fmt: skip
+    reply = deliver(talk.should_i(s), lang, chat.services)
+    assert isinstance(reply.message, Message)
+    return reply.message
+
+
 WITH_FOOTER: Final[dict[str, Callable[[Chat, str], Message]]] = {
     "brief": lambda chat, lang: event_brief().message(lang),
     "alert": lambda chat, lang: alert_message(insight(9), lang),
@@ -202,6 +212,14 @@ WITH_FOOTER: Final[dict[str, Callable[[Chat, str], Message]]] = {
     "range": range_message,
     "range not ready": fixed(today.RANGE_NOT_READY),
     "scope": fixed(today.SCOPE),
+    "greeting": fixed(talk.HELLO),
+    "thanks": fixed(talk.THANKED),
+    "about": fixed(talk.ABOUT_ME),
+    "off topic": fixed(talk.OFF_TOPIC_LINE),
+    "ipo": fixed(talk.IPO_EXPLAINER),
+    "money": fixed(talk.MONEY_FALLBACK),
+    "follow-up": fixed(talk.FOLLOW_UP_FALLBACK),
+    "should i": should_i,
 }
 
 

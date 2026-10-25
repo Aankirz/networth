@@ -321,6 +321,8 @@ def test_after_setup_free_text_gets_an_answer_even_without_models(chat: Chat) ->
     chat.say("Stock X will double", forward_date=1_700_000_000)
     assert chat.bot.last.startswith("I can't search the news right now")
     chat.say("hello")
+    assert chat.bot.last.startswith("Hi, I'm Networth.")
+    chat.say("tell me about the moon landing")
     assert chat.bot.last.startswith("I can tell you what happened today")
     chat.say("/frobnicate@networth_professor_bot")
     assert chat.bot.last == "I don't know that one yet. /help shows everything I can do."

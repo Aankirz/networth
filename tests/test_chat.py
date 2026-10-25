@@ -15,6 +15,7 @@ from networth.app.services import Services
 from networth.app.store import Profile
 from networth.bot.message import FOOTER
 from networth.chat import Intent, explain, jev, reply_lang
+from networth.chat.talk import HELLO
 from networth.chat.today import TYPE_QUESTION
 from networth.config import Query
 from networth.llm import (
@@ -150,7 +151,7 @@ def test_confident_jev_pick_wins_and_the_model_is_not_asked(tmp_path, cfg, monke
     models = FakeChatModels(Intent.WHAT_HAPPENED_TODAY.value)
     chat = talk(tmp_path, jev_on(cfg), models)
     chat.say("hi there")
-    assert chat.bot.last.startswith(ROUTED[Intent.OTHER])
+    assert chat.bot.last.startswith(HELLO["en"]), "jev's OTHER, then the greeting rule"
     assert models.picks == []
 
 
@@ -363,7 +364,7 @@ def test_jev_is_not_asked_when_config_turns_it_off(tmp_path, cfg, monkeypatch) -
     off = replace(cfg, product=replace(cfg.product, use_jev_for_intent=False))
     chat = talk(tmp_path, off, FakeChatModels(Intent.OTHER.value))
     chat.say("hi there")
-    assert asked == [] and chat.bot.last.startswith(ROUTED[Intent.OTHER])
+    assert asked == [] and chat.bot.last.startswith(HELLO["en"])
 
 
 def weekend_watcher(db: Path, checked: dt.datetime) -> None:
@@ -429,9 +430,11 @@ def test_past_the_hourly_cap_a_user_gets_a_polite_note_and_no_paid_call(tmp_path
     capped = replace(cfg, product=replace(cfg.product, chat_max_per_hour=2))
     models = FakeChatModels(Intent.OTHER.value)
     chat = talk(tmp_path, capped, models)
-    for _ in range(3):
+    for _ in range(2):
         chat.say("hi there")
-    assert len(models.picks) == 2
+    asked = len(models.picks)
+    chat.say("hi there")
+    assert len(models.picks) == asked
     assert chat.bot.last == TOO_MANY["en"]
 
 
