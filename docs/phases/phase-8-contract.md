@@ -41,9 +41,10 @@ The server is `networth/web/api.py`. The TypeScript below is the source of truth
 | `what_happened_today` | `news`: the confirmed stories from the same 24-hour window the answer words, with their publishers |
 | `why` | `history`: the engine's `odds()` row behind the answer's `/why` link |
 | `plan_range` | `plan_range`: `sim.plan_range` for the asker's own saved plan |
+| `holdings` | `holdings`: the asker's own saved holdings report, or `text` when they have none |
 | every other intent | `text`: the message is the whole answer |
 
-`holdings` appears on the dashboard. The chat pipeline has no holdings intent yet, so no chat turn carries one today.
+`holdings` also appears on the dashboard. The demo has no holdings, so its holdings questions get a `text` card.
 
 ## Types
 
@@ -60,6 +61,7 @@ export type Intent =
   | "plan_question"
   | "plan_range"
   | "watch"
+  | "holdings"
   | "other";
 
 export interface ChatRequest {

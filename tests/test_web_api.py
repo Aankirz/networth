@@ -286,3 +286,15 @@ def test_a_tip_marked_forwarded_goes_to_the_tip_check(tmp_path: Path, cfg) -> No
     w = World(tmp_path, cfg, FakeChatModels(None))
     turn = w.ask(USER, "SBI to merge with HDFC tomorrow, pakka news", forwarded=True).json()
     assert turn["intent"] == "tip_check" and turn["card"] == {"type": "text"}
+
+
+def test_a_holdings_question_carries_the_askers_own_holdings(tmp_path: Path, cfg) -> None:
+    from networth.holdings.model import to_json
+    from tests.test_holdings import fixture_holdings
+
+    w = World(tmp_path, cfg, FakeChatModels(Intent.HOLDINGS.value))
+    assert w.ask(OTHER_USER, "how are my holdings doing").json()["card"] == {"type": "text"}
+    w.store.save_holdings(USER, to_json(fixture_holdings()))
+    turn = w.ask(USER, "how are my holdings doing").json()
+    assert turn["intent"] == "holdings" and turn["card"]["type"] == "holdings"
+    assert turn["card"]["count"] == len(fixture_holdings().items)
