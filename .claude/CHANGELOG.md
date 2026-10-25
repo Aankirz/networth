@@ -297,7 +297,6 @@
 
 ## 2026-10-25 — Phase 6 report v2
 - Report updated for method v2: sources with the OECD splices and rejected ids, window 2007-10..2026-09 (228 months), v1 vs v2 table, new sample and guard-checked lines, label size check, gate counts.
-||||||| parent of 19df1a7 (feat: verify Keiki turn signatures with Ed25519 or HMAC)
 
 ## 2026-10-25 — Verify Keiki turn signatures
 - networth/keiki/verify.py trusts a pushed turn only on a valid Ed25519 signature (Keiki's JWKS, refetched at most once a minute on an unknown kid) or, when KEIKI_SIGNING_SECRET is set, a valid HMAC; stale (over 5 minutes), unsigned and unknown-kid requests get a reason. Adds the cryptography dependency (Phase 3C unit 1).
@@ -325,7 +324,6 @@
 
 ## 2026-10-25 — Deploy doc: Keiki
 - docs/deploy.md gains the Keiki section: resource ids, how to recreate them in a safe order, the KEIKI_* env var names, how turns are trusted, and how to rotate the HMAC secret and the API key.
-||||||| parent of 72ac779 (docs: fix the phase 5 eval plan before any result, with the walk-forward and vault runners)
 
 ## 2026-10-25 — Phase 5 plan and walk-forward harness
 - docs/phases/phase-5-plan.md fixes every eval choice before any result; evals/walkforward.py rebuilds base rates at a cutoff from the engine's public build steps; evals/vault.py scores the vault once; evals/news/LABELLING.md sets the news label rules; tests/test_evals.py covers the scoring rules.
@@ -345,7 +343,6 @@
 
 ## 2026-10-25 — Cite the rebased plan hash
 - docs/phases/phase-5-report.md: the plan commit was rewritten by the pre-push rebase; the report now cites both hashes and the unchanged file blob.
-||||||| parent of 52cb417 (fix: quote a short headline that holds the asked term in the memory line)
 
 ## 2026-10-25 — Memory line quotes a title that holds the term
 - networth/memory.py: the brief's memory line quotes the shortest confirmed story or article title that contains the asked term (at most 140 characters), not the story's own title, so the reader sees the term in the headline.
@@ -365,7 +362,6 @@
 
 ## 2026-10-25 — Phase 3D eval rerun and report
 - evals/results: live words and news rerun after findings 1 to 4; evals/intent_results_heldout_3d.json held-out intent rerun with the new criteria. docs/phases/phase-5-report.md before-and-after section and spend $2.42; phase-5-findings.md status per finding; phase-3b-report.md and phase-3b-decisions.tsv record Jev back on; docs/phases/phase-3d-report.md.
-||||||| parent of da2ecbf (docs: add the Slack setup and the phase 3C report)
 
 ## 2026-10-25 — Phase 3C: clean turn log, trace id, welcome kind, Slack route, report
 - The turn log kept Keiki's whole channel object (sender address and email text). It now keeps only the channel type; the fixture sends the object as Keiki does and the log test checks no address or text.
@@ -446,7 +442,6 @@
 
 ## 2026-10-25 — docs: drop the fixed push-access item from the 7B report
 - The 403 on push was fixed on the remote side, so the OWNER NEEDED line for it is removed.
-||||||| parent of a6f8d85 (feat: add the phase 8 Next.js site with the ledger and chat cards)
 
 ## 2026-10-25 — feat: phase 8 web dashboard and chat
 - Added networth/web/api.py (JSON API for the site: dashboard and chat for /u tokens and the demo, guard, rate limits, CORS allowlist, length cap, text-free turn log), registered from routes.py with one import.
@@ -511,11 +506,6 @@
 
 ## 2026-10-25 — web chat 500: torn call log line
 - Live /api/demo/chat 500: line 76 of /data/llm_calls.jsonl is 403 NUL bytes (VM stopped mid-append during the Maritime outage); run_turn -> cost_between -> net.read_records raised JSONDecodeError on every web turn. read_records now strips NULs and skips unparseable lines with a warning. Tests: demo chat 200 with a torn log, read_records keeps whole records.
-||||||| parent of a31f04e (feat: make the web app a chat with the dashboard one click away)
-||||||| parent of 395ddb1 (feat: make the web app a chat with the dashboard one click away)
-||||||| parent of 4b3cde8 (feat: make the web app a chat with the dashboard one click away)
-||||||| parent of 338ea2d (feat: make the web app a chat with the dashboard one click away)
-||||||| parent of f904838 (feat: make the web app a chat with the dashboard one click away)
 
 ## 2026-10-25 — Phase 10 slice 1: the chat-first web app
 - site/: centred chat home for /demo and /u/[token], sidebar with past chats kept in the browser, @ mentions and / commands, Vercel-black theme with Geist and a light theme, one card per server card type, designed thinking, error, unreachable, missing, rate-limited and over-length states.
@@ -548,3 +538,7 @@
 
 ## 2026-10-25 — holdings: small-cap and US tech ETF tickers are growth
 - TICKER_RULES growth now matches SML (HDFCSML250), MON100 and FANG (MAFANG). Tests added.
+
+## 2026-10-25 — Phase 10: the landing page, redone Maritime-style
+- site/app/page.tsx, app/landing.css, components/landing/{hero-sketch,step-icons,mocks,playback,in-view}.tsx, lib/pencil.ts: `/` rebuilt from scratch as one centred column with the hackathon pill, a self-drawing pencil hero, three self-drawing steps and five product mocks (the LIC IPO chat, the monthly brief, the range chart, an email reply and the dashboard sheet), plus the letter, the line we never cross and the FAQ; the old ask box (components/landing/ask.tsx) is removed.
+- site/e2e/landing.spec.ts: tests for the new page (centring, mock playback, reduced motion, the server's brief, the letter); docs/phases/phase-10-report.md: before/after critique, gates and LCP.

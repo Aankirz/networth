@@ -78,3 +78,79 @@ The first-visitor test is covered end to end: from `/`, "Try the demo" opens the
 
 - The landing page has no photographs. The brief asks that every figure come from the server, and stock pictures would be decoration, so the live product pieces are the imagery.
 - The design references' text-gradient hero and the taste skill's two-line headline rule both give way to the brief and the impeccable bans.
+
+## The landing page, redone
+
+The owner found the first landing page weak, so `/` was rebuilt from scratch. Maritime is the model, with Vercel's black and heyclicky's centred column as secondary references. All three were viewed in a browser at 1440. No code or assets were copied from them.
+
+### Critique before (impeccable, on the shipped `/`)
+
+Score 27/40. The AI slop verdict failed.
+
+- **No hero moment.** The hero was a left-aligned headline above a grid with a paragraph and an ask box. It had no visual, and nothing on the first screen showed the product.
+- **A widget instead of a promise.** The side ask box competed with the two buttons.
+- **A kicker above every heading.** "How it works", "Where it lives" and "Track record" sat as small labels above each h2: the repeated-label tell.
+- **Raw fragments.** The live dashboard pieces were set in plain boxes beside the step text. They read as parts of a dashboard, not as the product at work.
+- **An identical card row.** The channels section was three icon-plus-text cells of the same size.
+- **No motion,** except the charts drawing in.
+- **A flat rhythm.** Every section used the same padding and the same two-column split.
+
+The deterministic detector could not run (`detect.mjs`: bundled detector not found), so this is the model's assessment only.
+
+### What it is now
+
+- **Hero.**
+  - One centred column: the hackathon pill, then "Market news, checked against history.", one line under it, and "Try the demo" and "Message the bot".
+  - Under the buttons, a pencil line of monthly investing draws itself and falls. The brief's own line arrives beside the fall: "Months like this are why you have a plan."
+  - A faint grid and one soft glow sit behind it. The line is a shape with no figure on it.
+- **Three steps.** Each has a hand-drawn icon that draws stroke by stroke as it scrolls into view.
+- **Five product mocks, each under a big two-part heading:**
+  - **The Telegram chat.** It plays the phase 9 eval's LIC thread one message at a time, and the header says "typing…" before each reply. The thread runs from the question to "what should I read first?" and ends on the Hinglish answer, using the real reply text.
+  - **The monthly brief.** These are the server's brief lines (`networth/brief`), filled in from the sample profile's live dashboard data.
+  - **The pencil range chart.** It is drawn live from the demo data.
+  - **An email reply.** It uses the real repo-rate answer text.
+  - **The dashboard sheet.** It is the real plan, news and history components.
+- **The rest of the page:**
+  - a "why we built this" letter that states the negative result;
+  - "The line we never cross";
+  - the FAQ accordion;
+  - a footer with "Research, not advice."
+
+### Motion
+
+- **Entrances.** The hero draws once and doesn't loop. Blocks below the fold fade and rise once, 90 ms apart. They use opacity and transform only.
+- **The mocks** play only while on screen and loop after a six-second hold.
+- **Reduced motion** and no-script both show every mock's whole exchange at once. A block is held back only if it starts below the fold, so the first screen never flickers.
+- **New code:**
+  - `components/landing/playback.tsx` plays the mocks;
+  - `components/landing/in-view.tsx` runs the entrances;
+  - `lib/pencil.ts` draws the hand-drawn strokes on the server, seeded, with no script.
+
+### Critique after
+
+Score 34/40. The AI slop verdict passes.
+
+- **Fixed:**
+  - the hero now has one visual and one promise;
+  - every section shows the product doing the thing its heading says;
+  - the kicker labels and the identical card row are gone;
+  - the vertical rhythm varies by section.
+- **Still short:**
+  - the headline takes three lines at 320;
+  - the hero bubble is a little wider than its text on desktop;
+  - the brief mock shows the raw `^NSEI` ticker, because that is the server's sentence;
+  - the site has no photographs, by choice, as before.
+
+### Checks
+
+| Gate | Exit code | Result |
+| --- | --- | --- |
+| `make check` | 0 | 1194 passed, 12 skipped |
+| `npm run lint` | 0 | |
+| `npm run typecheck` | 0 | |
+| `npm run build` | 0 | clean `.next` |
+| `scripts/check-build.mjs` | 0 | banned-word grep green |
+| Playwright | 0 | 32 passed (9 on the landing page) |
+
+- **LCP.** Locally with 4x CPU throttling and 1.6 Mbps at 150 ms latency, LCP is 0.70 s at 390 and 0.75 s at 1440. The LCP element is the h1.
+- **Screenshots.** They are `phase-10-shots/landing-{320,1440}-{dark,light}.png` and `landing-full-*`.
