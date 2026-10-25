@@ -4,13 +4,14 @@ against, and the writer's task. deliver() is the only place a chat reply meets a
     reply = deliver(Answer(template, source, task), profile, text_lang, services)
 
 task None means the words are fixed: an English reader gets the template as is, anyone else a
-guarded translation of it.
+guarded translation of it. deliver_traced also says which words went out: the guard's "model",
+"rewrite" or "template", or "fixed" when no model was asked.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, Literal
 
 from networth import guard
 from networth.app.services import Services
@@ -35,11 +36,18 @@ class Answer:
     draft: bool = True  # the template words the same facts; False when it is only a fallback
 
 
+Used = guard.Used | Literal["fixed"]
+
+
 def deliver(answer: Answer, lang: str, services: Services) -> Reply:
+    return deliver_traced(answer, lang, services)[0]
+
+
+def deliver_traced(answer: Answer, lang: str, services: Services) -> tuple[Reply, Used]:
     language = LANGUAGES.get(lang, LANGUAGES["en"])
     models = services.models
     if models is None or (answer.task is None and lang == "en"):
-        return Reply(answer.template, answer.buttons)
+        return Reply(answer.template, answer.buttons), "fixed"
     if answer.task is None:
         task, facts = TRANSLATE_TASK.format(language=language), answer.template
     else:
@@ -48,4 +56,4 @@ def deliver(answer: Answer, lang: str, services: Services) -> Reply:
         facts = f"{answer.source}{plain}"
     out = guard.guarded(lambda fb: models.write(task, facts, fb), answer.source,
                         answer.template, services.guard_log, answer.kind)  # fmt: skip
-    return Reply(out.text, answer.buttons)
+    return Reply(out.text, answer.buttons), out.used

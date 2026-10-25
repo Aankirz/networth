@@ -137,14 +137,16 @@ def parse_update(update: dict) -> Incoming | None:
 
 @dataclass(frozen=True)
 class Turn:
-    """One update's worth of IO: where to save, where to send, the time it arrived, and the
-    slow work to run once the update lock is released."""
+    """One update's worth of IO: where to save, where to send, the time it arrived, the slow
+    work to run once the update lock is released, and what the chat answer used (its intent
+    and guard verdict), which a Keiki turn logs."""
 
     store: Store
     bot: Bot
     now: str
     services: Services
     later: list[Callable[[], None]] = field(default_factory=list)
+    trace: dict[str, str] = field(default_factory=dict)
 
     @property
     def clock(self) -> dt.datetime:
@@ -246,8 +248,14 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
         for reply in outcome.replies:
             turn.send(profile, reply)
     else:
-        turn.answer(profile, lambda: chat.respond(turn.store, profile, text, is_forward,
-                                                  turn.services, turn.clock))  # fmt: skip
+        turn.answer(profile, lambda: chat_reply(turn, profile, text, is_forward))
+
+
+def chat_reply(turn: Turn, profile: Profile, text: str, is_forward: bool) -> Reply:
+    reply, intent, used = chat.respond_traced(turn.store, profile, text, is_forward,
+                                              turn.services, turn.clock)  # fmt: skip
+    turn.trace.update(intent=intent.value, guard=used)
+    return reply
 
 
 def parse_callback(data: str) -> tuple[str, str] | None:

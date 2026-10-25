@@ -316,3 +316,6 @@
 
 ## 2026-10-25 — Memory callbacks in the brief
 - networth/memory.py reads glossary terms from knowledge/glossary.md; a short explain-this question with no link stores the terms it asks about (asked_terms table). The investing-day brief adds one line, "Earlier you asked what OFS means. It comes up in this month's news: ...", when a confirmed story of the last 30 days uses an unused term asked in the last memory_days; the line joins the template and the guard source, and the term is marked used once the brief is saved (Phase 3C unit 5).
+
+## 2026-10-25 — Keiki turn traces
+- Every Keiki turn appends one line to data/keiki_turns.jsonl: turn and trace ids, user id, channel, kind (chat, command, onboarding, link, notice), chat intent, guard verdict, cost (llm_calls.jsonl records written during the turn) and outcome; never text, address or token. chat.respond_traced and answer.deliver_traced return the intent and which words went out ("fixed" when no model wrote them); respond and deliver delegate (Phase 3C unit 6).
