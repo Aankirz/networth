@@ -433,3 +433,32 @@ def test_the_page_shows_no_holdings_until_they_are_confirmed(chat: Chat) -> None
 def test_a_bad_link_gets_the_friendly_404(chat: Chat) -> None:
     response = app_with(TABLE, chat.store.path.parent).get("/u/nope.123.abc/holdings")
     assert response.status_code == 404
+
+
+def bank_bees_row(**changes: str) -> dict:
+    """The real Bank BeES row from the Groww screenshot fixture, with fields a broker changes."""
+    rows = json.loads((FIXTURES / "groww_fake_vision.json").read_text())["rows"]
+    row = next(r for r in rows if r["identifier"] == "BANKBEES")
+    return {**row, **changes}
+
+
+@pytest.mark.parametrize("changes, bucket", [
+    ({}, Bucket.GROWTH),
+    ({"name": "BANKBEES"}, Bucket.GROWTH),  # a broker screenshot that shows only the ticker
+    ({"name": "PSUBNKBEES", "identifier": "PSUBNKBEES"}, Bucket.GROWTH),
+    ({"name": "ITBEES", "identifier": "ITBEES"}, Bucket.GROWTH),
+    ({"name": "NIFTYBEES", "identifier": "NIFTYBEES"}, Bucket.CORE),
+    ({"name": "LIQUIDBEES", "identifier": "LIQUIDBEES"}, Bucket.SAFETY),
+    ({"name": "Nippon India ETF Liquid BeES", "identifier": "LIQUIDBEES"}, Bucket.SAFETY),
+    ({"name": "GILT5YBEES", "identifier": "GILT5YBEES"}, Bucket.SAFETY),
+    ({"name": "ITOT", "identifier": "ITOT", "currency": "USD"}, Bucket.CORE),
+])  # fmt: skip
+def test_an_equity_etf_is_growth_and_a_liquid_or_gilt_etf_is_safety(
+    changes: dict, bucket: Bucket
+) -> None:
+    from networth.holdings.reader import parse_row
+    from networth.llm import WireHolding
+
+    holding = parse_row(WireHolding(**bank_bees_row(**changes)))
+    assert not isinstance(holding, str)
+    assert holding.bucket is bucket

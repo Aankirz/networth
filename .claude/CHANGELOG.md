@@ -542,3 +542,6 @@
 ## 2026-10-25 — Phase 10: critique, audit and report
 - site/: the light-theme chart accent is now oklch(62% 0.15 75), 3.59:1 on the page and 3.37:1 on cards (WCAG 1.4.11); Safari's details marker is hidden on the FAQ.
 - docs/phases/phase-10-report.md: design direction, libraries, the API and mention mapping, bundle and LCP numbers, what the critique and audit changed, known gaps and deviations.
+
+## 2026-10-25 — holdings: Indian ETF tickers placed by bucket
+- networth/holdings/model.py: TICKER_RULES read an INR ETF ticker (identifier or ticker-only name): LIQUID/GILT/Bharat Bond safety, sector (BANKBEES, PSUBNKBEES, ITBEES...) growth, broad index core. "nifty it" added to sector words. Tests from the Groww fixture Bank BeES row.

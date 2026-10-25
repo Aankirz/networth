@@ -92,7 +92,7 @@ class Holdings:
 
 SECTOR: Final = (
     r"bank|banking|financial services|pharma|healthcare|technology|tech|infra\w*|psu|energy|"
-    r"auto|fmcg|consumption|realty|metal|defen[cs]e|manufacturing|semiconductor"
+    r"auto|fmcg|consumption|realty|metal|defen[cs]e|manufacturing|semiconductor|nifty it"
 )
 # Checked in order on the lower-cased name; the first match places the holding. Debt words come
 # before sector words so "Banking & PSU Debt Fund" is safety, not a banking sector fund.
@@ -107,6 +107,21 @@ BUCKET_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
          r"index|bees|etf", Bucket.CORE),
     )
 )  # fmt: skip
+# An NSE ETF ticker ("BANKBEES", "LIQUIDBEES", "GILT5YBEES") is one run of capitals, so the
+# word rules above never see "bank" or "liquid" in it. These read the ticker, in the same order:
+# debt first, then a sector, then a broad index. An ISIN is not a ticker and is never read.
+# Only an INR holding is read this way: the patterns are NSE ticker names.
+TICKER_RULES: Final[tuple[tuple[re.Pattern[str], Bucket], ...]] = tuple(
+    (re.compile(pattern), bucket)
+    for pattern, bucket in (
+        (r"LIQUID|GILT|GSEC|SDL|EBBETF|BBETF|OVERNIGHT|MONEY", Bucket.SAFETY),
+        (r"BANK|BNK|BK|PHARMA|HEALTH|INFRA|PSU|CPSE|FMCG|CONSUM|AUTO|METAL|ENERGY|REALTY|^IT"
+         r"|MIDCAP|MID150|SMALLCAP|SMLCAP", Bucket.GROWTH),
+        (r"NIFTY|NIF50|SENSEX|JUNIOR|BEES|ETF", Bucket.CORE),
+    )
+)  # fmt: skip
+TICKER: Final = re.compile(r"[A-Z0-9&-]{3,20}")
+ISIN: Final = re.compile(r"[A-Z]{2}[A-Z0-9]{9}\d")
 # A name no rule matched falls back on the kind. A mutual fund the rules can't place (an
 # active flexi-cap fund, say) stays unplaced, and so does anything "other".
 KIND_BUCKETS: Final[Mapping[Kind, Bucket]] = {
@@ -117,10 +132,26 @@ KIND_BUCKETS: Final[Mapping[Kind, Bucket]] = {
 }
 
 
-def bucket_for(name: str, kind: Kind) -> Bucket | None:
-    """A single stock is growth whatever its name says: "HDFC Bank" is a stock, not a fund."""
+def ticker_of(name: str, identifier: str | None) -> str | None:
+    """The ETF's exchange ticker: the identifier, or a name that is only a ticker."""
+    for text in (identifier, name):
+        token = (text or "").strip().upper()
+        if TICKER.fullmatch(token) and not ISIN.fullmatch(token):
+            return token
+    return None
+
+
+def bucket_for(name: str, kind: Kind, identifier: str | None = None,
+               currency: str = "INR") -> Bucket | None:  # fmt: skip
+    """A single stock is growth whatever its name says: "HDFC Bank" is a stock, not a fund. An
+    Indian ETF's ticker is read first, since a screenshot may show only "BANKBEES". The ticker
+    rules are NSE names: a US ticker such as ITOT is placed by its name, as before."""
     if kind is Kind.STOCK:
         return Bucket.GROWTH
+    ticker = ticker_of(name, identifier) if kind is Kind.ETF and currency == "INR" else None
+    for pattern, bucket in TICKER_RULES if ticker else ():
+        if pattern.search(ticker):
+            return bucket
     lowered = name.lower()
     for pattern, bucket in BUCKET_RULES:
         if pattern.search(lowered):
@@ -130,7 +161,9 @@ def bucket_for(name: str, kind: Kind) -> Bucket | None:
 
 def placed(h: Holding) -> Holding:
     """h with the table's bucket, unless the user already said one."""
-    return h if h.bucket is not None else dataclasses.replace(h, bucket=bucket_for(h.name, h.kind))
+    if h.bucket is not None:
+        return h
+    return dataclasses.replace(h, bucket=bucket_for(h.name, h.kind, h.identifier, h.currency))
 
 
 def to_json(holdings: Holdings) -> str:
