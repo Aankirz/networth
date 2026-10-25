@@ -1,0 +1,65 @@
+{
+ "date": "2026-10-25",
+ "calibration": {
+  "walk_forward": {
+   "cutoffs": [
+    "2010-01-01",
+    "2013-01-01",
+    "2016-01-01",
+    "2019-01-01"
+   ],
+   "end": "2022-01-01",
+   "leans": {
+    "toward": {
+     "statements": 82,
+     "episodes": 152,
+     "later_rate": 0.4474,
+     "stated_rate": 0.6858,
+     "baseline": 0.5077,
+     "held": 25,
+     "judged": 55
+    },
+    "against": {
+     "statements": 61,
+     "episodes": 124,
+     "later_rate": 0.4677,
+     "stated_rate": 0.3456,
+     "baseline": 0.519,
+     "held": 22,
+     "judged": 42
+    }
+   },
+   "buckets": [
+    {
+     "bucket": "50-60%",
+     "episodes": 266,
+     "happened": 134,
+     "happened_rate": 0.5038,
+     "stated_mean": 0.5388,
+     "baseline_mean": 0.509
+    },
+    {
+     "bucket": "60-70%",
+     "episodes": 242,
+     "happened": 123,
+     "happened_rate": 0.5083,
+     "stated_mean": 0.6391,
+     "baseline_mean": 0.5118
+    },
+    {
+     "bucket": "70%+",
+     "episodes": 65,
+     "happened": 31,
+     "happened_rate": 0.4769,
+     "stated_mean": 0.8223,
+     "baseline_mean": 0.5624
+    }
+   ]
+  }
+ },
+ "vault": null,
+ "news_judge": null,
+ "no_advice": null,
+ "number_trace": null,
+ "spend_usd": 0
+}
