@@ -426,3 +426,6 @@
 
 ## 2026-10-25 — docs: rebase section in the phase 3E report
 - Added a Rebase section to docs/phases/phase-3e-report.md: each conflict and its resolution, the post-merge test fixes, and the branch cleanup (worktree-agent-* deleted; phase-3e-web/charts kept because -d refuses rebased branches).
+
+## 2026-10-25 — Phase 3F hardening
+- Rate-limited /link code misses per contact, 404 for stopped users' pages, uvicorn access log off, data dir 0700 on boot, and recorded email sender authentication as a known gap (phase 3C report, Hardening).

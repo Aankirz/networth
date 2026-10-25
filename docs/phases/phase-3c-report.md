@@ -145,12 +145,34 @@ Slack runs on the same agent, the same external harness and the same `/keiki/tur
 - **No proactive Slack.** A Slack-only user gets answers and `/brief` on demand, but no scheduled brief until they link Telegram or email. Their setup still says "I'll write on the …", which is only true after linking.
 - **Replay is proven by test only** (see Live checks).
 - **The link policy is a word and host list, not a classifier.** A tracker it does not know, on a path with none of the words, would still be fetched. Add the host to `SKIP_HOSTS` when one shows up.
-- **No rate limit on link-code guessing.** A code is 6 digits, lasts 10 minutes and works once, and only messages of 40 characters or fewer are read as codes.
+- **Link-code guessing is limited per contact, not overall.** See Hardening fix 1. Someone who controls many addresses still gets five tries per address per hour.
 - **Cost is attributed by time window.** Turns run one at a time under a process-wide lock, so the window is exact unless a scheduled job runs during a turn.
 - **Entity watches match the whole phrase,** and a story's first-seen time comes from its publish time.
 - **The deployment runs `c80dbbe`.** This round's fixes and `ac158d8` need OWNER NEEDED 1.
 
-## Deviations from the brief
+## Hardening (Phase 3F)
+
+From the data-isolation audit. The brief is `docs/phases/phase-3f-hardening.md`. Every test runs with no network.
+
+1. **/link code guessing.** A code sent by a contact that already got five wrong in the last hour is not tried at all, so the message is answered like any other, even when the code is right. The count is per contact (the sender's address, or the Slack author) and lives in a new `link_misses` table. `Store.redeem_link_code` checks the count, tries the code and records a miss in one transaction. Rows older than an hour are cleared on each try. Tests: `test_five_wrong_codes_in_an_hour_stop_codes_from_that_contact` (another contact still links with the same code) and `test_codes_from_a_contact_work_again_an_hour_after_the_misses`.
+2. **Stopped users' pages.** `profile_by_token` now skips a stopped profile, so `/u/{token}` and `/u/{token}/holdings` give the friendly 404 after /stop. Test: `test_a_stopped_users_pages_get_the_friendly_404`, for both pages.
+3. **Tokens in access logs.** uvicorn's access log is off, so no `/u/<token>` path is written. Recorded in `docs/deploy.md`. Test: `test_the_server_runs_without_an_access_log`. Gap: Maritime's edge may keep its own request log, and we cannot see or change it.
+4. **Data dir permissions.** `app_from_env` creates `$DATA_DIR` if needed and sets it to `0700` before anything opens a database. Test: `test_startup_makes_the_data_dir_private`, which starts with a `0755` dir. Locally this also sets the repo's `data/` to `0700` whenever the app module is imported.
+5. **Email sender authentication: a known gap.** Nothing is enforced on our side, because the turn carries no authentication result.
+   - AgentMail drops an inbound email whose authentication headers explicitly fail. One with no authentication headers is still processed and labelled `unauthenticated`, because "legitimate senders may omit the headers". So an email with no SPF or DKIM headers and a forged `From:` can still reach us.
+   - Keiki's turn payload documents no labels, no SPF, DKIM or DMARC result, and no authentication field. Its prompt guard's `screening.flagged` is about the text, not the sender. Ignoring unauthenticated turns would mean inventing a field, so we don't.
+   - What a forged sender can do: run commands as that contact, such as `/stop`, `/sendto` or a plan change. Where the reply goes depends on how Keiki addresses it, which its docs don't say. My guess is the real address, so the forger never sees it. A forged sender can also try link codes, five per address per hour (fix 1).
+   - Next step: ask Keiki whether it forwards AgentMail's `unauthenticated` label or the message's `Authentication-Results`, and drop those turns once it does.
+   - Read on 2026-10-25: https://onkeiki.com/docs/external-harness.md, https://onkeiki.com/docs/security.md, https://onkeiki.com/docs/conversation-auth.md, https://onkeiki.com/docs/partner-deployments.md, https://onkeiki.com/llms.txt, https://docs.agentmail.to/events.md (the `message.received.unauthenticated` event), https://docs.agentmail.to/email-deliverability.md, https://docs.agentmail.to/faq.md, https://docs.agentmail.to/lists.md.
+
+OWNER NEEDED: redeploy so the hardening goes live.
+
+```bash
+maritime deploy networth --source github --repo https://github.com/Aankirz/networth --branch main --wait --json
+```
+
+After the deploy, `maritime exec networth ls -ld /data --json` should show `drwx------`.
+
 
 1. Email-native user ids are `kk:<sha256(address)[:16]>`, so no log line names an address. A Slack contact hashes the same way.
 2. A first message that asks something is answered before the short setup. The brief says a new email user gets text onboarding. They still do, in the same turn.

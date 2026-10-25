@@ -11,6 +11,8 @@ One container serves the bot webhook, `/health` and the web pages. Its state is 
 - On boot, if `PUBLIC_URL` is set, the app calls Telegram `setWebhook` with `PUBLIC_URL/telegram/webhook` and the secret. A Telegram update to a sleeping agent wakes it in about a second.
 - `GET /schedules` publishes the scheduled jobs, and `POST /chat` runs the one Maritime delivers (see Schedules below).
 - `GET /u/{token}` is a user's own page, signed with `LINK_SIGNING_SECRET`.
+- uvicorn's access log is **off** (`access_log=False` in `networth/app/__main__.py`). It would write every request path, and a `/u/<token>` path is a 30-day credential to that user's page. Our own log lines still go out. Maritime's edge may keep its own request log, which this setting does not reach. Changing `LINK_SIGNING_SECRET` revokes every link if one ever leaks.
+- On boot the app creates `$DATA_DIR` if needed and sets it to mode `0700`, so only the server's user can read profiles, messages and broker secrets.
 - `POST /keiki/turn` takes signed Keiki turns for email and Slack (see Keiki below). An unsigned or stale request gets 401.
 
 ## Once, by the owner
