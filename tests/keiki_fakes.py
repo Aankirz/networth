@@ -62,14 +62,26 @@ GMAIL_QUOTE = (
     f"> {OPT_OUT}"
 )
 IPHONE = "\n\nSent from my iPhone"
+# The live /brief turn's text after Keiki's header, emails and the link masked (trace c79c227e).
+LIVE_BRIEF = (
+    "/brief\n[image: Mailsuite] Sender notified with Mailtrack  ·  Opt out\n"
+    f"<{OPT_OUT}>\n10/25/26, 02:28:20 PM"
+)
 SLACK_TEAM, SLACK_USER = "T_ACME", "U_ASHA"
 ADDRESS = "asha@example.com"
 TURN_URL = "https://onkeiki.example/api/v1/harness/turns/t1"
 
 
+def email_text(text: str, address: str = ADDRESS, subject: str = "hi") -> str:
+    """Keiki's header line, then the body, as on the live email turns."""
+    return f"[Email from Asha <{address}>; subject={subject}; message_id=<m1@mail>]\n{text}"
+
+
 def turn_payload(*texts: str, turn_id: str = "t1", address: str = ADDRESS,
-                 **extra: object) -> dict:  # fmt: skip
-    """An email as Keiki pushes it: every turn is its own thread, the sender is userId."""
+                 header: bool = True, **extra: object) -> dict:  # fmt: skip
+    """An email as Keiki pushes it: every turn is its own thread, the sender is userId, and
+    each text starts with Keiki's [Email from ...] line."""
+    texts = tuple(email_text(t, address) for t in texts) if header else texts
     return {
         "type": "keiki.turn", "turnId": turn_id, "agentId": AGENT,
         "conversationId": f"{turn_id}.thread@agentmail.to",
@@ -86,7 +98,7 @@ def slack_payload(text: str, thread: str, turn_id: str = "s1") -> dict:
     """A Slack DM as Keiki pushes it: the conversation is the thread, the author is userId."""
     channel = {"channel": "slack", "teamId": SLACK_TEAM, "channelId": "D1", "threadTs": thread,
                "userId": SLACK_USER, "inboundText": text}  # fmt: skip
-    return turn_payload(text, turn_id=turn_id, conversationId=f"slack:{SLACK_TEAM}:D1:{thread}",
+    return turn_payload(text, turn_id=turn_id, header=False, conversationId=f"slack:{SLACK_TEAM}:D1:{thread}",
                         channel=channel)  # fmt: skip
 
 

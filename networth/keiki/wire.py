@@ -34,6 +34,9 @@ TURN: Final = "keiki.turn"
 SLACK: Final = "slack"
 OTHER_TYPES: Final = frozenset({"keiki.turn.arrival", "keiki.turn.cancelled", "keiki.reaction"})
 QUOTE_HEADER: Final = re.compile(r"^(On\b.*\bwrote:|-----\s*Original Message\s*-----)\s*$", re.I)
+# Keiki's first line of every email text, seen live on 2026-10-25:
+# [Email from Name <sender>; subject=brief check; message_id=<id>]
+EMAIL_HEADER: Final = re.compile(r"^\[Email from\b.*\]$")
 # Where a signature or a mail client's footer starts: "-- ", "Sent from my iPhone", Outlook's
 # line, and Mailtrack's "Sender notified with Mailtrack" with its opt-out links.
 FOOTER: Final = re.compile(
@@ -123,8 +126,12 @@ def parse(payload: object) -> KeikiTurn | Other | None:
 def strip_quoted(text: str) -> str:
     """What the sender wrote: '>' lines go, and so does everything from a quote header ('On ...
     wrote:', which Gmail wraps over two lines, or '-----Original Message-----'), a signature or
-    a mail client's footer on. The first line always stays, so a lone '--' is never emptied."""
+    a mail client's footer on. Keiki's own '[Email from ...]' header line goes first, so a
+    command is the first thing left and the sender's address never reaches a model or the
+    message log. The first line left always stays, so a lone '--' is never emptied."""
     lines = text.splitlines()
+    if lines and EMAIL_HEADER.match(lines[0].strip()):
+        lines = lines[1:]
     kept: list[str] = []
     for i, line in enumerate(lines):
         here = line.strip()
