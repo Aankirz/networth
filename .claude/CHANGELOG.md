@@ -571,3 +571,11 @@
 
 ## 2026-10-25 — no footer or disclaimer in holdings replies
 - networth/holdings/lines.py, networth/bot/holdings.py, holdings_words: dropped "Research, not advice." footer and every not-advice/your-choice sentence in en, hi, hinglish (owner order); tests updated; a grep test fails if any holdings reply carries one.
+
+## 2026-10-25 — site: no disclaimers or answer footer anywhere (owner order)
+- Removed "Research, not advice." and every "not advice / your call / your choice / won't say yes or no" line (en, hi, Hinglish) from site copy: landing footer, mocks, letter, FAQ item, metadata, page frame; the site no longer renders any server `footer` (answer, error, dashboard). withoutFooter no longer empties labels when the footer is "".
+- scripts/disclaimers.mjs: one phrase list; check-build scans source and .next with it; e2e/no-disclaimer.spec.ts scans every reply fixture and each page. Fixtures scrubbed to a footer-less server.
+
+## 2026-10-25 — Phase 13B spike: A2UI SIP projection, money by currency
+- @a2ui/react and @a2ui/web_core 0.14.0 (exact), zod 3.25.76: a Networth A2UI v0.9 catalog (Column, Text, Slider, SipProjection) rendered client-side from server-shaped messages; sliders write the surface data model and the projection recomputes in the browser. /lab/sip shows it; e2e/a2ui.spec.ts proves no request on slider moves.
+- lib/money.ts: one formatter from the card's currency (en-IN lakh/crore for INR, en-US for USD and $1.2M); --up/--down tokens; range card says "today's money".
