@@ -33,13 +33,13 @@ from networth.bot.onboarding import (
     OWN_PLAN,
     OWN_PLAN_NAME,
     STARTER_PLANS,
-    format_money,
     ordinal,
     plan_line,
 )
 from networth.config import REPO
 from networth.engine import odds as engine
 from networth.engine.model import CURRENCY, EventType, RatesDB
+from networth.money import money as fmt_money
 from networth.sim.data import MissingSeries, Table, load_table
 from networth.web import holdings_view, names, plan_view, views
 from networth.web.fmt import percent, western_grouping
@@ -281,7 +281,7 @@ def user_page(request: Request, token: str, cfg: Config, table: SimTable) -> HTM
     if profile is None:
         return _not_found(request, BAD_LINK)
     plan = store.get_plan(profile.user_id)
-    money = format_money(profile.monthly_amount or 0, profile.currency or "INR")
+    money = fmt_money(profile.monthly_amount or 0, profile.currency, profile.lang)
     day = ordinal(profile.invest_day) if profile.invest_day else None
     last = store.last_brief(profile.user_id)
     last = (last[0], plain(from_stored(last[1]))) if last else None

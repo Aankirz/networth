@@ -160,10 +160,10 @@ def test_a_linked_user_on_email_gets_one_brief_a_day_and_none_on_telegram(tmp_pa
     assert len(chat.bot.sent) == telegram, "nothing proactive went to Telegram"
     queued = chat.store.pending_mail(ADDRESS)
     assert len(queued) == 1 and queued[0].text.startswith(
-        "Morning. It's your investing day, and ₹1,00,000 is ready."
+        "Morning. It's your investing day, and ₹1 lakh is ready."
     )
     keiki.say("", now=NOW)
-    assert keiki.last.startswith("Morning. It's your investing day, and ₹1,00,000 is ready."), (
+    assert keiki.last.startswith("Morning. It's your investing day, and ₹1 lakh is ready."), (
         "the notice turn delivers it"
     )
 

@@ -28,12 +28,18 @@ from typing import Final, Literal
 
 MULTIPLIERS: Final = {
     "lakh": 1e5, "lakhs": 1e5, "lac": 1e5, "l": 1e5, "crore": 1e7, "crores": 1e7, "cr": 1e7,
-    "k": 1e3, "thousand": 1e3, "million": 1e6, "mn": 1e6, "billion": 1e9, "bn": 1e9,
+    "k": 1e3, "thousand": 1e3, "million": 1e6, "mn": 1e6, "m": 1e6, "billion": 1e9, "bn": 1e9,
+    "b": 1e9, "लाख": 1e5, "करोड": 1e7,
 }  # fmt: skip
+# networth.money writes "₹2.91 lakh" or "$1.2M" for 2,91,234 or 1,204,000: within this share
+# of a source amount of at least COMPACT_FROM, a compact figure is that amount, not a new one.
+COMPACT_TOLERANCE: Final = 0.005
+COMPACT_FROM: Final = 1000
 # A digit run not continuing another number: "Rs5000", "Rs.5000" and "INR5000" all count.
 NUMBER: Final = re.compile(
     r"(?<!\d)(?<!\d[.,])(\d[\d,]*(?:\.\d+)?)"
-    r"(?:\s?(lakhs?|lac|crores?|cr|thousand|million|mn|billion|bn|k|l)(?![a-z]))?",
+    r"(?:\s?(lakhs?|lac|crores?|cr|thousand|million|mn|billion|bn|k|l|m|b|लाख|करोड\u093c?)"
+    r"(?![a-z]))?",
     re.IGNORECASE,
 )
 ORDINAL: Final = re.compile(r"(\d)(?:st|nd|rd|th)\b", re.IGNORECASE)
@@ -103,7 +109,15 @@ class Guarded:
 
 
 def _value(digits: str, unit: str | None) -> float:
-    return round(float(digits.replace(",", "")) * MULTIPLIERS.get((unit or "").lower(), 1), 2)
+    key = (unit or "").lower().removesuffix("\u093c")  # करोड़ with or without its nukta
+    return round(float(digits.replace(",", "")) * MULTIPLIERS.get(key, 1), 2)
+
+
+def _known(n: float, allowed: set[float]) -> bool:
+    """In the source, or a compact rounding of a source amount ("₹2.91 lakh" for 2,91,234)."""
+    return n in allowed or any(
+        a >= COMPACT_FROM and abs(a - n) <= COMPACT_TOLERANCE * a for a in allowed
+    )
 
 
 def normalise(text: str) -> str:
@@ -154,7 +168,7 @@ def _matches(pattern: re.Pattern[str], text: str) -> list[str]:
 
 def check(text: str, source: str) -> Verdict:
     allowed = numbers(source)
-    invented = sorted(n for n in numbers(text) if n not in allowed)
+    invented = sorted(n for n in numbers(text) if not _known(n, allowed))
     problems = [f"number {n:g} is not in the source" for n in invented]
     problems += [f"number word {w!r} is not in the source"
                  for w in _invented_words(text, source, allowed)]  # fmt: skip

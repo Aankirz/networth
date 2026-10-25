@@ -166,7 +166,7 @@ def test_a_rupee_user_gets_their_range(store: Store) -> None:
     assert text is not None
     assert (
         "20% safe money, 70% broad index funds, "
-        "10% single shares or themes, ₹1,50,000 a month for 3 years" in text
+        "10% single shares or themes, ₹1.5 lakh a month for 3 years" in text
     )
     assert text.endswith("It is not a forecast.")
 

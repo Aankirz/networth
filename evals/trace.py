@@ -22,10 +22,11 @@ from evals.words import NOW, PLAN, USER
 from networth import brief, guard
 from networth.app.services import Services
 from networth.bot.message import plain
-from networth.bot.onboarding import format_money, plan_line
+from networth.bot.onboarding import plan_line
 from networth.chat.answer import deliver
 from networth.chat.today import type_history
 from networth.engine import odds as engine
+from networth.money import money
 from networth.web import names
 from networth.web.fmt import percent
 
@@ -78,7 +79,7 @@ def name_fields() -> list[dict]:
 
 def profile_fields() -> list[dict]:
     return [*name_fields(), {"path": "profile.monthly_amount", "kind": "profile",
-             "value": format_money(USER.monthly_amount, USER.currency)},
+             "value": money(USER.monthly_amount, USER.currency)},
             {"path": "profile.plan", "kind": "profile", "value": plan_line(PLAN)},
             {"path": "brief.today", "kind": "profile", "value": f"{TODAY:%b} {TODAY.day}"},
             {"path": "event.event_date", "kind": "event",

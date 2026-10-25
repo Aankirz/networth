@@ -64,7 +64,6 @@ from networth.bot.onboarding import (
     BUCKETS,
     STARTER_PLANS,
     Reply,
-    format_money,
     ordinal,
     plan_line,
     with_lead,
@@ -74,6 +73,7 @@ from networth.brief.lines import Line, day_words, odds_line
 from networth.chat.answer import deliver
 from networth.engine import odds as engine
 from networth.keiki.turn import TURN_LOCK, cost_between
+from networth.money import money
 from networth.sim.data import Table
 from networth.watcher.store import Confirmed
 from networth.watcher.store import Store as WatcherStore
@@ -455,7 +455,7 @@ def dashboard(asker: Asker, services: Services, table: Table | None, now: dt.dat
     return {
         "sample": asker.sample, "lang": lang,
         "profile": {"plan": plan_line(plan, lang) if plan else None,
-                    "money": format_money(profile.monthly_amount or 0, profile.currency or "INR"),
+                    "money": money(profile.monthly_amount or 0, profile.currency, lang),
                     "day": ordinal(profile.invest_day) if profile.invest_day else None},
         "news": {"type": "news", "items": news, "note": None if news else say(NO_NEWS_YET, lang)},
         "history": history,

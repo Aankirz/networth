@@ -594,3 +594,6 @@
 
 ## 2026-10-25 — Phase 13A: last "your choice" lines
 - Removed "your plan is your choice" from the plan range label and the plan decline in all languages; DISCLAIMER now also catches "your choice"/"aapki pasand"/"आपकी पसंद".
+
+## 2026-10-25 — Phase 13A: amounts through money()
+- Onboarding summary, brief title and range line, user page, dashboard, plan range lines and card now use networth.money (lakh/crore, $K/M in the user currency). onboarding.format_money removed; sim.rupees kept only for holdings. Guard reads लाख/करोड़, M and B, and accepts a compact figure within 0.5% of a source amount.

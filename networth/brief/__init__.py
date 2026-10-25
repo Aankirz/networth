@@ -23,13 +23,14 @@ from typing import Final
 from networth import sim
 from networth.app.store import Plan, Profile
 from networth.bot.message import Message, say
-from networth.bot.onboarding import STARTER_PLANS, format_money
+from networth.bot.onboarding import STARTER_PLANS
 from networth.bot.telegram import Button, Keyboard
 from networth.brief.lines import Line, day_words, lang_of, odds_line, type_words
 from networth.engine import odds as engine
 from networth.engine.backtest import market_of
 from networth.engine.model import EventType
 from networth.memory import Callback
+from networth.money import money
 from networth.sim.data import MissingSeries
 from networth.watcher.store import Store
 from networth.web import names
@@ -177,7 +178,7 @@ class Brief:
         greet = GREETING[lang][0 if hour < NOON else 1 if hour < EVENING else 2]
         if self.local.day != self.profile.invest_day:
             return say(OTHER_DAY, lang).format(greet=greet)
-        amount = format_money(self.profile.monthly_amount or 0, self.profile.currency or "INR")
+        amount = money(self.profile.monthly_amount or 0, self.profile.currency, lang)
         return say(INVESTING_DAY, lang).format(greet=greet, amount=amount)
 
     def _news(self, lang: str) -> str:
@@ -196,8 +197,11 @@ class Brief:
         if self.range is None:
             return built
         r = self.range
-        replays = say(REPLAYS, lang).format(hit=r.hit_limit_pct, p10=sim.rupees(r.nominal_p10),
-                                            median=sim.rupees(r.nominal_median))  # fmt: skip
+        replays = say(REPLAYS, lang).format(
+            hit=r.hit_limit_pct,
+            p10=money(r.nominal_p10, "INR", lang),
+            median=money(r.nominal_median, "INR", lang),
+        )
         return f"{built}\n{replays}"
 
     def _plan_line(self, lang: str) -> str:

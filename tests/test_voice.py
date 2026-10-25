@@ -339,7 +339,7 @@ def test_a_hinglish_setup_asks_and_sums_up_in_hinglish(tmp_path: Path) -> None:
     for data in HINGLISH_TAPS[1:]:
         chat.tap(data)
     assert chat.bot.last.startswith("Mere paas yeh hai.")
-    assert "Har mahine: ₹1,00,000, 1 tareekh ko" in chat.bot.last
+    assert "Har mahine: ₹1 lakh, 1 tareekh ko" in chat.bot.last
     assert "Bahar rakha: Crypto" in chat.bot.last
     chat.tap("ob:confirm:ok")
     assert chat.bot.messages[-1].title == "Sab taiyaar hai."

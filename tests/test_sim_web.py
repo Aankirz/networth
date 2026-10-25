@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 from networth import sim
 from networth.app.services import Services
 from networth.app.settings import Settings
+from networth.money import money
 from networth.sim.data import Table
 from networth.web import plan_view
 from networth.web.routes import router, settings, sim_table
@@ -78,7 +79,7 @@ def test_the_demo_page_prints_the_simulated_range(client) -> None:
     r = sim.simulate((20, 70, 10), 150_000, 15, 20, TABLE)
     words = text(client.get("/plan-range?plan=balanced&amount=150000&years=15&fall=20").text)
     for n in (r.invested, r.nominal_p10, r.nominal_median, r.nominal_p90, r.real_median):
-        assert sim.rupees(n) in words
+        assert money(n, "INR") in words
     assert f"In {r.hit_limit_pct}% of the paths" in words
 
 
@@ -123,7 +124,7 @@ def test_a_missing_table_gets_a_page_saying_how_to_build_it() -> None:
 @pytest.fixture
 def chat(tmp_path: Path) -> Chat:
     chat = Chat(tmp_path, Services(tmp_path / "data", "https://nw.example", link_secret=SECRET))
-    onboard(chat)  # Balanced, ₹1,00,000 a month, INR
+    onboard(chat)  # Balanced, ₹1 lakh a month, INR
     return chat
 
 
@@ -135,7 +136,7 @@ def test_the_user_page_shows_only_the_users_own_range(chat: Chat) -> None:
     words = text(page)
     assert "What history says about this plan" in words
     assert LABEL in words and DISCLAIMER not in page
-    assert sim.rupees(r.nominal_median) in words
+    assert money(r.nominal_median, "INR") in words
     assert (
         "Balanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
         "10% single shares or themes" in words

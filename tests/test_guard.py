@@ -170,3 +170,14 @@ def test_every_glossary_row_passes_the_guard() -> None:
     cells = [c.strip() for row in rows for c in row.strip("|").split("|")[1:]]
     failing = {c: guard.check(c, c).problems for c in cells if not guard.check(c, c).ok}
     assert failing == {}, "the writer copies glossary wording, so it must read as description"
+
+
+def test_compact_money_is_the_source_amount_it_rounds() -> None:
+    assert guard.check("₹2.91 lakh a month", "monthly 291234").ok
+    assert guard.check("₹1.2 करोड़ by then", "median 12040000").ok
+    assert guard.check("worth $1.2M", "value 1204000").ok
+
+
+def test_a_compact_figure_far_from_any_source_amount_is_still_invented() -> None:
+    assert not guard.check("₹3.5 lakh a month", "monthly 291234").ok
+    assert not guard.check("worth $2M", "value 1204000").ok

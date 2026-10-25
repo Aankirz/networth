@@ -24,6 +24,7 @@ from networth.app.store import INDIA_TZ, US_TZ, Plan, Profile, Step
 from networth.bot.holdings_words import BUCKET_WORDS
 from networth.bot.message import Message, plain, say
 from networth.bot.telegram import Button, Keyboard
+from networth.money import money
 
 CALLBACK_PREFIX: Final = "ob"
 
@@ -227,19 +228,6 @@ def day_label(n: int, lang: str | None) -> str:
     return ordinal(n) if lang in (None, "en") else str(n)
 
 
-def indian_grouping(n: int) -> str:
-    digits = str(n)
-    if len(digits) <= 3:
-        return digits
-    head, tail = digits[:-3], digits[-3:]
-    pairs = [head[max(0, i - 2) : i] for i in range(len(head), 0, -2)]
-    return ",".join(reversed(pairs)) + "," + tail
-
-
-def format_money(amount: int, currency: str) -> str:
-    return f"${amount:,}" if currency == "USD" else f"₹{indian_grouping(amount)}"
-
-
 def goal_label(goal: str, lang: str | None) -> str:
     return GOAL_LABELS.get(lang or "en", {}).get(goal) or GOALS[goal][0]
 
@@ -291,7 +279,7 @@ def summary(p: Profile, plan: Plan) -> str:
     left_out = ", ".join(exclusion_label(k, lang) for k in p.exclude) or say(NOTHING, lang)
     return say(SUMMARY, lang).format(
         goal=goal_label(p.goal, lang), horizon=horizon_label(p.horizon_years, lang),
-        money=format_money(p.monthly_amount or 0, p.currency or "INR"),
+        money=money(p.monthly_amount or 0, p.currency, lang),
         day=day_label(p.invest_day, lang), drop=drop_label(p.drop_comfort, lang),
         left_out=left_out, lang=LANGS[p.lang][0], plan=plan_line(plan, lang))  # fmt: skip
 

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from networth.bot.onboarding import Money, format_money, parse_amount
+from networth.bot.onboarding import Money, parse_amount
+from networth.money import money
 
 
 @pytest.mark.parametrize(
@@ -37,8 +38,8 @@ def test_rejects(text: str) -> None:
 
 @pytest.mark.parametrize(
     ("amount", "currency", "shown"),
-    [(1_000, "INR", "₹1,000"), (100_000, "INR", "₹1,00,000"), (1_000_000, "INR", "₹10,00,000"),
-     (999, "INR", "₹999"), (12_345_678, "INR", "₹1,23,45,678"), (1_000, "USD", "$1,000")],
+    [(1_000, "INR", "₹1,000"), (100_000, "INR", "₹1 lakh"), (1_000_000, "INR", "₹10 lakh"),
+     (999, "INR", "₹999"), (12_345_678, "INR", "₹1.23 crore"), (1_000, "USD", "$1,000")],
 )  # fmt: skip
 def test_formats_money_the_local_way(amount: int, currency: str, shown: str) -> None:
-    assert format_money(amount, currency) == shown
+    assert money(amount, currency) == shown

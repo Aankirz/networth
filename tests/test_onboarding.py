@@ -26,7 +26,7 @@ NOW = "2026-10-25T06:00:00+00:00"
 SUMMARY = (
     "Here's what I have.\n\n"
     "Goal: A house, in about 4 years\n"
-    "Each month: ₹1,00,000 on the 1st\n"
+    "Each month: ₹1 lakh on the 1st\n"
     "A fall you can sit through: up to 20%\n"
     "Left out: Crypto, US stocks\n"
     "Language: English\n"

@@ -18,6 +18,7 @@ from typing import Final, Literal
 import numpy as np
 
 from networth.app.store import Plan, Profile, Store
+from networth.money import money
 from networth.sim import config
 from networth.sim.data import Table, load_table
 from networth.web.fmt import indian_grouping
@@ -187,7 +188,8 @@ CRORE_HUNDREDTH: Final = 10**5
 
 
 def rupees(n: int) -> str:
-    """₹1,50,000 below a crore, ₹2.7 Cr / ₹1.23 Cr from a crore up. Never rounds further."""
+    """ponytail: kept only for networth/holdings (Phase 12); new code calls networth.money.
+    ₹1,50,000 below a crore, ₹2.7 Cr / ₹1.23 Cr from a crore up. Never rounds further."""
     if n < CRORE or n % CRORE_HUNDREDTH:
         return f"₹{indian_grouping(n)}"
     crores, rest = divmod(n, CRORE)
@@ -258,12 +260,13 @@ ORDER: Final = ("what", "invested", "nominal", "real", "hit", "fall")
 def plan_range_lines(r: PlanRange, lang: Lang) -> list[str]:
     safety, core, growth = r.targets_pct
     values = {
-        "safety": safety, "core": core, "growth": growth, "amount": rupees(r.monthly_amount),
+        "safety": safety, "core": core, "growth": growth,
+        "amount": money(r.monthly_amount, "INR", lang),
         "years": r.years, "start": r.window_start.year, "end": r.window_end.year,
         "block": r.mean_block_months, "paths": indian_grouping(r.paths),
         "hit": r.hit_limit_pct, "limit": r.fall_limit_pct, "fall": r.worst_fall_pct,
-        "fall_rupees": rupees(r.worst_fall_rupees), "recovery": r.recovery_months,
-        **{k: rupees(getattr(r, k)) for k in (
+        "fall_rupees": money(r.worst_fall_rupees, "INR", lang), "recovery": r.recovery_months,
+        **{k: money(getattr(r, k), "INR", lang) for k in (
             "invested", "nominal_p10", "nominal_median", "nominal_p90",
             "real_p10", "real_median", "real_p90")},
     }  # fmt: skip

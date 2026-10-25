@@ -20,6 +20,7 @@ from networth.app.settings import Settings
 from networth.app.store import Status, Store
 from networth.bot.commands import TOO_MANY
 from networth.chat import Intent
+from networth.money import money
 from networth.web import api
 from networth.web.routes import router, settings, sim_table
 from tests.test_chat import GOOD_EXPLANATION, IPO_TEXT, FakeChatModels
@@ -102,7 +103,7 @@ def test_the_dashboard_is_the_token_owners_own(world: World) -> None:
     assert b["profile"]["plan"].startswith("Steady.")
     assert "Steady" not in json.dumps(a) and "Balanced" not in json.dumps(b)
     assert a["sample"] is False and a["footer"] == ""
-    assert (a["profile"]["money"], a["profile"]["day"]) == ("₹1,00,000", "1st")
+    assert (a["profile"]["money"], a["profile"]["day"]) == ("₹1 lakh", "1st")
 
 
 def test_the_dashboard_range_is_the_users_own_simulation(world: World) -> None:
@@ -111,8 +112,8 @@ def test_the_dashboard_range_is_the_users_own_simulation(world: World) -> None:
     assert plan is not None and profile is not None
     r = sim.plan_range(plan, profile, table=TABLE)
     card = world.client.get(f"/api/u/{world.token(USER)}/dashboard").json()["plan_range"]
-    assert card["range"]["nominal"]["median"] == sim.rupees(r.nominal_median)
-    assert card["range"]["invested"] == sim.rupees(r.invested)
+    assert card["range"]["nominal"]["median"] == money(r.nominal_median, "INR")
+    assert card["range"]["invested"] == money(r.invested, "INR")
 
 
 @pytest.mark.parametrize("token", ["nope", "abc.123.def", "x" * 40])
@@ -187,7 +188,7 @@ def test_the_demo_has_a_stricter_per_visitor_cap(world: World) -> None:
 def test_the_demo_is_its_own_paused_user_and_never_touches_real_history(world: World) -> None:
     before = (world.store.messages(USER), world.store.messages(OTHER_USER))
     board = world.client.get("/api/demo/dashboard").json()
-    assert board["sample"] is True and board["profile"]["money"] == "₹1,50,000"
+    assert board["sample"] is True and board["profile"]["money"] == "₹1.5 lakh"
     assert board["profile"]["plan"].startswith("Balanced.") and board["lang"] == "en"
     assert world.client.post("/api/demo/chat", json={"text": "hi"}).status_code == 200
     assert (world.store.messages(USER), world.store.messages(OTHER_USER)) == before

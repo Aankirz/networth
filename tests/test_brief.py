@@ -16,6 +16,7 @@ from networth.bot.message import DISCLAIMER, plain
 from networth.bot.telegram import html
 from networth.brief.lines import Line
 from networth.engine import odds as engine
+from networth.money import money
 from tests.test_sim import varying
 from tests.test_web import web_db  # noqa: F401, F811 - the engine fixture
 
@@ -75,15 +76,15 @@ def test_an_empty_month_says_nothing_needs_attention(lang: str) -> None:
 
 def test_an_event_month_leads_with_the_plan_range_before_any_count() -> None:
     m = event_brief().message("en")
-    assert m.title == "Morning. It's your investing day, and ₹1,00,000 is ready."
+    assert m.title == "Morning. It's your investing day, and ₹1 lakh is ready."
     assert m.body[0] == "This month's news: RBI rate hike on Oct 20."
     built = m.body[1].splitlines()
     assert built[0] == ("Months like this are why you have a plan. Yours is built to sit "
                         "through a fall of up to 20%.")  # fmt: skip
     r = event_brief().range
     assert built[1] == (f"In replays of past markets, a fall that big came in "
-                        f"{r.hit_limit_pct}% of paths. Bad case {sim.rupees(r.nominal_p10)}, "
-                        f"middle {sim.rupees(r.nominal_median)}.")  # fmt: skip
+                        f"{r.hit_limit_pct}% of paths. Bad case {money(r.nominal_p10, "INR")}, "
+                        f"middle {money(r.nominal_median, "INR")}.")  # fmt: skip
     assert m.body[2:] == ("Your plan: Balanced, the one you chose.", "What history counted:")
     assert not any("14 of 22" in b for b in m.body), "counts stay inside the detail"
 

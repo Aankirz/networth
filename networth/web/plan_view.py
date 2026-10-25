@@ -1,11 +1,12 @@
 """A PlanRange into what the plan range section prints. Every number is a PlanRange field,
-formatted by networth.sim.rupees; the only arithmetic is the range bar's geometry."""
+formatted by networth.money; the only arithmetic is the range bar's geometry."""
 
 from __future__ import annotations
 
 from typing import Final
 
-from networth.sim import PlanRange, rupees
+from networth.money import money
+from networth.sim import PlanRange
 from networth.web.fmt import western_grouping
 
 LABEL: Final = "This replays real past months. It is not a forecast."
@@ -26,7 +27,7 @@ CASE_NAMES: Final = ("Bad case", "Middle case", "Good case")
 
 
 def _range(p10: int, median: int, p90: int) -> dict:
-    return {"p10": rupees(p10), "median": rupees(median), "p90": rupees(p90)}
+    return {"p10": money(p10, "INR"), "median": money(median, "INR"), "p90": money(p90, "INR")}
 
 
 def bar_geometry(r: PlanRange) -> dict:
@@ -65,7 +66,7 @@ def bar_geometry(r: PlanRange) -> dict:
         # Row names sit on the side away from the invested line so it never crosses them.
         "name_x": 100 if left_half else 0,
         "name_anchor": "end" if left_half else "start",
-        "zero_label": rupees(0),
+        "zero_label": money(0, "INR"),
         "invested_name": INVESTED_NAME,
         "legend": [*((row["series"], row["name"]) for row in rows), ("invested", INVESTED_NAME)],
     }
@@ -80,15 +81,15 @@ def _recovery(months: int | None) -> str:
 def plan_range_view(r: PlanRange, plan_label: str) -> dict:
     return {
         "plan": plan_label,
-        "monthly": rupees(r.monthly_amount),
+        "monthly": money(r.monthly_amount, "INR"),
         "years": r.years,
-        "invested": rupees(r.invested),
+        "invested": money(r.invested, "INR"),
         "nominal": _range(r.nominal_p10, r.nominal_median, r.nominal_p90),
         "real": _range(r.real_p10, r.real_median, r.real_p90),
         "fall_limit": f"{r.fall_limit_pct}%",
         "hit_limit": f"{r.hit_limit_pct}%",
         "worst_fall_pct": f"{r.worst_fall_pct}%",
-        "worst_fall_rupees": rupees(r.worst_fall_rupees),
+        "worst_fall_rupees": money(r.worst_fall_rupees, "INR"),
         "recovery": _recovery(r.recovery_months),
         "paths": western_grouping(r.paths),
         "block_months": r.mean_block_months,
