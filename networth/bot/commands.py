@@ -215,13 +215,13 @@ UNREACHABLE: Final = {
 }
 ERASE_PREFIX: Final = "er"
 ERASE_ASK: Final = {
-    "en": "This deletes everything I have about you: your setup answers, plan, chats, watches, "
-    "holdings and any broker link. It can't be undone. /stop only pauses messages and keeps "
+    "en": "This deletes everything I have about you: your setup answers, plan, chats, watches "
+    "and holdings. It can't be undone. /stop only pauses messages and keeps "
     "your setup.",
-    "hi": "इससे आपके बारे में मेरे पास जो कुछ है, सब मिट जाएगा: सेटअप के जवाब, प्लान, बातचीत, वॉच, "
-    "होल्डिंग्स और कोई भी ब्रोकर लिंक। यह वापस नहीं होगा। /stop सिर्फ़ मैसेज रोकता है और सेटअप रखता है।",
+    "hi": "इससे आपके बारे में मेरे पास जो कुछ है, सब मिट जाएगा: सेटअप के जवाब, प्लान, बातचीत, वॉच "
+    "और होल्डिंग्स। यह वापस नहीं होगा। /stop सिर्फ़ मैसेज रोकता है और सेटअप रखता है।",
     "hinglish": "Isse aapke baare mein mere paas jo kuch hai, sab mit jayega: setup ke jawab, "
-    "plan, chats, watches, holdings aur koi bhi broker link. Yeh wapas nahin hoga. /stop sirf "
+    "plan, chats, watches aur holdings. Yeh wapas nahin hoga. /stop sirf "
     "messages rokta hai aur setup rakhta hai.",
 }
 ERASE_YES: Final = {"en": "Delete everything", "hi": "सब मिटाना है", "hinglish": "Sab mitana hai"}

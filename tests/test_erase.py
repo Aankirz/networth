@@ -158,3 +158,8 @@ def test_erase_is_in_help_and_the_command_list() -> None:
     assert "erase" in dict(COMMAND_LIST)
     for lang in ("en", "hi", "hinglish"):
         assert "/erase" in plain(help_message(lang))
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "hinglish"])
+def test_the_erase_ask_no_longer_mentions_a_broker(lang: str) -> None:
+    assert "broker" not in ERASE_ASK[lang].lower() and "ब्रोकर" not in ERASE_ASK[lang]
