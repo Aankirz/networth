@@ -440,3 +440,6 @@
 - New networth/bot/holdings.py: photo or image document to a three-language confirm prompt (Looks right, Fix a line, Cancel), typed fixes, the report in the 3E message shape with a holdings page button, /holdings, /link_broker, and holdings questions in chat (new Intent.HOLDINGS) through holdings_answer.
 - /stop deletes the user at SnapTrade (forget_snaptrade) and rotates the web link token before the stopped save. Group and channel chats get one line and store nothing.
 - Services gains prices (YahooPrices) and an injectable snaptrade client. Tests: tests/test_bot_holdings.py, tests/test_bot_holdings_edges.py.
+
+## 2026-10-25 — docs: phase 7B report
+- Added docs/phases/phase-7b-report.md: flows, samples in three languages, the BotFather command list, tests, deviations, known gaps and OWNER NEEDED items (push access, deploy, BotFather, Bank BeES bucket, SnapTrade keys).
