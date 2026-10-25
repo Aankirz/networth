@@ -17,7 +17,7 @@ from networth.app.main import create_app
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Step, Store, new_email_profile, now_iso
 from networth.bot.onboarding import Reply
-from networth.chat import Intent
+from networth.chat import Intent, explain
 from networth.keiki.mail import NOTICE, Mail
 from networth.keiki.turn import Harness, run_turn
 from networth.keiki.wire import parse
@@ -25,6 +25,8 @@ from networth.net import CallRecord, append_record
 from tests.keiki_fakes import (
     ADDRESS,
     AGENT,
+    GMAIL_QUOTE,
+    MAILTRACK_FOOTER,
     FakeApi,
     FakeTurnClient,
     body,
@@ -33,7 +35,7 @@ from tests.keiki_fakes import (
     slack_payload,
     turn_payload,
 )
-from tests.test_chat import FakeChatModels, weekend_watcher
+from tests.test_chat import GOOD_EXPLANATION, IPO_TEXT, FakeChatModels, weekend_watcher
 from tests.test_onboarding import FakeBot
 from tests.watcher_fakes import FAKE_ENV
 
@@ -279,6 +281,21 @@ def test_a_slack_dm_runs_the_same_pipeline_and_threads_share_one_profile(tmp_pat
     assert (first["channel"], first["kind"]) == ("slack", "welcome")
     assert (second["kind"], second["user_id"]) == ("command", first["user_id"])
     assert "*" not in keiki.last and "<" not in keiki.last, "plain text, as for email"
+
+
+def test_an_email_with_a_mailtrack_footer_is_explained_without_fetching(
+    tmp_path, cfg, monkeypatch
+) -> None:
+    fetched: list[str] = []
+    monkeypatch.setattr(explain, "page_text", lambda url, client=None: fetched.append(url) or "")
+    data = tmp_path / "data"
+    models = CostedModels(data / "llm_calls.jsonl", intent=Intent.EXPLAIN_THIS.value,
+                          writes=[GOOD_EXPLANATION])  # fmt: skip
+    keiki = Keiki(tmp_path, Services(data, None, models, None, cfg))
+    set_up(keiki)
+    keiki.say(IPO_TEXT + MAILTRACK_FOOTER + GMAIL_QUOTE)
+    assert fetched == []
+    assert keiki.last == GOOD_EXPLANATION
 
 
 def test_two_email_threads_from_one_sender_are_one_user(tmp_path: Path) -> None:

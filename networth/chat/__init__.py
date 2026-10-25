@@ -65,7 +65,6 @@ CRITERIA: Final[dict[str, str]] = {
 }
 QUESTION: Final = "Which of these does the user's message to a market-news assistant want?"
 STATE: Final = "{kind} to a market-news assistant: {text!r}"
-URL: Final = re.compile(r"https?://\S+")
 LONG_TEXT: Final = 400
 MAX_TERM_QUESTION: Final = 200  # a longer explain-this is a pasted document, not a question
 DEVANAGARI: Final = re.compile(r"[ऀ-ॿ]")
@@ -99,7 +98,7 @@ def reply_lang(text: str, profile: Profile) -> str:
 
 def _by_phrase(text: str, is_forward: bool) -> Intent:
     lowered = text.lower()
-    if URL.search(text) or len(text) > LONG_TEXT:
+    if explain.user_link(text) or len(text) > LONG_TEXT:
         return Intent.EXPLAIN_THIS
     if is_forward:
         return Intent.TIP_CHECK
@@ -143,9 +142,7 @@ HANDLERS: Final[dict[Intent, Handler]] = {
         store, p, s, now.astimezone(ZoneInfo(p.tz)).date(), text
     ),
     Intent.TIP_CHECK: lambda store, p, text, s, now: tip.check_tip(text, p, s, now),
-    Intent.EXPLAIN_THIS: lambda store, p, text, s, now: (
-        explain.explain_link(m.group(0)) if (m := URL.search(text)) else explain.explain_text(text)
-    ),
+    Intent.EXPLAIN_THIS: lambda store, p, text, s, now: explain.explain_message(text),
     Intent.PLAN_QUESTION: lambda store, p, text, s, now: today.plan(
         store, p, text, s, now.astimezone(ZoneInfo(p.tz)).date()
     ),
@@ -170,7 +167,8 @@ def respond_traced(
 ) -> tuple[Reply, Intent, Used]:  # fmt: skip
     """The reply, the intent that answered, and which words went out."""
     intent = classify(text, is_forward, services)
-    if intent is Intent.EXPLAIN_THIS and not URL.search(text) and len(text) <= MAX_TERM_QUESTION:
+    short = len(text) <= MAX_TERM_QUESTION
+    if intent is Intent.EXPLAIN_THIS and short and not explain.URL.search(text):
         store.add_asked_terms(profile.user_id, memory.asked_terms(text), now.isoformat())
     answer = HANDLERS[intent](store, profile, text, services, now)
     reply, used = deliver_traced(answer, reply_lang(text, profile), services)

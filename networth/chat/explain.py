@@ -7,7 +7,11 @@
 The text the user sent (a page's visible text, or the image transcription) is the guard's
 source, so every number in the explanation must be on the page. The writer gets the glossary
 through voice(). A link is fetched only from a public address, redirects included, because the
-server fetches whatever URL a user sends.
+server fetches whatever URL a user sends. An unsubscribe, opt-out, tracking or redirect link is
+never fetched, at any hop: a GET on one acts for the user (live, a Mailtrack opt-out link in an
+email footer unsubscribed the sender).
+
+    url = user_link(text)   # the first link in the text that is safe to fetch, or None
 """
 
 from __future__ import annotations
@@ -46,12 +50,35 @@ CANT_FETCH: Final = (
 CANT_READ: Final = (
     "I couldn't read the text in that image. Send a clearer screenshot, or paste the text."
 )
+URL: Final = re.compile(r"https?://[^\s<>\"'()\[\]]+")
+# ponytail: a word and host list, not a classifier. Add a host when a new mail tracker shows up.
+SKIP_HOSTS: Final = (
+    "mailtrack", "mailsuite", "list-manage", "mailchimp", "sendgrid", "mandrillapp",
+    "doubleclick", "hubspotlinks", "mlsend", "mailgun",
+)  # fmt: skip
+SKIP_WORDS: Final = frozenset({
+    "unsubscribe", "unsub", "optout", "opt", "resubscribe", "subscription", "preferences",
+    "track", "tracking", "trk", "pixel", "redirect", "click", "clicks",
+})  # fmt: skip
 TAGS: Final = re.compile(r"<(script|style|noscript)\b.*?</\1>|<[^>]+>", re.IGNORECASE | re.DOTALL)
 SPACE: Final = re.compile(r"\s+")
 
 
 class Blocked(Exception):
-    """The link is not a public http(s) address."""
+    """The link is not a public http(s) address, or not one to fetch (see fetchable)."""
+
+
+def fetchable(url: str) -> bool:
+    """False for a link whose GET may act for the user or only bounces elsewhere: a known mail
+    tracker, a path or query word like unsubscribe or click, or a URL inside the query."""
+    parts = urlsplit(url)
+    host, query = (parts.hostname or "").lower(), parts.query.lower()
+    words = set(re.split(r"[^a-z0-9]+", f"{host} {parts.path.lower()} {query}"))
+    return not (any(h in host for h in SKIP_HOSTS) or words & SKIP_WORDS or "http" in query)
+
+
+def user_link(text: str) -> str | None:
+    return next((url for url in URL.findall(text) if fetchable(url)), None)
 
 
 # ponytail: resolves, then httpx resolves again, so DNS rebinding between the two is not
@@ -59,7 +86,7 @@ class Blocked(Exception):
 # scale.
 def _public(url: str) -> None:
     parts = urlsplit(url)
-    if parts.scheme not in ("http", "https") or not parts.hostname:
+    if parts.scheme not in ("http", "https") or not parts.hostname or not fetchable(url):
         raise Blocked(url)
     try:
         infos = socket.getaddrinfo(parts.hostname, parts.port or 443, type=socket.SOCK_STREAM)
@@ -108,6 +135,12 @@ def explain_link(url: str) -> Answer:
     if not text:
         return Answer(CANT_FETCH, CANT_FETCH)
     return explain_text(text)
+
+
+def explain_message(text: str) -> Answer:
+    """The one link in the text that is safe to fetch, or else the text itself."""
+    url = user_link(text)
+    return explain_link(url) if url else explain_text(text)
 
 
 def explain_image(image: bytes, services: Services) -> Answer:

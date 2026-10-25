@@ -51,6 +51,17 @@ def body(payload: dict) -> bytes:
 
 
 AGENT = "agent-test"
+OPT_OUT = "https://mailtrack.io/opt-out?t=a1b2c3&e=asha%40example.com"
+# What Gmail with the Mailtrack extension appends to the plain part of a sent mail.
+MAILTRACK_FOOTER = (
+    "\n\nSender notified with\nMailtrack <https://mailtrack.io?utm_source=gmail&utm_medium=sig>"
+    f" - Opt out <{OPT_OUT}>\n25/10/26, 13:45:12"
+)
+GMAIL_QUOTE = (
+    "\n\nOn Sat, 25 Oct 2026 at 13:30, Asha <asha@\nexample.com> wrote:\n\n> Earlier mail\n"
+    f"> {OPT_OUT}"
+)
+IPHONE = "\n\nSent from my iPhone"
 SLACK_TEAM, SLACK_USER = "T_ACME", "U_ASHA"
 ADDRESS = "asha@example.com"
 TURN_URL = "https://onkeiki.example/api/v1/harness/turns/t1"

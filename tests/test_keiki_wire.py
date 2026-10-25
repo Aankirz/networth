@@ -18,6 +18,9 @@ from networth.keiki.render import plain
 from networth.keiki.wire import KeikiTurn, Other, parse, strip_quoted
 from tests.keiki_fakes import (
     ADDRESS,
+    GMAIL_QUOTE,
+    IPHONE,
+    MAILTRACK_FOOTER,
     SLACK_TEAM,
     SLACK_USER,
     TURN_URL,
@@ -37,6 +40,13 @@ def test_a_turn_payload_parses_into_its_fields_without_silent_messages() -> None
     assert turn == KeikiTurn("t1", "agent-test", "t1.thread@agentmail.to", ADDRESS, "agentmail",
                              ("What happened today?",), True, False, TURN_URL,
                              "tr_1")  # fmt: skip
+
+
+@pytest.mark.parametrize("tail", [MAILTRACK_FOOTER, GMAIL_QUOTE, IPHONE, "\n-- \nAsha\n+91 98"])
+def test_footers_signatures_and_gmail_quotes_are_stripped(tail: str) -> None:
+    assert strip_quoted("What does this mean?\nIt says 5%." + tail) == (
+        "What does this mean?\nIt says 5%."
+    )
 
 
 def test_a_turn_without_a_trace_id_uses_the_turn_id_as_keiki_does() -> None:
