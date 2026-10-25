@@ -1,0 +1,63 @@
+{"id": "in-rbi_hike-2022-05-04", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-rbi_hike-2023-02-08", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-rbi_cut-2020-03-27", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-rbi_cut-2025-06-06", "verdict": "fix", "problems": ["TOI live blog: label published 07:59:26 IST (page metadata) is before the 10:00 IST decision, so the excerpt (which reports the 50 bps cut) could not have been on the page then; the page's visible stamp is 'Jun 06, 2025, 15:43:04 IST'. Row still meets the 3-publisher rule either way; seen_on unchanged (NDTV 10:07 IST becomes earliest)."], "suggested_fix": {"articles[url=https://timesofindia.indiatimes.com/business/india-business/rbi-mpc-meeting-june-2025-live-updates-rbi-governor-sanjay-malhotra-mpc-repo-rate-cut-monetary-policy-committee/liveblog/121662971.cms].published": "2025-06-06T15:43:04+05:30"}}
+{"id": "in-union_budget-2024-07-23", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-union_budget-2023-02-01", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-inr_shock-2022-07-19", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-inr_shock-2025-12-03", "verdict": "ok", "problems": ["TOI article (4 Dec 09:18 IST) headlines the next day's further low (90.43) and only recaps the 3 Dec 90-breach; it is within 24h of NDTV so the rule still passes, but it is arguably about a second event."], "suggested_fix": null}
+{"id": "in-bank_stress-2020-03-05", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-bank_stress-2020-11-17", "verdict": "ok", "problems": ["NDTV Profit URL redirects to .../...-2326657-9881350 and Moneycontrol through a /europe/?url= wrapper; both show the title and text."], "suggested_fix": null}
+{"id": "in-election-2024-06-04", "verdict": "fix", "problems": ["Al Jazeera page is a live tracker: metadata time 03:08 UTC 4 Jun is ~40 min after counting began, but the excerpt ('all votes ... were counted by the end of the day on June 4', BJP short of majority) comes from the version 'Updated: 5 Jun 2024 01:35 PM (GMT)'. Frontline headline says 'Hung Parliament likely' but its body reports the result; NDTV reports the result. Use the page's update time for Al Jazeera; it stays within 24h of Frontline (14:07 UTC 4 Jun); seen_on stays 2024-06-04."], "suggested_fix": {"articles[url=https://www.aljazeera.com/news/2024/6/4/india-election-live-results-by-the-numbers].published": "2024-06-05T13:35:00+00:00"}}
+{"id": "in-military_conflict-2019-02-26", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-military_conflict-2025-05-07", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-near_miss-2023-04-06", "verdict": "ok", "problems": ["Rediff gives only an 'Updated' time, used as published (stated in note); fine."], "suggested_fix": null}
+{"id": "in-near_miss-2024-02-08", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-near_miss-2025-08-06", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-rumour-2019-09-25", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-rumour-2026-01-02", "verdict": "ok", "problems": ["Topic (Rs 500 notes at ATMs) is not one of the 12 types; valid rumour negative but weak."], "suggested_fix": null}
+{"id": "in-old_news-2020-02-26", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-old_news-2020-09-24", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-old_news-2026-05-10", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-opinion-2022-05-05", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-opinion-2025-12-29", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-preview-2022-12-04", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "in-preview-2023-01-17", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-fed_hike-2022-03-16", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-fed_hike-2022-06-15", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-fed_cut-2020-03-15", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-fed_cut-2024-09-18", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-tariff-2018-06-15", "verdict": "ok", "problems": ["Type mildly arguable: the release announces the 25% duty list on 15 Jun; the duties took effect 6 Jul 2018. Date 15 Jun confirmed via the USTR archive listing (page text has no date)."], "suggested_fix": null}
+{"id": "us-tariff-2025-04-02", "verdict": "ok", "problems": ["Type mildly arguable: tariffs announced/ordered 2 Apr took effect 5 Apr (10%) and 9 Apr (reciprocal, then paused); announcement treated as imposition."], "suggested_fix": null}
+{"id": "us-bank_stress-2023-03-10", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-bank_stress-2023-05-01", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-oil_supply-2019-09-14", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-oil_supply-2022-10-05", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-election-2024-11-06", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-military_conflict-2022-02-24", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-military_conflict-2025-06-21", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-pandemic-2020-03-11", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-near_miss-2023-06-14", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-near_miss-2022-12-04", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-near_miss-2019-05-30", "verdict": "ok", "problems": ["Page metadata date is 2019-05-31T12:16Z (update); page shows 'May 30, 2019, 7:51 PM EDT / Updated May 31', so the label's published is right. Type mildly arguable: on 30 May it was announced as a dated imposition (from 10 Jun), but it was suspended 7 Jun and never imposed, so near_miss holds."], "suggested_fix": null}
+{"id": "gl-rumour-2022-11-21", "verdict": "fix", "problems": ["WSJ URL does not open via TinyFish (target_http_error, paywall) on two tries; title, date (21 Nov 2022) and opening sentence are confirmed only through the search index, and the 14:18 UTC time cannot be checked. Label/kind are right (Saudi denial same day; OPEC+ held output 4 Dec 2022). The same Said/Faucon story is syndicated on MarketWatch, which opens; replace the article with it."], "suggested_fix": {"articles": [{"url": "https://www.marketwatch.com/story/saudi-arabia-eyes-opec-output-increase-ahead-of-restrictions-on-russian-oil-11669051317", "title": "Saudi Arabia eyes OPEC+ output increase ahead of restrictions on Russian oil", "published": "2022-11-21T12:21:00-05:00", "author": "Summer Said, Benoit Faucon", "text": "Saudi Arabia and other OPEC oil producers are discussing an output increase, the group’s delegates said, a move that could help heal a rift with the Biden administration and keep energy flowing amid new attempts to blunt Russia’s oil industry over the Ukraine war. A production increase of up to 500,000 barrels a day is now under discussion for OPEC+’s Dec. 4 meeting, delegates said."}], "headline": "Saudi Arabia eyes OPEC+ output increase ahead of restrictions on Russian oil", "note_change": "page states 'Nov. 21, 2022, 12:21 p.m. ET'; MarketWatch is a Dow Jones sister of WSJ, same authors"}}
+{"id": "us-rumour-2025-07-16", "verdict": "ok", "problems": ["Type arguable: the article's core claim (Trump asked GOP lawmakers about firing Powell) is confirmed by Trump himself in the same article; only the 'sources said he indicated he will do it' part was unconfirmed/false. Firing a Fed chair is also not one of the 12 types, so this is a weak rumour case for the taxonomy."], "suggested_fix": null}
+{"id": "us-old_news-2023-03-16", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "gl-old_news-2025-02-28", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-opinion-2025-04-05", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-opinion-2022-09-23", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-preview-2022-03-15", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "us-preview-2025-09-15", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "h-in-rbi_cut-2025-02-07", "verdict": "fix", "problems": ["note references id 'h-in-near_miss-2025-08-06', which does not exist in labels.jsonl (the row is 'in-near_miss-2025-08-06'). Articles, dates and label verified OK."], "suggested_fix": {"note": "RBI MPC cut the repo rate 25 bps, 6.50% to 6.25%, on 7 Feb 2025 (first cut since May 2020); three publishers (TNIE, Indian Express, ETRealty) within hours. Pairs with in-near_miss-2025-08-06 (hold)."}}
+{"id": "h-in-union_budget-2026-02-01", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "h-in-near_miss-2024-12-06", "verdict": "ok", "problems": ["CRR cut with repo unchanged is a deliberate hard case; defensible under 'a rate type is a change in the policy rate'. ING time set to T12:00 UTC rather than the publisher's local time (rule says local); minor."], "suggested_fix": null}
+{"id": "h-us-near_miss-2025-01-29", "verdict": "fix", "problems": ["note references id 'h-us-fed_cut-2024-09-18', which does not exist in labels.jsonl (the row is 'us-fed_cut-2024-09-18'). Articles, dates and label verified OK."], "suggested_fix": {"note": "Primary source: FOMC maintained the target range at 4.25-4.50% on 29 Jan 2025; page states \"For release at 2:00 p.m. EST\". Pair of us-fed_cut-2024-09-18."}}
+{"id": "h-us-near_miss-2025-02-03", "verdict": "ok", "problems": ["Type arguable: the article (Feb 3) reports, within 3 days, the 1 Feb tariff order including the 10% China tariff that did take effect 4 Feb, so a strict reading could see a real tariff event in it. The fresh news is the Mexico pause, so near_miss is defensible. CNN title mentions the Canada pause, which came later that day, so the CNN title reflects a later update of a live page."], "suggested_fix": null}
+{"id": "h-us-rumour-2025-04-07", "verdict": "ok", "problems": ["AP page was bot_blocked on first fetch, opened on retry; title and text verified."], "suggested_fix": null}
+{"id": "h-in-rumour-2025-04-18", "verdict": "ok", "problems": ["Topic (GST on UPI) is not one of the 12 types; article is the denial, as the note says."], "suggested_fix": null}
+{"id": "h-in-old_news-2024-11-08", "verdict": "ok", "problems": ["Demonetisation is not one of the 12 types; valid old_news by the rule (>7 days) but tests little."], "suggested_fix": null}
+{"id": "h-us-old_news-2024-03-11", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "h-us-old_news-2026-04-02", "verdict": "fix", "problems": ["note references id 'h-us-tariff-2025-04-02', which does not exist in labels.jsonl (the row is 'us-tariff-2025-04-02'). Articles, dates and label verified OK."], "suggested_fix": {"note": "First-anniversary review of the 2 Apr 2025 Liberation Day tariffs, published 2 Apr 2026. Pairs with us-tariff-2025-04-02."}}
+{"id": "h-us-preview-2024-09-13", "verdict": "fix", "problems": ["note references id 'h-us-fed_cut-2024-09-18', which does not exist in labels.jsonl (the row is 'us-fed_cut-2024-09-18'). Articles, dates and label verified OK."], "suggested_fix": {"note": "Published 13 Sep 2024, five days before the 18 Sep cut: \"The Federal Reserve is about to cut rates\". Expectation only. Pairs with us-fed_cut-2024-09-18."}}
+{"id": "h-in-preview-2026-02-04", "verdict": "ok", "problems": [], "suggested_fix": null}
+{"id": "h-in-opinion-2025-12-01", "verdict": "ok", "problems": [], "suggested_fix": null}

@@ -332,3 +332,6 @@
 
 ## 2026-10-25 — Phase 5 eval runners
 - evals/__main__.py (make evals), news.py, words.py with words_set.py (86 adversarial messages), trace.py, report.py and spend.py: the paid evals cache raw outputs under evals/results and rescore offline; the words set and rubric were committed before the live run. Restored after a rebase conflict dropped it.
+
+## 2026-10-25 — Phase 5 news labels
+- evals/news/labels.jsonl: 63 real stories (29 events of a type, 34 rumours, near misses, old news, opinion and previews), India, US and global, written by three curators and checked URL by URL (evals/news/label_check.jsonl), committed before the judge runs.
