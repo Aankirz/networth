@@ -26,9 +26,9 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Final, Literal
 
+from networth import chat
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Status, Step, Store, new_email_profile
-from networth import chat
 from networth.bot import commands
 from networth.bot.onboarding import Outcome, Reply
 from networth.bot.telegram import Keyboard
