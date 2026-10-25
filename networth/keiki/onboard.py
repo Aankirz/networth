@@ -60,6 +60,11 @@ DONE_BODY: Final = {
     "hinglish": "Har mahine {day} tareekh ki subah, jis din aap invest karte hain, main "
     "likhoonga ki aise mahinon ke baare mein history kya kehti hai.",
 }
+WANT_IT_NOW: Final = {
+    "en": "Want it now? Reply /brief now.",
+    "hi": "/brief now लिखने पर यह अभी आ जाएगी।",
+    "hinglish": "/brief now likhne par yeh abhi aa jayegi.",
+}
 DONE_HELP: Final = {
     "en": "Reply /help to see what I can do.",
     "hi": "/help भेजने पर मेरे सारे काम दिखेंगे।",
@@ -76,7 +81,7 @@ APPLY: Final[dict[Step, Callable[[Profile, object], Profile]]] = {
 def done_message(p: Profile) -> Message:
     lang = p.lang
     day = say(DONE_BODY, lang).format(day=day_label(p.invest_day or 1, lang))
-    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)))
+    return Message(say(DONE_TITLE, lang), (day, say(WANT_IT_NOW, lang), say(DONE_HELP, lang)))
 
 
 def prompt(profile: Profile) -> Reply:

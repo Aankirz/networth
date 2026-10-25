@@ -36,10 +36,13 @@ from networth.bot import briefs, watches
 from networth.bot import holdings as holdings_flow
 from networth.bot.message import Link, Message, say
 from networth.bot.onboarding import (
+    BRIEF_NOW,
     CALLBACK_PREFIX,
     Outcome,
     Reply,
     advance,
+    brief_now_buttons,
+    brief_offer,
     day_label,
     plan_line,
     with_lead,
@@ -511,6 +514,8 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
         cmd_range(turn, profile, "")
     elif tap.data == f"{brief.CALLBACK_PREFIX}:ok":
         turn.send(profile, Reply(say(PLAN_KEPT, profile.lang)))
+    elif tap.data == BRIEF_NOW:
+        brief_job(turn, profile, briefs.brief_now)
 
 
 def on_tap(turn: Turn, tap: Tap) -> None:
@@ -632,7 +637,8 @@ def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
     page = turn.services.page_url(profile.link_token, turn.clock)
     lang = profile.lang
     mine = (say(PAGE_NOTE, lang), Link(say(YOUR_PAGE, lang), page)) if page else ()
-    turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.", *mine))))
+    body = (f"{plan_line(plan, lang)}.", *mine, brief_offer(profile))
+    turn.send(profile, Reply(Message(say(PLAN_TITLE, lang), body), brief_now_buttons(lang)))
     turn.send(profile, ask_for(profile, plan))
 
 
@@ -705,17 +711,24 @@ def cmd_dashboard(turn: Turn, profile: Profile, args: str) -> None:
     set_menu(turn, profile)
 
 
-def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
+def brief_job(turn: Turn, profile: Profile, send_it: Callable[..., bool]) -> None:
     local = briefs.local_now(profile, turn.clock)
 
     def job() -> None:
         try:
-            briefs.send_brief(turn.store, turn.bot, profile, turn.services, local)
+            send_it(turn.store, turn.bot, profile, turn.services, local)
         except Exception:
             log.exception("brief for %s failed", profile.user_id)
             turn.send(profile, Reply(say(TRY_AGAIN, profile.lang)))
 
     turn.later.append(job)
+
+
+def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
+    """/brief is today's brief, claimed and kept; "/brief now" is the email way to tap "Get my
+    brief now", which never uses up the scheduled one."""
+    now = args.strip().lower() == "now"
+    brief_job(turn, profile, briefs.brief_now if now else briefs.send_brief)
 
 
 def cmd_range(turn: Turn, profile: Profile, args: str) -> None:

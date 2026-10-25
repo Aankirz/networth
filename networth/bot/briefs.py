@@ -120,6 +120,16 @@ def send_brief(
     return sent
 
 
+def brief_now(store: Store, bot: Bot, profile: Profile, services: Services,
+              local: dt.datetime) -> bool:  # fmt: skip
+    """The full brief right away, built as /brief builds it, for "Get my brief now". It never
+    claims or saves the day's brief, so the scheduled one on the investing day still goes out."""
+    if profile.step is not Step.DONE:
+        return send(store, bot, profile, Reply(say(NOT_SET_UP, profile.lang)))
+    reply, _ = compose_reply(profile, store, services, local)
+    return send(store, bot, profile, reply, mail=services.mail)
+
+
 def run_daily(store: Store, bot: Bot, services: Services, now: dt.datetime) -> int:
     """Send today's brief to each active, set-up user whose investing day is today in their
     own time zone. Returns how many went out."""

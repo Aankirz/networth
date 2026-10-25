@@ -313,7 +313,8 @@ def test_plan_command_shows_then_changes_the_plan(chat: Chat) -> None:
     chat.say("/plan")
     assert chat.bot.texts[-2] == (
         "Your plan\n\nBalanced. 20% safe money (liquid, gilt, FD), 70% broad index funds, "
-        "10% single shares or themes."
+        "10% single shares or themes.\n\n"
+        "I'll also send your brief on the 1st of every month. Want it now?"
     )
     assert chat.bot.messages[-2].title == "Your plan"
     chat.tap("ob:plan:steady")

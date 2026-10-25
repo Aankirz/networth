@@ -64,6 +64,7 @@ from networth.bot.onboarding import (
     BUCKETS,
     STARTER_PLANS,
     Reply,
+    brief_offer,
     ordinal,
     plan_line,
     with_lead,
@@ -633,7 +634,8 @@ def run_plan(f: CommandFacts) -> tuple[Message, dict]:
     lang = f.profile.lang
     if f.profile.step is not Step.DONE or plan is None:
         return message_of(with_lead(say(FINISH_FIRST, lang), ask_for(f.profile, plan))), TEXT_CARD
-    return Message(say(PLAN_TITLE, lang), (f"{plan_line(plan, lang)}.",)), TEXT_CARD  # fmt: skip
+    body = (f"{plan_line(plan, lang)}.", brief_offer(f.profile))
+    return Message(say(PLAN_TITLE, lang), body), TEXT_CARD
 
 
 def run_holdings(f: CommandFacts) -> tuple[Message, dict]:

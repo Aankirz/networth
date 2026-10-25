@@ -301,10 +301,35 @@ DONE_HELP: Final = {
 }
 
 
+# "Get my brief now": networth.brief's tap prefix ("br"), answered by commands.on_brief_tap
+# with briefs.brief_now, which never claims the day's brief, so the scheduled one still goes out.
+BRIEF_NOW: Final = "br:now"
+NOW_BUTTON: Final = {"en": "Get my brief now", "hi": "मेरी ब्रीफ़ अभी",
+                     "hinglish": "Meri brief abhi"}  # fmt: skip
+WANT_IT_NOW: Final = {"en": "Want it now?", "hi": "अभी भेज दूँ?", "hinglish": "Abhi bhej doon?"}
+BRIEF_OFFER: Final = {
+    "en": "I'll also send your brief on the {day} of every month. Want it now?",
+    "hi": "आपकी ब्रीफ़ हर महीने {day} तारीख़ को भी आएगी। अभी भेज दूँ?",
+    "hinglish": "Aapki brief har mahine {day} tareekh ko bhi aayegi. Abhi bhej doon?",
+}
+
+
+def brief_now_buttons(lang: str | None) -> Keyboard:
+    return ((Button(say(NOW_BUTTON, lang), BRIEF_NOW),),)
+
+
+def brief_offer(p: Profile) -> str:
+    return say(BRIEF_OFFER, p.lang).format(day=day_label(p.invest_day or 1, p.lang))
+
+
 def done_message(p: Profile) -> Message:
     lang = p.lang
     day = say(DONE_BODY, lang).format(day=day_label(p.invest_day or 1, lang))
-    return Message(say(DONE_TITLE, lang), (day, say(DONE_HELP, lang)))
+    return Message(say(DONE_TITLE, lang), (day, say(WANT_IT_NOW, lang), say(DONE_HELP, lang)))
+
+
+def done_reply(p: Profile) -> Reply:
+    return Reply(done_message(p), brief_now_buttons(p.lang))
 
 
 def with_lead(lead: str, ask: Reply) -> Reply:
@@ -472,7 +497,7 @@ PROMPTS: Final[dict[Step, Callable[[Profile, Plan | None], Reply]]] = {
     Step.PLAN: plan_reply,
     Step.OWN_SPLIT: lambda p, plan: Reply(ask(Step.OWN_SPLIT)(p, plan)),
     Step.CONFIRM: confirm_reply,
-    Step.DONE: lambda p, plan: Reply(done_message(p)),
+    Step.DONE: lambda p, plan: done_reply(p),
 }
 
 
@@ -590,7 +615,7 @@ CONFIRM_WORDS: Final = {
 def apply_confirm(p: Profile, plan: Plan | None, choice: str, now: str) -> Outcome:
     if choice == "ok":
         p = replace(p, step=Step.DONE)
-        return Outcome(p, plan, (Reply(done_message(p)),))
+        return Outcome(p, plan, (done_reply(p),))
     if choice == "fix":
         return Outcome(p, plan, (Reply(say(FIX_TEXT, p.lang), fix_keyboard(p.lang)),))
     p = replace(p, step=Step(choice))

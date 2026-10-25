@@ -13,6 +13,7 @@ from typing import Final
 from networth.app.services import Services
 from networth.app.store import Profile
 from networth.bot.message import say
+from networth.bot.onboarding import brief_now_buttons
 from networth.bot.telegram import Button
 from networth.brief import BUTTONS
 from networth.chat.answer import Answer
@@ -49,4 +50,5 @@ def dashboard(profile: Profile, services: Services, now: dt.datetime, lang: str)
     if url is None:
         return Answer.fixed(DASHBOARD_ON_TELEGRAM, kind=Talk.DASHBOARD.value)
     button = Button(say(BUTTONS["page"], lang), "", url)
-    return Answer.fixed(DASHBOARD_READY, kind=Talk.DASHBOARD.value, buttons=((button,),))
+    buttons = ((button,), *brief_now_buttons(lang))
+    return Answer.fixed(DASHBOARD_READY, kind=Talk.DASHBOARD.value, buttons=buttons)

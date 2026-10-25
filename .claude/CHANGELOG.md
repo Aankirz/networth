@@ -597,3 +597,6 @@
 
 ## 2026-10-25 — Phase 13A: amounts through money()
 - Onboarding summary, brief title and range line, user page, dashboard, plan range lines and card now use networth.money (lakh/crore, $K/M in the user currency). onboarding.format_money removed; sim.rupees kept only for holdings. Guard reads लाख/करोड़, M and B, and accepts a compact figure within 0.5% of a source amount.
+
+## 2026-10-25 — Phase 13A: Get my brief now
+- Setup done (Telegram), /plan and the dashboard reply carry a "Get my brief now" button (br:now); email setup says "Reply /brief now". briefs.brief_now builds the brief with the /brief builder but never claims or saves the day, so the scheduled brief still goes out. Web /plan matches Telegram. tests/test_brief_now.py.
