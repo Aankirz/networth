@@ -108,6 +108,10 @@ alert_min_episodes = 8
 alert_min_gap = 0.15
 alert_max_per_month = 2
 tip_lookback_days = 7  # how far back a tip check searches the news
+# Paid chat answers per user per rolling hour. One answer is a pick plus at most a search, a
+# same-claim check and a writer call, about $0.03, so the cap holds one user to about $0.60 an
+# hour. 20 is far above a person asking questions and far below a script.
+chat_max_per_hour = 20
 
 [group]
 batch_size = 50  # articles per grouping call

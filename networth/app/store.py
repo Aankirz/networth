@@ -140,6 +140,7 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "user_id": "TEXT NOT NULL", "day": "TEXT NOT NULL", "text": "TEXT NOT NULL DEFAULT ''",
         "used": "TEXT NOT NULL DEFAULT ''", "sent_at": "TEXT NOT NULL",
     },
+    "answers": {"user_id": "TEXT NOT NULL", "at": "TEXT NOT NULL"},
     "alerts": {
         "user_id": "TEXT NOT NULL", "event_key": "TEXT NOT NULL", "month": "TEXT NOT NULL",
         "text": "TEXT NOT NULL", "sent_at": "TEXT NOT NULL",
@@ -299,6 +300,22 @@ class Store:
                 (user_id, event_key, month, text, now_iso()),
             )
         return cursor.rowcount == 1
+
+    def claim_answer(self, user_id: str, now: dt.datetime, cap: int) -> bool:
+        """True when this user has had fewer than cap paid answers in the hour before now.
+        The check and the claim are one transaction."""
+        since = (now - dt.timedelta(hours=1)).isoformat()
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            conn.execute("DELETE FROM answers WHERE at < ?", (since,))
+            used = conn.execute(
+                "SELECT COUNT(*) FROM answers WHERE user_id = ?", (user_id,)
+            ).fetchone()[0]
+            if used >= cap:
+                return False
+            conn.execute("INSERT INTO answers (user_id, at) VALUES (?, ?)",
+                         (user_id, now.isoformat()))  # fmt: skip
+        return True
 
     def messages(self, user_id: str) -> list[Message]:
         with self._connect() as conn:

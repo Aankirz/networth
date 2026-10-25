@@ -34,6 +34,10 @@ log = logging.getLogger("networth.bot")
 STALE_TAP: Final = "That question has moved on."
 NOT_A_PHOTO: Final = "I can read photos and text. Send a screenshot, or paste the text."
 TRY_AGAIN: Final = "Something went wrong on my side. Please try again in a minute."
+TOO_MANY: Final = (
+    "That is a lot of questions in one hour, so I am taking a short break. Ask me again in a "
+    "little while and I will answer."
+)
 PLAN_KEPT: Final = "Noted. Your plan stays as it is."
 HELP: Final = (
     "Here's what I can do.\n\n"
@@ -119,7 +123,14 @@ class Turn:
         return dt.datetime.fromisoformat(self.now)
 
     def answer(self, profile: Profile, make: Callable[[], Reply]) -> None:
-        """Queue a slow reply; a failure still tells the user something went wrong."""
+        """Queue a slow reply; a failure still tells the user something went wrong. Past the
+        hourly cap the user gets a polite note and no paid call runs."""
+        cfg = self.services.cfg
+        if cfg is not None and not self.store.claim_answer(
+            profile.user_id, self.clock, cfg.product.chat_max_per_hour
+        ):
+            self.send(profile, Reply(TOO_MANY))
+            return
 
         def job() -> None:
             try:

@@ -240,3 +240,6 @@
 
 ## 2026-10-25 — Watcher refuses forged runs outside market hours
 - Maritime scheduled prompts carry no secret, so the watcher now runs only inside its own cron window; schedule.py and deploy.md state the bounded cost instead of claiming it is zero (round 2 item 4).
+
+## 2026-10-25 — Hourly cap on paid chat answers
+- product.chat_max_per_hour = 20; Store.claim_answer counts a rolling hour in one transaction; past the cap Turn.answer sends a polite note and runs no paid call (round 2 item 5).

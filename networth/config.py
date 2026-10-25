@@ -124,6 +124,7 @@ class ProductConfig:
     alert_min_gap: float  # |hit rate - baseline| an alert needs
     alert_max_per_month: int
     tip_lookback_days: int
+    chat_max_per_hour: int  # paid chat answers per user per rolling hour
 
 
 @dataclass(frozen=True)
@@ -317,6 +318,7 @@ def _product(raw: Mapping[str, object]) -> ProductConfig:
         _get(t, "alert_min_gap", float, "product"),
         _get(t, "alert_max_per_month", int, "product"),
         _get(t, "tip_lookback_days", int, "product"),
+        _get(t, "chat_max_per_hour", int, "product"),
     )
 
 

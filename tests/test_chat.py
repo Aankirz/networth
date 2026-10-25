@@ -328,3 +328,24 @@ def test_a_hyped_fake_tip_leads_with_the_verdict_and_quotes_the_hype(tmp_path, c
     assert chat.bot.last.startswith("Not confirmed.")
     assert '"will double", "buy HDFC Bank now", "sure shot"' in chat.bot.last
     assert models.tasks == [], "quoted hype goes out as code wrote it"
+
+
+def test_past_the_hourly_cap_a_user_gets_a_polite_note_and_no_paid_call(tmp_path, cfg) -> None:
+    from networth.bot.commands import TOO_MANY
+
+    capped = replace(cfg, product=replace(cfg.product, chat_max_per_hour=2))
+    models = FakeChatModels(Intent.OTHER.value)
+    chat = talk(tmp_path, capped, models)
+    for _ in range(3):
+        chat.say("hi there")
+    assert len(models.picks) == 2
+    assert chat.bot.last == TOO_MANY
+
+
+def test_the_hourly_cap_frees_up_after_an_hour(tmp_path) -> None:
+    from networth.app.store import Store
+
+    store, start = Store(tmp_path), dt.datetime(2026, 10, 26, 4, 0, tzinfo=dt.UTC)
+    assert store.claim_answer("u", start, 1)
+    assert not store.claim_answer("u", start + dt.timedelta(minutes=59), 1)
+    assert store.claim_answer("u", start + dt.timedelta(minutes=61), 1)
