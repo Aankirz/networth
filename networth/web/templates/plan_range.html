@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Plan range · Networth{% endblock %}
+{% block description %}One plan replayed over real past months, as a range in rupees. Not a forecast. Research, not advice.{% endblock %}
+{% block main %}
+<article class="note">
+  <h1 class="verdict">Your plan, replayed over real past months.</h1>
+  {% include "_plan_range.html" %}
+
+  {% if form %}
+  <form class="amount plan-form" method="get" action="/plan-range">
+    <label for="plan">Plan</label>
+    <select id="plan" name="plan">
+      {% for key, label in form.plans %}<option value="{{ key }}"{% if key == form.plan %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <fieldset class="plan-form__split">
+      <legend>Your own split, in %, adding up to 100 (used when the plan is your own split)</legend>
+      {% for bucket, pct in form.split %}
+      <label for="{{ bucket }}">{{ bucket|capitalize }}</label>
+      <input id="{{ bucket }}" name="{{ bucket }}" inputmode="numeric" value="{{ pct }}">
+      {% endfor %}
+    </fieldset>
+    <label for="amount">Each month, in rupees</label>
+    <input id="amount" name="amount" inputmode="numeric" value="{{ form.amount }}" required>
+    <label for="years">Time</label>
+    <select id="years" name="years">
+      {% for label, value in form.horizons %}<option value="{{ value }}"{% if value == form.years %} selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <label for="fall">A fall you can sit through</label>
+    <select id="fall" name="fall">
+      {% for pct in form.falls %}<option value="{{ pct }}"{% if pct == form.fall %} selected{% endif %}>{{ pct }}%</option>{% endfor %}
+    </select>
+    <button class="button" type="submit">Show this plan</button>
+  </form>
+  {% endif %}
+</article>
+{% endblock %}
