@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from networth import sim
+from networth import holdings, sim
 from networth.app import links
 from networth.app.settings import Settings
 from networth.app.store import Plan, Profile, Store
@@ -38,7 +38,7 @@ from networth.bot.onboarding import (
 from networth.engine import odds as engine
 from networth.engine.model import CURRENCY, EventType, RatesDB
 from networth.sim.data import MissingSeries, Table, load_table
-from networth.web import names, plan_view, views
+from networth.web import holdings_view, names, plan_view, views
 from networth.web.fmt import western_grouping
 
 HERE: Final = Path(__file__).resolve().parent
@@ -248,6 +248,23 @@ def user_page(request: Request, token: str, cfg: Config, table: SimTable) -> HTM
     last = store.last_brief(profile.user_id)
     response = _page(request, "user.html", plan=plan_line(plan) if plan else None, money=money,
                      day=day, brief=last, **_user_range(plan, profile, table))  # fmt: skip
+    response.headers["X-Robots-Tag"] = "noindex"
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
+@router.get("/u/{token}/holdings", response_class=HTMLResponse)
+def holdings_page(request: Request, token: str, cfg: Config, table: SimTable) -> HTMLResponse:
+    """One user's confirmed holdings, valued at the prices stored with them (no lookups)."""
+    now = dt.datetime.now(dt.UTC)
+    link_token = links.verify(token, cfg.link_secret, now) if cfg.link_secret else None
+    store = Store(cfg.data_dir)
+    profile = store.profile_by_token(link_token) if link_token else None
+    if profile is None:
+        return _not_found(request, BAD_LINK)
+    report = holdings.report_for(profile.user_id, store, table=table)
+    v = holdings_view.holdings_view(report) if report else None
+    response = _page(request, "holdings.html", v=v, empty=holdings_view.NO_HOLDINGS)
     response.headers["X-Robots-Tag"] = "noindex"
     response.headers["Cache-Control"] = "private, no-store"
     return response

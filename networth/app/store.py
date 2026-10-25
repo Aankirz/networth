@@ -10,6 +10,8 @@ keiki_turns holds every turn id answered; link_codes holds the single-use codes 
 email contact to a Telegram user; watches are standing per-user requests, and watch_hits holds
 one row per watch per confirmed story it matched, claimed before the message goes out;
 asked_terms holds glossary terms a user asked about, until a brief brings one back.
+holdings holds one user's holdings list as networth.holdings writes it (never an image), and
+snaptrade_users the SnapTrade user secret behind a broker link; both go when the user stops.
 A brief or an alert row is claimed before the message goes out, so a retried trigger never
 sends it twice. Each operation opens its own short connection,
 because webhook handlers run on a threadpool. The schema is created on first use and migrated
@@ -228,6 +230,13 @@ COLUMNS: Final[dict[str, dict[str, str]]] = {
         "user_id": "TEXT NOT NULL", "term": "TEXT NOT NULL", "asked_at": "TEXT NOT NULL",
         "used_at": "TEXT",
     },
+    "holdings": {
+        "user_id": "TEXT PRIMARY KEY", "data": "TEXT NOT NULL", "updated_at": "TEXT NOT NULL",
+    },
+    "snaptrade_users": {
+        "user_id": "TEXT PRIMARY KEY", "snaptrade_user_id": "TEXT NOT NULL",
+        "user_secret": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
+    },
     "outbox": {
         "id": "INTEGER PRIMARY KEY AUTOINCREMENT", "user_id": "TEXT NOT NULL",
         "address": "TEXT NOT NULL", "text": "TEXT NOT NULL", "created_at": "TEXT NOT NULL",
@@ -255,6 +264,7 @@ def migrate(conn: sqlite3.Connection) -> None:
 
 
 KEPT_ON_SAVE: Final = ("user_id", "link_token")
+FORGOTTEN_ON_STOP: Final = ("holdings", "snaptrade_users")
 
 
 def _profile_row(p: Profile) -> dict[str, object]:
@@ -317,7 +327,8 @@ class Store:
 
     def save_profile(self, profile: Profile) -> None:
         """Insert, or update every column but link_token, which only new_link_token changes,
-        so a turn holding an older copy of the profile never revives a retired link."""
+        so a turn holding an older copy of the profile never revives a retired link. Saving a
+        stopped profile deletes the user's holdings and broker link in the same transaction."""
         row = _profile_row(profile)
         names = ", ".join(f'"{n}"' for n in row)
         marks = ", ".join("?" for _ in row)
@@ -328,6 +339,9 @@ class Store:
                 f"ON CONFLICT(user_id) DO UPDATE SET {updates}",
                 tuple(row.values()),
             )
+            if profile.status is Status.STOPPED:
+                for table in FORGOTTEN_ON_STOP:
+                    conn.execute(f"DELETE FROM {table} WHERE user_id = ?", (profile.user_id,))
 
     def get_plan(self, user_id: str) -> Plan | None:
         with self._connect() as conn:
@@ -639,6 +653,36 @@ class Store:
     def mark_mail_sent(self, mail_id: int) -> None:
         with self._connect() as conn:
             conn.execute("UPDATE outbox SET sent_at = ? WHERE id = ?", (now_iso(), mail_id))
+
+    def save_holdings(self, user_id: str, data: str) -> None:
+        self._upsert("holdings", {"user_id": user_id, "data": data, "updated_at": now_iso()})
+
+    def holdings_data(self, user_id: str) -> str | None:
+        with self._connect() as conn:
+            row = conn.execute("SELECT data FROM holdings WHERE user_id = ?", (user_id,)).fetchone()
+        return row["data"] if row else None
+
+    def delete_holdings(self, user_id: str) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM holdings WHERE user_id = ?", (user_id,))
+
+    def save_snaptrade_user(self, user_id: str, snaptrade_user_id: str, secret: str) -> None:
+        row = {"user_id": user_id, "snaptrade_user_id": snaptrade_user_id,
+               "user_secret": secret, "created_at": now_iso()}  # fmt: skip
+        self._upsert("snaptrade_users", row)
+
+    def snaptrade_user(self, user_id: str) -> tuple[str, str] | None:
+        """(snaptrade_user_id, user_secret) for a user who has registered, else None."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT snaptrade_user_id, user_secret FROM snaptrade_users WHERE user_id = ?",
+                (user_id,),
+            ).fetchone()
+        return (row["snaptrade_user_id"], row["user_secret"]) if row else None
+
+    def delete_snaptrade_user(self, user_id: str) -> None:
+        with self._connect() as conn:
+            conn.execute("DELETE FROM snaptrade_users WHERE user_id = ?", (user_id,))
 
     def _upsert(self, table: str, row: Mapping[str, object]) -> None:
         names = ", ".join(f'"{n}"' for n in row)

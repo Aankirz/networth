@@ -1,0 +1,31 @@
+{
+  "results": [
+    {
+      "instrument": {"kind": "stock", "id": "11111111-0000-4000-8000-000000000001", "symbol": "AAPL",
+                     "raw_symbol": "AAPL", "description": "Apple Inc.", "currency": "USD", "exchange": "XNAS"},
+      "units": "10.5", "price": "190.00", "cost_basis": "150.25", "currency": "USD", "cash_equivalent": false
+    },
+    {
+      "instrument": {"kind": "etf", "id": "11111111-0000-4000-8000-000000000002", "symbol": "VOO",
+                     "raw_symbol": "VOO", "description": "Vanguard S&P 500 ETF", "currency": "USD", "exchange": "ARCX"},
+      "units": "4", "price": "500.10", "cost_basis": "420.00", "currency": "USD", "cash_equivalent": false
+    },
+    {
+      "instrument": {"kind": "mutualfund", "id": "11111111-0000-4000-8000-000000000003", "symbol": "SPAXX",
+                     "raw_symbol": "SPAXX", "description": "Fidelity Government Money Market Fund", "currency": "USD", "exchange": null},
+      "units": "1200", "price": "1.00", "cost_basis": "1.00", "currency": "USD", "cash_equivalent": true
+    },
+    {
+      "instrument": {"kind": "option", "id": "11111111-0000-4000-8000-000000000004", "symbol": "AAPL  261218C00200000",
+                     "option_type": "CALL", "strike_price": "200", "expiration_date": "2026-12-18", "multiplier": "100",
+                     "underlying": {"kind": "stock", "id": "11111111-0000-4000-8000-000000000001", "symbol": "AAPL", "raw_symbol": "AAPL"}},
+      "units": "1", "price": "3.20", "cost_basis": "2.75", "currency": "USD"
+    },
+    {
+      "instrument": {"kind": "stock", "id": "11111111-0000-4000-8000-000000000005", "symbol": "SHOP.TO",
+                     "raw_symbol": "SHOP", "description": "Shopify Inc.", "currency": "CAD", "exchange": "XTSE"},
+      "units": "3", "price": "150.00", "cost_basis": "120.00", "currency": "CAD", "cash_equivalent": false
+    }
+  ],
+  "data_freshness": {"as_of": "2026-10-24T20:00:00.000Z"}
+}

@@ -1,0 +1,89 @@
+{
+ "rows": [
+  {
+   "name": "UTI Nifty 50 Index Fund Direct Growth",
+   "kind": "mutual_fund",
+   "identifier": "",
+   "currency": "INR",
+   "units": 1250.0,
+   "avg_cost": 128.4,
+   "invested": 0.0,
+   "current_price": 162.1,
+   "current_value": 0.0,
+   "bought_on": "2022-03-15"
+  },
+  {
+   "name": "HDFC Liquid Fund Direct Growth",
+   "kind": "mutual_fund",
+   "identifier": "",
+   "currency": "INR",
+   "units": 20.5,
+   "avg_cost": 4720.0,
+   "invested": 0.0,
+   "current_price": 5105.3,
+   "current_value": 0.0,
+   "bought_on": "2024-01-02"
+  },
+  {
+   "name": "Parag Parikh Flexi Cap Fund Direct Growth",
+   "kind": "mutual_fund",
+   "identifier": "",
+   "currency": "INR",
+   "units": 800.0,
+   "avg_cost": 68.5,
+   "invested": 0.0,
+   "current_price": 84.2,
+   "current_value": 0.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Reliance Industries",
+   "kind": "stock",
+   "identifier": "RELIANCE",
+   "currency": "INR",
+   "units": 40.0,
+   "avg_cost": 2450.0,
+   "invested": 0.0,
+   "current_price": 2812.5,
+   "current_value": 0.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Tata Motors",
+   "kind": "stock",
+   "identifier": "TATAMOTORS",
+   "currency": "INR",
+   "units": 60.0,
+   "avg_cost": 910.0,
+   "invested": 0.0,
+   "current_price": 742.35,
+   "current_value": 0.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Nippon India ETF Bank BeES",
+   "kind": "etf",
+   "identifier": "BANKBEES",
+   "currency": "INR",
+   "units": 150.0,
+   "avg_cost": 470.0,
+   "invested": 0.0,
+   "current_price": 528.6,
+   "current_value": 0.0,
+   "bought_on": ""
+  },
+  {
+   "name": "Infosys",
+   "kind": "stock",
+   "identifier": "INFY",
+   "currency": "INR",
+   "units": 25.0,
+   "avg_cost": 1540.0,
+   "invested": 0.0,
+   "current_price": 1612.4,
+   "current_value": 0.0,
+   "bought_on": ""
+  }
+ ],
+ "unread": []
+}
