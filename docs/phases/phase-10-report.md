@@ -45,7 +45,7 @@ The taste skill dealt the "product performs" direction (seed 1584661201). The la
 - **JavaScript.** `/demo` loads 195.6 KB gzipped on first load, against a budget of 300 KB. rough.js is the separate 8.8 KB chunk above.
 - **Landing LCP, local production build.** With real DevTools mobile throttling, LCP is 1.5 s and CLS is 0.032. Simulated mobile Lighthouse gave 2.26, 2.49 and 2.61 s over three runs, right at the 2.5 s target. The LCP element is the h1, and its observed LCP is 447 ms, the same as first paint. The simulated time comes from Lighthouse modelling the framework scripts on slow 4G.
 - **Preview LCP: not measured.** Previews sit behind Vercel Authentication (302), and I didn't change the project's protection settings.
-- **Tests.** `make check` gives 1186 passed and 12 skipped, including 28 command tests and the contract checks. Playwright gives 30 passed across the chat, the charts, the canvas and the landing page, plus 24 screenshot runs.
+- **Tests.** `make check` gives 1194 passed and 12 skipped, including 28 command tests and the contract checks. Playwright gives 30 passed across the chat, the charts, the canvas and the landing page, plus 24 screenshot runs.
 
 ## What the critique and the audit changed
 
