@@ -786,3 +786,73 @@ h2 {
 .plan-form__split input {
   min-width: 0;
 }
+
+/* Holdings */
+.holdings__table tbody th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.holdings__gain--up {
+  color: var(--up);
+}
+
+.holdings__gain--down {
+  color: var(--down);
+}
+
+@media (max-width: 39.99rem) {
+  .holdings__table .holdings__ret {
+    grid-column: 1 / -1;
+  }
+
+  .holdings__table .holdings__ret::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+}
+
+.mix-bar {
+  margin: var(--space-3) 0;
+}
+
+.mix-bar svg {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+}
+
+.mix-bar__seg--safety {
+  fill: var(--band);
+}
+
+.mix-bar__seg--core {
+  fill: var(--dot);
+  fill-opacity: 0.55;
+}
+
+.mix-bar__seg--growth {
+  fill: var(--ink);
+}
+
+.mix-bar__name {
+  fill: var(--ink);
+  font: 600 16px var(--sans);
+}
+
+.mix-bar__pct {
+  fill: var(--paper);
+  font: 600 14px var(--sans);
+  paint-order: stroke;
+  stroke: var(--ink);
+  stroke-width: 3px;
+}
+
+.mix-bar figcaption {
+  color: var(--muted);
+  font-size: var(--text-small);
+  margin-top: var(--space-1);
+}

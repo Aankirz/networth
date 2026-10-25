@@ -6,6 +6,7 @@
     related = models.match_related(events, rejected_stories)   # role cheap
     text = models.write(task, facts, feedback)                # role writer, PRODUCT.md voice
     seen = models.read_image(jpeg_bytes, "image/jpeg")        # role vision, the image's text
+    rows = models.read_holdings(png_bytes, "image/png", "en") # role vision, a holdings table
     intent = models.pick(question, choices, text)             # role cheap, one closed choice
 
 Model output is parsed into pydantic wire types, then validated here against the inputs and
@@ -128,6 +129,8 @@ class ChatModels(Protocol):
 
     def read_image(self, image: bytes, mime: str) -> str: ...
 
+    def read_holdings(self, image: bytes, mime: str, lang: str) -> WireHoldings | None: ...
+
     def pick(self, question: str, choices: Mapping[str, str], text: str) -> str | None: ...
 
     def same_claim(self, claim: str, articles: Sequence[ArticleBrief]) -> set[str]: ...
@@ -178,6 +181,26 @@ class _WireClassification(BaseModel):
     reason: str
 
 
+class WireHolding(BaseModel):
+    """One row of a holdings screenshot, as written. 0 or "" means the image doesn't show it."""
+
+    name: str
+    kind: str  # stock | mutual_fund | etf | fd | bond | other
+    identifier: str  # a ticker or ISIN only when the image prints one
+    currency: str  # INR | USD
+    units: float
+    avg_cost: float  # per unit
+    invested: float  # the row's total cost
+    current_price: float  # per unit
+    current_value: float  # the row's total value now
+    bought_on: str  # YYYY-MM-DD
+
+
+class WireHoldings(BaseModel):
+    rows: list[WireHolding]
+    unread: list[str]  # each part of the table that could not be read, in a few words
+
+
 GROUP_INSTRUCTIONS: Final = """You group news articles into stories. A story is one real-world
 event (one rate decision, one attack, one tariff announcement). Articles that report the same
 event belong together even when worded differently; articles about different events never do.
@@ -214,6 +237,18 @@ READ_IMAGE_TASK: Final = """Transcribe every piece of text in this image, in rea
 exactly as written: names, numbers, dates, labels and their values. Keep each label next to its
 value ("Price band: ₹95 to ₹100"). Do not explain, summarise or add anything that is not
 written in the image."""
+
+
+READ_HOLDINGS_TASK: Final = """This image is a screenshot of someone's investment holdings
+from a broker or fund app (Groww, Zerodha, Kuvera, a CAS statement, Fidelity, Schwab and the
+like). Read every holding row into rows, copying numbers exactly as printed. Never compute,
+estimate or fill in a number the image does not print: use 0 for a number and "" for text it
+doesn't show. kind is one of stock, mutual_fund, etf, fd, bond, other, from what the row says.
+identifier is a ticker or ISIN only when one is printed. currency is INR for ₹ or Rs and USD
+for $. bought_on is YYYY-MM-DD only when a buy or start date is printed. Totals, headers and
+summary lines are not rows. List in unread anything that looks like a holding but is cut off,
+blurred or unreadable, in a few words each. If the image is not a holdings screen, answer no
+rows and say so in unread."""
 
 
 NO_DASHES: Final = "Never use long dashes (— or –). Write short sentences instead."
@@ -448,6 +483,18 @@ class OpenAIModels:
         if wire is None or not wire.text.strip():
             raise NoAnswer("no text read from the image")
         return wire.text.strip()
+
+    def read_holdings(self, image: bytes, mime: str, lang: str) -> WireHoldings | None:
+        """The holdings table in the image, or None when the model gave no parsed answer. The
+        image goes only into the request; the call log records tokens, never the input."""
+        url = f"data:{mime};base64,{base64.b64encode(image).decode()}"
+        hint = f"The app's language may be {lang}; write names exactly as printed."
+        content = [{"type": "input_text", "text": hint},
+                   {"type": "input_image", "image_url": url}]  # fmt: skip
+        return self._parse(
+            Role.VISION, "read_holdings", READ_HOLDINGS_TASK,
+            [{"role": "user", "content": content}], WireHoldings,
+        )  # fmt: skip
 
     def pick(self, question: str, choices: Mapping[str, str], text: str) -> str | None:
         listed = "\n".join(f"- {name}: {meaning}" for name, meaning in choices.items())

@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "kind": "investment",
+      "id": "0b7c8f2e-0000-4000-8000-00000000fa11",
+      "connection_id": "6a1d2c3b-0000-4000-8000-00000000c0de",
+      "display_name": "Made-up Brokerage Individual",
+      "masked_account_number": "****0001",
+      "sync_status": {},
+      "is_paper": false,
+      "net_value": {"amount": 12345.67, "currency": "USD"}
+    },
+    {
+      "kind": "deposit",
+      "id": "9d4e5f6a-0000-4000-8000-0000000dep05",
+      "connection_id": "6a1d2c3b-0000-4000-8000-00000000c0de",
+      "display_name": "Made-up Brokerage Cash",
+      "masked_account_number": "****0002",
+      "sync_status": {},
+      "is_paper": false
+    }
+  ]
+}

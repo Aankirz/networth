@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Your holdings · Networth{% endblock %}
+{% block description %}What you hold and what history says about a mix like it. Research, not advice.{% endblock %}
+{% block main %}
+<article class="note holdings">
+  <h1 class="verdict">Your holdings</h1>
+  {% if not v %}
+  <p class="normal">{{ empty }}</p>
+  {% else %}
+  <p class="normal">Valued on {{ v.as_of }}: {{ v.count }} holdings.</p>
+  <p class="callout callout--quiet">{{ v.label }}</p>
+
+  <table class="ledger holdings__table">
+    <caption>What you hold</caption>
+    <thead>
+      <tr><th scope="col">Holding</th><th scope="col">Units</th><th scope="col">Average cost</th><th scope="col">Put in</th><th scope="col">Worth now</th><th scope="col">Gain or loss</th><th scope="col">Return</th></tr>
+    </thead>
+    <tbody>
+      {% for r in v.rows %}
+      <tr>
+        <th scope="row">{{ r.n }}. {{ r.name }}<span class="cause">{{ r.bucket }} · price {{ r.price }}</span></th>
+        <td class="num" data-label="Units">{{ r.units }}</td>
+        <td class="num" data-label="Average cost">{{ r.avg_cost }}</td>
+        <td class="num" data-label="Put in">{{ r.invested }}</td>
+        <td class="num" data-label="Worth now">{{ r.value }}</td>
+        <td class="num holdings__gain--{{ r.lean }}" data-label="Gain or loss">{{ r.gain }}</td>
+        <td class="holdings__ret" data-label="Return">{{ r.ret }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <dl class="tally">
+    <div><dt>Put in</dt><dd class="num">{{ v.invested }}</dd></div>
+    <div><dt>Worth now</dt><dd class="num">{{ v.value }}</dd></div>
+    <div><dt>Gain or loss</dt><dd class="num">{{ v.gain }}</dd></div>
+  </dl>
+  <p class="fineprint">Return in total: {{ v.ret }}.</p>
+
+  <h2>Your mix next to the plan you saved</h2>
+  <figure class="mix-bar">
+    <svg viewBox="0 0 {{ v.bar.width }} {{ v.bar.height }}" role="img" aria-labelledby="mix-bar-title">
+      <title id="mix-bar-title">{{ v.bar_title }}</title>
+      {% for row in v.bar.rows %}
+      <text class="mix-bar__name" x="{{ v.bar.x }}" y="{{ row.label_y }}">{{ row.name }}</text>
+      {% for s in row.segments %}
+      <rect class="mix-bar__seg mix-bar__seg--{{ s.bucket }}" x="{{ s.x }}" y="{{ row.y }}" width="{{ s.w }}" height="{{ row.h }}"></rect>
+      {% if s.labelled %}<text class="mix-bar__pct" x="{{ s.mid }}" y="{{ row.y + 19 }}" text-anchor="middle">{{ s.pct }}%</text>{% endif %}
+      {% endfor %}
+      {% endfor %}
+    </svg>
+    <figcaption>Left to right: safety (lightest), core, growth (darkest), by value now.</figcaption>
+  </figure>
+  {% for line in v.mix %}<p>{{ line }}</p>{% endfor %}
+
+  <h2>What history says about both</h2>
+  {% for line in v.history %}<p>{{ line }}</p>{% endfor %}
+
+  {% for line in v.prices %}<p class="fineprint">{{ line }}</p>{% endfor %}
+  {% endif %}
+  <p class="fineprint">This page is private to you. Anyone with the link can see it, so don't share it.</p>
+</article>
+{% endblock %}
