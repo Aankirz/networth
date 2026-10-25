@@ -6,12 +6,9 @@
   <h1 class="verdict">{{ v.headline }}</h1>
   <p class="normal">{{ v.normal }}</p>
 
-  <p class="lean lean--{{ v.lean.kind }}">
-    <span class="lean__mark">{{ v.lean.mark }}</span>
-    <span>{{ v.odds_words }}{% if not v.weak_signal %}, {{ v.n_hits }} of {{ v.n_episodes }}{% endif %}.</span>
-  </p>
+  <p class="count">{{ v.count }}{% if v.near_normal %} That is within normal ups and downs.{% endif %}</p>
   {% if v.weak_signal %}
-  <p class="callout callout--weak">Fewer than 8 independent past cases is too few to call a pattern. Read this count as a hint.</p>
+  <p class="callout callout--weak">Fewer than 8 independent past cases is too few to call a pattern. Read this count as history, not as a hint.</p>
   {% endif %}
 
   <dl class="facts">
@@ -21,7 +18,7 @@
   </dl>
 
   {% if v.eras_disagree %}
-  <p class="callout">The eras disagree. One period of history puts this above its normal rate and another puts it below. Read the main count with care.</p>
+  <p class="callout">The eras disagree. Different stretches of history give different counts here. Read the main count with care.</p>
   {% endif %}
 
   <section aria-labelledby="cases">
@@ -62,10 +59,10 @@
     <h2 id="eras">Other stretches of history</h2>
     <ul class="eras">
       {% for era in v.other_eras %}
-      <li class="lean--{{ era.lean.kind }}">
+      <li>
         <strong>{{ era.name }}.</strong>
         {{ era.sentence }}
-        {{ era.shared }} of these episodes are also in the main count.{% if era.weak_signal %} Weak signal.{% endif %}
+        {{ era.shared }} of these episodes are also in the main count.{% if era.weak_signal %} Too few to call a pattern.{% endif %}
         <span class="cause">Measured on {{ era.series }}.</span>
       </li>
       {% endfor %}

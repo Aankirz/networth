@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import datetime as dt
 import html
+import json
 import re
 import shutil
 import sqlite3
@@ -16,7 +17,7 @@ from fastapi.testclient import TestClient
 
 from networth.engine import backtest, odds
 from networth.engine.model import DEFAULT_DB, EventType, RatesDB, write_db
-from networth.web import fmt, names
+from networth.web import fmt, names, routes
 from networth.web.routes import rates_db, router
 from tests.conftest import (
     BOOK_EVENTS,
@@ -32,6 +33,8 @@ BANNED = re.compile(
     r"\b(buy|sell|guaranteed|sure shot|can't lose|multibagger|target price)\b", re.IGNORECASE
 )
 DISCLAIMER = "Research, not advice"
+LEAN = re.compile(r"\blean(s|ing)?\b|🟢|🔴|⚪", re.IGNORECASE)
+NEAR = "within normal ups and downs"
 
 # Enough RBI hikes, each its own episode, for a row that is not a weak signal.
 MORE_RBI = [
@@ -109,6 +112,37 @@ def test_pages_carry_the_disclaimer_and_no_banned_words(client: TestClient, path
     assert not BANNED.search(page)
 
 
+@pytest.mark.parametrize("path", [*PAGES, *ERROR_PAGES])
+def test_no_page_frames_history_as_a_lean(client: TestClient, path: str) -> None:
+    assert not LEAN.search(client.get(path).text)
+
+
+def test_a_count_near_its_normal_rate_says_so_and_a_far_one_says_nothing(client, web_db) -> None:
+    o = odds.odds("rbi_hike", "^NSEBANK", db=web_db)
+    assert not o["weak_signal"] and abs(o["hit_rate"] - o["baseline"]) < names.NEAR_NORMAL
+    assert NEAR in text(client.get("/why/rbi_hike/^NSEBANK").text)
+    board = " ".join(text(client.get("/scoreboard/rbi_hike").text).split())
+    nears = set()
+    for group in (["^NSEBANK", "^CNXIT"], ["XLF", "XLK"]):
+        c = odds.compare("rbi_hike", group, db=web_db)
+        for a in c["assets"]:
+            near = abs(a["hit_rate"] - a["baseline"]) < names.NEAR_NORMAL
+            nears.add(near)
+            row = (f"{names.asset_name(a['asset'])} beat {names.benchmark_name(a['benchmark'])} "
+                   f"in {a['n_hits']} of {c['n_episodes']} shared past RBI rate hikes; "
+                   f"normal {fmt.percent(a['baseline'])}, {NEAR}")  # fmt: skip
+            assert (row in board) == near, a["asset"]
+    assert nears == {True, False}
+
+
+def test_pages_carry_link_preview_tags(client) -> None:
+    page = client.get("/why/rbi_hike/^NSEBANK").text
+    assert '<meta property="og:site_name" content="Networth">' in page
+    assert '<meta property="og:type" content="website">' in page
+    assert re.search(r'<meta property="og:title" content="[^"]*after past RBI rate hikes', page)
+    assert re.search(r'<meta property="og:description" content="[^"]*in \d+ of \d+', page)
+
+
 def test_why_shows_the_engine_counts_and_every_episode(client, web_db) -> None:
     o = odds.odds("rbi_hike", "^NSEBANK", db=web_db)
     page = client.get("/why/rbi_hike/^NSEBANK").text
@@ -125,7 +159,7 @@ def test_why_shows_the_engine_counts_and_every_episode(client, web_db) -> None:
 def test_weak_signal_label_appears_iff_the_engine_says_so(client, web_db, type, asset) -> None:
     o = odds.odds(type, asset, db=web_db)
     words = text(client.get(f"/why/{type}/{asset}").text)
-    assert ("Weak signal, only" in words) == o["weak_signal"]
+    assert ("Fewer than 8 independent past cases" in words) == o["weak_signal"]
 
 
 def test_fixture_has_both_weak_and_strong_rows(web_db) -> None:
@@ -220,6 +254,38 @@ def test_track_record_renders_its_table(web_db, tmp_path) -> None:
     assert "We start counting" not in words
 
 
+SUMMARY = {
+    "calibration": {"walk_forward": {
+        "cutoffs": ["2010-01-01", "2019-01-01"], "end": "2022-01-01",
+        "leans": {"toward": {"statements": 82, "later_rate": 0.4474, "baseline": 0.5077}}}},
+    "vault": {"leans": {"toward": {"statements": 34, "later_rate": 0.4471, "baseline": 0.4907}}},
+}  # fmt: skip
+
+
+def test_track_record_shows_our_own_negative_result(client, tmp_path, monkeypatch) -> None:
+    path = tmp_path / "summary.json"
+    path.write_text(json.dumps(SUMMARY))
+    monkeypatch.setattr(routes, "EVAL_SUMMARY", path)
+    words = " ".join(text(client.get("/track-record").text).split())
+    assert "they did no better than chance" in words
+    assert "From 2010 to 2021, 82 counts" in words
+    assert "the rate was 45%, against a normal 51%." in words
+    assert "From 2022 on, years we held back until the method was fixed, 34 counts" in words
+    assert "against a normal 49%." in words
+
+
+@pytest.mark.parametrize("content", [None, "{not json", "{}"])
+def test_track_record_leaves_the_test_out_without_a_summary(client, tmp_path, monkeypatch,
+                                                            content) -> None:  # fmt: skip
+    path = tmp_path / "summary.json"
+    if content is not None:
+        path.write_text(content)
+    monkeypatch.setattr(routes, "EVAL_SUMMARY", path)
+    r = client.get("/track-record")
+    assert r.status_code == 200
+    assert "no better than chance" not in r.text
+
+
 def test_stats_counts_match_sqlite(client, web_db) -> None:
     conn = sqlite3.connect(web_db)
     n_events = conn.execute("SELECT COUNT(*) FROM events").fetchone()[0]
@@ -241,7 +307,7 @@ def test_real_db_why_and_what_if_match_the_engine() -> None:
     c = client_for(DEFAULT_DB)
     why = text(c.get("/why/rbi_hike/^NSEBANK").text)
     assert "in 14 of 22 past RBI rate hikes" in why
-    assert "Weak signal, only" not in why
+    assert "Fewer than 8 independent past cases" not in why
     what_if = text(c.get("/what-if/oil_supply/JETS?amount=2000&currency=USD").text)
     assert all(v in what_if for v in ("−$258", "−$1", "+$211"))
 

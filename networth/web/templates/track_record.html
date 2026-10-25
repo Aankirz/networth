@@ -16,5 +16,14 @@
   <p class="normal">We start counting from our first message.</p>
   <p>Every scoreboard line we send will appear here, next to what happened 30 days later, including the times history was wrong.</p>
   {% endif %}
+
+  {% if tested %}
+  <section aria-labelledby="tested">
+    <h2 id="tested">When we tested ourselves</h2>
+    <p class="callout">When we tested these counts on years they hadn't seen, they did no better than chance. So we show them as history, not as a hint.</p>
+    {% for line in tested %}<p class="normal">{{ line }}</p>{% endfor %}
+    <p class="fineprint">Each count was rebuilt from the history before its test years, then checked against the cases that came after.</p>
+  </section>
+  {% endif %}
 </article>
 {% endblock %}
