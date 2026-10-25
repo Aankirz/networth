@@ -342,3 +342,6 @@
 
 ## 2026-10-25 — Keep the measured spend on a clean clone
 - evals/__main__.py: with no data/llm_calls.jsonl, `make evals` keeps the spend from the cached summary instead of writing "not measured" over it.
+
+## 2026-10-25 — Cite the rebased plan hash
+- docs/phases/phase-5-report.md: the plan commit was rewritten by the pre-push rebase; the report now cites both hashes and the unchanged file blob.

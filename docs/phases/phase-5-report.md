@@ -1,6 +1,6 @@
 # Phase 5 report: evals
 
-Phase 5 measures what Networth tells people against what happened later, and checks its words for advice and invented numbers. Every fixed choice is in `docs/phases/phase-5-plan.md`. That file was committed as `72ac7798fb3a73e6bf556f90d36c34e422ac1613` (file blob `c27abeb2df551ab66669c6add65e4307962c86bd`) at 2026-10-25 06:38 UTC, before the vault run at 07:08 UTC. The news labels were committed as `4d03f734fd41f6d6db31a29c68cfc419ff834cce` before the judge saw any of them. Product changes the results point to are in `docs/phases/phase-5-findings.md`. The decision log is `docs/phases/phase-5-decisions.tsv`.
+Phase 5 measures what Networth tells people against what happened later, and checks its words for advice and invented numbers. Every fixed choice is in `docs/phases/phase-5-plan.md`. That file was committed as `72ac7798fb3a73e6bf556f90d36c34e422ac1613` at 2026-10-25 06:38 UTC, before the vault run at 07:08 UTC. The vault result records that hash. A `git pull --rebase` before the push rewrote it to `5c4f289685f956c01edb74fcf7518933b11ca849` on `main`. The file's blob, `c27abeb2df551ab66669c6add65e4307962c86bd`, is the same in both, so the plan is byte for byte what was fixed. The news labels were committed as `4d03f734fd41f6d6db31a29c68cfc419ff834cce` (`aeecc0e5be9c4b653e64283a8fc03cd631da8573` after the rebase) before the judge saw any of them. Product changes the results point to are in `docs/phases/phase-5-findings.md`. The decision log is `docs/phases/phase-5-decisions.tsv`.
 
 ## What the results say
 
