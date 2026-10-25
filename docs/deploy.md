@@ -74,6 +74,18 @@ scripts/push_data.sh watcher.sqlite <agent-id>
 
 Look at the `ls` first. A `watcher.sqlite` there means the VM's own watcher has already run, and the push replaces whatever it wrote. Its alerts are already claimed in `networth.sqlite`, so nothing is sent twice. Only the news it pulled is lost until its next cycle. Once the VM's watcher is running on schedule, stop pushing.
 
+## Plan range table on /data
+
+`/range`, the "My range" button and `/plan-range` read `$DATA_DIR/sim/returns.csv`, the same data dir every other store uses (`/data` on the VM, `data/` locally). The image has no copy, since `data/` is gitignored. Build the table locally, then push both files:
+
+```bash
+uv run python -m networth.sim.data                 # writes data/sim/returns.csv and sources.json
+scripts/push_data.sh sim/returns.csv <agent-id>
+scripts/push_data.sh sim/sources.json <agent-id>
+```
+
+Each push prints the sha256 it checked inside the VM. With no table, `/plan-range` returns a 503 page and `/range` says the range isn't available right now. Before Phase 3D the app looked in `/app/data/sim`, which a redeploy wipes.
+
 ## Schedules
 
 A sleeping VM's timers never fire, so Maritime is the alarm clock (https://maritime.sh/docs/triggers). The app serves `GET /schedules`:

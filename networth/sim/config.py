@@ -4,9 +4,10 @@ here bumps METHOD_VERSION and gets a dated line there."""
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Final
 
-from networth.engine.model import DATA_DIR
+from networth.app.settings import Settings
 
 METHOD_VERSION: Final = "plan-range-v2"
 SEED: Final = 20261025
@@ -22,7 +23,7 @@ BUCKETS: Final = ("safety", "core", "growth")
 CPI: Final = "cpi"
 COLUMNS: Final = (*BUCKETS, CPI)
 
-SIM_DIR: Final = DATA_DIR / "sim"
+SIM_SUBDIR: Final = "sim"
 TABLE_FILE: Final = "returns.csv"
 SOURCES_FILE: Final = "sources.json"
 
@@ -69,3 +70,9 @@ SOURCES: Final[Mapping[str, Mapping[str, str]]] = {
         "Before 2012-01 it is the OECD index's month-on-month change.",
     },
 }
+
+
+def sim_dir() -> Path:
+    """The table's folder under the app's data dir: DATA_DIR from the env or .env, else data/.
+    Read per call, so the container's /data volume is used, not the image's /app/data."""
+    return Settings.from_env().data_dir / SIM_SUBDIR
