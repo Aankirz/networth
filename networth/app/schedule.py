@@ -85,17 +85,6 @@ def watcher_cycle(services: Services, now: dt.datetime) -> Sequence[Insight]:
         store.close()
 
 
-def last_cycle_end(services: Services) -> dt.datetime | None:
-    if not services.watcher_db.exists():
-        return None
-    store = WatcherStore.open(services.watcher_db)
-    try:
-        cycle = store.latest_cycle()
-    finally:
-        store.close()
-    return cycle.finished_at if cycle else None
-
-
 def in_watcher_window(now: dt.datetime) -> bool:
     local = now.astimezone(ZoneInfo(TZ))
     return local.weekday() < 5 and local.hour in MARKET_HOURS
@@ -105,7 +94,7 @@ def run_watcher(store: Store, bot: Bot, services: Services, now: dt.datetime,
                 cycle: Cycle = watcher_cycle) -> str:  # fmt: skip
     if not in_watcher_window(now):
         return "watcher skipped: outside market hours"
-    last = last_cycle_end(services)
+    last = services.last_news_check()
     if last is not None and now - last < WATCHER_MIN_GAP:
         return f"watcher skipped: last cycle ended {last.isoformat(timespec='seconds')}"
     fresh = cycle(services, now)

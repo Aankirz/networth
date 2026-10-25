@@ -299,15 +299,15 @@ class Store:
                 (text, used, now_iso(), user_id, day),
             )
 
-    def last_brief(self, user_id: str) -> tuple[str, str] | None:
-        """(day, text) of the newest brief that was written, if any."""
+    def last_brief(self, user_id: str) -> tuple[str, str, str] | None:
+        """(day, text, sent_at) of the newest brief that was written, if any."""
         with self._connect() as conn:
             row = conn.execute(
-                "SELECT day, text FROM briefs WHERE user_id = ? AND text != '' "
+                "SELECT day, text, sent_at FROM briefs WHERE user_id = ? AND text != '' "
                 "ORDER BY day DESC LIMIT 1",
                 (user_id,),
             ).fetchone()
-        return (row["day"], row["text"]) if row else None
+        return (row["day"], row["text"], row["sent_at"]) if row else None
 
     def claim_alert(self, user_id: str, event_key: str, month: str, cap: int, text: str) -> bool:
         """True when this user has not had this event's alert and is under the month's cap.

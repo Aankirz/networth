@@ -5,8 +5,8 @@
 
 The brief row is claimed before anything is sent, so a schedule that fires twice never sends
 a second brief the same day. A compose or send that fails releases the claim, so the next try
-sends it. Asking /brief again that day resends
-the stored text without another model call.
+sends it. Asking /brief again that day resends the stored text without another model call,
+unless a news check has finished since it was written; then the brief is written afresh.
 """
 
 from __future__ import annotations
@@ -77,7 +77,12 @@ def send_brief(
         if proactive:
             return False
         last = store.last_brief(profile.user_id)
-        if last and last[0] == day:
+        checked = services.last_news_check()
+        if (
+            last
+            and last[0] == day
+            and not (checked and checked > dt.datetime.fromisoformat(last[2]))
+        ):
             return send(store, bot, profile, Reply(last[1]))
     try:
         reply, used = compose_reply(profile, store, services, today)

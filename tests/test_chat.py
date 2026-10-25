@@ -266,6 +266,17 @@ def test_brief_is_sent_once_a_day_and_a_repeat_resends_it(tmp_path: Path, cfg) -
     assert len(models.tasks) == 2, "one draft and one rewrite, then the stored text is reused"
 
 
+def test_a_repeat_brief_is_written_afresh_after_a_newer_news_check(tmp_path: Path, cfg) -> None:
+    models = FakeChatModels()
+    chat = talk(tmp_path, cfg, models)
+    chat.say("/brief")
+    chat.say("/brief")
+    assert len(models.tasks) == 2, "no news check since, so the stored brief is resent"
+    weekend_watcher(chat.services.watcher_db, dt.datetime.now(dt.UTC) + dt.timedelta(minutes=1))
+    chat.say("/brief")
+    assert len(models.tasks) == 4, "a newer news check, so the brief is written again"
+
+
 def test_brief_buttons_keep_or_change_the_plan(tmp_path: Path, cfg) -> None:
     chat = talk(tmp_path, cfg)
     chat.tap("br:ok")

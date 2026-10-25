@@ -9,6 +9,7 @@ every reply falls back to its plain template and tip checks say they can't searc
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 import os
 from collections.abc import Mapping
@@ -20,6 +21,7 @@ from networth.app.settings import RATES_DB, Settings
 from networth.config import Config, ConfigError, load_config
 from networth.llm import ChatModels, OpenAIModels
 from networth.watcher.pull import ExaSearch, NewsSearch
+from networth.watcher.store import Store as WatcherStore
 
 log = logging.getLogger("networth.app")
 
@@ -53,6 +55,17 @@ class Services:
     @property
     def guard_log(self) -> Path:
         return self.data_dir / GUARD_LOG
+
+    def last_news_check(self) -> dt.datetime | None:
+        """When the newest watcher cycle finished, if one ever ran."""
+        if not self.watcher_db.exists():
+            return None
+        store = WatcherStore.open(self.watcher_db)
+        try:
+            cycle = store.latest_cycle()
+        finally:
+            store.close()
+        return cycle.finished_at if cycle else None
 
     @classmethod
     def from_settings(cls, settings: Settings) -> Services:

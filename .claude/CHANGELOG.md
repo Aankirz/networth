@@ -261,3 +261,6 @@
 
 ## 2026-10-25 — A fresh page link retires older ones
 - /plan and the brief issue a new link_token each time (Store.new_link_token), so earlier /u/ links 404; save_profile no longer overwrites link_token, so a stale profile copy cannot revive a retired link (round 2 item 11).
+
+## 2026-10-25 — Repeat /brief refreshes after newer news
+- A repeat /brief rewrites the brief when a news check finished after it was stored; Services.last_news_check replaces schedule.last_cycle_end (round 2 item 13).
