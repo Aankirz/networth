@@ -329,3 +329,6 @@
 
 ## 2026-10-25 — Phase 5 plan and walk-forward harness
 - docs/phases/phase-5-plan.md fixes every eval choice before any result; evals/walkforward.py rebuilds base rates at a cutoff from the engine's public build steps; evals/vault.py scores the vault once; evals/news/LABELLING.md sets the news label rules; tests/test_evals.py covers the scoring rules.
+
+## 2026-10-25 — Phase 5 eval runners
+- evals/__main__.py (make evals), news.py, words.py with words_set.py (86 adversarial messages), trace.py, report.py and spend.py: the paid evals cache raw outputs under evals/results and rescore offline; the words set and rubric were committed before the live run. Restored after a rebase conflict dropped it.
