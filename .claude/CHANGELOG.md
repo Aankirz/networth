@@ -399,3 +399,6 @@
 
 ## 2026-10-25 — Phase 3C: drop Keiki's email header line so /brief by email is a command
 - Live trace c79c227e showed each email text starts with "[Email from Name <addr>; subject=…; message_id=<…>]", so "/brief" was read as chat. strip_quoted drops that line; fixtures carry it, and a live-shape test checks the email brief equals Telegram's.
+
+## 2026-10-25 — Phase 3C: fix a line-length lint pushed red
+- 5c0239f went to main with one E501 in tests/keiki_fakes.py, because `make check | tail` hid the exit code. Split the line; the gate is green again.
