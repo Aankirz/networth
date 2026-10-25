@@ -704,3 +704,84 @@ h2 {
 .brief {
   white-space: pre-line;
 }
+
+/* Plan range */
+.plan-range h3 {
+  margin-top: var(--space-3);
+}
+
+.range--quiet dd {
+  font-size: 1.5rem;
+}
+
+.range-bar {
+  margin: var(--space-3) 0;
+}
+
+.range-bar svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.range-bar__band--1 {
+  fill: var(--dot);
+  fill-opacity: 0.35;
+}
+
+.range-bar__band--2 {
+  fill: var(--band);
+}
+
+.range-bar__median {
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+
+.range-bar__axis {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.range-bar__invested {
+  stroke: var(--muted);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.range-bar__name,
+.range-bar__label {
+  fill: var(--muted);
+  font: 600 22px var(--sans);
+}
+
+.range-bar__name {
+  fill: var(--ink);
+}
+
+.range-bar figcaption {
+  color: var(--muted);
+  font-size: var(--text-small);
+  margin-top: var(--space-1);
+}
+
+.plan-form__split {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem var(--space-1);
+  margin: var(--space-1) 0;
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  border: 1px solid var(--rule);
+  min-width: 0;
+}
+
+.plan-form__split legend {
+  color: var(--muted);
+  font-size: var(--text-small);
+  padding-inline: 0.25rem;
+}
+
+.plan-form__split input {
+  min-width: 0;
+}

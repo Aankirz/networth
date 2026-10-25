@@ -13,6 +13,7 @@
     <div><dt>Each month</dt><dd class="num">{{ money }}</dd></div>
     {% if day %}<div><dt>Investing day</dt><dd class="num">the {{ day }}</dd></div>{% endif %}
   </dl>
+  {% if pr or note %}{% include "_plan_range.html" %}{% endif %}
   <h2>Your latest brief</h2>
   {% if brief %}
   <p class="fineprint">Sent {{ brief[0] }}.</p>

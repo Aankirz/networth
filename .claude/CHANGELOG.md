@@ -279,3 +279,9 @@
 
 ## 2026-10-25 — Phase 6 return table and scaffold
 - networth/sim/config.py, data.py build data/sim/returns.csv (177 months, 2012-01..2026-09); sim/__init__.py scaffolds PlanRange and the API; numpy added with uv add because sim imports it directly (it was only a pandas transitive).
+
+## 2026-10-25 — Phase 6 plan range engine and lines
+- networth/sim/__init__.py fills simulate, worst_falls, plan_range, rupees, plan_range_lines (en/hi/hinglish) and plan_range_message per docs/phases/phase-6-method.md; tests/test_sim.py covers seed, all-safety, closed form, fall math, invested, horizons, rupee format, guard and the bot function.
+
+## 2026-10-25 — Plan range on the web
+- Added /plan-range (demo, own plan only, editable split/amount/years/fall), a plan range section on /u/{token}, networth/web/plan_view.py with an inline SVG range bar, scoped CSS, tests/test_sim_web.py and screenshots in docs/phases/phase-6-shots/.

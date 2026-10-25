@@ -1,0 +1,43 @@
+<section class="plan-range" aria-labelledby="plan-range-title">
+  <h2 id="plan-range-title">What history says about this plan</h2>
+  {% if note %}
+  <p class="normal">{{ note }}</p>
+  {% else %}
+  <p class="normal">{{ pr.plan }}. {{ pr.monthly }} a month for {{ pr.years }} years puts in {{ pr.invested }}.</p>
+  <p class="callout callout--quiet">{{ pr.label }}</p>
+
+  <h3>Where the money could end up</h3>
+  <dl class="range">
+    <div><dt>A bad case (1 in 10 paths did worse)</dt><dd class="num">{{ pr.nominal.p10 }}</dd></div>
+    <div><dt>The middle case</dt><dd class="num">{{ pr.nominal.median }}</dd></div>
+    <div><dt>A good case (1 in 10 paths did better)</dt><dd class="num">{{ pr.nominal.p90 }}</dd></div>
+  </dl>
+  <h3>The same range after inflation, in today's rupees</h3>
+  <dl class="range range--quiet">
+    <div><dt>A bad case</dt><dd class="num">{{ pr.real.p10 }}</dd></div>
+    <div><dt>The middle case</dt><dd class="num">{{ pr.real.median }}</dd></div>
+    <div><dt>A good case</dt><dd class="num">{{ pr.real.p90 }}</dd></div>
+  </dl>
+
+  <figure class="range-bar">
+    <svg viewBox="0 0 {{ pr.bar.width }} {{ pr.bar.height }}" role="img" aria-labelledby="range-bar-title">
+      <title id="range-bar-title">Before inflation, from {{ pr.nominal.p10 }} to {{ pr.nominal.p90 }}, middle {{ pr.nominal.median }}. After inflation, from {{ pr.real.p10 }} to {{ pr.real.p90 }}, middle {{ pr.real.median }}. Put in: {{ pr.invested }}.</title>
+      {% for row in pr.bar.rows %}
+      <text class="range-bar__name" x="{{ pr.bar.zero_x }}" y="{{ row.label_y }}">{{ row.name }}</text>
+      <rect class="range-bar__band range-bar__band--{{ loop.index }}" x="{{ row.x }}" y="{{ row.y }}" width="{{ row.w }}" height="{{ row.h }}"></rect>
+      <line class="range-bar__median" x1="{{ row.median_x }}" x2="{{ row.median_x }}" y1="{{ row.y - 6 }}" y2="{{ row.y + row.h + 6 }}"></line>
+      {% endfor %}
+      <line class="range-bar__axis" x1="{{ pr.bar.zero_x }}" x2="{{ pr.bar.width - pr.bar.zero_x }}" y1="{{ pr.bar.base_y }}" y2="{{ pr.bar.base_y }}"></line>
+      <line class="range-bar__invested" x1="{{ pr.bar.invested_x }}" x2="{{ pr.bar.invested_x }}" y1="8" y2="{{ pr.bar.base_y }}"></line>
+      <text class="range-bar__label" x="{{ pr.bar.zero_x }}" y="{{ pr.bar.base_y + 26 }}">{{ pr.bar.zero_label }}</text>
+      <text class="range-bar__label" x="{{ pr.bar.invested_label_x }}" y="{{ pr.bar.base_y + 26 }}" text-anchor="{{ pr.bar.invested_anchor }}">{{ pr.bar.invested_label }}</text>
+    </svg>
+    <figcaption>Each bar runs from the bad case to the good case, on one scale from {{ pr.bar.zero_label }}. The dark tick is the middle case. The dashed line is the {{ pr.invested }} put in.</figcaption>
+  </figure>
+
+  <h3>What a fall felt like</h3>
+  <p>In {{ pr.hit_limit }} of the paths, the plan fell by {{ pr.fall_limit }} or more at some point. That is the fall picked as one you can sit through.</p>
+  <p>In the middle case, the worst fall was {{ pr.worst_fall_pct }}, about {{ pr.worst_fall_rupees }} of the money held then. {{ pr.recovery }}</p>
+  <p class="fineprint">{{ pr.paths }} paths of real months from {{ pr.window }}, replayed in blocks of about {{ pr.block_months }} months. Index prices only, so dividends are left out. No taxes or fund costs, so the range runs a little high. The months start in 2012, so the 2008 crash is not in them. Method {{ pr.method_version }}.</p>
+  {% endif %}
+</section>
