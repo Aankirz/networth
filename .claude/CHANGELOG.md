@@ -285,3 +285,6 @@
 
 ## 2026-10-25 — Plan range on the web
 - Added /plan-range (demo, own plan only, editable split/amount/years/fall), a plan range section on /u/{token}, networth/web/plan_view.py with an inline SVG range bar, scoped CSS, tests/test_sim_web.py and screenshots in docs/phases/phase-6-shots/.
+
+## 2026-10-25 — Phase 6 report
+- docs/phases/phase-6-report.md: method hash 102d69b, sources with URLs and windows, Balanced sample in 0.099 s, guard-checked lines in en/hi/hinglish, deviations and gaps (no 2008 in the window). Fine print on the range section now names fund costs and the missing 2008 crash; shots retaken.
