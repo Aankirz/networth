@@ -12,11 +12,11 @@ One turn is one message, in or out:
 
 ```python
 @dataclass(frozen=True)
-class ChatTurn:            # networth/app/store.py, next to Watch and Message
+class ChatTurn:  # networth/app/store.py, next to Watch and Message
     role: Literal["user", "bot"]
-    text: str              # the user's words, or the bot's sent body without the footer
-    intent: str            # the Intent or Talk value that answered, e.g. "what_happened_today", "follow_up"
-    at: str                # ISO time, UTC
+    text: str  # the user's words, or the bot's sent body without the footer
+    intent: str  # the Intent or Talk value that answered, e.g. "what_happened_today", "follow_up"
+    at: str  # ISO time, UTC
 ```
 
 The window is the user's newest turns, oldest first: `tuple[ChatTurn, ...]`.
