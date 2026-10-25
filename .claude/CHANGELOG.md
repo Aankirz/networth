@@ -657,3 +657,7 @@
 
 ## 2026-10-25 — feat: the 13C sector board card with a gated lab page
 - site/components/cards/sectors.tsx: heat strip tinted from the server move strings, Day/Week/Month toggle with no request, tap a sector for its confirmed stories and source chip, biggest-mover insight pill; /lab/sectors (NETWORTH_LAB=1 only) renders the sectors.json fixture from the real board() on test fakes; e2e/sectors.spec.ts.
+
+## 2026-10-25 — feat: the market strip at the top of the chat
+- site/components/market-strip.tsx: server-drawn index tiles (level, change in --up/--down with an arrow, pencil sparkline) plus one source chip, streamed under the shell header with a skeleton while loading and a plain line when the route is missing; never a made-up number. Fetched by getMarket() from the proposed per-scope /api/{demo|u/{token}|web}/market route (shape in site/lib/market.ts, tiles already in the user's order, so US profiles lead with S&P 500, Nasdaq, Dow). Phones keep it on the empty chat only.
+- site/lib/contract.ts now copies contract block 1 with the 13A market cards (answer.tsx answers them in words for now); SourceChip shows 13A's preformatted as_of whole. Mock API serves market fixtures; e2e/market-strip.spec.ts; charts and a2ui specs no longer assume the chart is in view or count Next's link prefetches.

@@ -2,9 +2,12 @@ import { ArrowUpRight } from "lucide-react";
 
 import type { Source } from "@/lib/ratings-contract";
 
+const ISO_TIME = /^\d{4}-\d{2}-\d{2}T/;
+
 /** Where a number came from and when, opening the source. */
 export function SourceChip({ source }: { source: Source }) {
-  const when = source.as_of.slice(0, 10);
+  // 13C sends ISO times, cut to the day; 13A sends its own words ("last close 24 Oct 2026") as they are.
+  const when = ISO_TIME.test(source.as_of) ? source.as_of.slice(0, 10) : source.as_of;
   return (
     <a
       href={source.url}

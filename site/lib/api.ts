@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ApiError, ChatRequest, ChatTurn, CommandRequest, CommandTurn, Dashboard, Message, TrackRecord } from "@/lib/contract";
+import { isMarketStrip, type MarketStrip } from "@/lib/market";
 import { webToken, type WebVisitor } from "@/lib/session";
 
 // The one place the site talks to the Python server. NETWORTH_API_URL is a server-only
@@ -14,6 +15,7 @@ export type Result<T> =
 
 const DASHBOARD_TIMEOUT_MS = 15_000;
 const CHAT_TIMEOUT_MS = 60_000;
+const MARKET_TIMEOUT_MS = 8_000;
 const TOKEN = /^[A-Za-z0-9_-]+\.\d+\.[a-f0-9]+$/;
 
 function base(): string | null {
@@ -26,7 +28,7 @@ export function plausibleToken(token: string): boolean {
   return token.length <= 200 && TOKEN.test(token);
 }
 
-type Route = "dashboard" | "chat" | "command";
+type Route = "dashboard" | "chat" | "command" | "market";
 
 function path(scope: Scope, route: Route): string {
   if (scope.kind === "me") return `/api/web/${route}`;
@@ -121,6 +123,12 @@ export async function postCommand(
 ): Promise<Result<CommandTurn>> {
   const init = post(request, visitor, scope);
   return init ? call(path(scope, "command"), init, CHAT_TIMEOUT_MS, isCommandTurn) : UNSIGNED;
+}
+
+export async function getMarket(scope: Scope): Promise<Result<MarketStrip>> {
+  const headers = signedHeaders(scope);
+  if (!headers) return UNSIGNED;
+  return call(path(scope, "market"), { method: "GET", headers }, MARKET_TIMEOUT_MS, isMarketStrip);
 }
 
 function isTrackRecord(body: unknown): body is TrackRecord {

@@ -11,6 +11,11 @@ export type Intent =
   | "plan_range"
   | "watch"
   | "holdings"
+  | "price"
+  | "price_history"
+  | "position"
+  | "compare"
+  | "stock_view"
   | "other";
 
 export type CommandName = "brief" | "range" | "plan" | "holdings" | "help";
@@ -182,7 +187,131 @@ export interface TextCard {
   type: "text";
 }
 
-export type Card = NewsCard | HistoryCard | PlanRangeCard | HoldingsCard | TextCard;
+export type Direction = "up" | "down" | "flat";
+
+export interface Source {
+  name: string;
+  url: string;
+  as_of: string;
+}
+
+export interface Point {
+  t: string;
+  v: number;
+}
+
+export interface Series {
+  name: string;
+  label: string;
+  points: Point[];
+}
+
+export interface PriceCard {
+  type: "price";
+  symbol: string;
+  name: string;
+  exchange: string;
+  currency: string;
+  price: string;
+  change: string;
+  change_pct: string;
+  direction: Direction;
+  low_52w: string;
+  high_52w: string;
+  series: Series;
+  source: Source;
+}
+
+export interface ReturnRow {
+  label: string;
+  value: string;
+}
+
+export interface Drawdown {
+  fall: string;
+  peak: string;
+  trough: string;
+  recovered: string | null;
+}
+
+export interface PriceHistoryCard {
+  type: "price_history";
+  symbol: string;
+  name: string;
+  from: string;
+  to: string;
+  series: Series;
+  returns: ReturnRow[];
+  drawdowns: Drawdown[];
+  source: Source;
+}
+
+export interface PositionCard {
+  type: "position";
+  symbol: string;
+  name: string;
+  quantity: string;
+  avg_cost: string;
+  price: string;
+  invested: string;
+  value: string;
+  gain: string;
+  gain_pct: string;
+  direction: Direction;
+  low_52w: string;
+  high_52w: string;
+  series: Series;
+  source: Source;
+}
+
+export interface CompareRow {
+  label: string;
+  values: string[];
+}
+
+export interface CompareCard {
+  type: "compare";
+  from: string;
+  to: string;
+  series: Series[];
+  columns: string[];
+  rows: CompareRow[];
+  source: Source;
+}
+
+export interface IndexTile {
+  symbol: string;
+  name: string;
+  level: string;
+  change: string;
+  change_pct: string;
+  direction: Direction;
+}
+
+export interface Reason {
+  text: string;
+  publishers: string[];
+}
+
+export interface MarketTodayCard {
+  type: "market_today";
+  day: string;
+  tiles: IndexTile[];
+  reasons: Reason[];
+  source: Source;
+}
+
+export type Card =
+  | NewsCard
+  | HistoryCard
+  | PlanRangeCard
+  | HoldingsCard
+  | TextCard
+  | PriceCard
+  | PriceHistoryCard
+  | PositionCard
+  | CompareCard
+  | MarketTodayCard;
 
 export interface ChatTurn {
   trace_id: string;

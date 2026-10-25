@@ -63,6 +63,8 @@ export interface ShellProps {
   account?: string | null;
   /** Open with the dashboard showing, as /dashboard does. */
   dashboardFirst?: boolean;
+  /** The market strip, streamed in by the server under the header. */
+  strip?: React.ReactNode;
 }
 
 const ARRIVAL = "arrival";
@@ -78,7 +80,7 @@ function opening(ask: string | null): Chat {
   return reduce(newChat(), { type: "asked", entry: { id: ARRIVAL, asked, outcome: { kind: "waiting" } } });
 }
 
-export function Shell({ board, token, ask = null, account = null, dashboardFirst = false }: ShellProps) {
+export function Shell({ board, token, ask = null, account = null, dashboardFirst = false, strip = null }: ShellProps) {
   const scope = account ? `me:${account}` : token ? "user" : "demo";
   const [chat, dispatch] = useReducer(reduce, ask, opening);
   const [stored, setStored] = useState<Chat[]>([]);
@@ -265,6 +267,8 @@ export function Shell({ board, token, ask = null, account = null, dashboardFirst
             <PanelRight aria-hidden="true" /> Dashboard
           </button>
         </header>
+        {/* A phone keeps the strip for the empty chat; once talking, the thread needs the room. */}
+        {strip && <div className={`shrink-0 px-3 pb-2 sm:px-4 ${empty ? "" : "max-sm:hidden"}`}>{strip}</div>}
 
         <main className="relative flex min-h-0 flex-1 flex-col">
           {empty ? (

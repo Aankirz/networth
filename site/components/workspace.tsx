@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
 import { Shell } from "@/components/app/shell";
+import { MarketStrip, MarketStripLoading } from "@/components/market-strip";
 import { Mark } from "@/components/mark";
 import { MessageView } from "@/components/message";
 import { getDashboard, type Scope } from "@/lib/api";
@@ -37,5 +39,10 @@ export async function Workspace({ scope, ask = null }: { scope: Scope; ask?: str
     );
   }
   const account = scope.kind === "me" ? accountKey(scope.visitor) : null;
-  return <Shell board={result.data} token={tokenOf(scope)} ask={ask} account={account} dashboardFirst={scope.kind === "me"} />;
+  const strip = (
+    <Suspense fallback={<MarketStripLoading />}>
+      <MarketStrip scope={scope} />
+    </Suspense>
+  );
+  return <Shell board={result.data} token={tokenOf(scope)} ask={ask} account={account} dashboardFirst={scope.kind === "me"} strip={strip} />;
 }

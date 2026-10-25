@@ -20,6 +20,12 @@ const CARDS: { [K in Card["type"]]: { title: string; icon: typeof Newspaper; ren
   plan_range: { title: "What your plan could become", icon: TrendingUp, render: (card) => <RangeView card={card} /> },
   holdings: { title: "What you hold", icon: Wallet, render: (card) => <HoldingsView card={card} /> },
   text: { title: "", icon: Landmark, render: () => null },
+  // ponytail: the 13A market cards answer in words until their own renderers land
+  price: { title: "", icon: Landmark, render: () => null },
+  price_history: { title: "", icon: Landmark, render: () => null },
+  position: { title: "", icon: Landmark, render: () => null },
+  compare: { title: "", icon: Landmark, render: () => null },
+  market_today: { title: "", icon: Landmark, render: () => null },
 };
 
 function cardOf(card: Card) {

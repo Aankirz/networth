@@ -13,7 +13,8 @@ test("the SIP answer renders from A2UI messages and its sliders recompute in pla
   await expect(card.locator("[data-insight]")).toContainText("growth is bigger than everything you put in");
 
   const requests: string[] = [];
-  page.on("request", (r) => requests.push(r.url()));
+  // Next prefetches the footer links on its own; only a request from a slider counts.
+  page.on("request", (r) => { if (!r.url().includes("_rsc=")) requests.push(r.url()); });
   const years = page.getByRole("slider", { name: "Years", exact: true });
   await years.fill("25");
   await expect(page.locator("output").filter({ hasText: "25 yrs" })).toBeVisible();

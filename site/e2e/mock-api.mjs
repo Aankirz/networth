@@ -65,7 +65,17 @@ function web(req, res, route) {
   }
   if (!isLinked()) return error(res, 403, "not_linked", NOT_LINKED);
   if (route === "dashboard") return json(res, fixture("dashboard"));
+  if (route === "market") return market(res, visitor.sub);
   read(req, (body) => json(res, route === "command" ? fixture(`command-${COMMANDS.has(body.name) ? body.name : "help"}`) : turnFor(String(body.text ?? ""))));
+}
+
+// A subject naming "us" plays a USD profile, "nomarket" an API without the route yet, and "slow"
+// a price source that takes its time, so the loading state can be seen.
+const MARKET_SLOW_MS = 2500;
+function market(res, who = "") {
+  if (who.includes("nomarket")) return res.writeHead(404, { "content-type": "application/json" }).end('{"detail":"Not Found"}');
+  const send = () => json(res, fixture(who.includes("-us") ? "market-us" : "market-in"));
+  return who.includes("slow") ? setTimeout(send, MARKET_SLOW_MS) : send();
 }
 
 function json(res, body) {
@@ -82,15 +92,16 @@ function read(req, done) {
 createServer((req, res) => {
   const url = new URL(req.url, "http://mock");
   if (url.pathname === "/api/track-record") return json(res, fixture("track-record"));
-  const signed = url.pathname.match(/^\/api\/web\/(me|link|forget|dashboard|chat|command)$/);
+  const signed = url.pathname.match(/^\/api\/web\/(me|link|forget|dashboard|chat|command|market)$/);
   if (signed) return web(req, res, signed[1]);
-  const user = url.pathname.match(/^\/api\/u\/([^/]+)\/(dashboard|chat|command)$/);
-  const demo = url.pathname.match(/^\/api\/demo\/(dashboard|chat|command)$/);
+  const user = url.pathname.match(/^\/api\/u\/([^/]+)\/(dashboard|chat|command|market)$/);
+  const demo = url.pathname.match(/^\/api\/demo\/(dashboard|chat|command|market)$/);
   const route = demo?.[1] ?? user?.[2];
   if (!route || (user && decodeURIComponent(user[1]) !== USER_TOKEN)) {
     return error(res, 404, "not_found", "This link has expired or isn't right. Type /plan in the bot for a fresh one.");
   }
   if (route === "dashboard") return json(res, fixture(demo ? "demo-dashboard" : "dashboard"));
+  if (route === "market") return market(res);
   read(req, (body) => {
     // Long enough to see the thinking state, short enough to keep the run quick.
     setTimeout(() => {

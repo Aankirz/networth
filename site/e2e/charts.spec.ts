@@ -5,6 +5,8 @@ const fan = async (page: Page) => {
   await page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: "My range" }).click();
   const chart = page.locator("article[data-card='plan_range'] figure").first();
   await chart.locator("g.mark-hit").first().waitFor();
+  // The strokes are drawn once the chart scrolls near the view, and the market strip can push it below.
+  await chart.scrollIntoViewIfNeeded();
   return chart;
 };
 
