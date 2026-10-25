@@ -307,3 +307,6 @@
 
 ## 2026-10-25 — Answer Keiki turns
 - POST /keiki/turn verifies the signature and agent id (401 otherwise, 503 when Keiki is not configured), claims the turn id (a replay answers 200 and runs nothing) and runs the turn in the background. networth/keiki/turn.py flushes queued mail, finds the contact's profile or creates an email-native one (user id is a hash, so logs never carry the address), runs the short email setup (networth/keiki/onboard.py) or the same command and chat path as Telegram through KeikiTurnBot, then completes the turn. commands.on_profile_text is the shared text path; profiles gain deliver_to (Phase 3C unit 2).
+
+## 2026-10-25 — Link email to Telegram and route proactive mail
+- /link gives a single-use 6-digit code (link_codes table, expires after link_code_minutes, a new code retires the user's older one); a Keiki turn carrying it binds that contact to the Telegram user. /sendto email|telegram sets deliver_to, checked against a bound contact or a Telegram chat. outbox.send queues proactive briefs, alerts and watches for Keiki when deliver_to is email; the per-user brief claim keeps it to one brief a day across channels. Config gains watch_max_active, watch_max_per_month, link_code_minutes, memory_days; commands take their argument text (Phase 3C unit 3).

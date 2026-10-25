@@ -6,11 +6,14 @@ pipeline as Telegram, then complete the turn.
 The reply goes through KeikiTurnBot, a Bot whose send_message posts our exact text to the
 turn, so commands, onboarding and chat answers (intent, handler, guard) run unchanged. A
 contact we have never seen gets an email-native profile and the short setup in onboard.py.
+A /link code from Telegram, sent by email, points the contact at that Telegram user instead,
+even when the contact already had an email-native profile.
 """
 
 from __future__ import annotations
 
 import logging
+import re
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -19,7 +22,7 @@ from typing import Final, Literal
 from networth.app.services import Services
 from networth.app.store import Channel, Profile, Status, Step, Store, new_email_profile
 from networth.bot import commands
-from networth.bot.onboarding import Outcome
+from networth.bot.onboarding import Outcome, Reply
 from networth.bot.telegram import Keyboard
 from networth.keiki import onboard
 from networth.keiki.client import ClientFactory, TurnClient
@@ -34,6 +37,11 @@ Kind = Literal["chat", "command", "onboarding", "link", "notice"]
 # ponytail: one process-wide lock, so turns run one at a time. Per-turn cost attribution reads
 # the call log by time window, and that is only exact while no other turn overlaps.
 TURN_LOCK: Final = threading.Lock()
+LINK_CODE: Final = re.compile(r"(?<!\d)\d{6}(?!\d)")
+LINKED: Final = (
+    "Linked. Your plan, language and what you left out now apply here too. Briefs and alerts "
+    "stay on Telegram until you reply /sendto email."
+)
 
 
 def spawn(work: Callable[[], None]) -> None:
@@ -122,7 +130,22 @@ def email_setup(turn: commands.Turn, profile: Profile, text: str) -> bool:
     return True
 
 
+def link(turn: commands.Turn, address: str, text: str) -> Handled | None:
+    """Bind the contact to the user whose /link code the text carries, if it carries one."""
+    code = LINK_CODE.search(text)
+    user_id = turn.store.redeem_link_code(code.group(), turn.clock) if code else None
+    profile = turn.store.get_profile(user_id) if user_id else None
+    if profile is None:
+        return None
+    turn.store.bind_contact(address, profile.user_id)
+    turn.store.log_message(profile.user_id, "in", text)
+    turn.send(profile, Reply(LINKED))
+    return Handled("link", profile.user_id)
+
+
 def route(turn: commands.Turn, address: str, text: str) -> Handled:
+    if linked := link(turn, address, text):
+        return linked
     user_id = turn.store.contact_user(address)
     profile = turn.store.get_profile(user_id) if user_id else None
     if profile is None:

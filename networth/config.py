@@ -125,6 +125,10 @@ class ProductConfig:
     alert_max_per_month: int
     tip_lookback_days: int
     chat_max_per_hour: int  # paid chat answers per user per rolling hour
+    watch_max_active: int  # standing watches one user may hold at once
+    watch_max_per_month: int  # watch messages one user may get in a calendar month
+    link_code_minutes: int  # how long a /link code works
+    memory_days: int  # how far back an asked term may come back in a brief
 
 
 @dataclass(frozen=True)
@@ -319,6 +323,10 @@ def _product(raw: Mapping[str, object]) -> ProductConfig:
         _get(t, "alert_max_per_month", int, "product"),
         _get(t, "tip_lookback_days", int, "product"),
         _get(t, "chat_max_per_hour", int, "product"),
+        _get(t, "watch_max_active", int, "product"),
+        _get(t, "watch_max_per_month", int, "product"),
+        _get(t, "link_code_minutes", int, "product"),
+        _get(t, "memory_days", int, "product"),
     )
 
 

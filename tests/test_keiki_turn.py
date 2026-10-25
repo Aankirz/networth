@@ -49,11 +49,11 @@ class Keiki:
         self.client = FakeTurnClient()
         self._turns = 0
 
-    def say(self, *texts: str, address: str = ADDRESS) -> str:
+    def say(self, *texts: str, address: str = ADDRESS, now: str | None = None) -> str:
         self._turns += 1
         turn = parse(turn_payload(*texts, turn_id=f"t{self._turns}", address=address))
         assert turn is not None
-        return run_turn(turn, self.store, self.services, self.client, now_iso())
+        return run_turn(turn, self.store, self.services, self.client, now or now_iso())
 
     @property
     def last(self) -> str:

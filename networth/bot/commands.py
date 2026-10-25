@@ -22,7 +22,17 @@ from typing import Final
 from networth import brief, chat
 from networth.app import links
 from networth.app.services import Services
-from networth.app.store import Plan, Profile, Status, Step, Store, new_profile, now_iso, user_id_for
+from networth.app.store import (
+    Channel,
+    Plan,
+    Profile,
+    Status,
+    Step,
+    Store,
+    new_profile,
+    now_iso,
+    user_id_for,
+)
 from networth.bot import briefs
 from networth.bot.onboarding import CALLBACK_PREFIX, Outcome, Reply, advance, ordinal, plan_line
 from networth.bot.onboarding import prompt as ask_for
@@ -49,7 +59,9 @@ HELP: Final = (
     "/pause pause briefs and alerts\n"
     "/resume turn them back on\n"
     "/stop stop all messages\n"
-    "/start set up again or see your answers\n\n"
+    "/start set up again or see your answers\n"
+    "/link get a code to use me by email too\n"
+    "/sendto email or /sendto telegram, where briefs and alerts go\n\n"
     "Research, not advice."
 )
 UNKNOWN_COMMAND: Final = "I don't know that one yet. Type /help to see what I can do."
@@ -59,6 +71,19 @@ PAUSED: Final = (
 )
 STOPPED: Final = "Stopped. I won't message you again. Type /start any time to come back."
 WELCOME_BACK: Final = "Welcome back."
+UNAVAILABLE: Final = "That isn't available right now. Please try again later."
+LINK_ON_TELEGRAM: Final = "Linking starts on Telegram: type /link there, then email me the code."
+LINK_CODE: Final = (
+    "Your code is {code}. Email it to {where} within {minutes} minutes. It works once. After "
+    "that, your plan, language and what you left out apply there too."
+)
+DESTINATIONS: Final = {"email": Channel.EMAIL, "telegram": Channel.TELEGRAM}
+DESTINATION_NAMES: Final = {Channel.EMAIL: "your email", Channel.TELEGRAM: "Telegram"}
+SENDTO_USAGE: Final = "Type /sendto email or /sendto telegram to choose where briefs and alerts go."
+UNREACHABLE: Final = {
+    Channel.EMAIL: "Link your email first: type /link on Telegram and email me the code.",
+    Channel.TELEGRAM: "You haven't used Networth on Telegram yet, so briefs stay on email.",
+}
 
 
 @dataclass(frozen=True)
@@ -233,7 +258,7 @@ def on_brief_tap(turn: Turn, profile: Profile, tap: Tap) -> None:
     """Invest as planned only acknowledges: the user invests in their own app."""
     turn.bot.answer_callback(tap.callback_id)
     if tap.data == f"{brief.CALLBACK_PREFIX}:plan":
-        cmd_plan(turn, profile)
+        cmd_plan(turn, profile, "")
     elif tap.data == f"{brief.CALLBACK_PREFIX}:ok":
         turn.send(profile, Reply(PLAN_KEPT))
 
@@ -279,7 +304,7 @@ def on_media(turn: Turn, media: Media) -> None:
 # --- commands ------------------------------------------------------------------------------
 
 
-def cmd_start(turn: Turn, profile: Profile) -> None:
+def cmd_start(turn: Turn, profile: Profile, args: str) -> None:
     returning = profile.status is Status.STOPPED
     was_done = profile.step is Step.DONE
     profile = replace(profile, status=Status.ACTIVE) if returning else profile
@@ -291,7 +316,7 @@ def cmd_start(turn: Turn, profile: Profile) -> None:
     turn.send(profile, Reply(text, ask.buttons))
 
 
-def cmd_plan(turn: Turn, profile: Profile) -> None:
+def cmd_plan(turn: Turn, profile: Profile, args: str) -> None:
     plan = turn.plan(profile)
     if profile.step is not Step.DONE or plan is None:
         ask = ask_for(profile, plan)
@@ -308,23 +333,23 @@ def cmd_plan(turn: Turn, profile: Profile) -> None:
     turn.send(profile, ask_for(profile, plan))
 
 
-def cmd_pause(turn: Turn, profile: Profile) -> None:
+def cmd_pause(turn: Turn, profile: Profile, args: str) -> None:
     profile = turn.save(replace(profile, status=Status.PAUSED))
     turn.send(profile, Reply(PAUSED))
 
 
-def cmd_resume(turn: Turn, profile: Profile) -> None:
+def cmd_resume(turn: Turn, profile: Profile, args: str) -> None:
     profile = turn.save(replace(profile, status=Status.ACTIVE))
     day = f" I'll check in on the {ordinal(profile.invest_day)}." if profile.invest_day else ""
     turn.send(profile, Reply(f"Back on.{day}"))
 
 
-def cmd_stop(turn: Turn, profile: Profile) -> None:
+def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
     turn.send(profile, Reply(STOPPED))
     turn.save(replace(profile, status=Status.STOPPED))
 
 
-def cmd_brief(turn: Turn, profile: Profile) -> None:
+def cmd_brief(turn: Turn, profile: Profile, args: str) -> None:
     today = briefs.local_today(profile, turn.clock)
 
     def job() -> None:
@@ -337,15 +362,50 @@ def cmd_brief(turn: Turn, profile: Profile) -> None:
     turn.later.append(job)
 
 
-def cmd_help(turn: Turn, profile: Profile) -> None:
+def cmd_help(turn: Turn, profile: Profile, args: str) -> None:
     turn.send(profile, Reply(HELP))
 
 
-def cmd_unknown(turn: Turn, profile: Profile) -> None:
+def cmd_unknown(turn: Turn, profile: Profile, args: str) -> None:
     turn.send(profile, Reply(UNKNOWN_COMMAND))
 
 
-COMMANDS: Final[dict[str, Callable[[Turn, Profile], None]]] = {
+def cmd_link(turn: Turn, profile: Profile, args: str) -> None:
+    """A single-use code that ties the user's email to this Telegram profile."""
+    cfg = turn.services.cfg
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(FINISH_FIRST))
+    elif profile.channel == Channel.EMAIL:
+        turn.send(profile, Reply(LINK_ON_TELEGRAM))
+    elif cfg is None:
+        turn.send(profile, Reply(UNAVAILABLE))
+    else:
+        minutes = cfg.product.link_code_minutes
+        code = turn.store.new_link_code(profile.user_id, turn.clock, dt.timedelta(minutes=minutes))
+        where = turn.services.keiki_email or "Networth's email"
+        turn.send(profile, Reply(LINK_CODE.format(code=code, where=where, minutes=minutes)))
+
+
+def reachable(turn: Turn, profile: Profile, channel: Channel) -> bool:
+    if channel is Channel.EMAIL:
+        return turn.store.contact_for(profile.user_id) is not None
+    return profile.chat_id != 0
+
+
+def cmd_sendto(turn: Turn, profile: Profile, args: str) -> None:
+    channel = DESTINATIONS.get(args.strip().lower())
+    if channel is None:
+        turn.send(profile, Reply(SENDTO_USAGE))
+    elif not reachable(turn, profile, channel):
+        turn.send(profile, Reply(UNREACHABLE[channel]))
+    else:
+        profile = turn.save(replace(profile, deliver_to=channel))
+        turn.send(
+            profile, Reply(f"Done. Briefs and alerts now go to {DESTINATION_NAMES[channel]}.")
+        )
+
+
+COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/start": cmd_start,
     "/brief": cmd_brief,
     "/plan": cmd_plan,
@@ -353,6 +413,8 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile], None]]] = {
     "/resume": cmd_resume,
     "/stop": cmd_stop,
     "/help": cmd_help,
+    "/link": cmd_link,
+    "/sendto": cmd_sendto,
 }
 
 
@@ -365,4 +427,5 @@ def run_command(turn: Turn, profile: Profile, text: str) -> None:
     name = command_name(text)
     if profile.status is Status.STOPPED and name != "/start":
         return
-    COMMANDS.get(name, cmd_unknown)(turn, profile)
+    parts = text.split(maxsplit=1)
+    COMMANDS.get(name, cmd_unknown)(turn, profile, parts[1] if len(parts) > 1 else "")

@@ -112,6 +112,12 @@ tip_lookback_days = 7  # how far back a tip check searches the news
 # same-claim check and a writer call, about $0.03, so the cap holds one user to about $0.60 an
 # hour. 20 is far above a person asking questions and far below a script.
 chat_max_per_hour = 20
+# A watch is an explicit request, so pull-only users may set one. At most 5 standing at once and
+# 4 watch messages a month per person, on top of the 2 rare alerts, keep "quiet by default".
+watch_max_active = 5
+watch_max_per_month = 4
+link_code_minutes = 10  # a /link code is single use and stops working after this
+memory_days = 60  # an asked term older than this never comes back in a brief
 
 [group]
 batch_size = 50  # articles per grouping call
