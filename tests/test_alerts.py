@@ -75,5 +75,15 @@ def test_the_monthly_cap_holds_and_an_event_is_never_sent_twice(chat: Chat) -> N
     assert alerts(chat, insight(12, type="inr_shock")) == 0, "two this month already"
 
 
+def test_an_alert_that_failed_to_send_goes_out_on_the_next_run(chat: Chat, monkeypatch) -> None:
+    def down(*args: object) -> dict:
+        raise ConnectionError("telegram is down")
+
+    with monkeypatch.context() as m:
+        m.setattr(chat.bot, "send_message", down)
+        assert alerts(chat, insight(9)) == 0
+    assert alerts(chat, insight(9)) == 1
+
+
 def test_an_event_outside_the_users_markets_sends_nothing(chat: Chat) -> None:
     assert alerts(chat, insight(9, asset="XLF", type="fed_hike")) == 0, "US stocks left out"

@@ -104,6 +104,20 @@ def test_a_watcher_run_sends_rare_alerts_once(chat: Chat) -> None:
     )
 
 
+def test_alerts_lost_when_the_vm_stopped_after_a_cycle_go_out_on_the_next_run(
+    chat: Chat, monkeypatch
+) -> None:
+    from tests.test_chat import weekend_watcher
+
+    weekend_watcher(chat.services.watcher_db, OPEN - dt.timedelta(hours=2))
+    store = WatcherStore.open(chat.services.watcher_db)
+    store.put_insights([insight(9)], OPEN - dt.timedelta(hours=2))
+    store.close()
+    monkeypatch.setattr(schedule.run, "run_cycle", lambda *args: None)
+    outcome = schedule.run_job(schedule.WATCHER_PROMPT, chat.store, chat.bot, chat.services, OPEN)
+    assert outcome == "watcher ran: 1 insights, 1 alerts sent"
+
+
 def test_unknown_prompts_and_overlapping_runs_do_nothing(chat: Chat) -> None:
     assert job(chat, "DROP TABLE") is None
     with schedule.JOB_LOCK:

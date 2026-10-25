@@ -321,6 +321,12 @@ class Store:
                          (user_id, now.isoformat()))  # fmt: skip
         return True
 
+    def release_alert(self, user_id: str, event_key: str) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                "DELETE FROM alerts WHERE user_id = ? AND event_key = ?", (user_id, event_key)
+            )
+
     def messages(self, user_id: str) -> list[Message]:
         with self._connect() as conn:
             rows = conn.execute(

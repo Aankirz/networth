@@ -6,7 +6,8 @@ alert_max_per_month times a month to users who left alerts on.
 An Insight qualifies when its odds() row has at least alert_min_episodes episodes, is not a
 weak signal, and its hit rate sits at least alert_min_gap from the normal rate. Each user gets
 at most one alert per event, in their own markets, claimed before it is sent so a rerun never
-sends it twice. Paused, stopped and pull-only (alerts off) users get nothing.
+sends it twice; a failed send releases its claim so the next run retries it. Paused, stopped
+and pull-only (alerts off) users get nothing.
 """
 
 from __future__ import annotations
@@ -83,5 +84,6 @@ def run_alerts(
                                 services)  # fmt: skip
                 sent += send(store, bot, p, reply, proactive=True)
             except Exception:
+                store.release_alert(p.user_id, event_key(i))
                 log.exception("alert %s for %s failed", event_key(i), p.user_id)
     return sent

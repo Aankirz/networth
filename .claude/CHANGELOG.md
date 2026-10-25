@@ -249,3 +249,9 @@
 
 ## 2026-10-25 — Failed brief releases its claim
 - send_brief deletes the day's claim when compose or send raises, so the next run sends it (round 2 item 7).
+
+## 2026-10-25 — Phase 3C Keiki brief
+- Wrote docs/phases/phase-3c-keiki.md (Keiki external harness, email channel, watch-this, memory callbacks, traces, Maritime mtm.sh URL and egress allowlist). Spawned the 3C builder limited to the Step 0 spike until 3B round 2 is pushed. Owner says the Keiki org is on the Scale plan.
+
+## 2026-10-25 — Alerts survive a VM stop and a failed send
+- watcher_cycle hands alerts every insight decided in the last event_max_age_days, so a stop between cycle and alerts is caught up next run; a failed alert send releases its claim (round 2 item 8).

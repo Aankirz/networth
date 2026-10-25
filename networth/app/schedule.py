@@ -68,7 +68,9 @@ Cycle = Callable[[Services, dt.datetime], Sequence[Insight]]
 
 
 def watcher_cycle(services: Services, now: dt.datetime) -> Sequence[Insight]:
-    """One real watcher cycle; returns the insights it wrote."""
+    """One real watcher cycle; returns every insight decided in the last event_max_age_days,
+    not only this cycle's. A VM that stopped between a cycle and its alerts then sends them on
+    the next run, and the per-user, per-event alert claim keeps that from sending twice."""
     cfg = services.cfg
     if cfg is None:
         raise RuntimeError("watcher needs OPENAI_API_KEY and EXA_API_KEY")
@@ -78,7 +80,7 @@ def watcher_cycle(services: Services, now: dt.datetime) -> Sequence[Insight]:
                                          deadline_s=cfg.http.prices_deadline_s))  # fmt: skip
     store = WatcherStore.open(paths.watcher_db)
     try:
-        return store.insights(since=now)
+        return store.insights(since=now - dt.timedelta(days=cfg.event_max_age_days))
     finally:
         store.close()
 
