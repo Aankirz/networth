@@ -38,7 +38,7 @@ from tests.watcher_fakes import FAKE_ENV
 
 REPO = Path(__file__).resolve().parents[1]
 MODULES = (
-    "networth.bot.alerts", "networth.bot.briefs", "networth.bot.commands",
+    "networth.bot.alerts", "networth.bot.briefs", "networth.bot.commands", "networth.bot.holdings",
     "networth.bot.onboarding", "networth.bot.watches", "networth.brief",
     "networth.brief.lines", "networth.chat", "networth.chat.answer", "networth.chat.explain",
     "networth.chat.tip", "networth.chat.today", "networth.keiki.onboard", "networth.keiki.turn",
@@ -54,8 +54,9 @@ FOOTERS: Final = tuple(FOOTER.values())
 DEVANAGARI: Final = re.compile("[ऀ-ॿ]")
 TAG: Final = re.compile(r"<[^>]+>")
 SCRIPT: Final = re.compile(r"<script.*?</script>", re.DOTALL)
-# Upper-case constants that are not words a user reads: a model's input frame, a character set.
-NOT_WORDS: Final = {"STATE", "EDGES"}
+# Upper-case constants that are not words a user reads: a model's input frame, a character set,
+# the phrases a user's own message is matched against.
+NOT_WORDS: Final = {"STATE", "EDGES", "PHRASES"}
 
 
 def strings(value: object) -> Iterator[str]:

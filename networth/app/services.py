@@ -21,6 +21,8 @@ from typing import Final
 from networth.app.settings import RATES_DB, Settings
 from networth.app.store import Store
 from networth.config import Config, ConfigError, load_config
+from networth.holdings.prices import Prices, YahooPrices
+from networth.holdings.snaptrade import SnapTrade
 from networth.keiki.client import KeikiApi
 from networth.keiki.mail import Mail
 from networth.llm import ChatModels, OpenAIModels
@@ -46,6 +48,8 @@ class Services:
     link_secret: str | None = None  # signs /u/{token} links
     mail: Mail | None = None  # proactive email through Keiki
     keiki_email: str | None = None  # the inbox address /link replies name
+    prices: Prices | None = None  # current prices for holdings; None values them as read
+    snaptrade: SnapTrade | None = None  # None builds one from the SnapTrade keys, if set
 
     @property
     def rates_db(self) -> Path:
@@ -85,7 +89,8 @@ class Services:
             mail = Mail(Store(settings.data_dir),
                         KeikiApi(settings.keiki_api_key, settings.keiki_agent_id))  # fmt: skip
         base = cls(settings.data_dir, settings.public_url, link_secret=settings.link_secret,
-                   mail=mail, keiki_email=settings.keiki_email)  # fmt: skip
+                   mail=mail, keiki_email=settings.keiki_email,
+                   prices=YahooPrices())  # fmt: skip
         try:
             cfg = load_config()
         except ConfigError as exc:

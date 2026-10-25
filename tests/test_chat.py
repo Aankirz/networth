@@ -71,6 +71,9 @@ class FakeChatModels:
         self.images.append(image)
         return self.image_text
 
+    def read_holdings(self, image: bytes, mime: str, lang: str) -> None:
+        return None  # not a holdings screen, so the image goes on to Explain this
+
     def same_claim(self, claim: str, articles: Sequence[ArticleBrief]) -> set[str]:
         return {a.id for a in articles if a.id in self.same}
 
@@ -114,6 +117,7 @@ ROUTED = {
     Intent.PLAN_QUESTION: "I can't tell you whether a plan is right for you.",
     Intent.PLAN_RANGE: "This is your own plan:",
     Intent.WATCH: "Watching something.",
+    Intent.HOLDINGS: "Send me a screenshot of your holdings",
     Intent.OTHER: "I can tell you what happened today",
 }
 

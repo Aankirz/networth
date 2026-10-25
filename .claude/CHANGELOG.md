@@ -429,3 +429,14 @@
 
 ## 2026-10-25 — Phase 3F hardening
 - Rate-limited /link code misses per contact, 404 for stopped users' pages, uvicorn access log off, data dir 0700 on boot, and recorded email sender authentication as a known gap (phase 3C report, Hardening).
+
+## 2026-10-25 — docs: phase 7B brief
+- Added docs/phases/phase-7b-holdings-telegram.md, the builder brief for holdings on Telegram.
+
+## 2026-10-25 — fix: rewrite a stored brief written by older code
+- networth/bot/briefs.py folds FORMAT_KEY, a hash of the networth/brief sources and message.py, into each brief's inputs key, so a deploy that changes brief wording rewrites that day's stored brief on the next /brief instead of resending old copy. The day's claim is unchanged. Test: tests/test_bot_briefs_format.py.
+
+## 2026-10-25 — feat: holdings on Telegram (phase 7B)
+- New networth/bot/holdings.py: photo or image document to a three-language confirm prompt (Looks right, Fix a line, Cancel), typed fixes, the report in the 3E message shape with a holdings page button, /holdings, /link_broker, and holdings questions in chat (new Intent.HOLDINGS) through holdings_answer.
+- /stop deletes the user at SnapTrade (forget_snaptrade) and rotates the web link token before the stopped save. Group and channel chats get one line and store nothing.
+- Services gains prices (YahooPrices) and an injectable snaptrade client. Tests: tests/test_bot_holdings.py, tests/test_bot_holdings_edges.py.

@@ -34,6 +34,7 @@ from networth.app.store import (
     user_id_for,
 )
 from networth.bot import briefs, watches
+from networth.bot import holdings as holdings_flow
 from networth.bot.message import FOOTER, Link, Message, say
 from networth.bot.onboarding import (
     CALLBACK_PREFIX,
@@ -49,6 +50,7 @@ from networth.bot.outbox import send
 from networth.bot.telegram import Bot
 from networth.chat.answer import deliver
 from networth.chat.today import YOUR_PAGE
+from networth.holdings import snaptrade
 
 log = logging.getLogger("networth.bot")
 
@@ -100,14 +102,18 @@ HELP_COMMANDS: Final = {
     "/start set up again or see your answers\n/link a code to use me by email too\n"
     "/sendto email or /sendto telegram, where briefs and alerts go\n"
     "/watch something, to hear once when a confirmed story about it appears\n"
-    "/watches see or stop your watches\n/unwatch 1 stop a watch by its number",
+    "/watches see or stop your watches\n/unwatch 1 stop a watch by its number\n"
+    "/holdings what you hold, read from a screenshot you send\n"
+    "/link_broker link a US broker, read-only",
     "hi": "/brief इस महीने का ब्रीफ़\n/plan अपना प्लान देखना या बदलना\n"
     "/range पुराने महीनों को दोहराकर, आपका प्लान कहाँ तक पहुँच सकता है\n"
     "/pause ब्रीफ़ और अलर्ट रोकना\n/resume उन्हें फिर से चालू करना\n/stop सारे मैसेज बंद करना\n"
     "/start फिर से सेटअप, या अपने जवाब देखना\n/link ईमेल पर भी इस्तेमाल के लिए कोड\n"
     "/sendto email या /sendto telegram, ब्रीफ़ और अलर्ट किस जगह आते हैं\n"
     "/watch किसी चीज़ पर, उसकी पुष्ट ख़बर आने पर एक बार सुनने के लिए\n"
-    "/watches अपनी वॉच देखना या बंद करना\n/unwatch 1 नंबर से कोई वॉच बंद करना",
+    "/watches अपनी वॉच देखना या बंद करना\n/unwatch 1 नंबर से कोई वॉच बंद करना\n"
+    "/holdings आपके पास क्या है, आपके भेजे स्क्रीनशॉट से\n"
+    "/link_broker US ब्रोकर लिंक करना, सिर्फ़ पढ़ने के लिए",
     "hinglish": "/brief is mahine ka brief\n/plan apna plan dekhna ya badalna\n"
     "/range purane mahinon ko dohraakar, aapka plan kahan tak pahunch sakta hai\n"
     "/pause briefs aur alerts rokna\n/resume unhe phir se chalu karna\n"
@@ -115,7 +121,9 @@ HELP_COMMANDS: Final = {
     "/link email par bhi use karne ke liye code\n"
     "/sendto email ya /sendto telegram, briefs aur alerts kis jagah aate hain\n"
     "/watch kisi cheez par, uski confirmed story aane par ek baar sunne ke liye\n"
-    "/watches apni watches dekhna ya band karna\n/unwatch 1 number se koi watch band karna",
+    "/watches apni watches dekhna ya band karna\n/unwatch 1 number se koi watch band karna\n"
+    "/holdings aapke paas kya hai, aapke bheje screenshot se\n"
+    "/link_broker US broker link karna, read-only",
 }
 UNKNOWN_COMMAND: Final = {
     "en": "I don't know that one yet. /help shows everything I can do.",
@@ -197,6 +205,12 @@ UNREACHABLE: Final = {
         "aayenge.",
     },
 }
+PRIVATE_ONLY: Final = (
+    "I only answer in a private chat. Message me directly and we'll start there.\n"
+    "मैं सिर्फ़ प्राइवेट चैट में जवाब देता हूँ। मुझे सीधे मैसेज करने पर वहीं से बात शुरू होगी।"
+)
+PRIVATE: Final = "private"
+IMAGE_MIME: Final = "image/"
 PLAN_TITLE: Final = {"en": "Your plan", "hi": "आपका प्लान", "hinglish": "Aapka plan"}
 PAGE_NOTE: Final = {
     "en": "Your page has your plan and your latest brief.",
@@ -228,10 +242,35 @@ class Tap:
 @dataclass(frozen=True)
 class Media:
     chat_id: int
-    file_id: str | None  # the largest size of a photo; None for stickers, voice and the rest
+    file_id: str | None  # a photo's largest size or an image document; None for the rest
 
 
-Incoming = Text | Tap | Media
+@dataclass(frozen=True)
+class NotPrivate:
+    """A message or a tap from a group or a channel: answered once, never stored."""
+
+    chat_id: int
+    callback_id: str | None
+
+
+Incoming = Text | Tap | Media | NotPrivate
+
+
+def _private(message: dict) -> bool:
+    """A chat with no type, as in older updates, counts as private."""
+    return (message.get("chat") or {}).get("type", PRIVATE) == PRIVATE
+
+
+def _image_file_id(message: dict) -> str | None:
+    """The largest PhotoSize, or a document whose mime_type is an image."""
+    photos = message.get("photo")
+    largest = photos[-1] if isinstance(photos, list) and photos else {}
+    document = message.get("document")
+    if not largest and isinstance(document, dict):
+        mime = document.get("mime_type")
+        largest = document if isinstance(mime, str) and mime.startswith(IMAGE_MIME) else {}
+    file_id = largest.get("file_id") if isinstance(largest, dict) else None
+    return file_id if isinstance(file_id, str) else None
 
 
 def parse_update(update: dict) -> Incoming | None:
@@ -241,19 +280,20 @@ def parse_update(update: dict) -> Incoming | None:
         chat_id = (message.get("chat") or {}).get("id")
         if chat_id is None:
             return None
+        if not _private(message):
+            return NotPrivate(int(chat_id), str(tap["id"]))
         return Tap(int(chat_id), str(tap["id"]), str(tap.get("data") or ""),
                    message.get("message_id"))  # fmt: skip
     message = update.get("message")
     if not message or (message.get("chat") or {}).get("id") is None:
         return None
     chat_id = int(message["chat"]["id"])
+    if not _private(message):
+        return NotPrivate(chat_id, None)
     if isinstance(message.get("text"), str):
         is_forward = "forward_origin" in message or "forward_date" in message
         return Text(chat_id, message["text"], is_forward)
-    photos = message.get("photo")
-    largest = photos[-1] if isinstance(photos, list) and photos else {}
-    file_id = largest.get("file_id") if isinstance(largest, dict) else None
-    return Media(chat_id, file_id if isinstance(file_id, str) else None)
+    return Media(chat_id, _image_file_id(message))
 
 
 @dataclass(frozen=True)
@@ -345,6 +385,15 @@ def dispatch(update: dict, turn: Turn) -> None:
             on_text(turn, incoming)
         case Media():
             on_media(turn, incoming)
+        case NotPrivate():
+            on_not_private(turn, incoming)
+
+
+def on_not_private(turn: Turn, msg: NotPrivate) -> None:
+    if msg.callback_id is not None:
+        turn.bot.answer_callback(msg.callback_id, PRIVATE_ONLY)
+    else:
+        turn.bot.send_message(msg.chat_id, Message(body=(PRIVATE_ONLY,)))
 
 
 def on_text(turn: Turn, msg: Text) -> None:
@@ -368,6 +417,8 @@ def on_profile_text(turn: Turn, profile: Profile, text: str, is_forward: bool) -
             turn.send(profile, with_lead(f"{outcome.toast}.", ask))
         for reply in outcome.replies:
             turn.send(profile, reply)
+    elif (fixed := holdings_flow.typed_fix(turn.store, profile, text)) is not None:
+        turn.send(profile, fixed)
     else:
         turn.answer(profile, lambda: chat_reply(turn, profile, text, is_forward))
 
@@ -407,6 +458,11 @@ def on_tap(turn: Turn, tap: Tap) -> None:
     if profile.status is not Status.STOPPED and tap.data.startswith(f"{brief.CALLBACK_PREFIX}:"):
         on_brief_tap(turn, profile, tap)
         return
+    if profile.status is not Status.STOPPED and tap.data.startswith(f"{holdings_flow.TAP_PREFIX}:"):
+        turn.bot.answer_callback(tap.callback_id)
+        later(turn, profile, "holdings tap", lambda: holdings_flow.tapped(
+            turn.store, profile, tap.data, turn.services, turn.clock))  # fmt: skip
+        return
     parsed = parse_callback(tap.data)
     if profile.status is Status.STOPPED or parsed is None:
         turn.bot.answer_callback(tap.callback_id)
@@ -435,8 +491,22 @@ def on_media(turn: Turn, media: Media) -> None:
         turn.send(profile, Reply(say(NOT_A_PHOTO, profile.lang)))
         return
     file_id = media.file_id
-    turn.answer(profile, lambda: chat.respond_image(profile, turn.bot.download_file(file_id),
-                                                    turn.services))  # fmt: skip
+    turn.answer(profile, lambda: holdings_flow.photo_reply(
+        turn.store, profile, turn.bot.download_file(file_id), turn.services))  # fmt: skip
+
+
+def later(turn: Turn, profile: Profile, what: str, make: Callable[[], Reply]) -> None:
+    """Network work after the update lock, with no hourly claim; a failure says try again."""
+
+    def job() -> None:
+        try:
+            reply = make()
+        except Exception as exc:  # noqa: BLE001 - the user still hears something went wrong
+            log.warning("%s for %s failed: %s", what, profile.user_id, type(exc).__name__)
+            reply = Reply(say(TRY_AGAIN, profile.lang))
+        turn.send(profile, reply)
+
+    turn.later.append(job)
 
 
 # --- commands ------------------------------------------------------------------------------
@@ -488,7 +558,14 @@ def cmd_resume(turn: Turn, profile: Profile, args: str) -> None:
 
 
 def cmd_stop(turn: Turn, profile: Profile, args: str) -> None:
+    """Forgets the broker link at SnapTrade and retires the page link before the stopped save,
+    which deletes the holdings. A failed SnapTrade delete never stops the stop."""
     turn.send(profile, Reply(say(STOPPED, profile.lang)))
+    try:
+        snaptrade.forget_snaptrade(profile.user_id, turn.store, client=turn.services.snaptrade)
+    except Exception as exc:  # noqa: BLE001 - the row stays for a later retry
+        log.warning("snaptrade forget for %s failed: %s", profile.user_id, type(exc).__name__)
+    turn.store.new_link_token(profile.user_id)
     turn.save(replace(profile, status=Status.STOPPED))
 
 
@@ -521,6 +598,22 @@ def cmd_range(turn: Turn, profile: Profile, args: str) -> None:
         turn.send(profile, reply)
 
     turn.later.append(job)
+
+
+def cmd_holdings(turn: Turn, profile: Profile, args: str) -> None:
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(say(FINISH_FIRST, profile.lang)))
+        return
+    later(turn, profile, "holdings", lambda: holdings_flow.report_reply(
+        turn.store, profile, turn.services, turn.clock))  # fmt: skip
+
+
+def cmd_link_broker(turn: Turn, profile: Profile, args: str) -> None:
+    if profile.step is not Step.DONE:
+        turn.send(profile, Reply(say(FINISH_FIRST, profile.lang)))
+        return
+    later(turn, profile, "link_broker", lambda: holdings_flow.link_broker_reply(
+        turn.store, profile, turn.services))  # fmt: skip
 
 
 def cmd_help(turn: Turn, profile: Profile, args: str) -> None:
@@ -597,6 +690,8 @@ COMMANDS: Final[dict[str, Callable[[Turn, Profile, str], None]]] = {
     "/watch": cmd_watch,
     "/watches": cmd_watches,
     "/unwatch": cmd_unwatch,
+    "/holdings": cmd_holdings,
+    "/link_broker": cmd_link_broker,
 }
 
 
