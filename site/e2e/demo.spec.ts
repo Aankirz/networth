@@ -65,8 +65,8 @@ test("a chart carries a hidden table of its figures", async ({ page }) => {
   await page.goto("/demo");
   await page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: "My range" }).click();
   const answer = page.locator("article[data-card='plan_range']");
-  await expect(answer.locator("table.sr-only")).toHaveCount(1);
-  await expect(answer.locator("table.sr-only tbody tr").first()).toBeAttached();
+  await expect(answer.locator(".sr-only table")).toHaveCount(1);
+  await expect(answer.locator(".sr-only table tbody tr").first()).toBeAttached();
 });
 
 test("the dashboard opens from the top bar and closes with Escape", async ({ page }) => {
@@ -92,7 +92,7 @@ test("too many questions shows the server's words and a way to the bot", async (
 test("a phone has no sideways scroll, empty or answered", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/demo");
-  const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = () => page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - document.documentElement.clientWidth);
   expect(await overflow()).toBeLessThanOrEqual(0);
   await page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: "My range" }).click();
   await expect(page.locator("article[data-card='plan_range']")).toBeVisible();

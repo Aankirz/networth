@@ -35,7 +35,7 @@ function Block({ id, children }: { id: Section; children: React.ReactNode }) {
   );
 }
 
-function PlanBlock({ board }: { board: Dashboard }) {
+export function PlanBlock({ board }: { board: Dashboard }) {
   const { profile } = board;
   return (
     <div className="grid gap-3">

@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 import "./globals.css";
 
 const sans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Mono only sets figures, none of them above the fold, so it loads without a preload.
+const mono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], preload: false });
 
 export const metadata: Metadata = {
   title: "Networth",

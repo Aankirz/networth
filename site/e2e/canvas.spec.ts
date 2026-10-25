@@ -21,7 +21,7 @@ test("on a phone the dashboard is a full-width sheet", async ({ page }) => {
   const sheet = page.getByRole("dialog", { name: "Dashboard" });
   await expect(sheet).toBeVisible();
   expect((await sheet.boundingBox())!.width).toBeCloseTo(320, 0);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  const overflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
 

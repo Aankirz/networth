@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useReducer, useRef, useState, useSyncExternalStore } from "react";
 import { Menu, PanelRight, X } from "lucide-react";
 
-import { command as runCommand, ask } from "@/app/actions";
+import { command as runCommand, ask as askChat } from "@/app/actions";
 import { Canvas, type Section } from "@/components/app/canvas";
 import { Composer } from "@/components/app/composer";
 import { Sidebar } from "@/components/app/sidebar";
 import { Thread, WORDS } from "@/components/app/thread";
 import { Mark } from "@/components/mark";
-import { COMMANDS, announcement, composeText, newChat, reduce, type Action, type Asked, type Chat, type CommandSpec, type Entry, type Outcome } from "@/lib/chat";
+import { COMMANDS, MAX_TEXT, announcement, composeText, newChat, reduce, type Action, type Asked, type Chat, type CommandSpec, type Entry, type Outcome } from "@/lib/chat";
 import type { ApiError, Card, CommandName, Dashboard, Lang, Mention, Message } from "@/lib/contract";
 import { forgetChat, loadChats, saveChats, withChat } from "@/lib/library";
 
@@ -57,11 +57,22 @@ function settle(result: Settled | null): Outcome {
 export interface ShellProps {
   board: Dashboard;
   token: string | null;
+  /** A question to ask on arrival, from the landing page. */
+  ask?: string | null;
 }
 
-export function Shell({ board, token }: ShellProps) {
+const ARRIVAL = "arrival";
+
+/** The chat to open with: empty, or already asking the question the visitor brought. */
+function opening(ask: string | null): Chat {
+  if (!ask) return newChat();
+  const asked: Asked = { kind: "text", text: ask.slice(0, MAX_TEXT), chips: [], forwarded: false };
+  return reduce(newChat(), { type: "asked", entry: { id: ARRIVAL, asked, outcome: { kind: "waiting" } } });
+}
+
+export function Shell({ board, token, ask = null }: ShellProps) {
   const scope = token ? "user" : "demo";
-  const [chat, dispatch] = useReducer(reduce, undefined, newChat);
+  const [chat, dispatch] = useReducer(reduce, ask, opening);
   const [stored, setStored] = useState<Chat[]>([]);
   const [lang, setLang] = useState<Lang>(board.lang);
   const [drawer, setDrawer] = useState(false);
@@ -133,16 +144,34 @@ export function Shell({ board, token }: ShellProps) {
     return () => window.removeEventListener("keydown", onKey);
   }, [overlay, drawer, closeCanvas]);
 
+  const send = useCallback(
+    (id: string, asked: Asked) => {
+      const call =
+        asked.kind === "command"
+          ? runCommand({ token, name: asked.name as CommandName, lang })
+          : askChat({ token, text: composeText(asked.chips, asked.text), lang, forwarded: asked.forwarded });
+      call.catch(() => null).then((result) => dispatch({ type: "settled", id, outcome: settle(result) }));
+    },
+    [token, lang],
+  );
+
   const run = (asked: Asked, existing?: string) => {
     const id = existing ?? crypto.randomUUID();
     if (existing) dispatch({ type: "settled", id, outcome: { kind: "waiting" } });
     else dispatch({ type: "asked", entry: { id, asked, outcome: { kind: "waiting" } } });
-    const call =
-      asked.kind === "command"
-        ? runCommand({ token, name: asked.name as CommandName, lang })
-        : ask({ token, text: composeText(asked.chips, asked.text), lang, forwarded: asked.forwarded });
-    call.catch(() => null).then((result) => dispatch({ type: "settled", id, outcome: settle(result) }));
+    send(id, asked);
   };
+
+  // The question from the landing page is already on screen as waiting; send it once and drop
+  // ?q= so a reload doesn't ask it again.
+  const arrived = useRef(false);
+  useEffect(() => {
+    const first = chat.entries[0];
+    if (arrived.current || first?.id !== ARRIVAL || first.outcome.kind !== "waiting") return;
+    arrived.current = true;
+    history.replaceState(null, "", location.pathname);
+    send(first.id, first.asked);
+  }, [chat.entries, send]);
 
   const onCommand = (spec: CommandSpec) => {
     const id = crypto.randomUUID();

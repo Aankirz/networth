@@ -10,6 +10,20 @@ const starter = (page: Page, label: string) =>
   page.getByRole("list", { name: "Questions to start with" }).getByRole("button", { name: label }).click();
 
 const SHOTS: Shot[] = [
+  { name: "landing", path: "/" },
+  {
+    name: "landing-full",
+    path: "/",
+    act: async (page) => {
+      // The sketches draw as they come into view, so walk the page once before the full shot.
+      for (let y = 0; y < 6000; y += 600) {
+        await page.evaluate((top) => window.scrollTo(0, top), y);
+        await page.waitForTimeout(150);
+      }
+      await page.locator("#sample figure path").first().waitFor();
+      await page.evaluate(() => window.scrollTo(0, 0));
+    },
+  },
   { name: "demo-empty", path: "/demo" },
   {
     name: "demo-answer",
@@ -49,9 +63,9 @@ for (const width of [320, 1440]) {
         await page.emulateMedia({ reducedMotion: "reduce" });
         await page.goto(shot.path);
         await shot.act?.(page);
-        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+        const overflow = await page.evaluate(() => Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - document.documentElement.clientWidth);
         expect(overflow, `horizontal scroll at ${width}px on ${shot.name}`).toBeLessThanOrEqual(0);
-        await page.screenshot({ path: `${OUT}/${shot.name}-${width}-${theme}.png` });
+        await page.screenshot({ path: `${OUT}/${shot.name}-${width}-${theme}.png`, fullPage: shot.name === "landing-full" });
       });
     }
   }

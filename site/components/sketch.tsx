@@ -79,19 +79,22 @@ function Paths({ paths, from }: { paths: Drawn[]; from: number }) {
 
 function HiddenTable({ table, id }: { table: Table; id: string }) {
   return (
-    <table className="sr-only" id={id}>
-      <caption>{table.caption}</caption>
-      <thead>
-        <tr>{table.head.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
-      </thead>
-      <tbody>
-        {table.rows.map((row, r) => (
-          <tr key={r}>
-            {row.map((cell, c) => (c === 0 ? <th key={c} scope="row">{cell}</th> : <td key={c}>{cell}</td>))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    // sr-only cannot shrink a table, so a wrapper carries it.
+    <div className="sr-only">
+      <table id={id}>
+        <caption>{table.caption}</caption>
+        <thead>
+          <tr>{table.head.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, r) => (
+            <tr key={r}>
+              {row.map((cell, c) => (c === 0 ? <th key={c} scope="row">{cell}</th> : <td key={c}>{cell}</td>))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

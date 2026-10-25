@@ -529,3 +529,9 @@
 - site/: on the light theme chart accents use a deeper amber stroke token (--accent-stroke), since the highlighter yellow vanished on paper.
 - site/: component CSS now sits in @layer components, so utilities like md:hidden win (the phone menu button was showing on desktop).
 - site/e2e: charts.spec.ts (tooltip on focus and hover, named marks, reduced motion, seeded strokes, fixed height) and canvas.spec.ts (pin docks and persists, phone sheet, sidebar links land on their section). Screenshots refreshed.
+
+## 2026-10-25 — Phase 10 slice 3: the landing page at /
+- site/app/page.tsx: the GTM page replaces the redirect. Hero with both CTAs and a working question box (a plain GET form to /demo?q=, so it works before script loads); three steps, each beside a live piece of the sample profile; the three channels; the line we never cross; the server's own negative track record; the live range sketch; a six-question FAQ; footer "Research, not advice."
+- site/components/landing/: ask.tsx (the question box) and live.tsx (streamed, cached-per-request demo pieces that say "waking up" when the server is asleep).
+- site/: /demo asks a ?q= question on arrival and drops it from the URL; hidden chart tables sit in an sr-only wrapper (a table ignores sr-only's width, which widened the body at 320px); Geist Mono loads without a preload.
+- site/e2e: landing.spec.ts; overflow checks read body.scrollWidth too; landing screenshots at 320 and 1440, dark and light.

@@ -19,7 +19,7 @@ function Unavailable({ children }: { children: React.ReactNode }) {
 }
 
 /** One page for both routes: the chat is home, and the dashboard opens from it. */
-export async function Workspace({ scope }: { scope: Scope }) {
+export async function Workspace({ scope, ask = null }: { scope: Scope; ask?: string | null }) {
   const result = await getDashboard(scope);
   if (!result.ok && result.status === 404) notFound();
   if (!result.ok) {
@@ -29,5 +29,5 @@ export async function Workspace({ scope }: { scope: Scope }) {
       </Unavailable>
     );
   }
-  return <Shell board={result.data} token={scope.kind === "user" ? scope.token : null} />;
+  return <Shell board={result.data} token={scope.kind === "user" ? scope.token : null} ask={ask} />;
 }
