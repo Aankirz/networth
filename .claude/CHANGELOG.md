@@ -372,3 +372,8 @@
 - trace_id falls back to the turn id, which is Keiki's trace id. A first message answered then set up is logged as kind `welcome`.
 - Slack turns use the same /keiki/turn pipeline; a Slack author is one contact (`slack:<team>:<user>`) and is never mailed.
 - docs/deploy.md gains the Slack setup (OWNER NEEDED app install); docs/phases/phase-3c-report.md written.
+
+## 2026-10-25 — Phase 3E foundation: messages as data, Telegram HTML
+- networth/bot/message.py: Message (title, body, detail, footer, preview), Link, the one plain() render, FOOTER per language with say(), and a JSON round trip for stored briefs (a legacy plain-text row reads back as one body block).
+- networth/bot/telegram.py: html() is the only renderer and the only place text is escaped; sendMessage uses parse_mode HTML, link previews off unless the message names its link, and a "can't parse entities" 400 is resent once as plain text with a warning that never carries the text.
+- Reply holds a Message (a str still works); outbox, KeikiTurnBot and the test fakes pass the Message on; briefs are stored as JSON and resent from storage; /u shows the plain render. Tests in tests/test_message.py.

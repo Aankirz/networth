@@ -7,7 +7,7 @@ The brief row is claimed before anything is sent, so a schedule that fires twice
 a second brief the same day. The claim is per user, not per channel, so a person who gets
 briefs by email gets one a day across Telegram and email. A compose or send that fails
 releases the claim, so the next try sends it. Asking /brief again that day resends the stored
-text without another model call, unless a news check has finished since it was written; then
+message without another model call, unless a news check has finished since it was written; then
 the brief is written afresh.
 """
 
@@ -23,6 +23,7 @@ from networth import brief, guard, memory
 from networth.app import links
 from networth.app.services import Services
 from networth.app.store import Profile, Status, Step, Store
+from networth.bot import message
 from networth.bot.onboarding import Reply
 from networth.bot.outbox import send
 from networth.bot.telegram import Bot
@@ -110,14 +111,15 @@ def send_brief(
             and store.brief_inputs(profile.user_id, day) == inputs_key(profile, store)
             and not (checked and checked > dt.datetime.fromisoformat(last[2]))
         ):
-            return send(store, bot, profile, Reply(last[1]))
+            return send(store, bot, profile, Reply(message.from_stored(last[1])))
     try:
         reply, used, term = compose_reply(profile, store, services, today)
         sent = send(store, bot, profile, reply, proactive=proactive, mail=services.mail)
     except Exception:
         store.release_brief(profile.user_id, day)
         raise
-    store.save_brief(profile.user_id, day, reply.text, used, inputs_key(profile, store))
+    store.save_brief(profile.user_id, day, message.to_json(reply.message), used,
+                     inputs_key(profile, store))  # fmt: skip
     if term:
         store.mark_terms_used(profile.user_id, [term])
     return sent
