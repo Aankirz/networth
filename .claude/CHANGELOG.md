@@ -372,3 +372,7 @@
 - trace_id falls back to the turn id, which is Keiki's trace id. A first message answered then set up is logged as kind `welcome`.
 - Slack turns use the same /keiki/turn pipeline; a Slack author is one contact (`slack:<team>:<user>`) and is never mailed.
 - docs/deploy.md gains the Slack setup (OWNER NEEDED app install); docs/phases/phase-3c-report.md written.
+
+## 2026-10-25 — shadcn-look web charts (phase 3E addition)
+- New networth/web/static/charts.css holds shadcn's published chart tokens (light and dark) and one series-to-token map. The plan-range bar and the what-if strip now draw rounded bars, thin gridlines, 12px muted labels, an HTML legend and CSS-only tooltips on focusable, labelled marks.
+- Chart geometry is now percent across and pixels down, so text, corners and dots keep their size from 320px to 1440px. New `_chart.html` macros, a `/static/charts.css` route and tests/test_charts.py. Before and after shots are in docs/phases/phase-3e-shots/.
