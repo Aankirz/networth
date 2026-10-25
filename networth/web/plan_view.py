@@ -62,6 +62,9 @@ def bar_geometry(r: PlanRange) -> dict:
         "invested_label_x": round(invested_x + (6 if left_half else -6), 1),
         "invested_anchor": "start" if left_half else "end",
         "invested_label": INVESTED_LABEL,
+        # Row names sit on the side away from the invested line so it never crosses them.
+        "name_x": BAR_WIDTH - BAR_PAD if left_half else BAR_PAD,
+        "name_anchor": "end" if left_half else "start",
         "zero_label": rupees(0),
     }
 
