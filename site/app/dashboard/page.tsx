@@ -64,5 +64,5 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   if (!account.ok) return account.status === 401 ? <SignIn note="Your sign-in has run out. Sign in again to go on." /> : <Unavailable />;
   const forget = typeof params.forget === "string" ? NOTES[params.forget] : undefined;
   if (!account.data.linked) return <LinkStep name={visitor.name} note={forget} />;
-  return <Workspace scope={{ kind: "me", visitor }} />;
+  return <Workspace scope={{ kind: "me", visitor }} ask={typeof params.q === "string" ? params.q.trim() || null : null} />;
 }

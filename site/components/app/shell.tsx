@@ -70,7 +70,11 @@ const ARRIVAL = "arrival";
 /** The chat to open with: empty, or already asking the question the visitor brought. */
 function opening(ask: string | null): Chat {
   if (!ask) return newChat();
-  const asked: Asked = { kind: "text", text: ask.slice(0, MAX_TEXT), chips: [], forwarded: false };
+  // "/brief" from a "Get my brief now" link runs the server command itself, not a chat question.
+  const command = COMMANDS.find((c) => c.run.kind === "server" && `/${c.name}` === ask.toLowerCase());
+  const asked: Asked = command
+    ? { kind: "command", name: command.name }
+    : { kind: "text", text: ask.slice(0, MAX_TEXT), chips: [], forwarded: false };
   return reduce(newChat(), { type: "asked", entry: { id: ARRIVAL, asked, outcome: { kind: "waiting" } } });
 }
 

@@ -13,6 +13,7 @@ import { AccountButton } from "@/components/account/account-button";
 import { Mark } from "@/components/mark";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BOT_URL } from "@/lib/chat";
+import { signedIn } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Networth · market news, checked against history",
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 const STEPS = [
   { icon: "plane", title: "Tell it your plan", body: "Send /start to the bot. It asks what you put in each month, the day you invest, and the fall you can sit through." },
   { icon: "news", title: "It reads the news", body: "Each weekday it keeps only the stories a primary source or several publishers confirm, with who reported each one." },
-  { icon: "day", title: "On your day, a brief", body: "When you invest, it tells you what happened and what history counted the last times something like it happened." },
+  { icon: "day", title: "On your day, a brief", body: "When you invest, it tells you what happened and what history counted the last times something like it happened.", now: true },
 ] as const;
 
 const NEVER = [
@@ -111,6 +112,17 @@ function Hero() {
   );
 }
 
+/** The brief comes on your day; this loads the whole of it now: a signed-in visitor's own, or
+ * the sample profile's in the demo. */
+async function BriefNow({ primary = false }: { primary?: boolean }) {
+  const href = (await signedIn()) ? "/dashboard?q=%2Fbrief" : "/demo?q=%2Fbrief";
+  return (
+    <Link href={href} className={`btn no-underline ${primary ? "btn-primary" : ""}`}>
+      Get my brief now <ArrowRight aria-hidden="true" />
+    </Link>
+  );
+}
+
 function How() {
   return (
     <section id="how" aria-labelledby="how-title" className="scroll-mt-16 border-t border-line px-4 py-24 sm:py-28">
@@ -124,6 +136,7 @@ function How() {
               <StepIcon name={step.icon} />
               <h3 className="text-lg font-semibold">{step.title}</h3>
               <p className="max-w-[32ch] text-ink-2">{step.body}</p>
+              {"now" in step && <BriefNow />}
             </li>
           ))}
         </InView>
@@ -220,6 +233,9 @@ export default function Landing() {
           <Live height="min-h-[30rem]">
             <BriefMock />
           </Live>
+          <div className="mt-8 flex justify-center">
+            <BriefNow primary />
+          </div>
         </Feature>
         <Feature id="sample" title="History, drawn in pencil." more="The sample profile's plan, replayed over real past months." className="py-20 sm:py-32">
           <div className="mx-auto max-w-3xl rounded-[20px] border border-line p-5 text-left sm:p-8">

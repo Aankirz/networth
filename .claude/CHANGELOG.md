@@ -647,3 +647,7 @@
 
 ## 2026-10-25 — Holdings use the shared money() formatter
 - Holdings replies, the action plan and the sell view write amounts with networth.money.money(); deleted summary.short_money and its test; added a big-USD test ($234K) across every holdings reply.
+||||||| parent of 99e7291 (feat: a Get my brief now button wherever the brief is said to come on your day)
+
+## 2026-10-25 — site: "Get my brief now" (owner request)
+- Landing step "On your day, a brief" and the brief feature get a "Get my brief now" link: signed out it opens /demo?q=/brief, signed in /dashboard?q=/brief. A `/brief`-style ?q= now runs that server command on arrival (shell `opening`); /u/[token] and /dashboard pass ?q= through. e2e/brief-now.spec.ts covers all three.
