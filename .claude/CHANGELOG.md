@@ -365,3 +365,272 @@
 
 ## 2026-10-25 — Phase 3D eval rerun and report
 - evals/results: live words and news rerun after findings 1 to 4; evals/intent_results_heldout_3d.json held-out intent rerun with the new criteria. docs/phases/phase-5-report.md before-and-after section and spend $2.42; phase-5-findings.md status per finding; phase-3b-report.md and phase-3b-decisions.tsv record Jev back on; docs/phases/phase-3d-report.md.
+||||||| Stash base
+||||||| Stash base
+
+## 2026-10-25 — Parallel builders and Phase 5/6 briefs
+- Wrote docs/phases/phase-5-evals.md and phase-6-plan-range.md (Monte Carlo of the user plan from real history). Made clones ~/Desktop/networth-3c, networth-p5, networth-p6 (.env and data copied, gitignored). Moved 3C to its clone and spawned P5 and P6 builders.
+
+## 2026-10-25 — Phase 6 review round 1
+- Phase 6 plan range verified on a clean clone (483 passed, page renders, method-first). Sent one gap: extend the window to include 2008 if longer citable CPI and short-rate series exist; bigger chart labels.
+
+## 2026-10-25 — Phase 5 passed, Phase 3D fixes launched
+- Pushed P5 commits after adding the repo-local gh credential helper to the clones. P5 passed review (577 tests, plan before vault, $1.22 spend); finding 5 (leans do not hold out of sample) sent to owner. Wrote docs/phases/phase-3d-fixes.md (findings 1-4, Jev on, /range in Telegram) and spawned the 3D builder in ~/Desktop/networth-p6.
+
+## 2026-10-25 — Deploy df24d9d3 (3B, 3C, P5, P6) and live checks
+- Deployed main c80dbbe to Maritime. /health, /, /why/rbi_hike/^NSEBANK return 200. Telegram /brief, "What happened today?", the RBI Why and the fake tip all pass live.
+- Uploaded data/sim to the VM and copied it to /app/data/sim by hand, because SIM_DIR ignores the DATA_DIR env var. The real fix went to the 3D builder. /plan-range now returns 200 (₹3.35 Cr / ₹5.46 Cr / ₹8.78 Cr).
+- Keiki env vars are not set on Maritime. The secret write was blocked, so it is left for the owner. /keiki/turn returns 503 "keiki not configured" until then.
+
+## 2026-10-25 — Owner bot language set to English
+- Switched the owner Telegram profile from Hinglish to English through the bot edit flow. Found /brief re-sends the stored same-day brief after a profile change and sent it to the 3D builder.
+
+## 2026-10-25 — Phase 3E brief (message design)
+- Wrote docs/phases/phase-3e-messages.md: Telegram HTML with one escaping boundary, one renderer for Telegram and email, a 10-second brief, a calm empathetic voice in three languages. Lean wording stays untouched until the owner decides. Starts after 3D lands.
+
+## 2026-10-25 — Owner decisions, 3E and P7 briefs, live Keiki email
+- Owner chose finding 5 options a, b and c. Folded into docs/phases/phase-3e-messages.md (drop leans and colours, lead with the user plan range, publish the negative result on /track-record).
+- Wrote docs/phases/phase-7-holdings.md: screenshot (India) and SnapTrade read-only (US) feeding one factual holdings report, no advice. Owner approved. SnapTrade account is OWNER NEEDED. Free tier only.
+- Owner approved the deploy after the 3D review passes.
+- Live Keiki email turn passed (trace 3084530f…). Sent 3C four gaps: raw email text in the turn log, trace_id null, onboarding label, and Slack as a new channel.
+
+## 2026-10-25 — 3D passed and deployed. 3E and P7 builders spawned
+- 3D passed review at 541468d (605 tests, evals green, engine untouched, Jev on). Finding 3 and the Hinglish template tail moved into the 3E brief. Deployed ca42902f. Live checks: /plan-range reads /data/sim, /range works on Telegram, the brief rewrote in English, and the My range button is present.
+- Spawned the 3E (gui-sock-2915, ~/Desktop/networth-3e) and P7 (gui-sock-3471, ~/Desktop/networth-p7) builders in fresh clones. Updated the 5-minute monitor cron.
+
+## 2026-10-25 — 3E: shadcn-style charts
+- Owner approved. Sent 3E a note to style the inline SVG charts like shadcn charts with no new stack and no Simbian code. Appended it to the 3E brief.
+
+## 2026-10-25 — 3C live email round 2
+- Owner ran the log scrub. Sent IPO and /brief test emails. The log is clean (no text, trace ids filled). Found and sent to 3C: one sender becomes three user_ids (keyed per thread), and /brief by email is not routed as a command.
+
+## 2026-10-25 — 3C round review: deploy b3f3bcf9, live link recheck failed
+- Deployed 7008996 (sender-keyed contacts, command-in-first-email fix). Gate 613 passed. Live /link code by email was ignored and the explain path fetched a Mailtrack opt-out link from the email footer. Sent both gaps to the 3C builder.
+
+## 2026-10-25 — Phase 7 passed review and deployed
+- Reviewed 5b132c1: gate 682 passed, scope limited to holdings/web/store/llm, read-only SnapTrade, image never stored, /stop deletes holdings, words eval 30/30, spend $0.787. SnapTrade keys not yet in .env, so the live link stays an owner item. Telegram wiring waits for 3E to land.
+
+## 2026-10-25 — 3C footer fix deployed (9e2444a3), /brief by email still routed as chat
+- Reviewed edaf4c9 (gate 698). Live: email link code redeemed past the Mailtrack footer, no footer link fetched. /brief by email logged kind chat, sent back to the 3C builder.
+
+## 2026-10-25 — Phase 3C passed review, deployed 333be7ea
+- Reviewed ba24bcb (gate 700). Keiki's [Email from ...] header line is dropped before routing. Live: /brief by email from the linked owner logged tg user, kind command, and the email body matched the Telegram brief numbers. Slack live test remains an owner item (token and signing secret into Keiki).
+
+## 2026-10-25 — Spawned a Phase 3E finisher on the new account
+- The 3E builder (gui-sock-2915) hit the old account's usage limit with its work committed locally. A fresh session in ~/Desktop/networth-3e (gui-sock-30355) rebases it onto main (conflicts in chat, explain, keiki turn, web routes), keeps both sides, runs the gate and pushes.
+
+## 2026-10-25 — 3E deployed (265998cc); audit; phases 7B, 8, 3F started
+- 3E passed review (918 tests, words eval 85/86, no leans) and deployed. Live: fresh answers render HTML with one footer; stored same-day brief resends old format (sent to 7B). Data-isolation audit: isolation sound, deletion weak. Spawned 7B (holdings on Telegram + stop fixes), 8 (Next.js web chat on Vercel, owner-approved), 3F (hardening).
+
+## 2026-10-25 — Phase 3F hardening passed and deployed
+- Reviewed 7d3e3dc (gate 924): link-code miss limit per contact, stopped users' pages 404, access log off, data dir 0700, email sender auth recorded as a gap. Known limit: rotating sender addresses evades the per-contact cap.
+
+## 2026-10-25 — Resumed 7B and P8 builders on new login
+- Resumed sessions c11cfd40 (7B) and ba59f57d (P8) after the usage limit, under aman@parallelloop.ai, so they keep their context.
+
+## 2026-10-25 — Memory: connected Chrome browsers are local
+- Saved that every connected Claude in Chrome browser is on the owner's machine.
+
+## 2026-10-25 — Fixed 403 push in 7B and P8 clones
+- Set origin to https://Aankirz@github.com/Aankirz/networth.git so the keychain uses the Aankirz account, not the active gh account ankit-kiran-7.
+
+## 2026-10-25 — 7B reviewed and deployed
+- Gate green (992 tests), /stop forgets SnapTrade and rotates the link, no secrets. Deployed 2e9d693f. Live: /holdings, /link_broker (INR) and /brief in the new format verified. Screenshot upload left to the owner because Telegram Web ignores automated file drops.
+
+## 2026-10-25 — P8 server API deployed
+- P8 gates green (1025 tests, site build/lint/typecheck). Deployed the JSON API to Maritime; Vercel preview waits on the owner logging the CLI in as Aankirz.
+
+## 2026-10-25 — P8 preview deploy requested
+- Owner logged Vercel CLI in as aankirz; told the P8 builder to link site/ under aankirzs-projects and deploy a preview only.
+
+## 2026-10-25 — Personal git identity in every Networth clone
+- Set local user.name/email to Ankit Kiran / Aankirz noreply in all clones. 71 earlier commits used the global Simbian identity because the clones lacked it.
+
+## 2026-10-25 — Found /u link regression in production
+- Fresh /plan links 404 on the live server and on the P8 preview. Sent to the 7B builder as a bug fix. P8 live check otherwise passed: demo dashboard, What happened today, tip check, IPO parity with Telegram, friendly not-found.
+
+## 2026-10-25 — P8 re-review passed on preview l05e1qqm5
+- Gate 1025 green; chat now scrolls to each new turn; plan range answer renders. /u for real users waits on the 7B link fix. Gave 7B live facts: the signed link_token is valid but absent from the profiles table.
+
+## 2026-10-25 — /u link fix deployed (0fcfa06c)
+- Links now sign the stored token; rotation only on /stop. Verified live: a fresh link opens the server /u page, the API dashboard, and the P8 preview /u dashboard.
+
+## 2026-10-25 — P8 production deployed
+- Owner ran the production deploy; set NETWORTH_API_URL for production and deployed. networth-eight-pied.vercel.app/demo is public (200) and renders the sample plan.
+
+## 2026-10-25 — Phase 9 brief and clone
+- Wrote docs/phases/phase-9-conversation.md (full conversation, memory, open questions, /dashboard and menu button to the Vercel site). Cloned ~/Desktop/networth-p9 with the personal identity.
+
+## 2026-10-25 — Vercel project connected to GitHub
+- Owner asked. Connected aankirzs-projects/networth to Aankirz/networth (production branch main), root directory site, builds skipped when site/ is unchanged.
+
+## 2026-10-25 — Phase 10 web redesign brief and clone
+- Wrote docs/phases/phase-10-web-redesign.md (centred chat like claude.ai and the Notion AI reference, @ mentions, / commands, Vercel-black theme, rough.js pencil charts, CopilotKit evaluated, bencho.dev and the owner list as taste refs). Cloned ~/Desktop/networth-p10 with the personal identity and the Vercel link.
+
+## 2026-10-25 — Phase 10: GTM landing page added
+- Owner asked for a GTM page. Added a landing page section to the phase 10 brief, with elayadesign/ai-design-skills landing-page-design as a read-only reference. Started the P10 builder (socket 96436).
+
+## 2026-10-25 — Rewrote networth history to the personal identity
+- Owner approved. git filter-repo --mailmap mapped ankit-kiran-7 <ankit.sahu@simbian.ai> to Ankit Kiran <Aankirz noreply>; 132 commits, identical trees. Force-pushed with lease 1dbd3d6 -> c0e1267. Moved every clone onto the mapped commit with reset --soft (no local commits or changes existed). Added /erase to P9; told P10 the no-slop bar.
+
+## 2026-10-25 — P10 WIP preview checked
+- Opened preview networth-iyd12ls44 in Chrome; sent 4 UI gaps to P10 (command routes not on server, reversed timeline, missing dates, chat title).
+
+## 2026-10-25 — P9 slice 1 reviewed
+- 68a768a gate green (1103). Sent back 1 gap: shared web:demo window leaks between visitors; deploy held.
+
+## 2026-10-25 — P9 slices 1-2 deployed
+- Reviewed 2223051 and 47a0702, gate green (1136). Deployed 847f01ac. Live chains pass. Sent gap 2a: no menu button visible.
+
+## 2026-10-25 — P10 slice 1 code review
+- 338ea2d gates green (1191, lint, typecheck, build). Push held until Maritime recovers for a live preview check.
+
+## 2026-10-25 — Maritime still failing
+- Retried deploy once after agent went to error state (c87ba73f): same fc-manager 404. Told P9 to park the menu check.
+
+## 2026-10-25 — Phase 9 passed review
+- 47ccf0f gate 1162, eval honest. Deploy + menu check pending Maritime. Sent follow-up: "What is my plan?" should show the plan.
+
+## 2026-10-25 — SnapTrade dropped
+- Owner decision. Asked P9 to hide /link_broker from help and command list; saved memory.
+
+## 2026-10-25 — P9 follow-ups checked
+- 2935a07 plan readback and 7f41489 link_broker hidden; gate 1168. P9 idle; deploy waits on Maritime.
+
+## 2026-10-25 — Maritime deploy outage
+- P9 slice 3 (97b2f71) passed review. Two deploys failed on Maritime platform error fc-manager 404 stop-boot; restart returned 500; agent stuck deploying, API 503. Stopped after 3 tries, told owner.
+
+## 2026-10-25 — Maritime recovered
+- agents start revived it; deploy works only after agents sleep (81d141c8 live at 6d4dbf8). /erase Keep it verified. Sent P9: plan question still declines live, menu check, erase copy.
+
+## 2026-10-25 — NETWORTH_SITE_URL set, demo chat 500
+- Set NETWORTH_SITE_URL (public URL) and deployed 6dbc08dd. /api/demo/chat returns 500; sent to P9 as urgent.
+
+## 2026-10-25 — Landing redo brief
+- Owner rejected the GTM page. Appended a landing redo to the P10 brief (maritime.sh primary, vercel + heyclicky secondary, animated product mocks). Sent to P10.
+
+## 2026-10-25 — Server redeployed with phase 10 routes
+- Maritime deploy 40e92464 from d72a3b4 (gate 1206 passed, no secrets). Smoke checks pass, including /api/demo/command.
+
+## 2026-10-25 — Google sign-in env vars set
+- Owner added AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET and AUTH_SECRET to Vercel production. Owner skipped the key-file delete and secret reset for now.
+
+## 2026-10-25 — ETF bucket fix deployed
+- Reviewed 2cddbfd (gate 1215 passed). Maritime deploy 48c37d7f, smoke checks pass. Sent P9 small-cap and US-tech ETF gaps.
+
+## 2026-10-25 — Landing redo shipped, ETF gaps deployed
+- Passed P10 landing (7d84c77, c8359ac) after screenshot review. Deployed 89608e3 (Maritime 94b411a0). Sent P9 a flaky keiki_turn test.
+
+## 2026-10-25 — Phase 11 brief written
+- Wrote docs/phases/phase-11-sign-in.md in networth-p10 and handed it to the P10 builder.
+
+## 2026-10-25 — Flaky keiki test fixed
+- Reviewed 388d6c0 (tests only, gate 1218 passed). No deploy needed. P9 held idle so it does not clash with Phase 11 files.
+
+## 2026-10-25 — Phase 12 brief: holdings reply
+- Owner called the screenshot reply vague. Wrote docs/phases/phase-12-holdings-reply.md in networth-p9 and handed it to P9.
+
+## 2026-10-25 — Phase 11 reviewed, server deploying
+- Phase 11 (386a88f..dee2221) passes code review, gate 1273. Deploying server; live sign-in waits on owner setting NETWORTH_WEB_SECRET.
+
+## 2026-10-25 — Phase 11 server deployed
+- Maritime deploy 4dfdf1c5 from dee2221. Smoke checks pass.
+
+## 2026-10-25 — Slack channel connected
+- Owner connected the Keiki Slack bot. Slack Event Subscriptions URL verified and saved. Gold and silver ETFs moved to safety in Phase 12 (owner decision).
+
+## 2026-10-25 — Phase 13 quality push
+- Ran Perplexity Finance vs Networth on 5 questions; ours misrouted, lectured, no numbers. Wrote 13A (answers, data, eval harness via harness2), 13B (intelligent UI cards, OpenIntelligentUI, impeccable), 13C (ratings, sector board, news notifier). Owner dropped the no-picks rule.
+
+## 2026-10-25 — Phase 12 passed, old windows closed
+- Phase 12 (c797931) passes, gate 1297; deploying. Closed idle builder windows 3C, 3E, P7, 3C-old, 7B by PID (clean clones). 13A and 13C told to skip poteto-mode (owner).
+
+## 2026-10-25 — Disclaimers removed (owner order)
+- Told 13A, P9, P10 and 13C to remove every "Research, not advice." and similar line from their files, with a grep test.
+
+## 2026-10-25 — Holdings reply gets an action plan
+- Owner live-tested Phase 12. Sent P9 a spec: rebalance-now and new-money paths in rupees, no filler lines, plain-words plan screens.
+
+## 2026-10-25 — Get it now option
+- Owner: no waiting a month. 13A adds [Get my brief now] wherever the monthly brief is promised, P9 adds [Show me now] to the new-money path, P10 adds it on the site.
+
+## 2026-10-25 — Currency follows the user
+- Owner: no hard-coded rupees. 13A owns one shared money() formatter; P9, P10 and 13C adopt it; US users get USD and US indices.
+
+## 2026-10-25 — Hinglish sell routing to 13A
+- Forwarded P9 finding: "kya bechna chahiye" misroutes to chat explainer; 13A owns routing.
+
+## 2026-10-25 — Ship faster order
+- Told all four builders to push each green slice immediately, no batching.
+
+## 2026-10-25 — Demo deck and hard stop
+- Wrote ~/Desktop/GrowwOS/deck.html (10 hand-drawn slides, live demo iframe, SIP slider). Froze builders for the 21:27 IST hard stop.
+
+## 2026-10-25 — Deck tagline
+- deck.html title and closing slides now read "your money, in the right place" (owner correction).
+
+## 2026-10-25 — Deck: two products
+- deck.html: added "Two things we sell", a goals-first "Money in the right place" loop and a "Personal portfolio manager" loop; loop rows no longer wrap.
+
+## 2026-10-25 — /sectors wiring ordered
+- Owner asked to wire /sectors into the bot; sent to 13C as an urgent single task.
+
+## 2026-10-25 — /sectors wiring cancelled
+- Owner cancelled; 13C told to stop and not push. Push watcher stopped.
+
+## 2026-10-25 — /sectors wiring resumed
+- Owner said go ahead; 13C resumed.
+
+## 2026-10-25 — Freeze: local only
+- Owner stopped deploys. All builders told to commit locally and not push. Push watcher stopped.
+
+## 2026-10-25 — Keep working, no push
+- Owner correction: builders continue current tasks, commit locally, never push.
+
+## 2026-10-25 — Deck live slide fix
+- The site blocks iframes (X-Frame-Options DENY), so the live slide now has buttons that open the web demo and the Telegram bot in new tabs.
+
+## 2026-10-25 — Next local tasks
+- 13C: notifier with cap, quiet-hours and /alerts off tests. P10: rating and sectors cards. Both local only.
+
+## 2026-10-25 — P9 next local task
+- USD holdings fixture and phase 12 report update, local only.
+
+## 2026-10-25 — 13C next local task
+- /r pages, backtest route and report, local only.
+
+## 2026-10-25 — P9 sell view with rate()
+- Holdings sell question shows each holding rating plus plan gap, local only.
+
+## 2026-10-25 — P10 market strip
+- Market strip task sent, local only.
+
+## 2026-10-25 — Local pre-review
+- Stacked 17 local commits on staging, gate 1410 passed. Sent 13C two driver gaps (P/B vs P/E peer median, HDFC revenue +81%). Sent P9 a rebase onto 13A for a chat/__init__.py conflict.
+
+## 2026-10-25 — P10 next local task
+- Rebase onto 13A market data, real fixtures for the strip, then price and position cards.
+
+## 2026-10-25 — Staging green
+- 13C round 1 gaps fixed. All 23 local commits stack on main with no real conflicts; make check 1432 passed. P9 told to switch holdings to money().
+
+## 2026-10-25 — 13A continue
+- 13A market answers slice landed locally; told it to cap the Yahoo name search at 2s and continue with today, the guard and evals.
+
+## 2026-10-25 — Shipped 3dfd18d
+- Owner approved. Pushed 26 stacked local commits (gate 1434 passed) to main as 3dfd18d; Maritime deploy success; /health, /r/hdfcbank, /r/sectors, /api/sectors 200. Builders told to pull --rebase; push reopened.
+
+## 2026-10-25 — /sectors live gap
+- Live /api/sectors attaches scheduled data releases as the news behind moves; sent to 13C. Telegram tab frozen, so the check ran against the API.
+
+## 2026-10-25 — P9 closed, P10 next
+- P9 phase done, clone clean except its changelog; closed window 93457 by PID. P10 history card live on Vercel; next compare and market_today cards.
+
+## 2026-10-25 — Deployed 5f9e741
+- Gate 1447 passed, Maritime deploy success. /api/sectors: calendar items gone; foreign stories still pinned to NSE sectors (Ebola, US-Canada tariffs, US housing); sent round 2 to 13C. 13A takes eval baseline from 323158a locally.
+
+## 2026-10-25 — Builders lost to memory pressure; sector fix shipped
+- Claude Code reaped old background spawn shells under low memory, which closed the P10, 13A and 13C windows. Work is on disk (P10 uncommitted cards; 13A eval run lost). Shipped 13C 0217e6c as 987e0c3 (gate 1448 passed, deploy success); live sectors now show only Bank RBI and Energy oil stories.
+
+## 2026-10-25 — Closed idle old builders
+- Closed finished Networth builder windows 62031 (P5), 62163 and 88843 (P6), 64128 (P1) by PID to free memory; clones clean. Left 13336 (unknown GrowwOS session) and SimbianOS windows alone.
