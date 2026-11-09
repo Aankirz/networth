@@ -15,8 +15,8 @@ export function SourceChip({ source }: { source: Source }) {
       target="_blank"
       className="inline-flex max-w-full items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs text-ink-2 no-underline hover:border-line-strong hover:text-ink"
     >
-      <span className="truncate">{source.name}</span>
-      <span className="figure shrink-0 text-ink-3">{when}</span>
+      <span className="shrink-0">{source.name}</span>
+      <span className="figure min-w-0 truncate text-ink-3">{when}</span>
       <ArrowUpRight aria-hidden="true" className="size-3 shrink-0" />
     </a>
   );

@@ -1,223 +1,102 @@
-"""Record the site's market fixtures from real Yahoo Finance data through networth.market.
+"""Record the site's market fixtures from real Yahoo Finance closes through Phase 13A's code.
 
     uv run python site/e2e/record_market.py
 
-Every number is the source's own close on the day recorded. Phase 13A has the data layer
-(networth.market) but no card builder or strip route yet, so this writes the cards the way the
-contract describes them; once 13A's builders land, record their JSON instead and delete this.
+The price, position, history and compare answers come from networth.chat.markets itself, the
+same functions the chat runs, so their words and cards are what the server sends. Two things have
+no 13A builder yet, so this writes them in the contract's shape with 13A's own formatters:
+
+- the market strip (the site's proposed /api/.../market route);
+- market_today, whose tiles are real closes but whose reasons are the confirmed stories in the
+  test world's demo-dashboard.json, since this machine has no watcher database.
+
+Once 13A builds those, record its JSON instead.
 """
 
 from __future__ import annotations
 
 import json
 import uuid
+from collections.abc import Sequence
 from pathlib import Path
 
-import pandas as pd
-
+import networth.web.routes  # noqa: F401, I001 - loads the web package in the order the app does
 from networth import market
-from networth.money import money
+from networth.chat import markets
+from networth.chat.answer import Answer
+from networth.market import Found
+from networth.web.api import demo_profile
 
 OUT = Path(__file__).parent / "fixtures"
 STRIP = {"in": ("^NSEI", "^BSESN", "^NSEBANK", "^GSPC"), "us": ("^GSPC", "^IXIC", "^DJI", "^NSEI")}
+TODAY = ("^NSEI", "^BSESN", "^NSEBANK", "^NSEMDCP50", "NIFTYSMLCAP250.NS")
 SPARK_DAYS = 30
-MINUS = "−"
-SYMBOL = {"INR": "₹", "USD": "$"}
+MAX_REASONS = 4
+TCS = Found("TCS.NS", "Tata Consultancy Services")
+PROFILE, _ = demo_profile("2026-10-25T00:00:00+00:00")
 
 
-def grouped(n: float, currency: str) -> str:
-    whole, frac = f"{abs(n):.2f}".split(".")
-    body = market_grouping(int(whole), currency)
-    return f"{body}.{frac}"
+def turn(intent: str, answer: Answer) -> dict:
+    words = answer.template
+    message = {"title": "", "body": [{"kind": "text", "text": words}], "detail": [],
+               "footer": "", "preview": None}  # fmt: skip
+    return {"trace_id": uuid.uuid4().hex, "intent": intent, "message": message,
+            "text": words, "card": dict(answer.card or {"type": "text"})}  # fmt: skip
 
 
-def market_grouping(n: int, currency: str) -> str:
-    from networth.money import indian_grouping
-
-    return indian_grouping(n) if currency == "INR" else f"{n:,}"
-
-
-def signed(n: float, text: str) -> str:
-    return f"{MINUS}{text}" if n < 0 else f"+{text}"
-
-
-def price_text(n: float, currency: str) -> str:
-    return f"{SYMBOL.get(currency, currency + ' ')}{grouped(n, currency)}"
-
-
-def pct(x: float) -> str:
-    return signed(x, f"{abs(x) * 100:.2f}%")
-
-
-def direction(x: float) -> str:
-    return "up" if x > 0 else "down" if x < 0 else "flat"
-
-
-def day(d) -> str:
-    return pd.Timestamp(d).strftime("%-d %b %Y")
-
-
-def source(q_symbol: str, as_of) -> dict:
-    return {
-        "name": market.SOURCE_NAME,
-        "url": market.source_url(q_symbol),
-        "as_of": f"last close {day(as_of)}",
-    }
-
-
-def series(closes: pd.Series, name: str, label: str) -> dict:
-    return {
-        "name": name,
-        "label": label,
-        "points": [
-            {"t": d.strftime("%Y-%m-%d"), "v": round(float(v), 2)} for d, v in closes.items()
-        ],
-    }
-
-
-def tile(symbol: str) -> dict:
+def index_tile(symbol: str) -> tuple[dict, market.Quote]:
     q = market.quote(symbol)
     assert q, symbol
-    last = q.closes.iloc[-SPARK_DAYS:]
     return {
-        "symbol": q.symbol,
-        "name": q.name,
-        "level": grouped(q.price, q.currency),
-        "change": signed(q.change, grouped(abs(q.change), q.currency)),
-        "change_pct": pct(q.change_pct),
-        "direction": direction(q.change),
-        "series": series(last, q.name, f"{q.name}, last {SPARK_DAYS} trading days"),
-        "source": source(q.symbol, q.day),
-    }
+        "symbol": q.symbol, "name": q.name,
+        "level": markets.unit_price(q.price, q.currency, is_index=True),
+        "change": markets.unit_price(q.change, q.currency, is_index=True),
+        "change_pct": markets.pct(q.change_pct), "direction": markets.direction(q.change),
+    }, q  # fmt: skip
 
 
-def turn(intent: str, words: str, card: dict) -> dict:
-    message = {
-        "title": "",
-        "body": [{"kind": "text", "text": words}],
-        "detail": [],
-        "footer": "",
-        "preview": None,
-    }
-    return {
-        "trace_id": uuid.uuid4().hex,
-        "intent": intent,
-        "message": message,
-        "text": words,
-        "card": card,
-    }
+def strip_tile(symbol: str) -> dict:
+    tile, q = index_tile(symbol)
+    closes = q.closes.iloc[-SPARK_DAYS:]
+    return {**tile, "series": markets.series(q.name, f"last {SPARK_DAYS} closes", closes),
+            "source": markets.source(q.symbol, markets.close_of(q.day))}  # fmt: skip
 
 
-def price_turn(symbol: str, name: str) -> dict:
-    q = market.quote(symbol, name=name)
-    assert q, symbol
-    words = (
-        f"{q.name} closed at {price_text(q.price, q.currency)} on {day(q.day)}, "
-        f"{'up' if q.change >= 0 else 'down'} {abs(q.change_pct) * 100:.2f}% on the day."
-    )
-    return turn(
-        "price",
-        words,
-        {
-            "type": "price",
-            "symbol": q.symbol,
-            "name": q.name,
-            "exchange": q.exchange,
-            "currency": q.currency,
-            "price": price_text(q.price, q.currency),
-            "change": signed(q.change, price_text(abs(q.change), q.currency)),
-            "change_pct": pct(q.change_pct),
-            "direction": direction(q.change),
-            "low_52w": price_text(q.low_52w, q.currency),
-            "high_52w": price_text(q.high_52w, q.currency),
-            "series": series(q.closes, q.name, f"{q.name}, a year of daily closes"),
-            "source": source(q.symbol, q.day),
-        },
-    )
-
-
-def position_turn(symbol: str, name: str, quantity: int, avg: float) -> dict:
-    q = market.quote(symbol, name=name)
-    assert q, symbol
-    invested, value = quantity * avg, quantity * q.price
-    gain = value - invested
-    words = (
-        f"Your {quantity} {q.name} shares are worth {money(value, q.currency)} at the last close, "
-        f"{money(gain, q.currency, signed=True)} on the {money(invested, q.currency)} you put in."
-    )
-    return turn(
-        "position",
-        words,
-        {
-            "type": "position",
-            "symbol": q.symbol,
-            "name": q.name,
-            "quantity": f"{quantity:,}",
-            "avg_cost": price_text(avg, q.currency),
-            "price": price_text(q.price, q.currency),
-            "invested": money(invested, q.currency),
-            "value": money(value, q.currency),
-            "gain": money(gain, q.currency, signed=True),
-            "gain_pct": pct(gain / invested),
-            "direction": direction(gain),
-            "low_52w": price_text(q.low_52w, q.currency),
-            "high_52w": price_text(q.high_52w, q.currency),
-            "series": series(q.closes, q.name, f"{q.name}, a year of daily closes"),
-            "source": source(q.symbol, q.day),
-        },
-    )
-
-
-def history_turn(symbol: str, years: int) -> dict:
-    h = market.history(symbol, years)
-    assert h, symbol
-    weekly = h.closes.resample("W-FRI").last().dropna()
-    weekly.iloc[-1] = h.closes.iloc[-1]
-    falls = [
-        {
-            "fall": pct(-f.fall).replace("+", ""),
-            "peak": day(f.peak),
-            "trough": day(f.trough),
-            "recovered": day(f.recovered) if f.recovered else None,
-        }
-        for f in market.drawdowns(h.closes)
-    ]
-    worst = falls[0]["fall"] if falls else None
-    words = (
-        f"{h.name} returned {pct(h.total)} over the last {years} years, "
-        f"{pct(h.per_year)} a year on average."
-        + (f" Its worst fall on the way was {worst}." if worst else "")
-    )
-    return turn(
-        "price_history",
-        words,
-        {
-            "type": "price_history",
-            "symbol": h.symbol,
-            "name": h.name,
-            "from": day(h.closes.index[0]),
-            "to": day(h.closes.index[-1]),
-            "series": series(weekly, h.name, f"{h.name}, weekly closes over {years} years"),
-            "returns": [
-                {"label": f"{years} years", "value": pct(h.total)},
-                {"label": "a year, on average", "value": pct(h.per_year)},
-            ],
-            "drawdowns": falls,
-            "source": source(h.symbol, h.closes.index[-1]),
-        },
-    )
+def market_today() -> dict:
+    tiles, quotes = zip(*(index_tile(s) for s in TODAY), strict=True)
+    news = json.loads((OUT / "demo-dashboard.json").read_text(encoding="utf-8"))["news"]["items"]
+    reasons = [{"text": n["title"], "publishers": n["publishers"]} for n in news
+               if not n["title"].startswith("Sample")][:MAX_REASONS]  # fmt: skip
+    day = markets.day_words(quotes[0].day)
+    moves = "; ".join(f"{t['name']} {t['change_pct']}" for t in tiles)
+    words = f"At the close of {day}: {moves}."
+    source = markets.source(quotes[0].symbol, markets.close_of(quotes[0].day))
+    card = {"type": "market_today", "day": day, "tiles": list(tiles), "reasons": reasons,
+            "source": source}  # fmt: skip
+    return turn("what_happened_today", Answer.fixed({"en": words}, card=card))
 
 
 def write(name: str, body: dict) -> None:
-    (OUT / f"{name}.json").write_text(
-        json.dumps(body, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    text = json.dumps(body, indent=2, ensure_ascii=False) + "\n"
+    (OUT / f"{name}.json").write_text(text, encoding="utf-8")
+
+
+def found(*pairs: tuple[str, str]) -> Sequence[Found]:
+    return [Found(s, n) for s, n in pairs]
 
 
 if __name__ == "__main__":
     for m, symbols in STRIP.items():
-        write(f"market-{m}", {"tiles": [tile(s) for s in symbols]})
-    write("answer-price-inr", price_turn("TCS.NS", "Tata Consultancy Services"))
-    write("answer-price-usd", price_turn("AAPL", "Apple Inc."))
-    write("answer-position", position_turn("TCS.NS", "Tata Consultancy Services", 12, 3420.0))
-    write("answer-history", history_turn("^NSEI", 10))
+        write(f"market-{m}", {"tiles": [strip_tile(s) for s in symbols]})
+    apple = found(("AAPL", "Apple Inc."))
+    write("answer-price-inr", turn("price", markets.price([TCS], PROFILE, "en")))
+    write("answer-price-usd", turn("price", markets.price(apple, PROFILE, "en")))
+    holding = "I hold 12 shares of TCS at an average of 3420"
+    write("answer-position", turn("position", markets.position([TCS], holding, PROFILE, "en")))
+    ten = "How has Nifty 50 done over the last 10 years?"
+    nifty = found(("^NSEI", "Nifty 50"))
+    write("answer-history", turn("price_history", markets.price_history(nifty, ten, PROFILE, "en")))
+    versus = "TCS vs Infosys over the last 3 years"
+    pair = found(("TCS.NS", "Tata Consultancy Services"), ("INFY.NS", "Infosys"))
+    write("answer-compare", turn("compare", markets.compare(pair, versus, PROFILE, "en")))
+    write("answer-market-today", market_today())

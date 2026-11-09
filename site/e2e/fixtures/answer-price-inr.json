@@ -1,19 +1,19 @@
 {
-  "trace_id": "e06d6ccb68254287a7c5ae2bb5fea3ee",
+  "trace_id": "e19aea3d64a446059fdfa562632aca5e",
   "intent": "price",
   "message": {
     "title": "",
     "body": [
       {
         "kind": "text",
-        "text": "Tata Consultancy Services closed at ₹2,530.00 on 23 Oct 2026, up 0.92% on the day."
+        "text": "Tata Consultancy Services closed at ₹2,530.00 on 23 Oct 2026, up ₹23.10 (+0.9%) on the day.\n\nIts 52-week range is ₹1,976.80 to ₹3,350.00; it is 24.5% below the high.\n\nSource: Yahoo Finance, close of 23 Oct 2026 (https://finance.yahoo.com/quote/TCS.NS)."
       }
     ],
     "detail": [],
     "footer": "",
     "preview": null
   },
-  "text": "Tata Consultancy Services closed at ₹2,530.00 on 23 Oct 2026, up 0.92% on the day.",
+  "text": "Tata Consultancy Services closed at ₹2,530.00 on 23 Oct 2026, up ₹23.10 (+0.9%) on the day.\n\nIts 52-week range is ₹1,976.80 to ₹3,350.00; it is 24.5% below the high.\n\nSource: Yahoo Finance, close of 23 Oct 2026 (https://finance.yahoo.com/quote/TCS.NS).",
   "card": {
     "type": "price",
     "symbol": "TCS.NS",
@@ -21,14 +21,14 @@
     "exchange": "NSE",
     "currency": "INR",
     "price": "₹2,530.00",
-    "change": "+₹23.10",
-    "change_pct": "+0.92%",
+    "change": "₹23.10",
+    "change_pct": "+0.9%",
     "direction": "up",
     "low_52w": "₹1,976.80",
     "high_52w": "₹3,350.00",
     "series": {
       "name": "Tata Consultancy Services",
-      "label": "Tata Consultancy Services, a year of daily closes",
+      "label": "a year of daily closes",
       "points": [
         {
           "t": "2025-10-23",
@@ -60,7 +60,7 @@
         },
         {
           "t": "2025-11-03",
-          "v": 2891.99
+          "v": 2891.98
         },
         {
           "t": "2025-11-04",
@@ -1027,7 +1027,7 @@
     "source": {
       "name": "Yahoo Finance",
       "url": "https://finance.yahoo.com/quote/TCS.NS",
-      "as_of": "last close 23 Oct 2026"
+      "as_of": "close of 23 Oct 2026"
     }
   }
 }

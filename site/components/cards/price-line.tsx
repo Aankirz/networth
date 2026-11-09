@@ -10,7 +10,7 @@ import { pencil } from "@/lib/pencil";
 // point; the line is the source's own closes, so the figure shown is the source's figure.
 
 const PAD_Y = 8;
-const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+export const DAY = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 
 const TONE: Record<Direction, string> = { up: "var(--up)", down: "var(--down)", flat: "var(--pencil-soft)" };
 
@@ -32,7 +32,7 @@ export interface PriceLineProps {
   spans?: Span[];
 }
 
-function useWidth() {
+export function useWidth() {
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   useEffect(() => {
@@ -45,7 +45,7 @@ function useWidth() {
   return { box, width };
 }
 
-function seedOf(text: string): number {
+export function seedOf(text: string): number {
   return [...text].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 11);
 }
 

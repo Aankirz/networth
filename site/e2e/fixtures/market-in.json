@@ -5,11 +5,11 @@
       "name": "Nifty 50",
       "level": "22,600.00",
       "change": "−87.65",
-      "change_pct": "−0.39%",
+      "change_pct": "−0.4%",
       "direction": "down",
       "series": {
         "name": "Nifty 50",
-        "label": "Nifty 50, last 30 trading days",
+        "label": "last 30 closes",
         "points": [
           {
             "t": "2026-09-09",
@@ -136,7 +136,7 @@
       "source": {
         "name": "Yahoo Finance",
         "url": "https://finance.yahoo.com/quote/%5ENSEI",
-        "as_of": "last close 23 Oct 2026"
+        "as_of": "close of 23 Oct 2026"
       }
     },
     {
@@ -144,11 +144,11 @@
       "name": "Sensex",
       "level": "73,123.83",
       "change": "−125.56",
-      "change_pct": "−0.17%",
+      "change_pct": "−0.2%",
       "direction": "down",
       "series": {
         "name": "Sensex",
-        "label": "Sensex, last 30 trading days",
+        "label": "last 30 closes",
         "points": [
           {
             "t": "2026-09-09",
@@ -275,7 +275,7 @@
       "source": {
         "name": "Yahoo Finance",
         "url": "https://finance.yahoo.com/quote/%5EBSESN",
-        "as_of": "last close 23 Oct 2026"
+        "as_of": "close of 23 Oct 2026"
       }
     },
     {
@@ -283,11 +283,11 @@
       "name": "Nifty Bank",
       "level": "54,287.35",
       "change": "−638.35",
-      "change_pct": "−1.16%",
+      "change_pct": "−1.2%",
       "direction": "down",
       "series": {
         "name": "Nifty Bank",
-        "label": "Nifty Bank, last 30 trading days",
+        "label": "last 30 closes",
         "points": [
           {
             "t": "2026-09-09",
@@ -414,7 +414,7 @@
       "source": {
         "name": "Yahoo Finance",
         "url": "https://finance.yahoo.com/quote/%5ENSEBANK",
-        "as_of": "last close 23 Oct 2026"
+        "as_of": "close of 23 Oct 2026"
       }
     },
     {
@@ -422,11 +422,11 @@
       "name": "S&P 500",
       "level": "7,623.68",
       "change": "−39.75",
-      "change_pct": "−0.52%",
+      "change_pct": "−0.5%",
       "direction": "down",
       "series": {
         "name": "S&P 500",
-        "label": "S&P 500, last 30 trading days",
+        "label": "last 30 closes",
         "points": [
           {
             "t": "2026-09-14",
@@ -553,7 +553,7 @@
       "source": {
         "name": "Yahoo Finance",
         "url": "https://finance.yahoo.com/quote/%5EGSPC",
-        "as_of": "last close 23 Oct 2026"
+        "as_of": "close of 23 Oct 2026"
       }
     }
   ]

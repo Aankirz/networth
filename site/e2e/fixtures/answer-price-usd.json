@@ -1,19 +1,19 @@
 {
-  "trace_id": "57777ff6138c4c4aab38090b5370035f",
+  "trace_id": "57467c21f34e42c0ac957c362df14c61",
   "intent": "price",
   "message": {
     "title": "",
     "body": [
       {
         "kind": "text",
-        "text": "Apple Inc. closed at $347.73 on 23 Oct 2026, down 0.14% on the day."
+        "text": "Apple Inc. closed at $347.73 on 23 Oct 2026, down $0.49 (−0.1%) on the day.\n\nIts 52-week range is $243.42 to $351.73; it is 1.1% below the high.\n\nSource: Yahoo Finance, close of 23 Oct 2026 (https://finance.yahoo.com/quote/AAPL)."
       }
     ],
     "detail": [],
     "footer": "",
     "preview": null
   },
-  "text": "Apple Inc. closed at $347.73 on 23 Oct 2026, down 0.14% on the day.",
+  "text": "Apple Inc. closed at $347.73 on 23 Oct 2026, down $0.49 (−0.1%) on the day.\n\nIts 52-week range is $243.42 to $351.73; it is 1.1% below the high.\n\nSource: Yahoo Finance, close of 23 Oct 2026 (https://finance.yahoo.com/quote/AAPL).",
   "card": {
     "type": "price",
     "symbol": "AAPL",
@@ -22,13 +22,13 @@
     "currency": "USD",
     "price": "$347.73",
     "change": "−$0.49",
-    "change_pct": "−0.14%",
+    "change_pct": "−0.1%",
     "direction": "down",
     "low_52w": "$243.42",
     "high_52w": "$351.73",
     "series": {
       "name": "Apple Inc.",
-      "label": "Apple Inc., a year of daily closes",
+      "label": "a year of daily closes",
       "points": [
         {
           "t": "2025-10-24",
@@ -1039,7 +1039,7 @@
     "source": {
       "name": "Yahoo Finance",
       "url": "https://finance.yahoo.com/quote/AAPL",
-      "as_of": "last close 23 Oct 2026"
+      "as_of": "close of 23 Oct 2026"
     }
   }
 }

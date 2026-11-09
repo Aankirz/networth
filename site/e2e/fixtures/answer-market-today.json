@@ -1,0 +1,77 @@
+{
+  "trace_id": "7ee7c5891141452d86dd2fe417629778",
+  "intent": "what_happened_today",
+  "message": {
+    "title": "",
+    "body": [
+      {
+        "kind": "text",
+        "text": "At the close of 23 Oct 2026: Nifty 50 −0.4%; Sensex −0.2%; Nifty Bank −1.2%; Nifty Midcap 50 −2.1%; Nifty Smallcap 250 −2.8%."
+      }
+    ],
+    "detail": [],
+    "footer": "",
+    "preview": null
+  },
+  "text": "At the close of 23 Oct 2026: Nifty 50 −0.4%; Sensex −0.2%; Nifty Bank −1.2%; Nifty Midcap 50 −2.1%; Nifty Smallcap 250 −2.8%.",
+  "card": {
+    "type": "market_today",
+    "day": "23 Oct 2026",
+    "tiles": [
+      {
+        "symbol": "^NSEI",
+        "name": "Nifty 50",
+        "level": "22,600.00",
+        "change": "−87.65",
+        "change_pct": "−0.4%",
+        "direction": "down"
+      },
+      {
+        "symbol": "^BSESN",
+        "name": "Sensex",
+        "level": "73,123.83",
+        "change": "−125.56",
+        "change_pct": "−0.2%",
+        "direction": "down"
+      },
+      {
+        "symbol": "^NSEBANK",
+        "name": "Nifty Bank",
+        "level": "54,287.35",
+        "change": "−638.35",
+        "change_pct": "−1.2%",
+        "direction": "down"
+      },
+      {
+        "symbol": "^NSEMDCP50",
+        "name": "Nifty Midcap 50",
+        "level": "16,066.40",
+        "change": "−344.40",
+        "change_pct": "−2.1%",
+        "direction": "down"
+      },
+      {
+        "symbol": "NIFTYSMLCAP250.NS",
+        "name": "Nifty Smallcap 250",
+        "level": "16,385.15",
+        "change": "−471.05",
+        "change_pct": "−2.8%",
+        "direction": "down"
+      }
+    ],
+    "reasons": [
+      {
+        "text": "RBI raises repo rate to 5.50%",
+        "publishers": [
+          "livemint.com",
+          "businesstoday.in"
+        ]
+      }
+    ],
+    "source": {
+      "name": "Yahoo Finance",
+      "url": "https://finance.yahoo.com/quote/%5ENSEI",
+      "as_of": "close of 23 Oct 2026"
+    }
+  }
+}

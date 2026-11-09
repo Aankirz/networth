@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { expect, test, type Page } from "@playwright/test";
 
-import type { ChatTurn, PositionCard, PriceCard, PriceHistoryCard } from "../lib/contract";
+import type { ChatTurn, CompareCard, PositionCard, PriceCard, PriceHistoryCard } from "../lib/contract";
 
 const turn = (name: string) =>
   JSON.parse(readFileSync(join(process.cwd(), "e2e", "fixtures", `${name}.json`), "utf8")) as ChatTurn;
@@ -52,14 +52,14 @@ test("the chart reads out the first close with the arrow keys, in the card's cur
 });
 
 test("a holding shows what it is worth against what was paid, with a dashed paid line", async ({ page }) => {
-  const card = await ask(page, "I hold 12 TCS bought at 3420", "position");
+  const card = await ask(page, "I hold 12 shares of TCS at an average of 3420", "position");
   for (const v of [HOLDING.value, HOLDING.invested, HOLDING.avg_cost, HOLDING.quantity]) await expect(card).toContainText(v);
   await expect(card.locator("[data-change]").first()).toHaveText(`${HOLDING.gain} (${HOLDING.gain_pct})`);
   await expect(card.locator("[data-level]")).toContainText(`You paid ${HOLDING.avg_cost}`);
 });
 
 test("the what-if slider recomputes in the browser without asking the server", async ({ page }) => {
-  const card = await ask(page, "I hold 12 TCS bought at 3420", "position");
+  const card = await ask(page, "I hold 12 shares of TCS at an average of 3420", "position");
   const out = card.locator("[data-whatif-out]");
   await expect(out).toContainText(HOLDING.value);
   const requests: string[] = [];
@@ -73,13 +73,13 @@ test("the what-if slider recomputes in the browser without asking the server", a
 
 test("a holding under water says how far it must rise to get back to what was paid", async ({ page }) => {
   test.skip(HOLDING.direction !== "down", "the recorded holding is not under water");
-  const card = await ask(page, "I hold 12 TCS bought at 3420", "position");
+  const card = await ask(page, "I hold 12 shares of TCS at an average of 3420", "position");
   await expect(card.locator("[data-insight]")).toContainText("to get back to what you paid");
 });
 
 test("the price and holding cards fit a 320px phone", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
-  for (const [q, type] of [["What is TCS's price?", "price"], ["I hold 12 TCS bought at 3420", "position"]]) {
+  for (const [q, type] of [["What is TCS's price?", "price"], ["I hold 12 shares of TCS at an average of 3420", "position"]]) {
     await ask(page, q, type);
     // The chat scrolls inside its own box, so the page can't show a card that is too wide.
     const overflow = await page.evaluate(() =>
@@ -119,6 +119,47 @@ test("the range switch cuts the line in the browser and shades only the falls in
 test("the history card fits a 320px phone", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await ask(page, TEN_YEARS, "price_history");
+  const overflow = await page.evaluate(() =>
+    Math.max(...[document.documentElement, ...document.querySelectorAll(".overflow-y-auto")].map((el) => el.scrollWidth - el.clientWidth)));
+  expect(overflow).toBeLessThanOrEqual(0);
+});
+
+const VERSUS = turn("answer-compare").card as CompareCard;
+const PAIR = "TCS vs Infosys over the last 3 years";
+
+test("a comparison draws one line per name and the server's table under it", async ({ page }) => {
+  const card = await ask(page, PAIR, "compare");
+  for (const s of VERSUS.series) await expect(card.locator(`[data-series="${s.name}"] path`).first()).toBeAttached();
+  for (const r of VERSUS.rows) {
+    const row = card.getByRole("row", { name: new RegExp(`^${r.label}`) });
+    for (const v of r.values) await expect(row).toContainText(v);
+  }
+  await expect(card.locator(`a[href="${VERSUS.source.url}"]`)).toContainText(VERSUS.source.as_of);
+});
+
+test("a chip turns a line off and on, and the last line can't be turned off", async ({ page }) => {
+  const card = await ask(page, PAIR, "compare");
+  const [first, second] = VERSUS.series.map((s) => s.name);
+  const chip = (name: string) => card.getByRole("group", { name: "Lines to show" }).getByRole("button", { name });
+  await chip(first).click();
+  await expect(chip(first)).toHaveAttribute("aria-pressed", "false");
+  await expect(card.locator(`[data-series="${first}"]`)).toHaveCount(0);
+  await chip(second).click();
+  await expect(chip(second)).toHaveAttribute("aria-pressed", "true");
+  await chip(first).click();
+  await expect(card.locator(`[data-series="${first}"]`)).toHaveCount(1);
+});
+
+test("the comparison names who did best, in the server's own figures", async ({ page }) => {
+  const card = await ask(page, PAIR, "compare");
+  const [row] = VERSUS.rows;
+  const best = VERSUS.columns[row.values.map((v) => parseFloat(v.replace("−", "-"))).reduce((b, v, i, all) => (v > all[b] ? i : b), 0)];
+  await expect(card.locator("[data-insight]")).toContainText(`${best} did best over ${row.label}`);
+});
+
+test("the comparison fits a 320px phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await ask(page, PAIR, "compare");
   const overflow = await page.evaluate(() =>
     Math.max(...[document.documentElement, ...document.querySelectorAll(".overflow-y-auto")].map((el) => el.scrollWidth - el.clientWidth)));
   expect(overflow).toBeLessThanOrEqual(0);

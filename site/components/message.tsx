@@ -18,7 +18,7 @@ export function MessageView({ message, showTitle = true }: { message: Message; s
     <div className="grid gap-2">
       {showTitle && message.title && <p className="font-medium">{message.title}</p>}
       {body.length > 0 && (
-        <p className="max-w-[68ch] whitespace-pre-line text-ink">
+        <p className="max-w-[68ch] whitespace-pre-line text-ink [overflow-wrap:anywhere]">
           {body.map((block, i) => (
             <BlockView key={i} block={block} />
           ))}

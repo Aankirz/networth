@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Briefcase, Check, ChevronDown, Copy, History, Landmark, LineChart, Newspaper, TrendingUp, Wallet } from "lucide-react";
+import { Briefcase, Check, ChevronDown, Copy, GitCompareArrows, History, Landmark, LineChart, Newspaper, TrendingUp, Wallet } from "lucide-react";
 
+import { CompareView } from "@/components/cards/compare";
 import { HistoryRows } from "@/components/cards/history";
 import { HoldingsView } from "@/components/cards/holdings";
 import { NewsList } from "@/components/cards/news";
@@ -27,7 +28,7 @@ const CARDS: { [K in Card["type"]]: { title: string; icon: typeof Newspaper; ren
   price: { title: "The last close", icon: LineChart, render: (card) => <PriceView card={card} /> },
   price_history: { title: "Over the years", icon: History, render: (card) => <PriceHistoryView card={card} /> },
   position: { title: "Your holding", icon: Briefcase, render: (card) => <PositionView card={card} /> },
-  compare: { title: "", icon: Landmark, render: () => null },
+  compare: { title: "Side by side", icon: GitCompareArrows, render: (card) => <CompareView card={card} /> },
   market_today: { title: "", icon: Landmark, render: () => null },
 };
 
