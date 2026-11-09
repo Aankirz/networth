@@ -668,3 +668,6 @@
 ## 2026-10-25 — feat: the price and position cards
 - site/components/cards/price.tsx (last close, day move in --up/--down, a year of closes, 52-week range with a marker, where-in-year insight, source chip) and position.tsx (worth now against what was paid, table, dashed paid line, a what-if slider from −50% to +50% computed in the browser, break-even insight when under water); price-line.tsx is the shared pencil line with hover, tap and arrow-key read-out. lib/money gains price(), signed() and parseAmount(). Recorded answer fixtures from real Yahoo closes; the mock routes price and holding questions to them.
 - Fix: an answer, its card and the chart figure now use a minmax(0,1fr) column, so a wide caption can no longer push the card past a phone screen inside the chat scroller; the fit test checks the scroller too.
+
+## 2026-10-25 — Pulled the deployed main
+- git pull --rebase onto 3dfd18d; my local commits were already in it, so they were skipped. Nothing left to push.
